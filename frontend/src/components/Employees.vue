@@ -82,6 +82,7 @@
               <p class="emp-email">{{ employee.email }}</p>
             </div>
             <span class="badge" :class="roleBadge(employee.role)">{{ getRoleLabel(employee.role) }}</span>
+            <span class="badge status-badge" :class="onboardingStatusBadge(employee.onboarding_status)">{{ employee.onboarding_status_label || 'Onboarded' }}</span>
           </div>
           <div class="emp-details">
             <div v-if="isSystemAdmin && employee.company_name" class="detail-row">
@@ -680,6 +681,14 @@ export default {
       const m = { pending: 'badge-amber', approved: 'badge-green', rejected: 'badge-red' }
       return m[status] || 'badge-gray'
     },
+    onboardingStatusBadge(status) {
+      const m = {
+        pending_first_login: 'badge-amber',
+        onboarded: 'badge-green',
+        offboarded: 'badge-gray'
+      }
+      return m[status] || 'badge-gray'
+    },
     getInitials(employee) {
       if (employee.first_name && employee.last_name) return `${employee.first_name[0]}${employee.last_name[0]}`.toUpperCase()
       return (employee.username || '??').substring(0, 2).toUpperCase()
@@ -952,6 +961,7 @@ export default {
 .emp-identity { flex: 1; min-width: 0; }
 .emp-name { font-size: .9375rem; font-weight: 600; color: var(--gray-900); margin: 0; }
 .emp-email { font-size: .8125rem; color: var(--gray-500); margin: .125rem 0 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.status-badge { margin-left: .25rem; }
 .emp-details { padding: 0 1.25rem; }
 .detail-row { display: flex; justify-content: space-between; padding: .375rem 0; border-bottom: 1px solid var(--gray-100); font-size: .8125rem; }
 .detail-row:last-child { border-bottom: none; }

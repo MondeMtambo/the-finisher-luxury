@@ -316,6 +316,8 @@ class EmployeeSerializer(serializers.ModelSerializer):
     can_onboard = serializers.ReadOnlyField()
     onboarding_allowed_roles = serializers.ReadOnlyField()
     direct_reports_count = serializers.SerializerMethodField()
+    onboarding_status = serializers.SerializerMethodField()
+    onboarding_status_label = serializers.SerializerMethodField()
     
     class Meta:
         model = UserProfile
@@ -356,6 +358,8 @@ class EmployeeSerializer(serializers.ModelSerializer):
             'can_onboard',
             'onboarding_allowed_roles',
             'direct_reports_count',
+            'onboarding_status',
+            'onboarding_status_label',
             'created_at',
             'updated_at',
         ]
@@ -376,6 +380,22 @@ class EmployeeSerializer(serializers.ModelSerializer):
     
     def get_direct_reports_count(self, obj):
         return UserProfile.objects.filter(reports_to=obj.user, is_offboarded=False).count()
+
+    def get_onboarding_status(self, obj):
+        if obj.is_offboarded:
+            return 'offboarded'
+        if obj.requires_password_reset:
+            return 'pending_first_login'
+        return 'onboarded'
+
+    def get_onboarding_status_label(self, obj):
+        status = self.get_onboarding_status(obj)
+        labels = {
+            'pending_first_login': 'Pending First Login',
+            'onboarded': 'Onboarded',
+            'offboarded': 'Offboarded',
+        }
+        return labels.get(status, 'Onboarded')
 
 
 class EmployeeCreateSerializer(serializers.Serializer):
