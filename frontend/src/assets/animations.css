@@ -1,0 +1,220 @@
+/*
+ * THE FINISHER LUXURY - Global Subtle Animations
+ * Adds a "live" feeling to the entire system.
+ * Controlled via the CSS custom property --animations-enabled on <html>.
+ * When [data-animations="off"] is on <html>, all animations are disabled.
+ */
+
+/* ─── Keyframes ─── */
+
+@keyframes subtle-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.85; }
+}
+
+@keyframes subtle-glow {
+  0%, 100% { box-shadow: 0 0 0 rgba(59, 130, 246, 0); }
+  50% { box-shadow: 0 0 12px rgba(59, 130, 246, 0.08); }
+}
+
+@keyframes card-shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes fade-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes border-breathe {
+  0%, 100% { border-color: rgba(59, 130, 246, 0.1); }
+  50% { border-color: rgba(59, 130, 246, 0.25); }
+}
+
+@keyframes status-dot-pulse {
+  0%, 100% { transform: scale(1); opacity: 0.7; }
+  50% { transform: scale(1.3); opacity: 1; }
+}
+
+@keyframes gradient-shift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+@keyframes float-gentle {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-3px); }
+}
+
+/* ─── Global transition defaults ─── */
+
+html:not([data-animations="off"]) * {
+  /* Smooth transitions on interactive elements */
+}
+
+/* ─── Page entry animation ─── */
+html:not([data-animations="off"]) .employees-container,
+html:not([data-animations="off"]) .dashboard-container,
+html:not([data-animations="off"]) .contacts-container,
+html:not([data-animations="off"]) .deals-container,
+html:not([data-animations="off"]) .companies-container,
+html:not([data-animations="off"]) .tickets-container,
+html:not([data-animations="off"]) .reports-container,
+html:not([data-animations="off"]) .help-center-container {
+  animation: fade-in-up 0.4s ease-out;
+}
+
+/* ─── Card hover effects ─── */
+html:not([data-animations="off"]) .employee-card,
+html:not([data-animations="off"]) .contact-card,
+html:not([data-animations="off"]) .deal-card,
+html:not([data-animations="off"]) .company-card,
+html:not([data-animations="off"]) .ticket-card,
+html:not([data-animations="off"]) .stat-card,
+html:not([data-animations="off"]) .dashboard-card {
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+html:not([data-animations="off"]) .employee-card:hover,
+html:not([data-animations="off"]) .contact-card:hover,
+html:not([data-animations="off"]) .deal-card:hover,
+html:not([data-animations="off"]) .company-card:hover,
+html:not([data-animations="off"]) .ticket-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
+}
+
+html:not([data-animations="off"]) .stat-card:hover,
+html:not([data-animations="off"]) .dashboard-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 10px 30px rgba(59, 130, 246, 0.1);
+}
+
+/* ─── Subtle breathing glow on focused inputs ─── */
+html:not([data-animations="off"]) input:focus,
+html:not([data-animations="off"]) select:focus,
+html:not([data-animations="off"]) textarea:focus {
+  animation: subtle-glow 2s ease-in-out infinite;
+}
+
+/* ─── Button hover micro-animations ─── */
+html:not([data-animations="off"]) button {
+  transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease;
+}
+
+html:not([data-animations="off"]) .btn-create:hover,
+html:not([data-animations="off"]) .btn-primary:hover,
+html:not([data-animations="off"]) .btn-save:hover {
+  transform: translateY(-1px);
+}
+
+/* ─── Avatar initials gentle float ─── */
+html:not([data-animations="off"]) .employee-avatar,
+html:not([data-animations="off"]) .avatar-initials {
+  transition: transform 0.3s ease;
+}
+
+html:not([data-animations="off"]) .employee-card:hover .employee-avatar {
+  animation: float-gentle 2s ease-in-out infinite;
+}
+
+/* ─── Status badges subtle pulse ─── */
+html:not([data-animations="off"]) .status-badge {
+  transition: transform 0.2s ease;
+}
+
+html:not([data-animations="off"]) .role-admin {
+  animation: subtle-pulse 3s ease-in-out infinite;
+}
+
+/* ─── Modal entry animation ─── */
+html:not([data-animations="off"]) .modal-overlay {
+  animation: fade-in 0.2s ease-out;
+}
+
+html:not([data-animations="off"]) .modal {
+  animation: fade-in-up 0.3s ease-out;
+}
+
+/* ─── Grid stagger effect (children fade in sequence) ─── */
+html:not([data-animations="off"]) .employees-grid > *:nth-child(1) { animation: fade-in-up 0.3s ease-out 0.05s both; }
+html:not([data-animations="off"]) .employees-grid > *:nth-child(2) { animation: fade-in-up 0.3s ease-out 0.1s both; }
+html:not([data-animations="off"]) .employees-grid > *:nth-child(3) { animation: fade-in-up 0.3s ease-out 0.15s both; }
+html:not([data-animations="off"]) .employees-grid > *:nth-child(4) { animation: fade-in-up 0.3s ease-out 0.2s both; }
+html:not([data-animations="off"]) .employees-grid > *:nth-child(5) { animation: fade-in-up 0.3s ease-out 0.25s both; }
+html:not([data-animations="off"]) .employees-grid > *:nth-child(6) { animation: fade-in-up 0.3s ease-out 0.3s both; }
+
+/* ─── Accent line on section headers ─── */
+html:not([data-animations="off"]) h1 {
+  position: relative;
+}
+
+html:not([data-animations="off"]) .employees-header h1::after,
+html:not([data-animations="off"]) .dashboard-header h1::after {
+  content: '';
+  position: absolute;
+  bottom: -4px;
+  left: 0;
+  width: 40px;
+  height: 3px;
+  background: linear-gradient(90deg, #3b82f6, #60a5fa);
+  border-radius: 2px;
+  animation: gradient-shift 3s ease infinite;
+  background-size: 200% 200%;
+}
+
+/* ─── Loading skeleton animation ─── */
+html:not([data-animations="off"]) .loading {
+  position: relative;
+  overflow: hidden;
+}
+
+html:not([data-animations="off"]) .loading::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: linear-gradient(90deg, transparent, rgba(59, 130, 246, 0.05), transparent);
+  background-size: 200% 100%;
+  animation: card-shimmer 2s linear infinite;
+}
+
+/* ─── Slots indicator animation ─── */
+html:not([data-animations="off"]) .slots-count:not(.slots-full) {
+  animation: subtle-pulse 2.5s ease-in-out infinite;
+}
+
+/* ─── Toast notification entry ─── */
+html:not([data-animations="off"]) .toast-notification {
+  animation: fade-in-up 0.3s ease-out;
+}
+
+/* ─── Disable all animations when preference is off ─── */
+html[data-animations="off"] * {
+  animation: none !important;
+  transition: none !important;
+}
+
+/* ─── Respect prefers-reduced-motion ─── */
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

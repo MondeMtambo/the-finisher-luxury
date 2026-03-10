@@ -1,0 +1,10 @@
+backend/
+docs/
+*.py
+requirements.txt
+runtime.txt.backup
+Procfile
+build.sh
+start.sh
+*.md
+!frontend/

@@ -1,0 +1,160 @@
+"""
+DEBUGGING GUIDE: Company Auto-Creation Issue
+=============================================
+
+If companies are still not showing automatically after creating contacts,
+follow these debugging steps:
+
+STEP 1: Verify Contact Has Company Name
+----------------------------------------
+Run in Django shell:
+
+python manage.py shell
+
+>>> from crm.models import Contact, Company
+>>> from django.contrib.auth.models import User
+>>> 
+>>> # Get your user
+>>> user = User.objects.get(username='YOUR_USERNAME')
+>>> 
+>>> # Check all contacts
+>>> contacts = Contact.objects.filter(user=user)
+>>> for c in contacts:
+...     print(f"Contact: {c.first_name} {c.last_name}")
+...     print(f"  company_name_manual: '{c.company_name_manual}'")
+...     print(f"  company: {c.company}")
+...     print(f"  company_id: {c.company_id}")
+...     print()
+
+
+STEP 2: Check If Companies Exist
+---------------------------------
+>>> companies = Company.objects.filter(user=user)
+>>> print(f"Total companies: {companies.count()}")
+>>> for comp in companies:
+...     print(f"  • {comp.name} (ID: {comp.id})")
+
+
+STEP 3: Manually Trigger Auto-Creation
+---------------------------------------
+>>> from crm.views import ensure_company_for_contact
+>>> 
+>>> # Get a contact that should have a company
+>>> contact = Contact.objects.filter(user=user).first()
+>>> print(f"Before: company_id = {contact.company_id}")
+>>> 
+>>> # Run the helper
+>>> ensure_company_for_contact(contact)
+>>> 
+>>> # Check again
+>>> contact.refresh_from_db()
+>>> print(f"After: company_id = {contact.company_id}")
+>>> if contact.company:
+...     print(f"Company: {contact.company.name}")
+
+
+STEP 4: Check for Errors in Views
+----------------------------------
+Look at backend/crm/views.py line 65-115
+
+The ensure_company_for_contact function should:
+1. Refresh contact from DB
+2. Get company_name_manual
+3. Create company if doesn't exist
+4. Link contact to company
+
+Check these conditions:
+- contact.company_name_manual is not empty/None
+- No exception is being raised
+- Company.objects.create is being called
+- contact.save is being called
+
+
+STEP 5: Test Contact Creation Flow
+-----------------------------------
+Create a NEW contact via API and check logs:
+
+POST /api/contacts/
+{
+    "first_name": "Test",
+    "last_name": "User",
+    "email": "test@company.co.za",
+    "phone": "+27123456789",
+    "is_self_employed": false,
+    "company_direct_line": "+27987654321",
+    "company_name_manual": "Test Company"
+}
+
+Then immediately check:
+>>> Contact.objects.latest('created_at')
+>>> Company.objects.filter(name__iexact='Test Company')
+
+
+STEP 6: Common Issues
+----------------------
+Issue: company_name_manual is empty
+Fix: Serializer should set it in validate() method
+
+Issue: ensure_company_for_contact not being called
+Fix: Check perform_create and perform_update in ContactViewSet
+
+Issue: Company created but not linked
+Fix: Check the last lines of ensure_company_for_contact
+
+Issue: Case sensitivity mismatch
+Fix: We use name__iexact for case-insensitive lookup
+
+
+STEP 7: Run Fix Script
+-----------------------
+If many contacts are missing companies:
+
+cd backend
+python fix_existing_contacts_companies.py
+
+This will:
+- Find all contacts with company_name_manual but no company link
+- Run ensure_company_for_contact for each
+- Show summary of fixes
+
+
+STEP 8: Enable Debug Logging
+-----------------------------
+Add print statements to views.py:
+
+def ensure_company_for_contact(contact):
+    print(f"[DEBUG] Starting for contact: {contact.id}")
+    contact.refresh_from_db()
+    print(f"[DEBUG] company_name_manual: '{contact.company_name_manual}'")
+    
+    # ... rest of function
+    
+    print(f"[DEBUG] Company created/found: {company.id if company else None}")
+    print(f"[DEBUG] Final contact.company_id: {contact.company_id}")
+
+
+STEP 9: Frontend Console Check
+-------------------------------
+Open browser DevTools (F12) when creating contact:
+- Watch Network tab for POST /api/contacts/
+- Check response includes company_name_manual
+- Verify no 400/500 errors
+
+
+STEP 10: Database Direct Check
+-------------------------------
+sqlite3 backend/db.sqlite3
+
+SELECT c.id, c.first_name, c.last_name, c.company_name_manual, c.company_id, co.name as company_name
+FROM crm_contact c
+LEFT JOIN crm_company co ON c.company_id = co.id
+WHERE c.user_id = YOUR_USER_ID;
+
+Should show:
+- company_name_manual filled
+- company_id not NULL
+- company_name matches company_name_manual
+
+==============================================
+If all else fails, export this output and send to support.
+"""
