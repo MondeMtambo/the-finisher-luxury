@@ -1111,6 +1111,51 @@ class EmployeeViewSet(viewsets.ModelViewSet):
 
         return UserProfile.objects.filter(user=user)
     
+    @action(detail=True, methods=['post'], url_path='resend-credentials')
+    def resend_credentials(self, request, pk=None):
+        """
+        Resend temporary login credentials email to an employee.
+        Only admin/CEO or system admin can trigger this.
+        POST /api/employees/{id}/resend-credentials/
+        """
+        requester = request.user
+        requester_profile = getattr(requester, 'profile', None)
+        is_system_admin = requester.is_superuser or requester.is_staff
+        is_company_admin = requester_profile and requester_profile.role == 'admin'
+
+        if not (is_system_admin or is_company_admin):
+            return Response({'error': 'Only administrators can resend credentials.'}, status=403)
+
+        try:
+            target_profile = self.get_object()
+            target_user = target_profile.user
+        except Exception:
+            return Response({'error': 'Employee not found.'}, status=404)
+
+        # Only allow resending to employees in the same company (unless system admin)
+        if not is_system_admin:
+            company = normalize_company_name(requester_profile.company_name)
+            if normalize_company_name(target_profile.company_name) != company:
+                return Response({'error': 'You can only resend credentials to employees in your company.'}, status=403)
+
+        new_temp_password = generate_temp_password()
+        target_user.set_password(new_temp_password)
+        target_user.save()
+        target_profile.requires_password_reset = True
+        target_profile.save(update_fields=['requires_password_reset'])
+
+        try:
+            send_onboarding_credentials_email(target_user, new_temp_password)
+            return Response({
+                'success': True,
+                'message': f'New credentials emailed to {target_user.email}.',
+            })
+        except Exception as ex:
+            return Response({
+                'success': False,
+                'message': f'Password was reset but email failed to send: {str(ex)}'
+            }, status=500)
+
     def create(self, request, *args, **kwargs):
         """
         ADMP Onboarding — hierarchical employee creation.
