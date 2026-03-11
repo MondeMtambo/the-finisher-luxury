@@ -58,7 +58,21 @@
         <div class="sc-body">
           <div class="setting-row"><div class="setting-info"><span class="setting-name">Name</span></div><span class="setting-val">{{ fullName || '\u2014' }}</span></div>
           <div class="setting-row"><div class="setting-info"><span class="setting-name">Email</span></div><span class="setting-val">{{ email || '\u2014' }}</span></div>
-          <div class="setting-row"><div class="setting-info"><span class="setting-name">Company</span></div><span class="setting-val">{{ companyName || '\u2014' }}</span></div>
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-name">Company</span>
+              <span v-if="role === 'admin'" class="setting-hint">Click Edit to update your company name</span>
+            </div>
+            <div v-if="editingCompany" class="edit-company">
+              <input type="text" v-model="editCompanyName" class="company-input" placeholder="Enter company name" />
+              <button class="btn-save" @click="saveCompanyName" :disabled="savingCompany">{{ savingCompany ? 'Saving...' : 'Save' }}</button>
+              <button class="btn-cancel" @click="cancelEditCompany">Cancel</button>
+            </div>
+            <div v-else class="company-display">
+              <span class="setting-val">{{ companyName || '\u2014' }}</span>
+              <button v-if="role === 'admin'" class="btn-edit" @click="startEditCompany">Edit</button>
+            </div>
+          </div>
           <div class="setting-row">
             <div class="setting-info"><span class="setting-name">Role</span></div>
             <span class="badge" :class="'role-' + role">{{ roleDisplay }}</span>
@@ -103,7 +117,11 @@ export default {
       email: '',
       companyName: '',
       role: '',
-      tier: ''
+      tier: '',
+      editingCompany: false,
+      editCompanyName: '',
+      savingCompany: false,
+      saveMessage: ''
     }
   },
   computed: {
@@ -149,6 +167,27 @@ export default {
           this.tier = user.tier || ''
         }
       }
+    },
+    startEditCompany() {
+      this.editCompanyName = this.companyName
+      this.editingCompany = true
+    },
+    cancelEditCompany() {
+      this.editingCompany = false
+      this.editCompanyName = ''
+    },
+    async saveCompanyName() {
+      if (!this.editCompanyName.trim()) return
+      this.savingCompany = true
+      try {
+        await authAPI.updateProfile({ company_name: this.editCompanyName.trim() })
+        this.companyName = this.editCompanyName.trim()
+        this.editingCompany = false
+      } catch (err) {
+        alert('Failed to update company name. Please try again.')
+      } finally {
+        this.savingCompany = false
+      }
     }
   }
 }
@@ -176,6 +215,19 @@ export default {
 .setting-name { font-size: .875rem; font-weight: 500; color: var(--gray-800); }
 .setting-hint { font-size: .75rem; color: var(--gray-500); line-height: 1.4; }
 .setting-val  { font-size: .875rem; color: var(--gray-600); white-space: nowrap; }
+
+/* Company edit */
+.company-display { display: flex; align-items: center; gap: .5rem; }
+.edit-company { display: flex; align-items: center; gap: .5rem; }
+.company-input { font-size: .875rem; padding: .375rem .625rem; border: 1px solid var(--gray-300); border-radius: var(--radius-md); width: 200px; outline: none; }
+.company-input:focus { border-color: var(--primary-500); box-shadow: 0 0 0 2px rgba(59,130,246,.15); }
+.btn-edit { font-size: .75rem; padding: .25rem .625rem; background: var(--gray-100); color: var(--gray-600); border: 1px solid var(--gray-300); border-radius: var(--radius-md); cursor: pointer; }
+.btn-edit:hover { background: var(--gray-200); }
+.btn-save { font-size: .75rem; padding: .25rem .625rem; background: var(--primary-500); color: #fff; border: none; border-radius: var(--radius-md); cursor: pointer; }
+.btn-save:hover { background: var(--primary-600); }
+.btn-save:disabled { opacity: .6; cursor: not-allowed; }
+.btn-cancel { font-size: .75rem; padding: .25rem .625rem; background: var(--gray-100); color: var(--gray-600); border: 1px solid var(--gray-300); border-radius: var(--radius-md); cursor: pointer; }
+.btn-cancel:hover { background: var(--gray-200); }
 
 /* Role / Tier badges */
 .role-admin     { background: #eff6ff; color: var(--primary-500); }

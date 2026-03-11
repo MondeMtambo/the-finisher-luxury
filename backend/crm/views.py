@@ -1184,6 +1184,10 @@ class EmployeeViewSet(viewsets.ModelViewSet):
         else:
 
             company_name = normalize_company_name(profile.company_name)
+            if not company_name:
+                return Response({
+                    'error': 'Your account has no company name set. Please update your company name in Settings before onboarding employees.'
+                }, status=400)
 
         client_user_count = User.objects.filter(
             is_superuser=False,

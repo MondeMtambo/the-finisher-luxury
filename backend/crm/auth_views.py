@@ -255,6 +255,23 @@ class UserProfileView(generics.RetrieveUpdateAPIView):
     def get_object(self):
         return self.request.user
 
+    def update(self, request, *args, **kwargs):
+        user = self.get_object()
+        # Update basic User fields
+        for field in ('first_name', 'last_name'):
+            if field in request.data:
+                setattr(user, field, request.data[field])
+        user.save()
+        # Update profile fields
+        profile = getattr(user, 'profile', None)
+        if profile:
+            profile_fields = ('company_name', 'phone', 'job_title', 'department')
+            for field in profile_fields:
+                if field in request.data:
+                    setattr(profile, field, request.data[field])
+            profile.save()
+        return Response(UserSerializer(user).data)
+
 
 class ChangePasswordView(APIView):
     """
