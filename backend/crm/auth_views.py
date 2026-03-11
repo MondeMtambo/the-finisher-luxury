@@ -55,7 +55,8 @@ class EmailOnlyLoginTokenSerializer(TokenObtainPairSerializer):
                 attrs[self.username_field] = raw_identifier
 
         if '@' in raw_identifier:
-            user = User.objects.filter(email__iexact=raw_identifier).first()
+            # Support legacy records where login email may be stored in username.
+            user = User.objects.filter(email__iexact=raw_identifier).first() or User.objects.filter(username__iexact=raw_identifier).first()
             if not user:
                 raise serializers.ValidationError({'detail': 'No account found with that email.'})
             attrs[self.username_field] = user.username
