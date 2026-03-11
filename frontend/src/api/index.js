@@ -319,6 +319,7 @@ export const employeesAPI = {
   requestOffboarding: (data) => api.post('/employees/offboarding_requests/', data),
   processOffboarding: (data) => api.post('/employees/process_offboarding/', data),
   getOrgChart: () => api.get('/employees/org_chart/'),
+  resendCredentials: (id) => api.post(`/employees/${id}/resend-credentials/`),
 }
 
 // ============================================================================

@@ -128,6 +128,14 @@
           </div>
           <div class="emp-actions" v-if="canManageEmployee(employee)">
             <button @click="openEditModal(employee)" class="btn btn-sm btn-secondary">Edit</button>
+            <button
+              v-if="employee.onboarding_status === 'pending_first_login'"
+              @click="resendCredentials(employee)"
+              class="btn btn-sm btn-info"
+              :disabled="resendingId === employee.id"
+            >
+              {{ resendingId === employee.id ? 'Sending...' : 'Resend Credentials' }}
+            </button>
             <button v-if="canOnboard && !isSystemAdmin" @click="openOffboardModal(employee)" class="btn btn-sm btn-warning">Request Offboard</button>
             <button v-if="isSystemAdmin && currentUserId !== employee.user" @click="confirmDelete(employee)" class="btn btn-sm btn-danger">Delete</button>
           </div>
@@ -561,6 +569,8 @@ export default {
       onboardingLogs: [],
       logsLoading: false,
       logActionFilter: '',
+
+      resendingId: null,
     }
   },
   computed: {
@@ -919,6 +929,19 @@ export default {
         toast.error('Process Failed', error.response?.data?.error || 'Failed to process request')
       } finally {
         this.processingOffboard = false
+      }
+    },
+
+    // ── Resend Credentials ──
+    async resendCredentials(employee) {
+      this.resendingId = employee.id
+      try {
+        await employeesAPI.resendCredentials(employee.id)
+        toast.success('Credentials Sent', `New temporary password emailed to ${employee.email || employee.username}.`)
+      } catch (err) {
+        toast.error('Failed', err.message || 'Could not resend credentials.')
+      } finally {
+        this.resendingId = null
       }
     },
   }
