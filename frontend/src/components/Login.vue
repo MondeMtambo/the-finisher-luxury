@@ -128,9 +128,14 @@ export default {
           return
         }
         
-        
+        const normalizedUsername = (this.form.username || '').trim()
+        if (!normalizedUsername) {
+          this.error = 'Email is required.'
+          return
+        }
+
         const loginResponse = await authAPI.login({
-          username: this.form.username,
+          username: normalizedUsername,
           password: this.form.password
         })
         

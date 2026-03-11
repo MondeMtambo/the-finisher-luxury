@@ -115,10 +115,20 @@ const processQueue = (error, token = null) => {
 api.interceptors.response.use(
   response => response,
   async error => {
-    const originalRequest = error.config
+    const originalRequest = error.config || {}
+    const publicAuthPaths = [
+      '/auth/login/',
+      '/auth/register/',
+      '/auth/refresh/',
+      '/auth/verify-mfa/',
+      '/auth/password-reset/',
+      '/auth/password-reset-confirm/'
+    ]
+    const requestUrl = String(originalRequest.url || '')
+    const isPublicAuthRequest = publicAuthPaths.some(p => requestUrl.includes(p))
 
-    // Handle 401 Unauthorized
-    if (error.response?.status === 401 && !originalRequest._retry) {
+    // Handle 401 Unauthorized for protected endpoints only
+    if (error.response?.status === 401 && !isPublicAuthRequest && !originalRequest._retry) {
       // Don't immediately logout on first 401 - might be a timing issue
       // Only try refresh if we have a refresh token
       const refreshToken = authService.getRefreshToken()
