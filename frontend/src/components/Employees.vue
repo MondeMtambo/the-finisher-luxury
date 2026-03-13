@@ -188,11 +188,6 @@
                 <label class="form-label">Email *</label>
                 <input v-model="form.email" @input="syncUsernameFromEmail" type="email" class="form-input" required>
               </div>
-              <div class="form-group">
-                <label class="form-label">Password *</label>
-                <input v-model="form.password" type="password" class="form-input" required minlength="8">
-                <span class="form-hint">Min 8 characters. Must be unique (cannot match your password).</span>
-              </div>
             </div>
             <div class="form-grid-2">
               <div class="form-group">
@@ -722,7 +717,7 @@ export default {
     },
     getEmptyForm() {
       return {
-        username: '', email: '', first_name: '', last_name: '', role: 'user', password: '',
+        username: '', email: '', first_name: '', last_name: '', role: 'user',
         phone: '', job_title: '', department: '', employee_id: '', date_of_birth: null,
         address: '', emergency_contact_name: '', emergency_contact_phone: '',
         start_date: null, notes: '', reports_to: null, division: null, company_name: '',
