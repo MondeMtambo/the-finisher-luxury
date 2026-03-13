@@ -35,6 +35,20 @@ ALLOWED_HOSTS = [
     '.onrender.com',
 ]
 
+# Trusted origins for CSRF when serving over HTTPS (include scheme)
+CSRF_TRUSTED_ORIGINS = [
+    'https://the-finisher-luxury-be.fly.dev',
+    'https://the-finisher-luxury-be.onrender.com',
+]
+
+# Recognize X-Forwarded-Proto from reverse proxy (Fly) so Django knows requests are HTTPS
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
+# Use secure cookies in production
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+SECURE_SSL_REDIRECT = not DEBUG
+
 
 # Application definition
 
