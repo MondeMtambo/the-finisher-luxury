@@ -1179,6 +1179,11 @@ class EmployeeViewSet(viewsets.ModelViewSet):
         if is_system_admin:
 
             company_name = normalize_company_name(request.data.get('company_name', ''))
+
+            # FIX: If superuser didn't type a company name, default to their own profile's company
+            if not company_name and profile and profile.company_name:
+                company_name = normalize_company_name(profile.company_name)
+
             if not company_name:
                 return Response({'error': 'Company name is required when onboarding as admin'}, status=400)
         else:
@@ -2496,7 +2501,3 @@ class DashboardLayoutViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
-
-
-
-
