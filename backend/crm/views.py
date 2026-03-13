@@ -1241,10 +1241,12 @@ class EmployeeViewSet(viewsets.ModelViewSet):
                     'error': f'Division is required for {dict(UserProfile.ROLE_CHOICES).get(assigned_role, assigned_role)} role. Please assign employee to a division.'
                 }, status=400)
 
-            try:
-                Division.objects.get(id=division_id, company_name__iexact=company_name)
-            except Division.DoesNotExist:
-                return Response({'error': 'Invalid division or division does not belong to your company'}, status=400)
+            # Bypass strict division check for System Admins (Programmers)
+            if not is_system_admin:
+                try:
+                    Division.objects.get(id=division_id, company_name__iexact=company_name)
+                except Division.DoesNotExist:
+                    return Response({'error': 'Invalid division or division does not belong to your company'}, status=400)
 
         reports_to_user = user_data.get('reports_to')
         if reports_to_user:
