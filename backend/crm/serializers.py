@@ -404,7 +404,6 @@ class EmployeeCreateSerializer(serializers.Serializer):
     email = serializers.EmailField()
     first_name = serializers.CharField(max_length=150)
     last_name = serializers.CharField(max_length=150)
-    password = serializers.CharField(write_only=True, required=False, min_length=8, allow_blank=True, trim_whitespace=True)
 
     role = serializers.ChoiceField(choices=UserProfile.ROLE_CHOICES, required=True)
     company_name = serializers.CharField(max_length=200, required=False, allow_blank=True)
@@ -424,14 +423,6 @@ class EmployeeCreateSerializer(serializers.Serializer):
     reports_to = serializers.PrimaryKeyRelatedField(
         queryset=User.objects.all(), required=False, allow_null=True
     )
-    
-    def validate_password(self, value):
-        """Ensure password is not empty or just whitespace"""
-        if not value or not value.strip():
-            raise serializers.ValidationError("Password cannot be empty")
-        if len(value.strip()) < 8:
-            raise serializers.ValidationError("Password must be at least 8 characters")
-        return value.strip()
     
     def validate_email(self, value):
         normalized = (value or '').strip().lower()
@@ -705,4 +696,3 @@ class DashboardLayoutSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'is_default', 'widget_config',
                   'created_at', 'updated_at']
         read_only_fields = ['id', 'created_at', 'updated_at']
-
