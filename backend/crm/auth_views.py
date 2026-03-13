@@ -27,43 +27,6 @@ from .utils import get_client_ip, is_trusted_ip, MAX_ACCOUNTS_PER_IP, is_owner_a
 from .models import Notification
 import os
 
-
-class EmailOnlyLoginTokenSerializer(TokenObtainPairSerializer):
-    """
-    Login policy:
-    - adminluxury may login with username "adminluxury"
-    - all other users must login with email
-    """
-
-    def validate(self, attrs):
-        raw_identifier = (attrs.get(self.username_field) or '').strip()
-        if not raw_identifier:
-            raise serializers.ValidationError({'detail': 'Email is required.'})
-
-        is_adminluxury_username = raw_identifier.lower() == 'adminluxury'
-
-        if not is_adminluxury_username and '@' not in raw_identifier:
-            raise serializers.ValidationError({
-                'detail': 'Login with your email address. Only adminluxury can login with username.'
-            })
-
-        if is_adminluxury_username:
-            admin_account = User.objects.filter(username__iexact='adminluxury').first()
-            if admin_account:
-                attrs[self.username_field] = admin_account.username
-            else:
-                attrs[self.username_field] = raw_identifier
-
-        if '@' in raw_identifier:
-            # Support legacy records where login email may be stored in username.
-            user = User.objects.filter(email__iexact=raw_identifier).first() or User.objects.filter(username__iexact=raw_identifier).first()
-            if not user:
-                raise serializers.ValidationError({'detail': 'No account found with that email.'})
-            attrs[self.username_field] = user.username
-
-        return super().validate(attrs)
-
-
 class LoginView(TokenObtainPairView):
     """
     JWT login endpoint with IP tracking.
@@ -71,7 +34,7 @@ class LoginView(TokenObtainPairView):
     Body: {username, password}
     """
     permission_classes = (AllowAny,)
-    serializer_class = EmailOnlyLoginTokenSerializer
+    serializer_class = TokenObtainPairSerializer
     
     def post(self, request, *args, **kwargs):
         response = super().post(request, *args, **kwargs)
