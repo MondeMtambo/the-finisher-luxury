@@ -5,9 +5,9 @@
       <div class="auth-brand">
         <div class="brand-mark">F</div>
         <h1 class="brand-title">THE FINISHER</h1>
-        <p class="brand-tag">Admin Registration</p>
+        <p class="brand-tag">Apply for Access</p>
       </div>
-      <p class="admin-notice">Registration is for <strong>company administrators</strong> only. Employees are onboarded by their admin after setup.</p>
+      <p class="admin-notice">Access is for <strong>partner companies</strong> only. Submit an application to get your workspace set up.</p>
 
       <div class="steps">
         <div class="step" :class="{ active: currentStep === 1, done: currentStep > 1 }">
@@ -221,28 +221,6 @@
 
           <div class="form-grid-2">
             <div class="form-group">
-              <label class="form-label">Password *</label>
-              <input v-model="form.password" type="password" class="form-input" placeholder="********" required @input="validatePasswordRealtime" />
-            </div>
-            <div class="form-group">
-              <label class="form-label">Confirm Password *</label>
-              <input v-model="form.password2" type="password" class="form-input" placeholder="********" required />
-            </div>
-          </div>
-
-          <div v-if="form.password" class="pw-rules">
-            <p class="pw-rules-title">Password Requirements:</p>
-            <div class="pw-rule" :class="{ passed: passwordChecks.length }"><span class="rule-dot"></span>At least 8 characters</div>
-            <div class="pw-rule" :class="{ passed: passwordChecks.uppercase }"><span class="rule-dot"></span>At least 1 uppercase letter</div>
-            <div class="pw-rule" :class="{ passed: passwordChecks.lowercase }"><span class="rule-dot"></span>At least 1 lowercase letter</div>
-            <div class="pw-rule" :class="{ passed: passwordChecks.number }"><span class="rule-dot"></span>At least 1 number</div>
-            <div class="pw-rule" :class="{ passed: passwordChecks.special }"><span class="rule-dot"></span>At least 1 special character</div>
-            <div class="pw-bar"><div class="pw-bar-fill" :style="{ width: passwordStrengthPercent + '%' }" :class="passwordStrengthClass"></div></div>
-            <p class="pw-strength-label" :class="passwordStrengthClass">{{ passwordStrengthLabel }}</p>
-          </div>
-
-          <div class="form-grid-2">
-            <div class="form-group">
               <label class="form-label">Work Phone *</label>
               <input v-model="form.phone" type="tel" class="form-input" placeholder="+27 12 345 6789" required />
             </div>
@@ -361,7 +339,7 @@
           <div class="step-nav">
             <button type="button" class="btn btn-secondary" @click="goToStep(2)">Back</button>
             <button type="submit" class="btn btn-primary" :disabled="loading || !termsAccepted">
-              {{ loading ? 'Creating Account...' : 'Create Account' }}
+              {{ loading ? 'Submitting Application...' : 'Submit Application' }}
             </button>
           </div>
         </div>
@@ -395,8 +373,6 @@ export default {
         last_name: '',
         company_name: '',
         phone: '',
-        password: '',
-        password2: '',
         tier: 'luxury',
         job_title: '',
         industry: '',
@@ -415,13 +391,6 @@ export default {
       termsAccepted: false,
       showTermsModal: false,
       tierBlockMessage: '',
-      passwordChecks: {
-        length: false,
-        uppercase: false,
-        lowercase: false,
-        number: false,
-        special: false
-      }
     }
   },
   computed: {
@@ -433,35 +402,7 @@ export default {
     },
     step2Valid() {
       return this.form.first_name && this.form.last_name && this.form.username &&
-             this.form.email && this.form.password && this.form.password2 &&
-             this.form.phone && this.allPasswordChecksPassed &&
-             this.form.password === this.form.password2
-    },
-    allPasswordChecksPassed() {
-      return this.passwordChecks.length && this.passwordChecks.uppercase &&
-             this.passwordChecks.lowercase && this.passwordChecks.number &&
-             this.passwordChecks.special
-    },
-    passwordStrengthPercent() {
-      const checks = Object.values(this.passwordChecks)
-      const passed = checks.filter(Boolean).length
-      return (passed / checks.length) * 100
-    },
-    passwordStrengthClass() {
-      const pct = this.passwordStrengthPercent
-      if (pct <= 20) return 'strength-weak'
-      if (pct <= 40) return 'strength-fair'
-      if (pct <= 60) return 'strength-moderate'
-      if (pct <= 80) return 'strength-good'
-      return 'strength-strong'
-    },
-    passwordStrengthLabel() {
-      const pct = this.passwordStrengthPercent
-      if (pct <= 20) return 'Weak'
-      if (pct <= 40) return 'Fair'
-      if (pct <= 60) return 'Moderate'
-      if (pct <= 80) return 'Good'
-      return 'Strong ✓'
+             this.form.email && this.form.phone
     },
     resolvedCompanyName() {
       if (this.form.company_name === '__other__') {
@@ -487,16 +428,6 @@ export default {
     }
   },
   methods: {
-    validatePasswordRealtime() {
-      const pw = this.form.password
-      this.passwordChecks = {
-        length: pw.length >= 8,
-        uppercase: /[A-Z]/.test(pw),
-        lowercase: /[a-z]/.test(pw),
-        number: /[0-9]/.test(pw),
-        special: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?`~]/.test(pw)
-      }
-    },
     goToStep(step) {
       if (step === 2 && !this.step1Valid) {
         toast.warning('Please select your company and role before continuing.')
@@ -513,14 +444,6 @@ export default {
         }
         if (!this.form.phone) {
           toast.warning('Please enter your work phone number.')
-          return
-        }
-        if (!this.allPasswordChecksPassed) {
-          toast.error('Your password does not meet all the required rules. Please check the requirements.')
-          return
-        }
-        if (this.form.password !== this.form.password2) {
-          toast.error('Passwords do not match.')
           return
         }
         toast.warning('Please fill in all required fields before continuing.')
@@ -559,56 +482,26 @@ export default {
         submitData.company_name = this.resolvedCompanyName
         submitData.is_unlisted_company = this.form.company_name === '__other__'
 
-        const response = await authAPI.register(submitData)
-        this.success = response.data?.message || 'Registration successful.'
+        const apiUrl = (import.meta.env && import.meta.env.VITE_API_URL) ? import.meta.env.VITE_API_URL : '';
+        const response = await fetch(`${apiUrl}/api/auth/request-access/`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(submitData)
+        });
 
-        const { tokens, user } = response.data || {}
-        const hasAccessToken = Boolean(tokens?.access && tokens?.refresh)
-        const userPayload = user || { username: this.form.username }
-
-        if (hasAccessToken) {
-          authService.saveAuth(tokens, userPayload)
-        } else if (userPayload) {
-          authService.setUser(userPayload)
+        if (!response.ok) {
+          throw new Error('Application submission failed. Please try again.')
         }
 
-        let sessionOk = false
-        try {
-          const prof = await authAPI.getProfile()
-          if (prof && prof.data) {
-            authService.setUser(prof.data)
-            sessionOk = true
-          }
-        } catch (e) {
-          try {
-            await authService.login(this.form.username, this.form.password)
-            sessionOk = true
-          } catch (_) {
-            sessionOk = false
-          }
-        }
-
+        this.success = 'Application successful! We will contact you soon.'
         
-        if (this.form.tier === 'luxury') {
-          const proceed = await modal.payment(
-            'LUXURY Edition Activated!',
-            'Your account has been created successfully!\n\n💳 Next step: Complete payment (R249/month)\n\nSome features require an active subscription.',
-            { confirmText: 'Set Up Payment', cancelText: 'Go to Dashboard' }
-          )
-          if (proceed) {
-            await modal.alert(
-              'Payment Coming Soon',
-              'Payment integration is launching shortly.\n\nFor now, contact support@thefinisher.co.za to activate your LUXURY subscription.',
-              'info'
-            )
-          }
-        }
+        await modal.alert(
+          'Application Received ✨',
+          'Thank you for applying!\n\nOur team will review your application and contact you shortly to complete your workspace setup.',
+          'success'
+        )
 
-        const redirectTarget = sessionOk ? '/' : '/login'
-        if (!sessionOk) {
-          this.success += ' Please log in with your new credentials.'
-        }
-        this.$router.push(redirectTarget)
+        this.$router.push('/login')
 
       } catch (error) {
         console.error('Registration failed:', error)
@@ -672,23 +565,6 @@ export default {
 
 /* Info bar (reuse global if available) */
 .info-bar { background: #eff6ff; color: var(--primary-500); padding: .75rem 1rem; border-radius: var(--radius-md); font-size: .8125rem; line-height: 1.5; }
-
-/* Password rules */
-.pw-rules { background: var(--gray-50); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: .75rem 1rem; margin-bottom: 1rem; }
-.pw-rules-title { font-size: .75rem; font-weight: 600; color: var(--gray-600); margin: 0 0 .5rem; }
-.pw-rule { font-size: .75rem; color: var(--gray-500); display: flex; align-items: center; gap: .375rem; margin-bottom: .25rem; }
-.pw-rule.passed { color: var(--green-500); }
-.rule-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gray-300); flex-shrink: 0; }
-.pw-rule.passed .rule-dot { background: var(--green-500); }
-.pw-bar { height: 4px; background: var(--gray-200); border-radius: 2px; margin-top: .5rem; overflow: hidden; }
-.pw-bar-fill { height: 100%; border-radius: 2px; transition: width .3s; }
-.pw-bar-fill.weak { background: var(--red-500); }
-.pw-bar-fill.fair { background: var(--amber-500); }
-.pw-bar-fill.strong { background: var(--green-500); }
-.pw-strength-label { font-size: .6875rem; margin: .25rem 0 0; }
-.pw-strength-label.weak { color: var(--red-500); }
-.pw-strength-label.fair { color: var(--amber-500); }
-.pw-strength-label.strong { color: var(--green-500); }
 
 /* Tier cards */
 .tier-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: .75rem; }
