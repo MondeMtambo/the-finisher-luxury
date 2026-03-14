@@ -14,7 +14,7 @@ from django.contrib.auth.models import User
 from django.core.mail import send_mail
 from django.conf import settings
 from .models import PasswordResetOTP, UserProfile
-from .mfa_utils import create_mfa_code, verify_mfa_code, is_mfa_required
+from .mfa_utils import create_mfa_code, verify_mfa_code
 from .auth_serializers import (
     RegisterSerializer, 
     UserSerializer, 
@@ -59,7 +59,7 @@ class LoginView(TokenObtainPairView):
                     profile.last_login_ip = ip
                     profile.save()
 
-                    skip_mfa = user.is_superuser or user.is_staff or is_owner_admin_user(user)
+                    skip_mfa = user.is_superuser or user.is_staff
 
                     if user.profile.is_banned:
                         return Response({
@@ -76,7 +76,7 @@ class LoginView(TokenObtainPairView):
                             'contact': 'support@thefinisher.co.za'
                         }, status=status.HTTP_402_PAYMENT_REQUIRED)
 
-                    if not skip_mfa and is_mfa_required(user):
+                    if not skip_mfa:
 
                         code, success, msg = create_mfa_code(user)
 
@@ -454,6 +454,56 @@ class PasswordResetConfirmView(APIView):
                 }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
         
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class RequestAccessView(APIView):
+    """
+    Public endpoint to request access/demo. Sends email to system admin.
+    POST /api/auth/request-access/
+    """
+    permission_classes = (AllowAny,)
+
+    def post(self, request):
+        data = request.data
+        name = f"{data.get('first_name', '')} {data.get('last_name', '')}".strip()
+        email = data.get('email', '')
+        company = data.get('company_name', '')
+        phone = data.get('phone', '')
+        role = data.get('job_title', '')
+        tier = data.get('tier', 'unknown')
+        use_case = data.get('intended_use_case', '')
+
+        subject = f"🚀 New Application: {company} ({tier.upper()})"
+        message = f"""
+A new CEO/Company has applied for access to THE FINISHER!
+
+Applicant Details:
+------------------
+Name: {name}
+Email: {email}
+Phone: {phone}
+Role: {role}
+Company: {company}
+
+Preferences:
+------------
+Requested Tier: {tier.upper()}
+Intended Use Case: {use_case}
+
+Please reach out to them to verify details, take payment, and onboard them via the Admin Console.
+        """
+        
+        try:
+            send_mail(
+                subject=subject,
+                message=message,
+                from_email=settings.DEFAULT_FROM_EMAIL,
+                recipient_list=[settings.DEFAULT_FROM_EMAIL],  # Send directly to the admin
+                fail_silently=False,
+            )
+            return Response({'message': 'Application received successfully.'}, status=status.HTTP_200_OK)
+        except Exception as e:
+            return Response({'error': 'Could not process application at this time.'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class LogoutView(APIView):

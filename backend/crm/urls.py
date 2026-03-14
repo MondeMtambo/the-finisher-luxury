@@ -37,6 +37,7 @@ urlpatterns = [
     path('api/auth/password-reset/', auth_views.PasswordResetRequestView.as_view(), name='password_reset'),
     path('api/auth/password-reset/verify-otp/', auth_views.PasswordResetVerifyOTPView.as_view(), name='password_reset_verify_otp'),
     path('api/auth/password-reset-confirm/', auth_views.PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
+    path('api/auth/request-access/', auth_views.RequestAccessView.as_view(), name='request_access'),
     path('api/auth/logout/', auth_views.LogoutView.as_view(), name='logout'),
 
     path('api/', include(router.urls)),
