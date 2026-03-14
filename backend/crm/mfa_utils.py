@@ -2,6 +2,7 @@
 MFA (Multi-Factor Authentication) Utilities
 Handles OTP generation, sending, and verification for email-based MFA
 """
+import logging
 import random
 import string
 from datetime import timedelta
@@ -9,6 +10,8 @@ from django.utils import timezone
 from django.core.mail import send_mail
 from django.conf import settings
 from django.template.loader import render_to_string
+
+logger = logging.getLogger(__name__)
 
 
 def generate_mfa_code(length=6):
@@ -30,7 +33,7 @@ def send_mfa_code_email(user, mfa_code):
         else:
             subject = "Welcome back - THE FINISHER LUXURY Login Verification"
             intro_line = "Welcome back"
-            body_line = "Please use these digits to verify your login."
+            body_line = "Please use this 6 digit OTP to login:"
         
         html_message = f"""
         <html>
@@ -70,9 +73,7 @@ def send_mfa_code_email(user, mfa_code):
         plain_message = f"""
         {intro_line} {user.first_name or user.username},
         
-        {body_line}
-
-        Verification code: {mfa_code}
+        {body_line} {mfa_code}
         
         This code expires in 5 minutes.
         
@@ -81,6 +82,10 @@ def send_mfa_code_email(user, mfa_code):
         The Finisher Team
         """
         
+        if not user.email:
+            raise ValueError('User has no email address')
+
+        # Use Django's send_mail; avoid passing unsupported kwargs like `timeout`
         send_mail(
             subject=subject,
             message=plain_message,
@@ -88,12 +93,12 @@ def send_mfa_code_email(user, mfa_code):
             recipient_list=[user.email],
             html_message=html_message,
             fail_silently=False,
-            timeout=getattr(settings, 'EMAIL_TIMEOUT', 10),
         )
         
         return True, "OTP sent successfully"
     
     except Exception as e:
+        logger.exception('Failed to send MFA email to %s', getattr(user, 'email', None))
         return False, f"Failed to send OTP: {str(e)}"
 
 
