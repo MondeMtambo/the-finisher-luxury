@@ -224,6 +224,35 @@ export default {
           authService.setUser(response.data.user)
         }
         
+        let profile
+        try {
+          profile = await authAPI.getProfile()
+          authService.setUser(profile.data)
+        } catch (profileError) {
+          console.warn('Failed to load profile:', profileError)
+        }
+        
+        try {
+          const requiresReset = profile?.data?.requires_password_reset === true
+          const isSuperOrStaff = Boolean(profile?.data?.is_superuser || profile?.data?.is_staff)
+          if (requiresReset && !isSuperOrStaff) {
+            const newPwd = await modal.prompt('Set New Password', 'Security: Please set a new password now (minimum 8 characters):', { inputType: 'password', confirmText: 'Update Password' })
+            if (newPwd && newPwd.length >= 8) {
+              try {
+                await authAPI.changePassword({
+                  old_password: this.form.password,
+                  new_password: newPwd,
+                  new_password2: newPwd
+                })
+                toast.success('Password Updated', 'Your password has been updated successfully!')
+              } catch (e) {
+                console.error('Password change failed:', e)
+                toast.error('Password Change Failed', 'Could not update password. You can change it from your profile later.')
+              }
+            }
+          }
+        } catch (_) {}
+
         toast.success('Verified', 'You have been logged in successfully!')
         this.showMFAModal = false
         this.$router.push('/dashboard')
