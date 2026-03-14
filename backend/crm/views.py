@@ -1348,7 +1348,7 @@ class EmployeeViewSet(viewsets.ModelViewSet):
             return Response({'error': 'An error occurred during onboarding. Please try again.'}, status=400)
     
     def update(self, request, *args, **kwargs):
-        """Update employee details - system admin or CEO/Executive within same company."""
+        """Update employee details - system admin or CEO within same company."""
         user = request.user
         profile = getattr(user, 'profile', None)
         is_system_admin = user.is_superuser or user.is_staff
@@ -1358,8 +1358,8 @@ class EmployeeViewSet(viewsets.ModelViewSet):
         
         if not is_system_admin:
 
-            if not profile or not profile.can_onboard:
-                return Response({'error': 'Only CEOs, Executives, or system administrators can update employees.'}, status=403)
+            if not profile or profile.role != 'admin':
+                return Response({'error': 'Only CEOs or system administrators can update employees.'}, status=403)
             
             my_company = normalize_company_name(profile.company_name)
             target_company = normalize_company_name(target_profile.company_name)
@@ -1523,9 +1523,9 @@ class EmployeeViewSet(viewsets.ModelViewSet):
         if not profile:
             return Response({'error': 'Profile not found'}, status=400)
 
-        if not profile.can_onboard and not (user.is_superuser or user.is_staff):
+        if profile.role != 'admin' and not (user.is_superuser or user.is_staff):
             return Response({
-                'error': 'Only CEOs and Executives can request employee offboarding. Contact your supervisor.'
+                'error': 'Only CEOs can request employee offboarding. Contact your company administrator.'
             }, status=403)
         
         create_ser = OffboardingRequestCreateSerializer(data=request.data)
