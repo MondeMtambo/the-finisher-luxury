@@ -43,6 +43,73 @@
       margin: 0;
       min-height: 100vh;
     }
+
+    /* =========================================
+       CONCEPT 4: THE KINETIC EDGE (LUXURY NAV)
+       ========================================= */
+    /* The Sidebar Canvas */
+    .sidebar {
+      background-color: #0B0C10 !important;
+      border-right: 1px solid rgba(212, 175, 55, 0.15) !important;
+    }
+
+    /* Sleek, borderless nav items with sharp edges */
+    .nav-item {
+      position: relative !important;
+      background: transparent !important;
+      border: none !important;
+      border-radius: 0 !important;
+      color: #9ca3af !important;
+      transition: all 0.3s ease !important;
+      overflow: hidden !important;
+      z-index: 1 !important;
+    }
+
+    /* Laser-thin golden border drawing effect */
+    .nav-item::before, .nav-item::after {
+      content: '' !important;
+      position: absolute !important;
+      width: 0 !important;
+      height: 1px !important;
+      background: #D4AF37 !important;
+      transition: width 0.4s cubic-bezier(0.19, 1, 0.22, 1) !important;
+      z-index: -1 !important;
+    }
+    .nav-item::before { top: 0 !important; left: 0 !important; }
+    .nav-item::after { bottom: 0 !important; right: 0 !important; }
+
+    /* Hover State - Triggers the laser draw */
+    .nav-item:hover {
+      color: #fff !important;
+      background: rgba(212, 175, 55, 0.02) !important;
+    }
+    .nav-item:hover::before, .nav-item:hover::after {
+      width: 100% !important;
+    }
+
+    /* Active Tab - Ambient Metallic Aura */
+    .nav-item.active {
+      color: #D4AF37 !important;
+      background: rgba(212, 175, 55, 0.05) !important;
+      box-shadow: inset 3px 0 0 #D4AF37, inset 0 0 20px rgba(212, 175, 55, 0.1) !important;
+      text-shadow: 0 0 8px rgba(212, 175, 55, 0.4) !important;
+    }
+    .nav-item.active svg {
+      stroke: #D4AF37 !important;
+      filter: drop-shadow(0 0 5px rgba(212, 175, 55, 0.5)) !important;
+    }
+
+    /* Absolute Global Eradication of Old Light UI */
+    .card, .modal-panel, .stat-card, .table-card, .auth-card {
+      background-color: rgba(17, 20, 24, 0.85) !important;
+      border: 1px solid rgba(212, 175, 55, 0.2) !important;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.6), inset 0 0 15px rgba(212,175,55,0.05) !important;
+      color: #ffffff !important;
+    }
+    .data-table th, .data-table td { border-bottom-color: rgba(255,255,255,0.05) !important; color: #fff !important; }
+    .data-table th { background: rgba(0,0,0,0.4) !important; color: #D4AF37 !important; text-transform: uppercase; }
+    .form-input { background-color: rgba(0,0,0,0.2) !important; color: #fff !important; border-color: rgba(255,255,255,0.1) !important; }
+    .form-input:focus { border-color: #D4AF37 !important; box-shadow: 0 0 0 3px rgba(212,175,55,0.2) !important; }
   </style>
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="application-name" content="Finisher CRM">
