@@ -13,7 +13,35 @@
   <style>
     /* CSS fallback for browsers without theme-color support */
     :root {
-      --theme-color: #FFD700;
+      --theme-color: #D4AF37;
+      
+      /* LUXURY THEME VARIABLES - GLOBAL OVERRIDE */
+      --primary: #D4AF37;
+      --primary-hover: #B49015;
+      --primary-500: #D4AF37;
+      --primary-600: #B49015;
+      --primary-700: #997A00;
+      
+      /* Obsidian Dark Mode */
+      --gray-900: #0B0C10;
+      --gray-800: #111418;
+      --gray-700: #1A1D24;
+      --gray-600: #374151;
+      --gray-500: #6b7280;
+      --gray-400: #9ca3af;
+      --gray-300: #d1d5db;
+      
+      /* UI Elements */
+      --card-bg: rgba(17, 20, 24, 0.85);
+      --border: rgba(212, 175, 55, 0.2);
+      --border-color: rgba(212, 175, 55, 0.2);
+    }
+
+    html, body, #app {
+      background-color: #0B0C10 !important; /* Force Obsidian Black globally */
+      color: #ffffff !important;
+      margin: 0;
+      min-height: 100vh;
     }
   </style>
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
