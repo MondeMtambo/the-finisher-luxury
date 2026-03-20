@@ -836,15 +836,15 @@ export default {
           datasets: [{
             data: Object.values(stages),
             backgroundColor: [
-              '#3B82F6', 
+              '#D4AF37', 
               '#10B981', 
-              '#F59E0B', 
-              '#EF4444', 
-              '#22C55E', 
+              '#3B82F6', 
+              '#B49015', 
+              '#059669', 
               '#6B7280'  
             ],
             borderWidth: 2,
-            borderColor: '#fff'
+            borderColor: '#111418'
           }]
         },
         options: {
@@ -855,7 +855,8 @@ export default {
               position: 'bottom',
               labels: {
                 padding: 15,
-                font: { size: 11 }
+                  font: { size: 11 },
+                  color: '#9ca3af'
               }
             }
           }
@@ -1318,11 +1319,11 @@ export default {
 .page-header h1 {
   font-size: 1.75rem;
   font-weight: 700;
-  color: var(--gray-900);
+  color: #fff;
   margin: 0;
 }
 .page-subtitle {
-  color: var(--gray-500);
+  color: #9ca3af;
   font-size: 0.95rem;
   margin: 0.25rem 0 0;
 }
@@ -1335,30 +1336,30 @@ export default {
   gap: 0.15rem;
   padding: 0.5rem 1rem;
   border-radius: var(--radius-md);
-  background: var(--primary-50);
-  border: 1px solid var(--primary-200);
+  background: rgba(212, 175, 55, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.3);
   white-space: nowrap;
 }
 .tier-chip .tier-label {
   font-size: 0.8rem;
   font-weight: 700;
-  color: var(--primary-700);
+  color: #D4AF37;
   letter-spacing: 0.5px;
   text-transform: uppercase;
 }
 .tier-chip .tier-price {
   font-size: 0.75rem;
-  color: var(--gray-500);
+  color: #9ca3af;
 }
-.tier-chip.tier-free { background: var(--gray-100); border-color: var(--gray-300); }
-.tier-chip.tier-free .tier-label { color: var(--gray-600); }
-.tier-chip.tier-luxury { background: #fef9c3; border-color: #fde047; }
-.tier-chip.tier-luxury .tier-label { color: #854d0e; }
-.tier-chip.tier-premium { background: #fef3c7; border-color: #fbbf24; }
-.tier-chip.tier-premium .tier-label { color: #92400e; }
-.tier-chip.tier-ultimate { background: linear-gradient(135deg, #1e1b4b, #312e81); border-color: #6366f1; }
-.tier-chip.tier-ultimate .tier-label { color: #e0e7ff; }
-.tier-chip.tier-ultimate .tier-price { color: #a5b4fc; }
+.tier-chip.tier-free { background: rgba(255,255,255,0.05); border-color: rgba(255,255,255,0.2); }
+.tier-chip.tier-free .tier-label { color: #9ca3af; }
+.tier-chip.tier-luxury { background: rgba(212, 175, 55, 0.15); border-color: #D4AF37; }
+.tier-chip.tier-luxury .tier-label { color: #D4AF37; }
+.tier-chip.tier-premium { background: rgba(212, 175, 55, 0.2); border-color: #D4AF37; }
+.tier-chip.tier-premium .tier-label { color: #D4AF37; }
+.tier-chip.tier-ultimate { background: linear-gradient(135deg, #D4AF37, #B49015); border-color: #D4AF37; }
+.tier-chip.tier-ultimate .tier-label { color: #000; }
+.tier-chip.tier-ultimate .tier-price { color: #111; }
 
 /* Info Bars */
 .info-bar {
@@ -1374,14 +1375,14 @@ export default {
 .info-bar svg { flex-shrink: 0; }
 .info-bar span { flex: 1; }
 .info-bar--blue {
-  background: var(--primary-50);
-  color: var(--primary-700);
-  border: 1px solid var(--primary-200);
+  background: rgba(212, 175, 55, 0.05);
+  color: #D4AF37;
+  border: 1px solid rgba(212, 175, 55, 0.2);
 }
 .info-bar--amber {
-  background: #fffbeb;
-  color: #92400e;
-  border: 1px solid #fde68a;
+  background: rgba(212, 175, 55, 0.05);
+  color: #D4AF37;
+  border: 1px solid rgba(212, 175, 55, 0.2);
 }
 
 /* Stat Cards Grid */
@@ -1399,16 +1400,19 @@ export default {
   cursor: pointer;
   position: relative;
   transition: box-shadow 0.2s, transform 0.15s;
+  background: rgba(17, 20, 24, 0.85);
+  border: 1px solid rgba(212, 175, 55, 0.2);
 }
 .stat-card:hover {
   transform: translateY(-2px);
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 10px 25px rgba(0,0,0,0.6), inset 0 0 15px rgba(212,175,55,0.05);
+  border-color: rgba(212, 175, 55, 0.5);
 }
 .drag-handle {
   position: absolute;
   top: 0.5rem;
   right: 0.5rem;
-  color: var(--gray-300);
+  color: #6b7280;
   cursor: grab;
   padding: 0.25rem;
   line-height: 1;
@@ -1426,22 +1430,16 @@ export default {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  background: rgba(212, 175, 55, 0.1) !important;
+  color: #D4AF37 !important;
 }
-.stat-icon-wrap.contacts { background: #dbeafe; color: var(--primary-600); }
-.stat-icon-wrap.companies { background: #e0e7ff; color: #4338ca; }
-.stat-icon-wrap.deals { background: #d1fae5; color: #059669; }
-.stat-icon-wrap.revenue { background: #fef3c7; color: #d97706; }
-.stat-icon-wrap.assigned { background: #dbeafe; color: var(--primary-600); }
-.stat-icon-wrap.openTickets { background: #fee2e2; color: #dc2626; }
-.stat-icon-wrap.inProgress { background: #fef3c7; color: #d97706; }
-.stat-icon-wrap.completedTickets { background: #d1fae5; color: #059669; }
 
 .stat-body {
   min-width: 0;
 }
 .stat-label {
   font-size: 0.8rem;
-  color: var(--gray-500);
+  color: #9ca3af;
   margin: 0 0 0.15rem;
   text-transform: uppercase;
   letter-spacing: 0.3px;
@@ -1450,7 +1448,7 @@ export default {
 .stat-value {
   font-size: 1.5rem;
   font-weight: 700;
-  color: var(--gray-900);
+  color: #fff;
   margin: 0;
   line-height: 1.2;
 }
@@ -1469,13 +1467,13 @@ export default {
 .section-head h2 {
   font-size: 1.15rem;
   font-weight: 700;
-  color: var(--gray-900);
+  color: #fff;
   margin: 0;
 }
 .ticket-desc {
   margin: 0.25rem 0 0;
   font-size: 0.8rem;
-  color: var(--gray-500);
+  color: #9ca3af;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1498,7 +1496,7 @@ export default {
 .chart-card h3 {
   font-size: 1rem;
   font-weight: 700;
-  color: var(--gray-900);
+  color: #fff;
   margin: 0 0 1rem;
 }
 .chart-wrap {
@@ -1509,20 +1507,20 @@ export default {
   display: flex;
   justify-content: space-around;
   padding-top: 1rem;
-  border-top: 1px solid var(--gray-200);
+  border-top: 1px solid rgba(255,255,255,0.1);
   margin-top: 1rem;
 }
 .chart-footer span {
   font-size: 0.85rem;
-  color: var(--gray-500);
+  color: #d1d5db;
   font-weight: 600;
 }
 .locked-card {
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 2px dashed var(--gray-300);
-  background: var(--gray-50);
+  border: 2px dashed rgba(212, 175, 55, 0.4);
+  background: rgba(0, 0, 0, 0.4);
 }
 .locked-body {
   text-align: center;
@@ -1532,12 +1530,12 @@ export default {
 .locked-body h4 {
   font-size: 1.1rem;
   font-weight: 700;
-  color: var(--gray-700);
+  color: #D4AF37;
   margin: 0 0 0.5rem;
 }
 .locked-body p {
   font-size: 0.875rem;
-  color: var(--gray-500);
+  color: #9ca3af;
   margin: 0 0 1.25rem;
   max-width: 280px;
   margin-left: auto;
@@ -1552,7 +1550,7 @@ export default {
 .quick-actions-bar h3 {
   font-size: 1rem;
   font-weight: 700;
-  color: var(--gray-900);
+  color: #fff;
   margin: 0 0 0.75rem;
 }
 .qa-buttons {
@@ -1575,12 +1573,13 @@ export default {
   top: 100%;
   left: 0;
   right: 0;
-  background: #fff;
-  border: 1px solid var(--gray-200);
+  background: #111418;
+  border: 1px solid rgba(255,255,255,0.1);
   border-radius: var(--radius-md);
   max-height: 200px;
   overflow-y: auto;
-  box-shadow: var(--shadow-md);
+  box-shadow: 0 10px 20px rgba(0,0,0,0.5);
+  color: #fff;
   z-index: 20;
   list-style: none;
   padding: 0;
@@ -1593,7 +1592,7 @@ export default {
   transition: background 0.15s;
 }
 .dropdown-suggestions li:hover {
-  background: var(--primary-50);
+  background: rgba(212, 175, 55, 0.2);
 }
 
 /* Alert */
@@ -1611,7 +1610,7 @@ export default {
   align-items: center;
   gap: 0.5rem;
   font-size: 0.875rem;
-  color: var(--gray-700);
+  color: #d1d5db;
   font-weight: 500;
   cursor: pointer;
 }
@@ -1629,9 +1628,9 @@ export default {
 }
 .preview-list li {
   padding: 0.5rem 0;
-  border-bottom: 1px solid var(--gray-100);
+  border-bottom: 1px solid rgba(255,255,255,0.1);
   font-size: 0.875rem;
-  color: var(--gray-700);
+  color: #d1d5db;
 }
 .preview-list li:last-child { border-bottom: none; }
 
@@ -1647,15 +1646,15 @@ export default {
   justify-content: space-between;
   gap: 0.75rem;
   padding: 0.6rem 0.75rem;
-  border: 1px solid var(--gray-200);
+  border: 1px solid rgba(255,255,255,0.1);
   border-radius: var(--radius-md);
   cursor: pointer;
   transition: background 0.15s, border-color 0.15s;
 }
-.deal-row:hover { background: var(--primary-50); border-color: var(--primary-200); }
-.deal-row.selected { background: var(--primary-50); border-color: var(--primary-400); }
-.deal-name { font-weight: 600; color: var(--gray-800); }
-.deal-val { font-weight: 600; color: var(--gray-700); font-size: 0.9rem; }
+.deal-row:hover { background: rgba(212, 175, 55, 0.1); border-color: rgba(212, 175, 55, 0.3); }
+.deal-row.selected { background: rgba(212, 175, 55, 0.2); border-color: #D4AF37; }
+.deal-name { font-weight: 600; color: #fff; }
+.deal-val { font-weight: 600; color: #D4AF37; font-size: 0.9rem; }
 .deal-detail {
   margin-top: 1rem;
   padding: 1rem;
@@ -1664,17 +1663,31 @@ export default {
   margin: 0 0 0.75rem;
   font-size: 1rem;
   font-weight: 700;
-  color: var(--gray-900);
+  color: #fff;
 }
 .deal-detail p {
   margin: 0.25rem 0;
   font-size: 0.875rem;
-  color: var(--gray-700);
+  color: #d1d5db;
 }
 
 .modal-lg {
   max-width: 640px;
 }
+
+/* Base overrides for inside components */
+.modal-panel { background: rgba(17, 20, 24, 0.95); border: 1px solid rgba(212, 175, 55, 0.3); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8); color: #fff; }
+.modal-header { border-bottom: 1px solid rgba(255,255,255,0.1); }
+.modal-header h3 { color: #fff; }
+.form-input { background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: #fff; }
+.form-input:focus { border-color: #D4AF37; box-shadow: 0 0 0 3px rgba(212,175,55,0.2); }
+.form-label { color: #d1d5db; }
+.form-hint { color: #9ca3af; }
+.modal-footer { border-top: 1px solid rgba(255,255,255,0.1); }
+.data-table th { background: rgba(255,255,255,0.05); color: #9ca3af; border-bottom: 1px solid rgba(255,255,255,0.1); padding: 10px; text-align: left; }
+.data-table td { border-bottom: 1px solid rgba(255,255,255,0.05); color: #fff; padding: 10px; }
+.btn-secondary { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; }
+.btn-secondary:hover { border-color: #D4AF37; color: #D4AF37; }
 
 /* Text helpers */
 .text-muted { color: var(--gray-500); }
