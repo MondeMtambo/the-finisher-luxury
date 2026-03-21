@@ -85,6 +85,16 @@ def api_overview(request):
     })
 
 
+@api_view(['GET'])
+@permission_classes([AllowAny])
+def health(request):
+    """Simple health endpoint for load balancers and readiness checks."""
+    return Response({
+        'status': 'ok',
+        'service': 'the-finisher-luxury',
+    }, status=status.HTTP_200_OK)
+
+
 def log_activity(user, action, entity_type, entity_id, entity_name, details=''):
     """
     Helper function to log CRUD activities.

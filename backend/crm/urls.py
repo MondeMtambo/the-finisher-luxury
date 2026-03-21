@@ -41,6 +41,7 @@ urlpatterns = [
 
     path('api/', include(router.urls)),
     path('api/prerequisites/', views.prerequisite_status, name='prerequisite_status'),
+    path('health/', views.health, name='health'),
     path('api/performance/me/', views.performance_me, name='performance_me'),
     path('api/performance/user/<int:user_id>/', views.performance_user, name='performance_user'),
     path('api/admin/overview/', views.AdminOverviewView.as_view(), name='admin_overview'),
