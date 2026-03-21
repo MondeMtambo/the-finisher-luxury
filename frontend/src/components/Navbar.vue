@@ -32,8 +32,8 @@
 
       <div class="topbar-right">
 
-        <div class="notif-wrapper" @mouseenter="showNotifications = true" @mouseleave="showNotifications = false">
-          <button class="topbar-icon-btn" title="Notifications">
+        <div class="notif-wrapper" ref="notifWrapper">
+          <button class="topbar-icon-btn" title="Notifications" @click="toggleNotifications">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
             <span v-if="unreadCount > 0" class="notif-badge">{{ unreadCount > 9 ? '9+' : unreadCount }}</span>
           </button>
@@ -69,8 +69,8 @@
           </transition>
         </div>
 
-        <div class="user-menu" @mouseenter="showUserMenu = true" @mouseleave="showUserMenu = false">
-          <button class="user-btn">
+        <div class="user-menu" ref="userWrapper">
+          <button class="user-btn" @click="toggleUserMenu">
             <div class="user-avatar-sm">{{ userInitials }}</div>
             <div class="user-info-sm">
               <span class="user-name-sm">{{ userFullName }}</span>
@@ -268,6 +268,7 @@ export default {
     this.notificationInterval = setInterval(this.fetchNotifications, 60000)
     if (window.innerWidth <= 1024) this.sidebarCollapsed = true
     window.addEventListener('resize', this.handleResize)
+    document.addEventListener('click', this.handleClickOutside)
     this.updateLayoutOffsets()
   },
   watch: {
@@ -288,9 +289,26 @@ export default {
   beforeUnmount() {
     if (this.notificationInterval) clearInterval(this.notificationInterval)
     window.removeEventListener('resize', this.handleResize)
+    document.removeEventListener('click', this.handleClickOutside)
     document.documentElement.style.setProperty('--sidebar-current-width', '0px')
   },
   methods: {
+    toggleNotifications() {
+      this.showNotifications = !this.showNotifications
+      if (this.showNotifications) this.showUserMenu = false
+    },
+    toggleUserMenu() {
+      this.showUserMenu = !this.showUserMenu
+      if (this.showUserMenu) this.showNotifications = false
+    },
+    handleClickOutside(e) {
+      if (this.showNotifications && this.$refs.notifWrapper && !this.$refs.notifWrapper.contains(e.target)) {
+        this.showNotifications = false
+      }
+      if (this.showUserMenu && this.$refs.userWrapper && !this.$refs.userWrapper.contains(e.target)) {
+        this.showUserMenu = false
+      }
+    },
     toggleSidebar() {
       if (window.innerWidth <= 768) {
         this.mobileMenuOpen = !this.mobileMenuOpen

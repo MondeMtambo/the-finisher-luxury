@@ -2062,9 +2062,13 @@ class ProductViewSet(viewsets.ModelViewSet):
         return Product.objects.filter(company_name=company_name)
 
     def perform_create(self, serializer):
-        company = getattr(self.request.user, 'profile', None)
-        company_name = company.company_name if company else ''
-        serializer.save(created_by=self.request.user, company_name=company_name)
+        user = self.request.user
+        if user.is_superuser:
+            company_name = 'MTAMBO HOLDINGS'
+        else:
+            company = getattr(user, 'profile', None)
+            company_name = company.company_name if company else ''
+        serializer.save(created_by=user, company_name=company_name)
 
 
 class LineItemViewSet(viewsets.ModelViewSet):

@@ -580,6 +580,7 @@ class ProductSerializer(serializers.ModelSerializer):
             'price_incl_tax', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'company_name', 'created_at', 'updated_at']
 
 
 class LineItemSerializer(serializers.ModelSerializer):
