@@ -25,8 +25,8 @@
         <div class="stat-label">Categories</div>
       </div>
       <div class="stat-card">
-        <div class="stat-value">R{{ formatNumber(avgPrice) }}</div>
-        <div class="stat-label">Avg Price</div>
+        <div class="stat-value">R{{ formatNumber(totalValue) }}</div>
+        <div class="stat-label">Total Value</div>
       </div>
     </div>
 
@@ -201,9 +201,9 @@ export default {
     categories() {
       return [...new Set(this.products.map(p => p.category).filter(Boolean))].sort()
     },
-    avgPrice() {
+    totalValue() {
       if (!this.filteredProducts.length) return 0
-      return this.filteredProducts.reduce((sum, p) => sum + parseFloat(p.price || 0), 0) / this.filteredProducts.length
+      return this.filteredProducts.reduce((sum, p) => sum + parseFloat(p.price || 0), 0)
     },
     calculatedPriceInclVat() {
       const price = parseFloat(this.form.price) || 0;
