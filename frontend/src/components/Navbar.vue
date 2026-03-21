@@ -523,7 +523,7 @@ export default {
       toast.info('Logging out...', 'Session ending')
       authService.clearAuth()
       authAPI.logout().catch(() => {})
-      setTimeout(() => this.$router.replace('/login'), 250)
+      setTimeout(() => this.$router.replace('/'), 250)
     }
   }
 }

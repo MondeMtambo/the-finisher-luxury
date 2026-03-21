@@ -1,237 +1,68 @@
 <template>
-  <div class="auth-page">
-    <div class="auth-card register-card">
-
-      <div class="auth-brand">
-        <div class="brand-mark">F</div>
-        <h1 class="brand-title">THE FINISHER</h1>
-        <p class="brand-tag">Admin Registration</p>
+  <div class="auth-page luxury-auth-bg">
+    <nav class="exclusive-nav">
+      <div class="nav-brand">THE FINISHER</div>
+      <div class="nav-links">
+        <button class="nav-btn" @click="$router.push('/login')">Member Login</button>
       </div>
-      <p class="admin-notice">Registration is for <strong>company administrators</strong> only. Employees are onboarded by their admin after setup.</p>
+    </nav>
 
-      <div class="steps">
-        <div class="step" :class="{ active: currentStep === 1, done: currentStep > 1 }">
-          <span class="step-num">{{ currentStep > 1 ? '\u2713' : '1' }}</span><span class="step-text">Company</span>
+    <div class="auth-card register-card glass-panel" v-if="!applicationSubmitted">
+
+      <div class="auth-header">
+        <div class="card-logo">F</div>
+        <h1 class="headline">Request Access</h1>
+        <p class="subheadline">The Finisher Luxury Edition is available by invitation and application only.</p>
+      </div>
+
+      <div class="vip-steps">
+        <div class="vip-step" :class="{ active: currentStep === 1, done: currentStep > 1 }">
+          <span>I. Identity</span>
         </div>
-        <div class="step-line" :class="{ filled: currentStep > 1 }"></div>
-        <div class="step" :class="{ active: currentStep === 2, done: currentStep > 2 }">
-          <span class="step-num">{{ currentStep > 2 ? '\u2713' : '2' }}</span><span class="step-text">Account</span>
-        </div>
-        <div class="step-line" :class="{ filled: currentStep > 2 }"></div>
-        <div class="step" :class="{ active: currentStep === 3 }">
-          <span class="step-num">3</span><span class="step-text">Plan</span>
+        <div class="vip-step-divider"></div>
+        <div class="vip-step" :class="{ active: currentStep === 2, done: currentStep > 2 }">
+          <span>II. Organisation</span>
         </div>
       </div>
 
       <form @submit.prevent="handleRegister" class="reg-form">
 
         <div v-show="currentStep === 1" class="form-step">
-          <h3 class="step-title">Company &amp; Role</h3>
-
-          <div class="form-group">
-            <label class="form-label">Company Name *</label>
-            <select v-model="form.company_name" class="form-input" required>
-              <option value="">Select Your Company</option>
-              <optgroup label="Financial Services">
-                <option value="Discovery">Discovery</option>
-                <option value="Momentum">Momentum</option>
-                <option value="Sanlam">Sanlam</option>
-                <option value="Old Mutual">Old Mutual</option>
-                <option value="Liberty">Liberty</option>
-                <option value="FNB">First National Bank (FNB)</option>
-                <option value="Standard Bank">Standard Bank</option>
-                <option value="ABSA">ABSA</option>
-                <option value="Nedbank">Nedbank</option>
-                <option value="Capitec">Capitec</option>
-                <option value="Investec">Investec</option>
-                <option value="African Bank">African Bank</option>
-                <option value="Allan Gray">Allan Gray</option>
-              </optgroup>
-              <optgroup label="Insurance">
-                <option value="Outsurance">Outsurance</option>
-                <option value="MiWay">MiWay</option>
-                <option value="Hollard">Hollard</option>
-                <option value="King Price">King Price</option>
-                <option value="Budget Insurance">Budget Insurance</option>
-                <option value="1st for Women">1st for Women</option>
-                <option value="Santam">Santam</option>
-              </optgroup>
-              <optgroup label="Telecommunications">
-                <option value="MTN">MTN</option>
-                <option value="Vodacom">Vodacom</option>
-                <option value="Cell C">Cell C</option>
-                <option value="Telkom">Telkom</option>
-                <option value="Rain">Rain</option>
-              </optgroup>
-              <optgroup label="Retail & FMCG">
-                <option value="Shoprite">Shoprite</option>
-                <option value="Checkers">Checkers</option>
-                <option value="Pick n Pay">Pick n Pay</option>
-                <option value="Woolworths">Woolworths</option>
-                <option value="Spar">Spar</option>
-                <option value="Clicks">Clicks</option>
-                <option value="Dis-Chem">Dis-Chem</option>
-                <option value="Mr Price">Mr Price</option>
-                <option value="TFG">The Foschini Group (TFG)</option>
-                <option value="Pepkor">Pepkor</option>
-              </optgroup>
-              <optgroup label="Technology & IT">
-                <option value="Naspers">Naspers</option>
-                <option value="Takealot">Takealot</option>
-                <option value="Dimension Data">Dimension Data</option>
-                <option value="BCX">BCX</option>
-                <option value="Altron">Altron</option>
-                <option value="Datatec">Datatec</option>
-              </optgroup>
-              <optgroup label="Mining & Energy">
-                <option value="Anglo American">Anglo American</option>
-                <option value="Sasol">Sasol</option>
-                <option value="Eskom">Eskom</option>
-                <option value="Gold Fields">Gold Fields</option>
-                <option value="Sibanye-Stillwater">Sibanye-Stillwater</option>
-                <option value="Exxaro">Exxaro</option>
-              </optgroup>
-              <optgroup label="Healthcare">
-                <option value="Netcare">Netcare</option>
-                <option value="Mediclinic">Mediclinic</option>
-                <option value="Life Healthcare">Life Healthcare</option>
-              </optgroup>
-              <optgroup label="Media & Entertainment">
-                <option value="MultiChoice">MultiChoice</option>
-                <option value="Primedia">Primedia</option>
-                <option value="Media24">Media24</option>
-              </optgroup>
-              <optgroup label="Real Estate & Property">
-                <option value="Growthpoint">Growthpoint Properties</option>
-                <option value="Redefine Properties">Redefine Properties</option>
-                <option value="Pam Golding">Pam Golding Properties</option>
-              </optgroup>
-              <optgroup label="Logistics & Transport">
-                <option value="Imperial">Imperial Logistics</option>
-                <option value="Transnet">Transnet</option>
-                <option value="Bidvest">Bidvest</option>
-              </optgroup>
-              <option value="__other__">My company is not listed</option>
-            </select>
-          </div>
-
-          <div v-if="form.company_name === '__other__'" class="form-group">
-            <label class="form-label">Enter Company Name *</label>
-            <input v-model="customCompanyName" type="text" class="form-input" placeholder="Enter your company name" required />
-            <span class="form-hint" style="color:var(--amber-500)">Unlisted companies require manual verification (24-48 hours).</span>
-          </div>
-
-          <div v-if="form.company_name && form.company_name !== '__other__'" class="info-bar" style="margin-bottom:1rem">
-            <strong>{{ form.company_name }}</strong> &mdash; Registered partner company
-          </div>
-
-          <div class="form-grid-2">
-            <div class="form-group">
-              <label class="form-label">Your Role / Position *</label>
-              <select v-model="form.job_title" class="form-input" required>
-                <option value="">Select Your Role</option>
-                <optgroup label="Executive & Leadership">
-                  <option value="CEO">Chief Executive Officer (CEO)</option>
-                  <option value="COO">Chief Operating Officer (COO)</option>
-                  <option value="CFO">Chief Financial Officer (CFO)</option>
-                  <option value="CTO">Chief Technology Officer (CTO)</option>
-                  <option value="Managing Director">Managing Director</option>
-                  <option value="Director">Director</option>
-                </optgroup>
-                <optgroup label="Sales & CRM">
-                  <option value="Sales Director">Sales Director</option>
-                  <option value="Sales Manager">Sales Manager</option>
-                  <option value="Account Manager">Account Manager</option>
-                  <option value="Business Development Manager">Business Development Manager</option>
-                  <option value="Sales Representative">Authorized Sales Representative</option>
-                </optgroup>
-                <optgroup label="IT & Support">
-                  <option value="IT Manager">IT Manager</option>
-                  <option value="IT Administrator">IT Administrator</option>
-                  <option value="Service Desk Manager">Service Desk Manager</option>
-                  <option value="Support Manager">Support Manager</option>
-                </optgroup>
-                <optgroup label="Operations & HR">
-                  <option value="Operations Manager">Operations Manager</option>
-                  <option value="HR Manager">HR Manager</option>
-                  <option value="Office Manager">Office Manager</option>
-                  <option value="Project Manager">Project Manager</option>
-                </optgroup>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label">Industry</label>
-              <select v-model="form.industry" class="form-input">
-                <option value="">Select Industry</option>
-                <option value="it">Information Technology</option>
-                <option value="retail">Retail & E-commerce</option>
-                <option value="healthcare">Healthcare & Medical</option>
-                <option value="manufacturing">Manufacturing</option>
-                <option value="finance">Finance & Banking</option>
-                <option value="real_estate">Real Estate</option>
-                <option value="education">Education & Training</option>
-                <option value="hospitality">Hospitality & Tourism</option>
-                <option value="construction">Construction & Engineering</option>
-                <option value="consulting">Consulting & Professional Services</option>
-                <option value="marketing">Marketing & Advertising</option>
-                <option value="logistics">Logistics & Transportation</option>
-                <option value="other">Other</option>
-              </select>
-            </div>
-          </div>
-
-          <div class="who-can-register">
-            <h4>Who can register?</h4>
-            <ul>
-              <li><strong>CEOs / Directors</strong> &mdash; Primary company admin</li>
-              <li><strong>Authorized Sales Representatives</strong> &mdash; Given authorization by the CEO</li>
-              <li><strong>IT Managers</strong> &mdash; System administrators for the company</li>
-            </ul>
-            <p class="form-hint">All other employees will be onboarded by the admin after registration.</p>
-          </div>
-
-          <button type="button" class="btn btn-primary btn-block" @click="goToStep(2)" :disabled="!step1Valid">Next: Account Details</button>
-        </div>
-
-        <div v-show="currentStep === 2" class="form-step">
-          <h3 class="step-title">Account Details</h3>
 
           <div class="form-grid-2">
             <div class="form-group">
               <label class="form-label">First Name *</label>
-              <input v-model="form.first_name" type="text" class="form-input" placeholder="John" required />
+              <input v-model="form.first_name" type="text" class="form-input" required />
             </div>
             <div class="form-group">
               <label class="form-label">Last Name *</label>
-              <input v-model="form.last_name" type="text" class="form-input" placeholder="Doe" required />
+              <input v-model="form.last_name" type="text" class="form-input" required />
             </div>
           </div>
 
           <div class="form-grid-2">
             <div class="form-group">
-              <label class="form-label">Username (Company Name) *</label>
-              <input v-model="form.username" type="text" class="form-input" readonly style="background:var(--gray-100)" />
-              <span class="form-hint">Automatically set to your company name.</span>
+              <label class="form-label">Corporate Email *</label>
+              <input v-model="form.email" type="email" class="form-input" required />
             </div>
             <div class="form-group">
-              <label class="form-label">Work Email *</label>
-              <input v-model="form.email" type="email" class="form-input" placeholder="john@company.com" required />
+              <label class="form-label">Direct Phone *</label>
+              <input v-model="form.phone" type="tel" class="form-input" required />
             </div>
           </div>
 
           <div class="form-grid-2">
             <div class="form-group">
-              <label class="form-label">Password *</label>
-              <input v-model="form.password" type="password" class="form-input" placeholder="********" required @input="validatePasswordRealtime" />
+              <label class="form-label">Secure Password *</label>
+              <input v-model="form.password" type="password" class="form-input" required @input="validatePasswordRealtime" />
             </div>
             <div class="form-group">
               <label class="form-label">Confirm Password *</label>
-              <input v-model="form.password2" type="password" class="form-input" placeholder="********" required />
+              <input v-model="form.password2" type="password" class="form-input" required />
             </div>
           </div>
 
           <div v-if="form.password" class="pw-rules">
-            <p class="pw-rules-title">Password Requirements:</p>
             <div class="pw-rule" :class="{ passed: passwordChecks.length }"><span class="rule-dot"></span>At least 8 characters</div>
             <div class="pw-rule" :class="{ passed: passwordChecks.uppercase }"><span class="rule-dot"></span>At least 1 uppercase letter</div>
             <div class="pw-rule" :class="{ passed: passwordChecks.lowercase }"><span class="rule-dot"></span>At least 1 lowercase letter</div>
@@ -387,6 +218,7 @@ export default {
   data() {
     return {
       currentStep: 1,
+      applicationSubmitted: false,
       customCompanyName: '',
       form: {
         username: '',
@@ -411,10 +243,8 @@ export default {
       },
       loading: false,
       error: '',
-      success: '',
       termsAccepted: false,
       showTermsModal: false,
-      tierBlockMessage: '',
       passwordChecks: {
         length: false,
         uppercase: false,
@@ -426,48 +256,18 @@ export default {
   },
   computed: {
     step1Valid() {
-      if (this.form.company_name === '__other__') {
-        return this.customCompanyName.trim() && this.form.job_title
-      }
-      return this.form.company_name && this.form.job_title
+      return this.form.first_name && this.form.last_name && this.form.email && this.form.phone && this.allPasswordChecksPassed && this.form.password === this.form.password2
     },
     step2Valid() {
-      return this.form.first_name && this.form.last_name && this.form.username &&
-             this.form.email && this.form.password && this.form.password2 &&
-             this.form.phone && this.allPasswordChecksPassed &&
-             this.form.password === this.form.password2
+      return this.customCompanyName.trim() && this.form.job_title && this.termsAccepted
     },
     allPasswordChecksPassed() {
       return this.passwordChecks.length && this.passwordChecks.uppercase &&
              this.passwordChecks.lowercase && this.passwordChecks.number &&
              this.passwordChecks.special
     },
-    passwordStrengthPercent() {
-      const checks = Object.values(this.passwordChecks)
-      const passed = checks.filter(Boolean).length
-      return (passed / checks.length) * 100
-    },
-    passwordStrengthClass() {
-      const pct = this.passwordStrengthPercent
-      if (pct <= 20) return 'strength-weak'
-      if (pct <= 40) return 'strength-fair'
-      if (pct <= 60) return 'strength-moderate'
-      if (pct <= 80) return 'strength-good'
-      return 'strength-strong'
-    },
-    passwordStrengthLabel() {
-      const pct = this.passwordStrengthPercent
-      if (pct <= 20) return 'Weak'
-      if (pct <= 40) return 'Fair'
-      if (pct <= 60) return 'Moderate'
-      if (pct <= 80) return 'Good'
-      return 'Strong ✓'
-    },
     resolvedCompanyName() {
-      if (this.form.company_name === '__other__') {
-        return this.customCompanyName.trim()
-      }
-      return this.form.company_name
+      return this.customCompanyName.trim()
     },
     generatedUsername() {
       const name = this.resolvedCompanyName
@@ -498,11 +298,6 @@ export default {
       }
     },
     goToStep(step) {
-      if (step === 2 && !this.step1Valid) {
-        toast.warning('Please select your company and role before continuing.')
-        return
-      }
-      if (step === 3 && !this.step2Valid) {
         if (!this.form.first_name || !this.form.last_name) {
           toast.warning('Please enter your first and last name.')
           return
@@ -523,27 +318,7 @@ export default {
           toast.error('Passwords do not match.')
           return
         }
-        toast.warning('Please fill in all required fields before continuing.')
-        return
-      }
       this.currentStep = step
-    },
-    attemptSelectTier(tier) {
-      this.tierBlockMessage = ''
-      if (tier === 'free') {
-        this.tierBlockMessage = '🚫 FREE tier is not available in THE FINISHER LUXURY Edition. LUXURY plan (R249/mo) gives you 10-user access, advanced features & priority support!'
-        setTimeout(() => { this.tierBlockMessage = '' }, 6000)
-        return
-      }
-      if (tier === 'luxury' || tier === 'premium') {
-        this.tierBlockMessage = `🔒 ${tier.toUpperCase()} tier is coming Q2 2026! Start with LUXURY (R249/mo) to access all current features.`
-        setTimeout(() => { this.tierBlockMessage = '' }, 5000)
-        return
-      }
-      if (tier === 'luxury') {
-        this.form.tier = tier
-        this.error = ''
-      }
     },
     handleTermsAccept() {
       this.termsAccepted = true
@@ -551,64 +326,18 @@ export default {
     async handleRegister() {
       this.loading = true
       this.error = ''
-      this.success = ''
 
       try {
         
         const submitData = { ...this.form }
         submitData.company_name = this.resolvedCompanyName
-        submitData.is_unlisted_company = this.form.company_name === '__other__'
+        submitData.is_unlisted_company = true // All companies in exclusive mode are manually typed
 
         const response = await authAPI.register(submitData)
-        this.success = response.data?.message || 'Registration successful.'
 
-        const { tokens, user } = response.data || {}
-        const hasAccessToken = Boolean(tokens?.access && tokens?.refresh)
-        const userPayload = user || { username: this.form.username }
-
-        if (hasAccessToken) {
-          authService.saveAuth(tokens, userPayload)
-        } else if (userPayload) {
-          authService.setUser(userPayload)
-        }
-
-        let sessionOk = false
-        try {
-          const prof = await authAPI.getProfile()
-          if (prof && prof.data) {
-            authService.setUser(prof.data)
-            sessionOk = true
-          }
-        } catch (e) {
-          try {
-            await authService.login(this.form.username, this.form.password)
-            sessionOk = true
-          } catch (_) {
-            sessionOk = false
-          }
-        }
-
-        
-        if (this.form.tier === 'luxury') {
-          const proceed = await modal.payment(
-            'LUXURY Edition Activated!',
-            'Your account has been created successfully!\n\n💳 Next step: Complete payment (R249/month)\n\nSome features require an active subscription.',
-            { confirmText: 'Set Up Payment', cancelText: 'Go to Dashboard' }
-          )
-          if (proceed) {
-            await modal.alert(
-              'Payment Coming Soon',
-              'Payment integration is launching shortly.\n\nFor now, contact support@thefinisher.co.za to activate your LUXURY subscription.',
-              'info'
-            )
-          }
-        }
-
-        const redirectTarget = sessionOk ? '/' : '/login'
-        if (!sessionOk) {
-          this.success += ' Please log in with your new credentials.'
-        }
-        this.$router.push(redirectTarget)
+        // Velvet Rope: Do not log them in. Show success screen.
+        authService.clearAuth()
+        this.applicationSubmitted = true
 
       } catch (error) {
         console.error('Registration failed:', error)
@@ -635,90 +364,94 @@ export default {
 }
 </script>
 <style scoped>
-.auth-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 2rem 1rem; background: var(--gray-900); }
-.auth-card { background: #fff; border-radius: var(--radius-lg); box-shadow: var(--shadow-xl); width: 100%; padding: 2rem 2.5rem; }
-.register-card { max-width: 720px; }
+.luxury-auth-bg {
+  min-height: 100vh;
+  background: #000000;
+  color: #ffffff;
+  font-family: 'Inter', system-ui, sans-serif;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 2rem;
+}
 
-.auth-brand { text-align: center; margin-bottom: .75rem; }
-.brand-mark { width: 44px; height: 44px; background: var(--primary-500); color: #fff; border-radius: var(--radius-md); display: inline-flex; align-items: center; justify-content: center; font-weight: 700; font-size: 1.25rem; margin-bottom: .5rem; }
-.brand-title { font-size: 1.125rem; font-weight: 700; color: var(--gray-900); margin: 0; }
-.brand-tag { font-size: .8125rem; color: var(--gray-500); margin: .125rem 0 0; }
-.admin-notice { font-size: .8125rem; color: var(--gray-600); text-align: center; margin: .75rem 0 1.25rem; line-height: 1.5; }
+.exclusive-nav {
+  position: absolute;
+  top: 0; left: 0; width: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 2rem 4rem;
+  z-index: 10;
+}
+.nav-brand { font-size: 0.875rem; font-weight: 800; letter-spacing: 4px; color: #D4AF37; }
+.nav-btn { background: transparent; border: none; color: #9ca3af; font-size: 0.875rem; font-weight: 600; text-transform: uppercase; letter-spacing: 2px; cursor: pointer; transition: color 0.3s; }
+.nav-btn:hover { color: #D4AF37; }
 
-/* Steps */
-.steps { display: flex; align-items: center; justify-content: center; gap: 0; margin-bottom: 1.75rem; }
-.step { display: flex; align-items: center; gap: .375rem; }
-.step-num { width: 26px; height: 26px; border-radius: 50%; border: 2px solid var(--gray-300); display: flex; align-items: center; justify-content: center; font-size: .75rem; font-weight: 600; color: var(--gray-400); transition: all .2s; }
-.step-text { font-size: .75rem; color: var(--gray-400); font-weight: 500; }
-.step.active .step-num { border-color: var(--primary-500); background: var(--primary-500); color: #fff; }
-.step.active .step-text { color: var(--primary-500); }
-.step.done .step-num { border-color: var(--green-500); background: var(--green-500); color: #fff; }
-.step.done .step-text { color: var(--green-500); }
-.step-line { width: 40px; height: 2px; background: var(--gray-200); margin: 0 .5rem; transition: background .2s; }
-.step-line.filled { background: var(--green-500); }
+.glass-panel {
+  background: linear-gradient(135deg, rgba(15,15,15,0.8) 0%, rgba(5,5,5,0.9) 100%);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.9), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 600px;
+  padding: 3rem;
+  position: relative;
+  z-index: 10;
+}
+.success-panel { text-align: center; padding: 4rem 3rem; }
+.success-icon { margin-bottom: 2rem; }
+.success-divider { height: 1px; width: 50px; background: #D4AF37; margin: 2rem auto; }
+.success-note { color: #9ca3af; font-size: 0.95rem; line-height: 1.6; }
 
-/* Form */
-.reg-form { }
-.step-title { font-size: 1rem; font-weight: 600; color: var(--gray-800); margin: 0 0 1rem; padding-bottom: .5rem; border-bottom: 1px solid var(--gray-100); }
+.auth-header { text-align: center; margin-bottom: 2rem; }
+.card-logo { font-size: 2.5rem; font-weight: 900; color: transparent; -webkit-text-stroke: 1px rgba(212, 175, 55, 0.8); margin-bottom: 1rem; line-height: 1; }
+.headline { font-size: 2rem; font-weight: 800; margin: 0 0 0.5rem; color: #ffffff; letter-spacing: 1px; }
+.subheadline { font-size: 0.875rem; color: #9ca3af; margin: 0; }
+
+.vip-steps { display: flex; align-items: center; justify-content: center; gap: 1rem; margin-bottom: 2.5rem; }
+.vip-step { font-size: 0.75rem; font-weight: 700; color: #6b7280; text-transform: uppercase; letter-spacing: 2px; transition: color 0.3s; }
+.vip-step.active { color: #D4AF37; text-shadow: 0 0 10px rgba(212, 175, 55, 0.3); }
+.vip-step.done { color: #ffffff; }
+.vip-step-divider { width: 40px; height: 1px; background: rgba(255,255,255,0.1); }
+
+.form-group { margin-bottom: 1.5rem; }
+.form-label { display: block; font-size: 0.75rem; font-weight: 600; color: #9ca3af; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 0.5rem; }
+.form-input { width: 100%; padding: 0.875rem 1rem; background: rgba(0,0,0,0.4); border: 1px solid rgba(255,255,255,0.1); border-radius: 4px; color: #fff; font-size: 0.95rem; transition: all 0.3s; }
+.form-input:focus { border-color: #D4AF37; box-shadow: 0 0 15px rgba(212, 175, 55, 0.1); outline: none; }
 .form-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 1rem; }
-.btn-block { width: 100%; }
+
+.btn { display: inline-block; text-align: center; padding: 1rem 2rem; font-size: 0.875rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; border-radius: 4px; cursor: pointer; transition: all 0.3s; }
+.btn-primary { background: rgba(212, 175, 55, 0.1); border: 1px solid #D4AF37; color: #D4AF37; }
+.btn-primary:hover:not(:disabled) { background: #D4AF37; color: #000; box-shadow: 0 0 20px rgba(212, 175, 55, 0.4); }
+.btn-primary:disabled { opacity: 0.5; cursor: not-allowed; border-color: rgba(255,255,255,0.1); color: #6b7280; }
+.btn-secondary { background: transparent; border: 1px solid rgba(255,255,255,0.2); color: #9ca3af; }
+.btn-secondary:hover { border-color: #fff; color: #fff; }
+.btn-block { width: 100%; display: block; }
 .step-nav { display: flex; gap: .75rem; margin-top: 1.25rem; }
 .step-nav .btn { flex: 1; }
 
-/* Who can register */
-.who-can-register { background: var(--gray-50); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: 1rem 1.25rem; margin-bottom: 1.25rem; }
-.who-can-register h4 { font-size: .8125rem; font-weight: 600; color: var(--gray-700); margin: 0 0 .5rem; }
-.who-can-register ul { margin: 0; padding-left: 1.25rem; font-size: .8125rem; color: var(--gray-600); line-height: 1.7; }
+.pw-rules { display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 1.5rem; }
+.pw-rule { font-size: 0.7rem; color: #6b7280; display: flex; align-items: center; gap: 4px; }
+.pw-rule.passed { color: #D4AF37; }
+.rule-dot { width: 4px; height: 4px; border-radius: 50%; background: #6b7280; }
+.pw-rule.passed .rule-dot { background: #D4AF37; box-shadow: 0 0 5px #D4AF37; }
 
-/* Info bar (reuse global if available) */
-.info-bar { background: #eff6ff; color: var(--primary-500); padding: .75rem 1rem; border-radius: var(--radius-md); font-size: .8125rem; line-height: 1.5; }
-
-/* Password rules */
-.pw-rules { background: var(--gray-50); border: 1px solid var(--border-color); border-radius: var(--radius-md); padding: .75rem 1rem; margin-bottom: 1rem; }
-.pw-rules-title { font-size: .75rem; font-weight: 600; color: var(--gray-600); margin: 0 0 .5rem; }
-.pw-rule { font-size: .75rem; color: var(--gray-500); display: flex; align-items: center; gap: .375rem; margin-bottom: .25rem; }
-.pw-rule.passed { color: var(--green-500); }
-.rule-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--gray-300); flex-shrink: 0; }
-.pw-rule.passed .rule-dot { background: var(--green-500); }
-.pw-bar { height: 4px; background: var(--gray-200); border-radius: 2px; margin-top: .5rem; overflow: hidden; }
-.pw-bar-fill { height: 100%; border-radius: 2px; transition: width .3s; }
-.pw-bar-fill.weak { background: var(--red-500); }
-.pw-bar-fill.fair { background: var(--amber-500); }
-.pw-bar-fill.strong { background: var(--green-500); }
-.pw-strength-label { font-size: .6875rem; margin: .25rem 0 0; }
-.pw-strength-label.weak { color: var(--red-500); }
-.pw-strength-label.fair { color: var(--amber-500); }
-.pw-strength-label.strong { color: var(--green-500); }
-
-/* Tier cards */
-.tier-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: .75rem; }
-.tier-card { position: relative; background: #fff; border: 2px solid var(--border-color); border-radius: var(--radius-md); padding: 1.25rem 1rem; text-align: center; cursor: pointer; transition: border-color .2s, box-shadow .2s; }
-.tier-card h4 { font-size: .8125rem; font-weight: 700; color: var(--gray-800); margin: 0 0 .375rem; letter-spacing: .03em; }
-.tier-price { font-size: 1.125rem; font-weight: 700; color: var(--gray-900); margin: 0 0 .5rem; }
-.tier-price small { font-size: .75rem; font-weight: 400; color: var(--gray-500); }
-.tier-card ul { list-style: none; padding: 0; margin: 0; font-size: .75rem; color: var(--gray-600); line-height: 1.8; }
-.tier-active { border-color: var(--primary-500); }
-.tier-active.selected { box-shadow: 0 0 0 3px rgba(37,99,235,.15); }
-.tier-locked { opacity: .55; pointer-events: none; position: relative; }
-.locked-overlay { position: absolute; inset: 0; background: rgba(255,255,255,.7); display: flex; align-items: center; justify-content: center; border-radius: var(--radius-md); z-index: 1; }
-.locked-overlay span { font-size: .6875rem; font-weight: 700; color: var(--gray-500); letter-spacing: .05em; }
-
-/* Consent */
-.consent-section { margin: 1.25rem 0; display: flex; flex-direction: column; gap: .5rem; }
-.check-row { display: flex; align-items: flex-start; gap: .5rem; font-size: .8125rem; color: var(--gray-600); cursor: pointer; }
-.check-row input { margin-top: 2px; accent-color: var(--primary-500); }
+.consent-section { margin: 2rem 0; padding: 1rem; border: 1px solid rgba(212, 175, 55, 0.2); background: rgba(212, 175, 55, 0.05); border-radius: 4px; }
+.check-row { display: flex; align-items: flex-start; gap: 0.75rem; font-size: 0.8125rem; color: #d1d5db; cursor: pointer; line-height: 1.5; }
+.check-row input { margin-top: 3px; accent-color: #D4AF37; }
 .link { color: var(--primary-500); text-decoration: none; font-weight: 500; }
 .link:hover { text-decoration: underline; }
 
-.auth-footer { text-align: center; margin-top: 1.5rem; font-size: .8125rem; color: var(--gray-500); }
+.form-error { color: #ef4444; font-size: 0.875rem; background: rgba(239, 68, 68, 0.1); padding: 0.75rem; border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 4px; margin-bottom: 1.5rem; text-align: center; }
 
-@media (max-width: 768px) {
-  .auth-card { padding: 1.5rem 1.25rem; }
-  .form-grid-2 { grid-template-columns: 1fr; }
-  .tier-grid { grid-template-columns: repeat(2, 1fr); }
-}
 @media (max-width: 480px) {
-  .tier-grid { grid-template-columns: 1fr; }
-  .step-text { display: none; }
+  .glass-panel { padding: 2rem 1.5rem; }
+  .form-grid-2 { grid-template-columns: 1fr; gap: 0; }
+  .step-nav { flex-direction: column; }
+  .exclusive-nav { padding: 1.5rem 2rem; }
 }
 </style>
