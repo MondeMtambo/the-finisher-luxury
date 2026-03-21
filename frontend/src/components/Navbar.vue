@@ -373,13 +373,23 @@ export default {
           await this.fetchNotifications()
         }
       } catch (e) { /* non-blocking */ }
-      const routes = { ticket: '/tickets', deal: '/deals', contact: '/contacts', company: '/companies' }
-      const route = routes[notif.entity_type]
-      if (route) {
-        const query = notif.entity_type === 'ticket' && notif.entity_id ? `?ticket=${notif.entity_id}` : ''
-        this.$router.push(route + query)
-        this.showNotifications = false
+
+      // Show notification details in a modal and let user choose to open linked route
+      try {
+        const confirmed = await modal.confirm(notif.title || 'Notification', notif.message || '', 'info', { confirmText: 'Open', cancelText: 'Close' })
+        if (confirmed) {
+          const routes = { ticket: '/tickets', deal: '/deals', contact: '/contacts', company: '/companies' }
+          const route = routes[notif.entity_type]
+          if (route) {
+            const query = notif.entity_type === 'ticket' && notif.entity_id ? `?ticket=${notif.entity_id}` : ''
+            this.$router.push(route + query)
+          }
+        }
+      } catch (e) {
+        // Fallback: just close the dropdown
       }
+
+      this.showNotifications = false
     },
     formatNotificationTime(dateString) {
       if (!dateString) return ''
