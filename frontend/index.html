@@ -101,6 +101,70 @@
     .data-table th { background: transparent !important; color: #D4AF37 !important; text-transform: uppercase; letter-spacing: 2px; }
     .form-input { background-color: rgba(0,0,0,0.4) !important; color: #fff !important; border-color: rgba(255,255,255,0.05) !important; }
     .form-input:focus { border-color: #D4AF37 !important; box-shadow: 0 0 15px rgba(212,175,55,0.1) !important; }
+
+    /* =========================================
+       VIP NOTIFICATION POP-UPS & KINETICS
+       ========================================= */
+    /* System Toast Notifications */
+    .toast-container {
+      position: fixed !important;
+      top: 24px !important;
+      right: 24px !important;
+      z-index: 100000 !important;
+      display: flex !important;
+      flex-direction: column !important;
+      gap: 12px !important;
+      pointer-events: none !important;
+    }
+    .toast {
+      pointer-events: auto !important;
+      background: rgba(15, 15, 15, 0.95) !important;
+      backdrop-filter: blur(15px) !important;
+      border-left: 4px solid #D4AF37 !important;
+      border-top: 1px solid rgba(212, 175, 55, 0.2) !important;
+      border-right: 1px solid rgba(212, 175, 55, 0.2) !important;
+      border-bottom: 1px solid rgba(212, 175, 55, 0.2) !important;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.9), 0 0 20px rgba(212,175,55,0.15) !important;
+      color: #fff !important;
+      padding: 16px 24px !important;
+      border-radius: 8px !important;
+      min-width: 320px !important;
+      animation: slideInRight 0.5s cubic-bezier(0.19, 1, 0.22, 1) forwards !important;
+    }
+    .toast-success { border-left-color: #22c55e !important; }
+    .toast-error { border-left-color: #ef4444 !important; }
+    .toast-warning { border-left-color: #f59e0b !important; }
+    .toast-info { border-left-color: #3b82f6 !important; }
+
+    @keyframes slideInRight {
+      from { transform: translateX(120%); opacity: 0; }
+      to { transform: translateX(0); opacity: 1; }
+    }
+
+    /* Topbar Notification Dropdowns & Modals */
+    .notif-dropdown, .user-dropdown {
+      background: rgba(15, 15, 15, 0.95) !important;
+      backdrop-filter: blur(15px) !important;
+      border: 1px solid rgba(212, 175, 55, 0.3) !important;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.9), inset 0 0 15px rgba(212, 175, 55, 0.05) !important;
+      color: #fff !important;
+      animation: popDown 0.4s cubic-bezier(0.19, 1, 0.22, 1) forwards !important;
+      transform-origin: top right;
+    }
+    .notif-item:hover, .dropdown-item:hover { background: rgba(212, 175, 55, 0.1) !important; }
+    
+    .modal-panel {
+      animation: popUp 0.4s cubic-bezier(0.19, 1, 0.22, 1) forwards !important;
+    }
+
+    @keyframes popDown {
+      from { transform: scale(0.95) translateY(-10px); opacity: 0; }
+      to { transform: scale(1) translateY(0); opacity: 1; }
+    }
+    @keyframes popUp {
+      from { transform: scale(0.95) translateY(20px); opacity: 0; }
+      to { transform: scale(1) translateY(0); opacity: 1; }
+    }
   </style>
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="application-name" content="Finisher CRM">

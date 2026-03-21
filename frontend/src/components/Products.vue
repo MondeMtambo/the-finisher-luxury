@@ -144,12 +144,16 @@
                 <input class="form-input" v-model="form.price" type="number" step="0.01" min="0" required>
               </div>
               <div class="form-group flex-1">
-                <label class="form-label">Cost Price</label>
-                <input class="form-input" v-model="form.cost" type="number" step="0.01" min="0" placeholder="For margin calc">
-              </div>
-              <div class="form-group flex-1">
                 <label class="form-label">VAT Rate (%)</label>
                 <input class="form-input" v-model="form.tax_rate" type="number" step="0.01" min="0" max="100">
+              </div>
+              <div class="form-group flex-1">
+                <label class="form-label">Price (incl. VAT)</label>
+                <input class="form-input" :value="calculatedPriceInclVat" disabled style="background: rgba(255, 255, 255, 0.05); color: #D4AF37; border-color: rgba(212, 175, 55, 0.3); cursor: not-allowed;">
+              </div>
+              <div class="form-group flex-1">
+                <label class="form-label">Cost Price</label>
+                <input class="form-input" v-model="form.cost" type="number" step="0.01" min="0" placeholder="For margin calc">
               </div>
             </div>
             <div class="form-group">
@@ -198,8 +202,13 @@ export default {
       return [...new Set(this.products.map(p => p.category).filter(Boolean))].sort()
     },
     avgPrice() {
-      if (!this.products.length) return 0
-      return this.products.reduce((sum, p) => sum + parseFloat(p.price || 0), 0) / this.products.length
+      if (!this.filteredProducts.length) return 0
+      return this.filteredProducts.reduce((sum, p) => sum + parseFloat(p.price || 0), 0) / this.filteredProducts.length
+    },
+    calculatedPriceInclVat() {
+      const price = parseFloat(this.form.price) || 0;
+      const tax = parseFloat(this.form.tax_rate) || 0;
+      return (price * (1 + tax / 100)).toFixed(2);
     },
     filteredProducts() {
       return this.products.filter(p => {
