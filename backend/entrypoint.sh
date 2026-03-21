@@ -9,7 +9,7 @@ python manage.py collectstatic --noinput || { echo "Collectstatic failed"; exit 
 
 echo "[entrypoint] Starting gunicorn..."
 exec gunicorn finisher_api.wsgi:application \
-  --bind 0.0.0.0:8000 \
+  --bind "0.0.0.0:${PORT:-8000}" \
   --workers 3 \
   --threads 2 \
   --timeout 120
