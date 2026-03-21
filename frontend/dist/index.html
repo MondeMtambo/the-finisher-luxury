@@ -38,11 +38,69 @@
     }
 
     html, body, #app {
-      background-color: #0B0C10 !important; /* Force Obsidian Black globally */
+      background-color: #000000 !important; /* Absolute Zero Canvas */
       color: #ffffff !important;
       margin: 0;
       min-height: 100vh;
+      overflow-x: hidden;
     }
+
+    /* =========================================
+       CONCEPT 3: THE CINEMATIC SPOTLIGHT
+       ========================================= */
+    
+    /* The Global Spotlight Overlay */
+    body::after {
+      content: '';
+      position: fixed;
+      top: 0; left: 0; width: 100vw; height: 100vh;
+      background: radial-gradient(600px circle at var(--mouse-x, 50%) var(--mouse-y, 50%), rgba(212, 175, 55, 0.08), transparent 40%);
+      pointer-events: none;
+      z-index: 9998;
+    }
+
+    /* Reactive, Shadowed UI Canvas */
+    .card, .modal-panel, .stat-card, .table-card, .auth-card {
+      background-color: rgba(10, 10, 10, 0.6) !important;
+      border: 1px solid rgba(255, 255, 255, 0.03) !important;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.8) !important;
+      color: #9ca3af !important;
+      transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1) !important;
+      backdrop-filter: blur(10px);
+    }
+    
+    /* Spotlight Hover State - Cards illuminate when the light hits them */
+    .card:hover, .modal-panel:hover, .stat-card:hover, .table-card:hover, .auth-card:hover {
+      border-color: rgba(212, 175, 55, 0.3) !important;
+      box-shadow: 0 0 30px rgba(212, 175, 55, 0.1), inset 0 0 15px rgba(212, 175, 55, 0.05) !important;
+      color: #ffffff !important;
+      transform: translateY(-2px);
+    }
+
+    /* Golden Shockwave Click Effect */
+    .golden-shockwave {
+      position: fixed;
+      width: 20px; height: 20px;
+      border: 2px solid rgba(212, 175, 55, 0.8);
+      border-radius: 50%;
+      transform: translate(-50%, -50%) scale(1);
+      animation: shockwave 0.8s cubic-bezier(0.19, 1, 0.22, 1) forwards;
+      pointer-events: none;
+      z-index: 10000;
+    }
+    @keyframes shockwave {
+      0% { transform: translate(-50%, -50%) scale(1); opacity: 1; box-shadow: 0 0 15px rgba(212, 175, 55, 0.8); }
+      100% { transform: translate(-50%, -50%) scale(15); opacity: 0; border-width: 0px; }
+    }
+
+    /* Nav & Form Controls */
+    .sidebar { background-color: #000000 !important; border-right: 1px solid rgba(255,255,255,0.02) !important; }
+    .nav-item { color: #4b5563 !important; transition: all 0.4s ease !important; }
+    .nav-item:hover, .nav-item.active { color: #D4AF37 !important; text-shadow: 0 0 10px rgba(212,175,55,0.3) !important; background: transparent !important; }
+    .data-table th, .data-table td { border-bottom-color: rgba(255,255,255,0.02) !important; color: inherit !important; transition: color 0.3s; }
+    .data-table th { background: transparent !important; color: #D4AF37 !important; text-transform: uppercase; letter-spacing: 2px; }
+    .form-input { background-color: rgba(0,0,0,0.4) !important; color: #fff !important; border-color: rgba(255,255,255,0.05) !important; }
+    .form-input:focus { border-color: #D4AF37 !important; box-shadow: 0 0 15px rgba(212,175,55,0.1) !important; }
   </style>
   <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="application-name" content="Finisher CRM">
@@ -58,10 +116,30 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <title>THE FINISHER LUXURY CRM</title>
-  <script type="module" crossorigin src="/assets/index-Fjr8qVWV.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-BTtuBaW0.css">
+  <script type="module" crossorigin src="/assets/index-DrWSH9nQ.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-CTTuPp-v.css">
 </head>
 <body>
-  <div id="app"></div>
+  <div id="app"></div>
+  <script>
+    // 1. The Spotlight Engine
+    document.addEventListener('mousemove', e => {
+      document.documentElement.style.setProperty('--mouse-x', e.clientX + 'px');
+      document.documentElement.style.setProperty('--mouse-y', e.clientY + 'px');
+    });
+
+    // 2. The Golden Shockwave Engine
+    document.addEventListener('mousedown', e => {
+      const isActionable = e.target.closest('button, a, .card, .stat-card, .nav-item, select, input, .deal-card');
+      if (isActionable) {
+        const ripple = document.createElement('div');
+        ripple.className = 'golden-shockwave';
+        ripple.style.left = e.clientX + 'px';
+        ripple.style.top = e.clientY + 'px';
+        document.body.appendChild(ripple);
+        setTimeout(() => ripple.remove(), 800);
+      }
+    });
+  </script>
 </body>
 </html>
