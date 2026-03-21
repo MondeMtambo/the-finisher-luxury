@@ -167,7 +167,7 @@ export default {
 /* Hero */
 .hero { display:grid;grid-template-columns:1fr 1fr;gap:4rem;max-width:1200px;margin:0 auto;padding:6rem 2rem;align-items:center; }
 .hero-badge { display:inline-block;background:rgba(212, 175, 55, 0.15);color:#D4AF37;padding:.375rem 1rem;border-radius:var(--radius-md);font-weight:700;font-size:.75rem;letter-spacing:.04em;margin-bottom:1.5rem; border: 1px solid rgba(212, 175, 55, 0.3); box-shadow: 0 0 10px rgba(212, 175, 55, 0.2); }
-.hero-title { font-size:3.5rem;font-weight:800;color:#fff;line-height:1.15;margin:0 0 1.25rem; background: linear-gradient(to right, #fff, #D4AF37); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.hero-title { font-size:3.5rem;font-weight:800;color:#fff;line-height:1.15;margin:0 0 1.25rem; background: linear-gradient(to right, #fff, #D4AF37); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 .hero-subtitle { font-size:1.125rem;color:#9ca3af;line-height:1.6;margin:0 0 2rem;max-width:540px; }
 .hero-cta { display:flex;gap:1rem;margin-bottom:.75rem; }
 .cta-primary { background:linear-gradient(135deg, #D4AF37 0%, #B49015 100%);color:#000;border:none;padding:.875rem 2rem;border-radius:var(--radius-md);font-size:1rem;font-weight:700;cursor:pointer;transition:all .3s; text-transform: uppercase; letter-spacing: 1px; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4); }
@@ -190,7 +190,7 @@ export default {
 
 /* Features */
 .features-section { background:#0D0F12;padding:6rem 2rem; border-top: 1px solid rgba(212, 175, 55, 0.1); border-bottom: 1px solid rgba(212, 175, 55, 0.1); }
-.section-title { text-align:center;font-size:2.5rem;font-weight:800;color:#fff;margin:0 0 .5rem; background: linear-gradient(to right, #D4AF37, #fff); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.section-title { text-align:center;font-size:2.5rem;font-weight:800;color:#fff;margin:0 0 .5rem; background: linear-gradient(to right, #D4AF37, #fff); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 .section-subtitle { text-align:center;font-size:1.125rem;color:#9ca3af;margin:0 0 4rem; }
 .features-grid { display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:2rem;max-width:1200px;margin:0 auto; }
 .feature-card { background:rgba(255,255,255,0.02);padding:2.5rem;border-radius:var(--radius-lg);border:1px solid rgba(255,255,255,0.05);transition:all .3s; position: relative; overflow: hidden; }
@@ -237,7 +237,7 @@ export default {
 /* Final CTA  */
 .final-cta { background:linear-gradient(to bottom, #111418, #000);color:#fff;padding:8rem 2rem;text-align:center; position: relative; overflow: hidden; }
 .final-cta::before { content: ''; position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 100%; max-width: 800px; height: 1px; background: linear-gradient(90deg, transparent, #D4AF37, transparent); }
-.final-cta h2 { font-size:3.5rem;font-weight:800;margin:0 0 1rem; background: linear-gradient(to right, #fff, #D4AF37); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+.final-cta h2 { font-size:3.5rem;font-weight:800;margin:0 0 1rem; background: linear-gradient(to right, #fff, #D4AF37); background-clip: text; -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
 .final-cta p { font-size:1.25rem;margin:0 0 3rem;color:#9ca3af; }
 .cta-note { color:rgba(255,255,255,.4);font-size:.8125rem;margin-top:1.5rem; text-transform: uppercase; letter-spacing: 1px; }
 

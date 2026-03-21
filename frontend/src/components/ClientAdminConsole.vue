@@ -109,7 +109,6 @@
                 <div class="form-group"><label class="form-label">Username *</label><input v-model="form.username" type="text" class="form-input" required :disabled="isEditMode"></div>
                 <div class="form-group"><label class="form-label">Email *</label><input v-model="form.email" type="email" class="form-input" required :disabled="isEditMode"></div>
               </div>
-              <div v-if="!isEditMode" class="form-group"><label class="form-label">Password *</label><input v-model="form.password" type="password" class="form-input" required minlength="8"><span class="form-hint">Minimum 8 characters</span></div>
               <div class="form-grid-2">
                 <div class="form-group"><label class="form-label">Role *</label><select v-model="form.role" class="form-input" required><option value="user">Standard User</option><option value="supervisor">Supervisor</option><option value="manager">Manager</option><option value="admin">Administrator</option></select></div>
                 <div class="form-group"><label class="form-label">Phone</label><input v-model="form.phone" type="tel" class="form-input"></div>
@@ -230,7 +229,6 @@ export default {
         first_name: '',
         last_name: '',
         role: 'user',
-        password: '',
         phone: '',
         job_title: '',
         department: '',

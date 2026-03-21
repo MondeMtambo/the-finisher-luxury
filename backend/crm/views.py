@@ -1125,10 +1125,23 @@ class EmployeeViewSet(viewsets.ModelViewSet):
                 'upgrade_required': True
             }, status=400)
 
+        import random
+        import string
+        from django.core.mail import send_mail
+
         create_serializer = EmployeeCreateSerializer(data=request.data)
         create_serializer.is_valid(raise_exception=True)
         user_data = create_serializer.validated_data
         assigned_role = user_data.get('role')
+
+        raw_password = user_data.get('password')
+        if not raw_password:
+            raw_password = ''.join(random.choices(string.ascii_letters + string.digits + '!@#$%', k=12))
+
+        if user.check_password(raw_password):
+            return Response({
+                'error': 'Security: Employee password cannot be the same as your password. Please use a unique password.'
+            }, status=400)
 
         if not is_system_admin:
             allowed_roles = ONBOARDING_HIERARCHY.get(profile.role, [])
@@ -1191,7 +1204,7 @@ class EmployeeViewSet(viewsets.ModelViewSet):
                     email=email_identity,
                     first_name=user_data['first_name'],
                     last_name=user_data['last_name'],
-                    password=user_data['password'],
+                    password=raw_password,
                 )
 
                 new_profile = new_user.profile
@@ -1230,6 +1243,30 @@ class EmployeeViewSet(viewsets.ModelViewSet):
                     role_assigned=new_profile.role,
                     department=new_profile.department,
                 )
+
+                try:
+                    send_mail(
+                        subject='Welcome to THE FINISHER CRM - Your Account Details',
+                        message=f'''Hello {new_user.first_name},
+
+You have been invited to THE FINISHER LUXURY CRM by {user.get_full_name() or user.username}.
+
+Your login details are as follows:
+Username / Email: {email_identity}
+Temporary Password: {raw_password}
+
+You will be required to change your password and verify your identity via OTP upon your first login.
+
+Best regards,
+THE FINISHER Team''',
+                        from_email='thefinishercrm@gmail.com',
+                        recipient_list=[email_identity],
+                        fail_silently=False,
+                    )
+                except Exception as e:
+                    import logging
+                    logger = logging.getLogger(__name__)
+                    logger.error(f"Failed to send onboarding email to {email_identity}: {e}")
 
                 response_serializer = EmployeeSerializer(new_profile)
                 return Response(response_serializer.data, status=201)
@@ -2403,7 +2440,3 @@ class DashboardLayoutViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
-
-
-
-

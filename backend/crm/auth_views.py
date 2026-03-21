@@ -313,7 +313,7 @@ Best regards,
 � THE FINISHER
 MTAMBO HOLDINGS Team
                     """,
-                    from_email=settings.DEFAULT_FROM_EMAIL,
+                    from_email='thefinishercrm@gmail.com',
                     recipient_list=[email],
                     fail_silently=False,
                 )
