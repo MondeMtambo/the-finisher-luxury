@@ -72,6 +72,23 @@
 
       <div class="card settings-card">
         <div class="sc-header">
+          <div class="sc-icon" style="background: rgba(212, 175, 55, 0.1); color: #D4AF37;">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+          </div>
+          <div>
+            <h3 class="sc-title">Profile Avatar</h3>
+            <p class="sc-desc">Select your executive identity</p>
+          </div>
+        </div>
+        <div class="sc-body" style="padding: 1.25rem;">
+          <div class="avatar-grid">
+            <div v-for="avatar in availableAvatars" :key="avatar.id" class="avatar-item" :class="{ selected: selectedAvatar === avatar.id }" @click="selectAvatar(avatar.id)" :title="avatar.style + ' - ' + avatar.skinTone" v-html="avatar.svg"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card settings-card">
+        <div class="sc-header">
           <div class="sc-icon gray">
             <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="9" r="7"/><line x1="9" y1="7" x2="9" y2="11"/><circle cx="9" cy="5" r=".5" fill="currentColor"/></svg>
           </div>
@@ -92,6 +109,8 @@
 <script>
 import animationsPreference from '../utils/animations'
 import authService from '../services/auth'
+import toast from '../utils/toast'
+import { avatars } from '../utils/avatars.js'
 import { authAPI } from '../api'
 
 export default {
@@ -99,11 +118,14 @@ export default {
   data() {
     return {
       animationsEnabled: true,
+      username: '',
       fullName: '',
       email: '',
       companyName: '',
       role: '',
-      tier: ''
+      tier: '',
+      availableAvatars: avatars,
+      selectedAvatar: null
     }
   },
   computed: {
@@ -133,11 +155,15 @@ export default {
       try {
         const response = await authAPI.getProfile()
         const data = response.data
+        this.username = data.username || ''
         this.fullName = data.full_name || `${data.first_name || ''} ${data.last_name || ''}`.trim()
         this.email = data.email || ''
         this.companyName = data.company_name || ''
         this.role = data.role || ''
         this.tier = data.tier || ''
+        if (this.username) {
+          this.selectedAvatar = localStorage.getItem(`avatar_${this.username}`) || avatars[0].id
+        }
       } catch (err) {
         
         const user = authService.getUser()
@@ -147,7 +173,19 @@ export default {
           this.companyName = user.company_name || ''
           this.role = user.role || ''
           this.tier = user.tier || ''
+          this.username = user.username || ''
+          if (this.username) {
+            this.selectedAvatar = localStorage.getItem(`avatar_${this.username}`) || avatars[0].id
+          }
         }
+      }
+    },
+    selectAvatar(id) {
+      this.selectedAvatar = id
+      if (this.username) {
+        localStorage.setItem(`avatar_${this.username}`, id)
+        toast.success('Avatar Updated', 'Your executive identity has been set.')
+        setTimeout(() => window.location.reload(), 800)
       }
     }
   }
@@ -207,6 +245,38 @@ input:checked + .toggle-track::before { transform: translateX(20px); }
 .preview-line.short { width: 55%; }
 @keyframes pvFloat { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-4px)} }
 @keyframes pvPulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+
+/* Avatar Grid */
+.avatar-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(56px, 1fr));
+  gap: 12px;
+}
+.avatar-item {
+  width: 56px;
+  height: 56px;
+  border-radius: 12px;
+  cursor: pointer;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.05);
+  background: rgba(0, 0, 0, 0.2);
+  transition: all 0.2s ease;
+}
+.avatar-item:hover {
+  transform: translateY(-2px);
+  border-color: rgba(212, 175, 55, 0.5);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+.avatar-item.selected {
+  border-color: #D4AF37;
+  box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.2), 0 8px 16px rgba(0, 0, 0, 0.4);
+  transform: scale(1.05);
+}
+.avatar-item :deep(svg) {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
 
 @media (max-width: 640px) {
   .setting-row { padding: .625rem 1rem; }

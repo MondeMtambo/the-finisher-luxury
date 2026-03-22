@@ -71,7 +71,8 @@
 
         <div class="user-menu" ref="userWrapper">
           <button class="user-btn" @click.stop="toggleUserMenu">
-            <div class="user-avatar-sm">{{ userInitials }}</div>
+            <div v-if="!userAvatarSvg" class="user-avatar-sm">{{ userInitials }}</div>
+            <div v-else class="user-avatar-sm svg-avatar" v-html="userAvatarSvg"></div>
             <div class="user-info-sm">
               <span class="user-name-sm">{{ userFullName }}</span>
               <span class="user-role-sm">{{ userCompany }}</span>
@@ -81,7 +82,8 @@
           <transition name="fade">
             <div v-if="showUserMenu" class="user-dropdown">
               <div class="user-dropdown-header">
-                <div class="user-avatar-lg">{{ userInitials }}</div>
+                <div v-if="!userAvatarSvg" class="user-avatar-lg">{{ userInitials }}</div>
+                <div v-else class="user-avatar-lg svg-avatar" v-html="userAvatarSvg"></div>
                 <div>
                   <div class="dropdown-name">{{ userFullName }}</div>
                   <div class="dropdown-email">{{ userEmail }}</div>
@@ -207,6 +209,7 @@ import authService from '../services/auth'
 import { authAPI, systemAPI, contactsAPI, companiesAPI, dealsAPI, notificationsAPI } from '../api'
 import toast from '../utils/toast'
 import modal from '../utils/modal'
+import { getRandomAvatar, getAvatarById } from '../utils/avatars.js'
 
 export default {
   name: 'Navbar',
@@ -230,6 +233,7 @@ export default {
       userCompany: '',
       userRole: '',
       userEmail: '',
+      userAvatarSvg: null,
       isAdmin: false,
       isClientAdmin: false,
       profileLoaded: false,
@@ -789,6 +793,18 @@ export default {
 .user-role-sm { display: block; font-size: 11px; color: #9ca3af; line-height: 1.3; }
 .user-btn svg { color: #9ca3af; }
 
+.svg-avatar {
+  background: transparent !important;
+  padding: 0 !important;
+  overflow: hidden;
+  border: 1px solid rgba(212, 175, 55, 0.4);
+}
+.svg-avatar :deep(svg) {
+  width: 100%;
+  height: 100%;
+  display: block;
+}
+
 .user-dropdown {
   position: absolute;
   top: calc(100% + 8px);
@@ -879,8 +895,9 @@ export default {
   width: 36px;
   height: 36px;
   border-radius: 10px;
-  background: var(--primary-600);
-  color: #fff;
+  background: rgba(212, 175, 55, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  color: #D4AF37;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -888,12 +905,19 @@ export default {
   font-weight: 700;
   flex-shrink: 0;
 }
+.brand-icon span {
+  animation: f-pulse 2.5s infinite ease-in-out;
+}
+@keyframes f-pulse {
+  0%, 100% { opacity: 1; text-shadow: 0 0 12px rgba(212, 175, 55, 0.8); transform: scale(1); }
+  50% { opacity: 0.4; text-shadow: none; transform: scale(0.96); }
+}
 .brand-text { min-width: 0; }
 .brand-name {
   display: block;
   font-size: 14px;
   font-weight: 700;
-  color: #fff;
+  color: #D4AF37;
   white-space: nowrap;
   letter-spacing: -0.02em;
 }
