@@ -241,7 +241,7 @@ export default {
   },
   computed: {
     isPublicPage() {
-      return ['/', '/login', '/register', '/forgot-password', '/verify-otp'].includes(this.$route.path)
+      return ['/', '/login', '/register', '/forgot-password', '/verify-otp', '/disclaimer', '/privacy-policy', '/terms-of-service', '/popia-compliance'].includes(this.$route.path)
     },
     isAuthenticated() {
       return authService.isAuthenticated()

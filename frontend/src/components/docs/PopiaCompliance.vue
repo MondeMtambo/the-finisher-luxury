@@ -152,46 +152,54 @@ export default {
 <style scoped>
 .doc-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  color: #e2e8f0;
+  background: #000000;
+  color: #ffffff;
   padding: 2rem;
+  font-family: 'Inter', system-ui, sans-serif;
 }
 
 .doc-container {
   max-width: 900px;
   margin: 0 auto;
-  background: rgba(255, 255, 255, 0.05);
+  background: linear-gradient(135deg, rgba(15,15,15,0.8) 0%, rgba(5,5,5,0.9) 100%);
+  backdrop-filter: blur(20px);
   padding: 3rem;
   border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.9), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
 .back-btn {
-  background: rgba(56, 189, 248, 0.2);
-  border: 1px solid rgba(56, 189, 248, 0.4);
-  color: #38bdf8;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #9ca3af;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
   cursor: pointer;
   font-weight: 600;
   margin-bottom: 2rem;
   transition: all 0.2s ease;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-size: 0.8125rem;
 }
 
 .back-btn:hover {
-  background: rgba(56, 189, 248, 0.3);
+  border-color: #ffffff;
+  color: #ffffff;
   transform: translateX(-4px);
 }
 
 h1 {
   font-size: 2.5rem;
-  color: #f8fafc;
+  color: #ffffff;
   margin-bottom: 0.5rem;
   font-weight: 800;
+  letter-spacing: 1px;
 }
 
 .last-updated {
-  color: #94a3b8;
+  color: #9ca3af;
   font-size: 0.9rem;
   margin-bottom: 2rem;
 }
@@ -201,23 +209,26 @@ section {
 }
 
 h2 {
-  font-size: 1.8rem;
-  color: #38bdf8;
+  font-size: 1.5rem;
+  color: #D4AF37;
   margin: 2rem 0 1rem 0;
   font-weight: 700;
+  letter-spacing: 1px;
 }
 
 h3 {
-  font-size: 1.3rem;
-  color: #93c5fd;
+  font-size: 1.1rem;
+  color: #B49015;
   margin: 1.5rem 0 0.75rem 0;
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 p {
   line-height: 1.8;
   margin: 1rem 0;
-  color: #cbd5e1;
+  color: #d1d5db;
 }
 
 ul {
@@ -228,11 +239,11 @@ ul {
 li {
   margin: 0.5rem 0;
   line-height: 1.6;
-  color: #cbd5e1;
+  color: #d1d5db;
 }
 
 strong {
-  color: #f8fafc;
+  color: #ffffff;
   font-weight: 700;
 }
 

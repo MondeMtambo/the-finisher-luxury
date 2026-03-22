@@ -39,7 +39,7 @@
         <div class="auth-links">
           <router-link to="/forgot-password">Forgot Password?</router-link>
           <span class="link-sep">&middot;</span>
-          <router-link to="/register">Create Account</router-link>
+          <router-link to="/register" class="link">Request Access</router-link>
         </div>
       </form>
     </div>
