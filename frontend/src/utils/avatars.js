@@ -8,88 +8,86 @@ const skinTones = [
 
 const m1 = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
   <defs>
-    <clipPath id="c_m1"><circle cx="50" cy="50" r="50"/></clipPath>
-    <linearGradient id="bg_m1" x1="0" y1="0" x2="100" y2="100">
+    <clipPath id="clip1"><circle cx="50" cy="50" r="50"/></clipPath>
+    <linearGradient id="bg1" x1="0" y1="0" x2="100" y2="100">
       <stop offset="0%" stop-color="#1A1D24"/>
       <stop offset="100%" stop-color="#000000"/>
     </linearGradient>
   </defs>
-  <g clip-path="url(#c_m1)">
-    <rect width="100" height="100" fill="url(#bg_m1)"/>
-    <path d="M 10 100 Q 10 60 50 60 Q 90 60 90 100 Z" fill="#111418"/>
-    <path d="M 35 100 L 50 75 L 65 100 Z" fill="#ffffff"/>
-    <path d="M 47 75 L 53 75 L 55 100 L 45 100 Z" fill="#D4AF37"/>
-    <rect x="42" y="45" width="16" height="20" fill="[SKIN_COLOR]"/>
-    <circle cx="50" cy="38" r="18" fill="[SKIN_COLOR]"/>
-    <path d="M 32 38 Q 32 15 50 15 Q 68 15 68 38 Q 68 25 50 20 Q 32 25 32 38 Z" fill="#111111"/>
+  <g clip-path="url(#clip1)">
+    <rect width="100" height="100" fill="url(#bg1)"/>
+    <path d="M 10 110 C 25 70 75 70 90 110" fill="#0B0C10" stroke="#D4AF37" stroke-width="2"/>
+    <path d="M 35 110 L 50 80 L 65 110" fill="#E5E7EB"/>
+    <path d="M 46 80 L 54 80 L 56 110 L 44 110 Z" fill="#D4AF37"/>
+    <rect x="42" y="60" width="16" height="25" fill="[SKIN_COLOR]"/>
+    <path d="M 28 50 C 28 85 72 85 72 50 C 72 20 28 20 28 50 Z" fill="[SKIN_COLOR]"/>
+    <path d="M 26 50 C 26 5 74 5 74 50 C 74 35 50 25 26 50 Z" fill="#111111"/>
   </g>
 </svg>`;
 
 const m2 = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
   <defs>
-    <clipPath id="c_m2"><circle cx="50" cy="50" r="50"/></clipPath>
-    <linearGradient id="bg_m2" x1="0" y1="0" x2="100" y2="100">
-      <stop offset="0%" stop-color="#000000"/>
-      <stop offset="100%" stop-color="#111418"/>
+    <clipPath id="clip2"><circle cx="50" cy="50" r="50"/></clipPath>
+    <linearGradient id="bg2" x1="0" y1="0" x2="100" y2="100">
+      <stop offset="0%" stop-color="#2a2d34"/>
+      <stop offset="100%" stop-color="#050505"/>
     </linearGradient>
   </defs>
-  <g clip-path="url(#c_m2)">
-    <rect width="100" height="100" fill="url(#bg_m2)"/>
-    <path d="M 15 100 Q 15 65 50 65 Q 85 65 85 100 Z" fill="#D4AF37"/>
-    <path d="M 35 100 L 35 60 Q 50 75 65 60 L 65 100 Z" fill="#111418"/>
-    <rect x="42" y="40" width="16" height="20" fill="[SKIN_COLOR]"/>
-    <circle cx="50" cy="35" r="18" fill="[SKIN_COLOR]"/>
-    <rect x="34" y="32" width="12" height="8" rx="2" fill="none" stroke="#D4AF37" stroke-width="2"/>
-    <rect x="54" y="32" width="12" height="8" rx="2" fill="none" stroke="#D4AF37" stroke-width="2"/>
-    <line x1="46" y1="36" x2="54" y2="36" stroke="#D4AF37" stroke-width="2"/>
-    <path d="M 32 35 C 32 10 68 10 68 35 C 68 20 32 20 32 35 Z" fill="#111111"/>
+  <g clip-path="url(#clip2)">
+    <rect width="100" height="100" fill="url(#bg2)"/>
+    <path d="M 15 110 C 20 65 80 65 85 110" fill="#111418"/>
+    <path d="M 38 75 C 38 65 62 65 62 75 L 65 110 L 35 110 Z" fill="#0B0C10" stroke="#D4AF37" stroke-width="1"/>
+    <rect x="42" y="55" width="16" height="20" fill="[SKIN_COLOR]"/>
+    <path d="M 30 48 C 30 80 70 80 70 48 C 70 15 30 15 30 48 Z" fill="[SKIN_COLOR]"/>
+    <rect x="30" y="42" width="16" height="12" rx="4" fill="none" stroke="#D4AF37" stroke-width="2.5"/>
+    <rect x="54" y="42" width="16" height="12" rx="4" fill="none" stroke="#D4AF37" stroke-width="2.5"/>
+    <line x1="46" y1="48" x2="54" y2="48" stroke="#D4AF37" stroke-width="2.5"/>
+    <path d="M 28 48 C 28 10 72 10 72 48 C 72 35 28 35 28 48 Z" fill="#111111"/>
   </g>
 </svg>`;
 
 const f1 = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
   <defs>
-    <clipPath id="c_f1"><circle cx="50" cy="50" r="50"/></clipPath>
-    <linearGradient id="bg_f1" x1="0" y1="0" x2="100" y2="100">
-      <stop offset="0%" stop-color="#111418"/>
+    <clipPath id="clip3"><circle cx="50" cy="50" r="50"/></clipPath>
+    <linearGradient id="bg3" x1="0" y1="0" x2="100" y2="100">
+      <stop offset="0%" stop-color="#1A1D24"/>
       <stop offset="100%" stop-color="#000000"/>
     </linearGradient>
   </defs>
-  <g clip-path="url(#c_f1)">
-    <rect width="100" height="100" fill="url(#bg_f1)"/>
-    <path d="M 15 100 Q 15 65 50 65 Q 85 65 85 100 Z" fill="#374151"/>
-    <path d="M 35 100 L 50 75 L 65 100 Z" fill="#0B0C10"/>
-    <path d="M 40 70 Q 50 85 60 70" fill="none" stroke="#D4AF37" stroke-width="2"/>
-    <rect x="43" y="45" width="14" height="20" fill="[SKIN_COLOR]"/>
-    <circle cx="50" cy="40" r="17" fill="[SKIN_COLOR]"/>
-    <path d="M 30 50 Q 30 15 50 15 Q 70 15 70 50 Q 65 55 60 50 L 60 25 Q 50 20 40 25 L 40 50 Q 35 55 30 50 Z" fill="#111111"/>
+  <g clip-path="url(#clip3)">
+    <rect width="100" height="100" fill="url(#bg3)"/>
+    <path d="M 12 110 C 12 65 88 65 88 110" fill="#1F2937" stroke="#D4AF37" stroke-width="1.5"/>
+    <path d="M 38 110 L 50 85 L 62 110" fill="#0B0C10"/>
+    <rect x="43" y="60" width="14" height="30" fill="[SKIN_COLOR]"/>
+    <path d="M 32 50 C 32 80 68 80 68 50 C 68 20 32 20 32 50 Z" fill="[SKIN_COLOR]"/>
+    <path d="M 25 55 C 25 5 75 5 75 55 C 75 75 68 80 65 60 C 65 30 35 30 35 60 C 32 80 25 75 25 55 Z" fill="#0B0C10"/>
   </g>
 </svg>`;
 
 const f2 = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100">
   <defs>
-    <clipPath id="c_f2"><circle cx="50" cy="50" r="50"/></clipPath>
-    <linearGradient id="bg_f2" x1="0" y1="0" x2="100" y2="100">
-      <stop offset="0%" stop-color="#374151"/>
-      <stop offset="100%" stop-color="#0B0C10"/>
+    <clipPath id="clip4"><circle cx="50" cy="50" r="50"/></clipPath>
+    <linearGradient id="bg4" x1="0" y1="0" x2="100" y2="100">
+      <stop offset="0%" stop-color="#2a2d34"/>
+      <stop offset="100%" stop-color="#050505"/>
     </linearGradient>
   </defs>
-  <g clip-path="url(#c_f2)">
-    <rect width="100" height="100" fill="url(#bg_f2)"/>
-    <path d="M 20 100 Q 20 70 50 70 Q 80 70 80 100 Z" fill="#ffffff"/>
-    <path d="M 40 100 Q 50 65 60 100 Z" fill="#D4AF37"/>
-    <path d="M 35 75 Q 50 85 65 75 Z" fill="#B49015"/>
-    <rect x="44" y="45" width="12" height="20" fill="[SKIN_COLOR]"/>
-    <circle cx="50" cy="40" r="16" fill="[SKIN_COLOR]"/>
-    <circle cx="50" cy="18" r="10" fill="#111111"/>
-    <path d="M 33 40 Q 33 15 50 20 Q 67 15 67 40 Q 67 25 50 25 Q 33 25 33 40 Z" fill="#111111"/>
+  <g clip-path="url(#clip4)">
+    <rect width="100" height="100" fill="url(#bg4)"/>
+    <path d="M 20 110 C 30 75 70 75 80 110" fill="#E5E7EB"/>
+    <path d="M 40 85 Q 50 100 60 85" fill="none" stroke="#D4AF37" stroke-width="2.5"/>
+    <rect x="44" y="60" width="12" height="30" fill="[SKIN_COLOR]"/>
+    <path d="M 34 50 C 34 78 66 78 66 50 C 66 22 34 22 34 50 Z" fill="[SKIN_COLOR]"/>
+    <circle cx="50" cy="20" r="16" fill="#0B0C10"/>
+    <path d="M 30 48 C 30 15 70 15 70 48 C 70 30 30 30 30 48 Z" fill="#0B0C10"/>
   </g>
 </svg>`;
 
 const templates = [
-  { id: 'm1', gender: 'male', style: 'Executive Suit', svg: m1 },
-  { id: 'm2', gender: 'male', style: 'Creative Director', svg: m2 },
-  { id: 'f1', gender: 'female', style: 'Power Blazer', svg: f1 },
-  { id: 'f2', gender: 'female', style: 'Elegant Blouse', svg: f2 }
+  { id: 'm1', gender: 'male', style: 'Executive Fade', svg: m1 },
+  { id: 'm2', gender: 'male', style: 'Modern Tech', svg: m2 },
+  { id: 'f1', gender: 'female', style: 'Power Bob', svg: f1 },
+  { id: 'f2', gender: 'female', style: 'Minimalist Updo', svg: f2 }
 ];
 
 export const avatars = [];
