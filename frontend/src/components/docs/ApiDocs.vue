@@ -212,57 +212,65 @@ export default {
 <style scoped>
 .doc-page {
   min-height: 100vh;
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
-  color: #e2e8f0;
+  background: #000000;
+  color: #ffffff;
   padding: 2rem;
+  font-family: 'Inter', system-ui, sans-serif;
 }
 
 .doc-container {
   max-width: 1000px;
   margin: 0 auto;
-  background: rgba(255, 255, 255, 0.05);
+  background: linear-gradient(135deg, rgba(15,15,15,0.8) 0%, rgba(5,5,5,0.9) 100%);
+  backdrop-filter: blur(20px);
   padding: 3rem;
   border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  box-shadow: 0 30px 60px rgba(0, 0, 0, 0.9), inset 0 0 0 1px rgba(255, 255, 255, 0.05);
 }
 
 .back-btn {
-  background: rgba(56, 189, 248, 0.2);
-  border: 1px solid rgba(56, 189, 248, 0.4);
-  color: #38bdf8;
-  padding: 0.5rem 1rem;
-  border-radius: 8px;
+  background: transparent;
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #9ca3af;
+  padding: 0.75rem 1.5rem;
+  border-radius: 4px;
   cursor: pointer;
   font-weight: 600;
   margin-bottom: 2rem;
-  transition: all 0.2s ease;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  font-size: 0.8125rem;
 }
 
 .back-btn:hover {
-  background: rgba(56, 189, 248, 0.3);
+  border-color: #ffffff;
+  color: #ffffff;
   transform: translateX(-4px);
 }
 
 h1 {
   font-size: 2.5rem;
-  color: #f8fafc;
+  color: #ffffff;
   margin-bottom: 0.5rem;
   font-weight: 800;
+  letter-spacing: 1px;
 }
 
 .subtitle {
-  color: #94a3b8;
+  color: #9ca3af;
   font-size: 1.1rem;
   margin-bottom: 2rem;
 }
 
 .api-notice {
-  background: rgba(251, 191, 36, 0.15);
-  border: 1px solid rgba(251, 191, 36, 0.4);
+  background: rgba(212, 175, 55, 0.15);
+  border: 1px solid rgba(212, 175, 55, 0.4);
   border-radius: 8px;
   padding: 1rem;
   margin: 2rem 0;
-  color: #fbbf24;
+  color: #D4AF37;
 }
 
 section {
@@ -270,43 +278,46 @@ section {
 }
 
 h2 {
-  font-size: 1.8rem;
-  color: #38bdf8;
+  font-size: 1.5rem;
+  color: #D4AF37;
   margin: 2rem 0 1rem 0;
   font-weight: 700;
-  border-bottom: 2px solid rgba(56, 189, 248, 0.3);
+  border-bottom: 2px solid rgba(212, 175, 55, 0.3);
   padding-bottom: 0.5rem;
+  letter-spacing: 1px;
 }
 
 h3 {
-  font-size: 1.3rem;
-  color: #93c5fd;
+  font-size: 1.1rem;
+  color: #B49015;
   margin: 1.5rem 0 0.75rem 0;
   font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 
 p {
   line-height: 1.8;
   margin: 1rem 0;
-  color: #cbd5e1;
+  color: #d1d5db;
 }
 
 .code-block {
-  background: #0a0f1a;
-  border: 1px solid rgba(56, 189, 248, 0.3);
+  background: rgba(0, 0, 0, 0.5);
+  border: 1px solid rgba(212, 175, 55, 0.2);
   border-radius: 8px;
   padding: 1rem;
   margin: 1rem 0;
   font-family: 'Courier New', monospace;
   font-size: 0.9rem;
-  color: #93c5fd;
+  color: #D4AF37;
   overflow-x: auto;
   white-space: pre-wrap;
 }
 
 .endpoint {
-  background: rgba(15, 23, 42, 0.6);
-  border: 1px solid rgba(148, 163, 184, 0.2);
+  background: rgba(15, 15, 15, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.1);
   border-radius: 12px;
   padding: 1.5rem;
   margin: 1.5rem 0;
@@ -328,32 +339,32 @@ p {
 }
 
 .method.get {
-  background: rgba(34, 197, 94, 0.2);
-  color: #22c55e;
-  border: 1px solid rgba(34, 197, 94, 0.4);
+  background: rgba(212, 175, 55, 0.1);
+  color: #D4AF37;
+  border: 1px solid rgba(212, 175, 55, 0.3);
 }
 
 .method.post {
-  background: rgba(59, 130, 246, 0.2);
-  color: #3b82f6;
-  border: 1px solid rgba(59, 130, 246, 0.4);
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.3);
 }
 
 .path {
   font-family: 'Courier New', monospace;
   font-size: 1.1rem;
-  color: #f8fafc;
+  color: #ffffff;
   font-weight: 600;
 }
 
 .endpoint-desc {
-  color: #cbd5e1;
+  color: #d1d5db;
   margin: 0.5rem 0;
 }
 
 .params {
   margin-top: 1rem;
-  color: #94a3b8;
+  color: #9ca3af;
   font-size: 0.9rem;
 }
 
@@ -365,15 +376,15 @@ ul {
 li {
   margin: 0.5rem 0;
   line-height: 1.6;
-  color: #cbd5e1;
+  color: #d1d5db;
 }
 
 code {
-  background: rgba(56, 189, 248, 0.15);
+  background: rgba(212, 175, 55, 0.15);
   padding: 0.2rem 0.4rem;
   border-radius: 4px;
   font-family: 'Courier New', monospace;
-  color: #38bdf8;
+  color: #D4AF37;
   font-size: 0.9em;
 }
 
@@ -384,18 +395,18 @@ code {
 }
 
 .response-table th {
-  background: rgba(56, 189, 248, 0.1);
+  background: rgba(212, 175, 55, 0.1);
   padding: 0.75rem;
   text-align: left;
   font-weight: 700;
-  color: #38bdf8;
-  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #D4AF37;
+  border: 1px solid rgba(212, 175, 55, 0.3);
 }
 
 .response-table td {
   padding: 0.75rem;
-  border: 1px solid rgba(148, 163, 184, 0.2);
-  color: #cbd5e1;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #d1d5db;
 }
 
 .code-badge {
@@ -417,7 +428,7 @@ code {
 }
 
 a {
-  color: #38bdf8;
+  color: #D4AF37;
   text-decoration: none;
   font-weight: 600;
 }
