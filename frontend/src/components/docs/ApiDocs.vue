@@ -196,7 +196,7 @@ X-RateLimit-Reset: 1699876543
       <section>
         <h2>Need Help?</h2>
         <p>Contact our developer support team:</p>
-        <p><strong>Email:</strong> api@thefinisher.co.za</p>
+        <p><strong>Email:</strong> thefinishercrm@gmail.com</p>
         <p><strong>Documentation:</strong> <a href="https://docs.thefinisher.co.za" target="_blank">docs.thefinisher.co.za</a></p>
       </section>
     </div>

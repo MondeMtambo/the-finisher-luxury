@@ -101,7 +101,7 @@ class LoginView(TokenObtainPairView):
                         return Response({
                             'error': 'Account banned',
                             'message': f'Your account has been banned. Reason: {user.profile.ban_reason}',
-                            'contact': 'support@thefinisher.co.za'
+                        'contact': 'thefinishercrm@gmail.com'
                         }, status=status.HTTP_403_FORBIDDEN)
 
                     if not user.profile.can_access:
@@ -109,7 +109,7 @@ class LoginView(TokenObtainPairView):
                             'error': 'Payment required',
                             'message': 'Your account requires payment to continue. Please contact support.',
                             'payment_status': user.profile.payment_status,
-                            'contact': 'support@thefinisher.co.za'
+                        'contact': 'thefinishercrm@gmail.com'
                         }, status=status.HTTP_402_PAYMENT_REQUIRED)
 
                     if not skip_mfa and is_mfa_required(user):

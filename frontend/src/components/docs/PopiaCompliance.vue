@@ -14,7 +14,7 @@
       <section>
         <h2>Information Officer</h2>
         <p><strong>Name:</strong> Monde Mtambo</p>
-        <p><strong>Email:</strong> info@thefinisher.co.za</p>
+        <p><strong>Email:</strong> thefinishercrm@gmail.com</p>
         <p><strong>Phone:</strong> +27 (0)10 123 4567</p>
         <p>Our Information Officer is responsible for ensuring POPIA compliance across all operations.</p>
       </section>
@@ -126,7 +126,7 @@
       <section>
         <h2>Filing a Complaint</h2>
         <p>If you believe we have violated your privacy rights:</p>
-        <p><strong>Contact us first:</strong> privacy@thefinisher.co.za</p>
+        <p><strong>Contact us first:</strong> thefinishercrm@gmail.com</p>
         <p><strong>Or lodge a complaint with:</strong></p>
         <p>
           Information Regulator (South Africa)<br>

@@ -104,16 +104,16 @@
 
       <section>
         <h2>12. Contact</h2>
-        <p><strong>Legal / Privacy:</strong> legal@thefinisher.co.za</p>
-        <p><strong>Data Protection / DPO:</strong> privacy@thefinisher.co.za</p>
-        <p><strong>Support:</strong> support@thefinisher.co.za</p>
+        <p><strong>Legal / Privacy:</strong> thefinishercrm@gmail.com</p>
+        <p><strong>Data Protection / DPO:</strong> thefinishercrm@gmail.com</p>
+        <p><strong>Support:</strong> thefinishercrm@gmail.com</p>
         <p><strong>Phone:</strong> +27 (0)10 123 4567</p>
       </section>
 
       <section>
         <h2>13. POPIA Compliance</h2>
         <p>We process personal information in accordance with the Protection of Personal Information Act (POPIA) (Act No. 4 of 2013). THE FINISHER LUXURY is committed to protecting the privacy and personal information of our users and customers. We will only collect, use, retain and disclose personal information where there is a lawful basis for doing so and for purposes set out in these Terms and our Privacy Policy.</p>
-        <p>Data subjects have rights under POPIA, including the right to access, correct, request deletion of, or object to certain processing of their personal information. To exercise these rights or to contact our Data Protection Officer, please email <strong>privacy@thefinisher.co.za</strong> or <strong>legal@thefinisher.co.za</strong>. We will respond to privacy requests in accordance with applicable law.</p>
+        <p>Data subjects have rights under POPIA, including the right to access, correct, request deletion of, or object to certain processing of their personal information. To exercise these rights or to contact our Data Protection Officer, please email <strong>thefinishercrm@gmail.com</strong>. We will respond to privacy requests in accordance with applicable law.</p>
         <p>We retain personal information only for as long as necessary to fulfil the purposes for which it was collected or to comply with legal obligations. We implement reasonable technical and organisational measures to protect personal information against loss, unauthorized access, disclosure, or other unlawful processing.</p>
       </section>
     </div>

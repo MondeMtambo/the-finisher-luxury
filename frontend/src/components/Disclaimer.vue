@@ -85,9 +85,9 @@
 
       <section>
         <h2>Contact &amp; Legal Inquiries</h2>
-        <p>For privacy, legal queries, or licensing inquiries, contact MTAMBO HOLDINGS at <strong>legal@mtamboholdings.co.za</strong><br>
+        <p>For privacy, legal queries, or licensing inquiries, contact MTAMBO HOLDINGS at <strong>thefinishercrm@gmail.com</strong><br>
         <strong>Address:</strong> MTAMBO HOLDINGS, South Africa<br>
-        <strong>Product Support:</strong> support@thefinisher.co.za</p>
+        <strong>Product Support:</strong> thefinishercrm@gmail.com</p>
       </section>
 
       <div class="legal-footer">

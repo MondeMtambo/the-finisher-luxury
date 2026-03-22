@@ -85,7 +85,7 @@
       <section>
         <h2>8. Contact Us</h2>
         <p>For privacy concerns or to exercise your POPIA rights:</p>
-        <p><strong>Email:</strong> privacy@thefinisher.co.za</p>
+        <p><strong>Email:</strong> thefinishercrm@gmail.com</p>
         <p><strong>Phone:</strong> +27 (0)10 123 4567</p>
         <p><strong>Address:</strong> Johannesburg, South Africa</p>
       </section>
