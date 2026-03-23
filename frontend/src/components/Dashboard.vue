@@ -733,8 +733,8 @@ export default {
       if (savedLayout) {
         try {
           const parsed = JSON.parse(savedLayout)
-          // Fallback to rebuild if it's the old 1D array layout missing the 2D grid coordinates
-          if (parsed.length && parsed[0].w === undefined) {
+          // Fallback to rebuild if it's the old layout missing grid coords OR using the broken 4-column scale
+          if (parsed.length && (parsed[0].w === undefined || parsed[0].w === 1)) {
             console.log("Old layout detected, resetting to default 2D layout.");
             this.setDefaultLayout()
             this.$nextTick(() => this.initGrid()); // Re-init grid after setting defaults
@@ -755,18 +755,18 @@ export default {
         
         const c = this.ticketStatusCounts
         this.statCards = [
-          { key: 'assigned', icon: '🎟️', label: 'Assigned Tickets', value: this.myAssignedTickets.length, x: 0, y: 0, w: 1, h: 1 },
-          { key: 'openTickets', icon: '', label: 'Open', value: c.open || 0, x: 1, y: 0, w: 1, h: 1 },
-          { key: 'inProgress', icon: '⏱️', label: 'In Progress', value: c.in_progress || 0, x: 2, y: 0, w: 1, h: 1 },
-          { key: 'completedTickets', icon: '✅', label: 'Completed', value: c.completed || 0, x: 3, y: 0, w: 1, h: 1 }
+          { key: 'assigned', icon: '🎟️', label: 'Assigned Tickets', value: this.myAssignedTickets.length, x: 0, y: 0, w: 3, h: 1 },
+          { key: 'openTickets', icon: '', label: 'Open', value: c.open || 0, x: 3, y: 0, w: 3, h: 1 },
+          { key: 'inProgress', icon: '⏱️', label: 'In Progress', value: c.in_progress || 0, x: 6, y: 0, w: 3, h: 1 },
+          { key: 'completedTickets', icon: '✅', label: 'Completed', value: c.completed || 0, x: 9, y: 0, w: 3, h: 1 }
         ]
       } else {
         
         this.statCards = [
-          { key: 'contacts', icon: '👥', label: 'Total Contacts', value: this.contacts.length, x: 0, y: 0, w: 1, h: 1 },
-          { key: 'companies', icon: '🏢', label: 'Companies', value: this.companies.length, x: 1, y: 0, w: 1, h: 1 },
-          { key: 'deals', icon: '💰', label: 'Active Deals', value: this.activeDeals.length, x: 2, y: 0, w: 1, h: 1 },
-          { key: 'revenue', icon: '📈', label: 'Pipeline Value', value: `R${this.pipelineSum}`, x: 3, y: 0, w: 1, h: 1 }
+          { key: 'contacts', icon: '👥', label: 'Total Contacts', value: this.contacts.length, x: 0, y: 0, w: 3, h: 1 },
+          { key: 'companies', icon: '🏢', label: 'Companies', value: this.companies.length, x: 3, y: 0, w: 3, h: 1 },
+          { key: 'deals', icon: '💰', label: 'Active Deals', value: this.activeDeals.length, x: 6, y: 0, w: 3, h: 1 },
+          { key: 'revenue', icon: '📈', label: 'Pipeline Value', value: `R${this.pipelineSum}`, x: 9, y: 0, w: 3, h: 1 }
         ]
       }
     },
@@ -816,7 +816,6 @@ export default {
       this.grid = GridStack.init({
         cellHeight: 110,
         margin: 16,
-        column: 4,
         handle: '.drag-handle',
         animate: true,
         float: true,
@@ -828,25 +827,6 @@ export default {
         id: card.key,
         x: card.x, y: card.y, w: card.w, h: card.h
       })));
-
-      this.grid.on('change', (event, items) => {
-        if (!items) return;
-        const newStatCards = this.statCards.map(card => {
-          const updatedItem = items.find(item => item.id === card.key);
-          if (updatedItem) {
-            return {
-              ...card,
-              x: updatedItem.x,
-              y: updatedItem.y,
-              w: updatedItem.w,
-              h: updatedItem.h,
-            };
-          }
-          return card;
-        });
-        this.statCards = newStatCards;
-        this.saveLayout();
-      }, this.$refs.topStatsGrid);
 
       this.grid.on('change', (event, items) => {
         if (!items) return;

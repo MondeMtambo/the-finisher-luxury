@@ -198,16 +198,16 @@ export default {
       resetting: false,
       showAddWidget: false,
       availableWidgets: [
-        { type: 'stat_card', name: 'Stat Card', desc: 'Key metric overview', icon: '📊', width: 1, height: 1 },
-        { type: 'pipeline_chart', name: 'Pipeline Chart', desc: 'Deals by stage', icon: '📈', width: 2, height: 1 },
-        { type: 'revenue_chart', name: 'Revenue Chart', desc: 'Revenue over time', icon: '💰', width: 2, height: 1 },
-        { type: 'activity_feed', name: 'Activity Feed', desc: 'Recent activities', icon: '📋', width: 1, height: 2 },
-        { type: 'deal_funnel', name: 'Deal Funnel', desc: 'Sales funnel visual', icon: '🔽', width: 2, height: 1 },
-        { type: 'top_contacts', name: 'Top Contacts', desc: 'Highest-scoring contacts', icon: '⭐', width: 1, height: 1 },
-        { type: 'campaign_stats', name: 'Campaign Stats', desc: 'Email campaign overview', icon: '✉️', width: 2, height: 1 },
-        { type: 'team_leaderboard', name: 'Team Leaderboard', desc: 'Top performers', icon: '🏆', width: 1, height: 1 },
-        { type: 'tasks_due', name: 'Tasks Due', desc: 'Tickets due today', icon: '✅', width: 1, height: 1 },
-        { type: 'recent_deals', name: 'Recent Deals', desc: 'Latest deal activity', icon: '📝', width: 2, height: 1 },
+        { type: 'stat_card', name: 'Stat Card', desc: 'Key metric overview', icon: '📊', width: 3, height: 1 },
+        { type: 'pipeline_chart', name: 'Pipeline Chart', desc: 'Deals by stage', icon: '📈', width: 6, height: 1 },
+        { type: 'revenue_chart', name: 'Revenue Chart', desc: 'Revenue over time', icon: '💰', width: 6, height: 1 },
+        { type: 'activity_feed', name: 'Activity Feed', desc: 'Recent activities', icon: '📋', width: 3, height: 2 },
+        { type: 'deal_funnel', name: 'Deal Funnel', desc: 'Sales funnel visual', icon: '🔽', width: 6, height: 1 },
+        { type: 'top_contacts', name: 'Top Contacts', desc: 'Highest-scoring contacts', icon: '⭐', width: 3, height: 1 },
+        { type: 'campaign_stats', name: 'Campaign Stats', desc: 'Email campaign overview', icon: '✉️', width: 6, height: 1 },
+        { type: 'team_leaderboard', name: 'Team Leaderboard', desc: 'Top performers', icon: '🏆', width: 3, height: 1 },
+        { type: 'tasks_due', name: 'Tasks Due', desc: 'Tickets due today', icon: '✅', width: 3, height: 1 },
+        { type: 'recent_deals', name: 'Recent Deals', desc: 'Latest deal activity', icon: '📝', width: 6, height: 1 },
       ]
     }
   },
@@ -251,7 +251,6 @@ export default {
       this.grid = GridStack.init({
         cellHeight: 180,
         margin: 16,
-        column: 4, // 4-column dashboard layout
         disableResize: !this.canDragDrop,
         disableDrag: !this.canDragDrop,
         handle: '.draggable-header',
@@ -285,11 +284,22 @@ export default {
       this.loading = true
       try {
         const res = await dashboardWidgetsAPI.getAll()
-        this.widgets = res.data.results || res.data || []
-        if (this.widgets.length === 0) {
+        let fetchedWidgets = res.data.results || res.data || []
+        if (fetchedWidgets.length === 0) {
           await this.resetDefaults()
           return
         }
+        
+        // Auto-migrate from old 4-column sizes to standard 12-column sizes seamlessly
+        if (fetchedWidgets.some(w => w.width <= 2)) {
+           fetchedWidgets = fetchedWidgets.map(w => {
+             w.width = w.width * 3
+             w.position_x = (w.position_x || 0) * 3
+             return w
+           })
+        }
+        this.widgets = fetchedWidgets
+
         this.$nextTick(() => {
           this.initGrid()
         })

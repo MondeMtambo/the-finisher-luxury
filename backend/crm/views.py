@@ -2331,13 +2331,13 @@ class DashboardWidgetViewSet(viewsets.ModelViewSet):
         """Reset to default widgets."""
         DashboardWidget.objects.filter(user=request.user).delete()
         defaults = [
-            {'widget_type': 'stat_card', 'title': 'Total Contacts', 'position_x': 0, 'position_y': 0, 'width': 1, 'height': 1},
-            {'widget_type': 'stat_card', 'title': 'Total Deals', 'position_x': 1, 'position_y': 0, 'width': 1, 'height': 1},
-            {'widget_type': 'stat_card', 'title': 'Revenue', 'position_x': 2, 'position_y': 0, 'width': 1, 'height': 1},
-            {'widget_type': 'pipeline_chart', 'title': 'Pipeline', 'position_x': 0, 'position_y': 1, 'width': 2, 'height': 1},
-            {'widget_type': 'activity_feed', 'title': 'Activity Feed', 'position_x': 2, 'position_y': 1, 'width': 1, 'height': 1},
-            {'widget_type': 'deal_funnel', 'title': 'Deal Funnel', 'position_x': 0, 'position_y': 2, 'width': 2, 'height': 1},
-            {'widget_type': 'recent_deals', 'title': 'Recent Deals', 'position_x': 2, 'position_y': 2, 'width': 1, 'height': 1},
+            {'widget_type': 'stat_card', 'title': 'Total Contacts', 'position_x': 0, 'position_y': 0, 'width': 3, 'height': 1},
+            {'widget_type': 'stat_card', 'title': 'Total Deals', 'position_x': 3, 'position_y': 0, 'width': 3, 'height': 1},
+            {'widget_type': 'stat_card', 'title': 'Revenue', 'position_x': 6, 'position_y': 0, 'width': 3, 'height': 1},
+            {'widget_type': 'pipeline_chart', 'title': 'Pipeline', 'position_x': 0, 'position_y': 1, 'width': 6, 'height': 1},
+            {'widget_type': 'activity_feed', 'title': 'Activity Feed', 'position_x': 6, 'position_y': 1, 'width': 3, 'height': 2},
+            {'widget_type': 'deal_funnel', 'title': 'Deal Funnel', 'position_x': 0, 'position_y': 2, 'width': 6, 'height': 1},
+            {'widget_type': 'recent_deals', 'title': 'Recent Deals', 'position_x': 6, 'position_y': 2, 'width': 6, 'height': 1},
         ]
         widgets = []
         for d in defaults:
