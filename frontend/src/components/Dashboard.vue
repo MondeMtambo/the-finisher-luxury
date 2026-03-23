@@ -774,33 +774,29 @@ export default {
       
       if (this.isEmployeeOnly) {
         const c = this.ticketStatusCounts
-        this.statCards = this.statCards.map(card => {
+        this.statCards.forEach(card => {
           switch(card.key) {
             case 'assigned':
-              return { ...card, value: this.myAssignedTickets.length }
+              card.value = this.myAssignedTickets.length; break;
             case 'openTickets':
-              return { ...card, value: c.open || 0 }
+              card.value = c.open || 0; break;
             case 'inProgress':
-              return { ...card, value: c.in_progress || 0 }
+              card.value = c.in_progress || 0; break;
             case 'completedTickets':
-              return { ...card, value: c.completed || 0 }
-            default:
-              return card
+              card.value = c.completed || 0; break;
           }
         })
       } else {
-        this.statCards = this.statCards.map(card => {
+        this.statCards.forEach(card => {
           switch(card.key) {
             case 'contacts':
-              return { ...card, value: this.contacts.length }
+              card.value = this.contacts.length; break;
             case 'companies':
-              return { ...card, value: this.companies.length }
+              card.value = this.companies.length; break;
             case 'deals':
-              return { ...card, value: this.activeDeals.length }
+              card.value = this.activeDeals.length; break;
             case 'revenue':
-              return { ...card, value: `R${this.pipelineSum}` }
-            default:
-              return card
+              card.value = `R${this.pipelineSum}`; break;
           }
         })
       }
@@ -814,12 +810,13 @@ export default {
         this.grid.destroy(false);
       }
       this.grid = GridStack.init({
-        cols: 12,            // Enable 2D grid (default 1 = 1D single column)
+        column: 12,
         cellHeight: 110,
         margin: 16,
         handle: '.drag-handle',
         animate: true,
         float: true,
+        disableOneColumnMode: true, // Prevent snapping to 1 column on smaller screens
         disableResize: false, // Allow resizing
         disableDrag: false,   // Allow dragging
       }, this.$refs.topStatsGrid);

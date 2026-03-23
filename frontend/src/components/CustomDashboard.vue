@@ -249,11 +249,12 @@ export default {
         this.grid.destroy(false);
       }
       this.grid = GridStack.init({
-        cols: 12,            // Enable 2D grid (default 1 = 1D single column)
+        column: 12,
         cellHeight: 180,
         margin: 16,
         disableResize: !this.canDragDrop,
         disableDrag: !this.canDragDrop,
+        disableOneColumnMode: true,
         handle: '.draggable-header',
         animate: true,
         float: true // Allows widgets to be freely placed without auto-snapping up
@@ -354,8 +355,8 @@ export default {
       if (!confirm(`Remove "${widget.title}" widget?`)) return
       try {
         await dashboardWidgetsAPI.delete(widget.id)
-        this.widgets = this.widgets.filter(w => w.id !== widget.id)
         toast.success('Widget removed')
+        this.fetchWidgets()
       } catch (e) {
         toast.error('Failed to remove widget')
       }
