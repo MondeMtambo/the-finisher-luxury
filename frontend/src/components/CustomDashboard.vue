@@ -193,6 +193,7 @@ export default {
       showAddWidget: false,
       dragIndex: null,
       dragOverIndex: null,
+      pendingDropIndex: null,
       availableWidgets: [
         { type: 'stat_card', name: 'Stat Card', desc: 'Key metric overview', icon: '📊', width: 1, height: 1 },
         { type: 'pipeline_chart', name: 'Pipeline Chart', desc: 'Deals by stage', icon: '📈', width: 2, height: 1 },
@@ -244,32 +245,31 @@ export default {
       if (!this.canDragDrop) return
       this.dragIndex = index
       event.dataTransfer.effectAllowed = 'move'
-      setTimeout(() => { event.target.classList.add('dragging-active') }, 0)
     },
     onDragEnter(index, event) {
       if (!this.canDragDrop || this.dragIndex === null || this.dragIndex === index) return
       this.dragOverIndex = index
     },
     onDrop(index) {
-      if (this.dragIndex !== null && this.dragOverIndex !== null && this.dragIndex !== this.dragOverIndex) {
+      // Defer the data swap until the browser finishes the physical drop
+      this.pendingDropIndex = index
+    },
+    onDragEnd(event) {
+      // Now that the browser released the element, it is safe to let Vue update the array
+      if (this.dragIndex !== null && this.pendingDropIndex !== null && this.dragIndex !== this.pendingDropIndex) {
         const widgets = [...this.activeWidgets]
         const moved = widgets.splice(this.dragIndex, 1)[0]
-        widgets.splice(this.dragOverIndex, 0, moved)
+        widgets.splice(this.pendingDropIndex, 0, moved)
         
-        widgets.forEach((w, i) => w.position_y = i)
-        this.widgets = this.widgets.map(w => {
-          const updated = widgets.find(aw => aw.id === w.id)
-          return updated ? updated : w
+        widgets.forEach((w, i) => {
+          const target = this.widgets.find(x => x.id === w.id)
+          if (target) target.position_y = i
         })
         this.saveLayout()
       }
       this.dragIndex = null
       this.dragOverIndex = null
-    },
-    onDragEnd(event) {
-      event.target.classList.remove('dragging-active')
-      this.dragIndex = null
-      this.dragOverIndex = null
+      this.pendingDropIndex = null
     },
     async saveLayout() {
       const positions = this.activeWidgets.map((w, index) => ({ id: w.id, x: 0, y: index, w: w.width, h: w.height }))
@@ -381,12 +381,11 @@ export default {
 
 .dashboard-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
 .widget-card { background: rgba(15, 15, 15, 0.8) !important; border: 1px solid rgba(212, 175, 55, 0.2) !important; border-radius: 12px; padding: 0; overflow: hidden; transition: transform 0.2s ease, box-shadow 0.2s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
-.widget-card.is-dragging { opacity: 0.4; transform: scale(0.98); border-color: #D4AF37 !important; }
-.widget-card.dragging-active { opacity: 0; }
+.widget-card.is-dragging { opacity: 0.3; transform: scale(0.98); border: 2px dashed rgba(212, 175, 55, 0.5) !important; }
 .widget-card.drag-over { 
   border: 2px dashed #D4AF37 !important; 
   transform: translateY(4px); 
-}
+} 
 .w-1 { grid-column: span 1; }
 .w-2 { grid-column: span 2; }
 .w-3 { grid-column: span 3; }
