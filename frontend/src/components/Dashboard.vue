@@ -30,21 +30,19 @@
       </div>
     </div>
 
-    <draggable
-      v-model="statCards"
-      class="stats-grid"
-      :animation="200"
-      handle=".drag-handle"
-      @end="saveLayout"
-    >
-      <template #item="{element}">
-        <div
-          class="stat-card card"
-          @click="onStatCardClick(element.key)"
-          role="button"
-          tabindex="0"
-        >
-          <span class="drag-handle" title="Drag to reorder">
+    <div class="grid-stack top-stats-grid" ref="topStatsGrid">
+      <div 
+        v-for="element in statCards" 
+        :key="element.key"
+        class="grid-stack-item"
+        :gs-id="element.key"
+        :gs-x="element.x || 0"
+        :gs-y="element.y || 0"
+        :gs-w="element.w || 1"
+        :gs-h="element.h || 1"
+      >
+        <div class="grid-stack-item-content stat-card card" @click="onStatCardClick(element.key)" role="button" tabindex="0">
+          <span class="drag-handle" title="Drag to reorder" @click.stop>
             <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><circle cx="4" cy="2" r="1.5"/><circle cx="10" cy="2" r="1.5"/><circle cx="4" cy="7" r="1.5"/><circle cx="10" cy="7" r="1.5"/><circle cx="4" cy="12" r="1.5"/><circle cx="10" cy="12" r="1.5"/></svg>
           </span>
           <div class="stat-icon-wrap" :class="element.key">
@@ -63,8 +61,8 @@
             <h3 class="stat-value">{{ element.value }}</h3>
           </div>
         </div>
-      </template>
-    </draggable>
+      </div>
+    </div>
 
     <section v-if="isEmployeeOnly" class="section-card card">
       <div class="section-head">
@@ -376,7 +374,6 @@
 
 <script>
 import { contactsAPI, companiesAPI, dealsAPI, ticketsAPI } from '../api'
-import draggable from 'vuedraggable'
 import { Chart, registerables } from 'chart.js'
 import saCompanies from '../utils/saCompanies'
 import EmployeePerformance from './EmployeePerformance.vue'
@@ -405,11 +402,11 @@ const PERSONAL_EMAIL_DOMAINS = new Set([
 export default {
   name: 'Dashboard',
   components: {
-    draggable,
     EmployeePerformance
   },
   data() {
     return {
+      grid: null,
       statCards: [],
       charts: {},
       
@@ -696,6 +693,7 @@ export default {
       ])
       this.initializeStatCards()
       await this.$nextTick()
+      this.initGrid()
       this.initializeCharts()
     } catch (error) {
       console.error('Failed to load dashboard data:', error)
@@ -734,10 +732,19 @@ export default {
       const savedLayout = localStorage.getItem('dashboardLayout')
       if (savedLayout) {
         try {
-          this.statCards = JSON.parse(savedLayout)
-          this.updateStatCards()
+          const parsed = JSON.parse(savedLayout)
+          // Fallback to rebuild if it's the old 1D array layout missing the 2D grid coordinates
+          if (parsed.length && parsed[0].w === undefined) {
+            console.log("Old layout detected, resetting to default 2D layout.");
+            this.setDefaultLayout()
+            this.$nextTick(() => this.initGrid()); // Re-init grid after setting defaults
+          } else {
+            this.statCards = parsed
+            this.updateStatCards()
+          }
         } catch (e) {
           this.setDefaultLayout()
+          this.$nextTick(() => this.initGrid()); // Re-init grid after setting defaults
         }
       } else {
         this.setDefaultLayout()
@@ -748,18 +755,18 @@ export default {
         
         const c = this.ticketStatusCounts
         this.statCards = [
-          { key: 'assigned', icon: '🎟️', label: 'Assigned Tickets', value: this.myAssignedTickets.length },
-          { key: 'openTickets', icon: '�', label: 'Open', value: c.open || 0 },
-          { key: 'inProgress', icon: '⏱️', label: 'In Progress', value: c.in_progress || 0 },
-          { key: 'completedTickets', icon: '✅', label: 'Completed', value: c.completed || 0 }
+          { key: 'assigned', icon: '🎟️', label: 'Assigned Tickets', value: this.myAssignedTickets.length, x: 0, y: 0, w: 1, h: 1 },
+          { key: 'openTickets', icon: '', label: 'Open', value: c.open || 0, x: 1, y: 0, w: 1, h: 1 },
+          { key: 'inProgress', icon: '⏱️', label: 'In Progress', value: c.in_progress || 0, x: 2, y: 0, w: 1, h: 1 },
+          { key: 'completedTickets', icon: '✅', label: 'Completed', value: c.completed || 0, x: 3, y: 0, w: 1, h: 1 }
         ]
       } else {
         
         this.statCards = [
-          { key: 'contacts', icon: '�👥', label: 'Total Contacts', value: this.contacts.length },
-          { key: 'companies', icon: '🏢', label: 'Companies', value: this.companies.length },
-          { key: 'deals', icon: '💰', label: 'Active Deals', value: this.activeDeals.length },
-          { key: 'revenue', icon: '📈', label: 'Pipeline Value', value: `R${this.pipelineSum}` }
+          { key: 'contacts', icon: '👥', label: 'Total Contacts', value: this.contacts.length, x: 0, y: 0, w: 1, h: 1 },
+          { key: 'companies', icon: '🏢', label: 'Companies', value: this.companies.length, x: 1, y: 0, w: 1, h: 1 },
+          { key: 'deals', icon: '💰', label: 'Active Deals', value: this.activeDeals.length, x: 2, y: 0, w: 1, h: 1 },
+          { key: 'revenue', icon: '📈', label: 'Pipeline Value', value: `R${this.pipelineSum}`, x: 3, y: 0, w: 1, h: 1 }
         ]
       }
     },
@@ -801,6 +808,59 @@ export default {
     saveLayout() {
       
       localStorage.setItem('dashboardLayout', JSON.stringify(this.statCards))
+    },
+    initGrid() {
+      if (this.grid) {
+        this.grid.destroy(false);
+      }
+      this.grid = GridStack.init({
+        cellHeight: 110,
+        margin: 16,
+        column: 4,
+        handle: '.drag-handle',
+        animate: true,
+        float: true,
+        disableResize: false, // Allow resizing
+        disableDrag: false,   // Allow dragging
+      }, this.$refs.topStatsGrid);
+
+      this.grid.load(this.statCards.map(card => ({
+        id: card.key,
+        x: card.x, y: card.y, w: card.w, h: card.h
+      })));
+
+      this.grid.on('change', (event, items) => {
+        if (!items) return;
+        const newStatCards = this.statCards.map(card => {
+          const updatedItem = items.find(item => item.id === card.key);
+          if (updatedItem) {
+            return {
+              ...card,
+              x: updatedItem.x,
+              y: updatedItem.y,
+              w: updatedItem.w,
+              h: updatedItem.h,
+            };
+          }
+          return card;
+        });
+        this.statCards = newStatCards;
+        this.saveLayout();
+      }, this.$refs.topStatsGrid);
+
+      this.grid.on('change', (event, items) => {
+        if (!items) return;
+        items.forEach(item => {
+          const card = this.statCards.find(c => c.key === item.id);
+          if (card) {
+            card.x = item.x;
+            card.y = item.y;
+            card.w = item.w;
+            card.h = item.h;
+          }
+        });
+        this.saveLayout();
+      });
     },
     initializeCharts() {
       
@@ -1385,13 +1445,8 @@ export default {
   border: 1px solid rgba(212, 175, 55, 0.2);
 }
 
-/* Stat Cards Grid */
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
-  gap: 1rem;
-  margin-bottom: 2rem;
-}
+.top-stats-grid { margin-bottom: 2rem; background: transparent; }
+.grid-stack-item-content { border-radius: var(--radius-md); }
 .stat-card {
   display: flex;
   align-items: center;
@@ -1400,8 +1455,9 @@ export default {
   cursor: pointer;
   position: relative;
   transition: box-shadow 0.2s, transform 0.15s;
-  background: rgba(17, 20, 24, 0.85);
+  background: rgba(15, 15, 15, 0.8) !important;
   border: 1px solid rgba(212, 175, 55, 0.2);
+  height: 100%;
 }
 .stat-card:hover {
   transform: translateY(-2px);
@@ -1703,16 +1759,11 @@ export default {
   .dashboard { padding: 1rem; }
   .header-row { flex-direction: column; gap: 0.75rem; }
   .tier-chip { align-items: flex-start; }
-  .stats-grid { grid-template-columns: 1fr 1fr; gap: 0.75rem; }
-  .stat-card { padding: 1rem; }
-  .stat-value { font-size: 1.25rem; }
   .analytics-grid { grid-template-columns: 1fr; }
   .qa-buttons { flex-direction: column; }
   .qa-buttons .btn { width: 100%; justify-content: center; }
   .form-row-2col { grid-template-columns: 1fr; }
 }
 @media (max-width: 480px) {
-  .stats-grid { grid-template-columns: 1fr; }
-  .stat-icon-wrap { width: 40px; height: 40px; }
 }
 </style>

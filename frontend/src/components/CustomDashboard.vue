@@ -21,18 +21,18 @@
       </div>
     </div>
 
-    <draggable
-      v-if="!loading && activeWidgetsList.length > 0"
-      v-model="activeWidgetsList"
-      class="dashboard-grid"
-      item-key="id"
-      handle=".draggable-header"
-      :animation="200"
-      :disabled="!canDragDrop"
-      ghost-class="ghost-widget"
-    >
-      <template #item="{ element: widget }">
-        <div :class="['widget-card', 'w-' + widget.width, 'h-' + widget.height]">
+    <div v-if="!loading && activeWidgets.length > 0" class="grid-stack" ref="gridContainer">
+      <div 
+        v-for="widget in activeWidgets" 
+        :key="widget.id"
+        class="grid-stack-item"
+        :gs-id="widget.id"
+        :gs-x="widget.position_x || 0"
+        :gs-y="widget.position_y || 0"
+        :gs-w="widget.width || 1"
+        :gs-h="widget.height || 1"
+      >
+        <div class="grid-stack-item-content widget-card">
         <div class="widget-header" :class="{ 'draggable-header': canDragDrop }">
           <h3>{{ widget.title }}</h3>
           <div class="widget-controls">
@@ -144,10 +144,10 @@
           <div v-else class="widget-empty">Widget loading...</div>
         </div>
       </div>
-      </template>
-    </draggable>
+      </div>
+    </div>
 
-    <div v-else-if="!loading && activeWidgetsList.length === 0" class="dashboard-grid">
+    <div v-else-if="!loading && activeWidgets.length === 0" class="empty-state-wrap">
       <div class="empty-state">
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--gray-300)" stroke-width="1.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
         <h3>No widgets yet</h3>
@@ -184,15 +184,14 @@
 import { dashboardWidgetsAPI } from '../api'
 import toast from '../utils/toast'
 import authService from '../services/auth'
-import draggable from 'vuedraggable'
+import 'gridstack/dist/gridstack.min.css'
+import { GridStack } from 'gridstack'
 
 export default {
   name: 'CustomDashboard',
-  components: {
-    draggable
-  },
   data() {
     return {
+      grid: null,
       widgets: [],
       widgetData: {},
       loading: true,
@@ -213,17 +212,8 @@ export default {
     }
   },
   computed: {
-    activeWidgetsList: {
-      get() {
-        return this.widgets.filter(w => w.is_visible).sort((a, b) => (a.position_y || 0) - (b.position_y || 0))
-      },
-      set(newOrder) {
-        newOrder.forEach((w, index) => {
-          const target = this.widgets.find(x => x.id === w.id)
-          if (target) target.position_y = index
-        })
-        this.saveLayout()
-      }
+    activeWidgets() {
+      return this.widgets.filter(w => w.is_visible)
     },
     canDragDrop() {
       const user = authService.getUser() || {}
@@ -254,13 +244,32 @@ export default {
       if (diff < 1440) return `${Math.floor(diff / 60)}h ago`
       return dt.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' })
     },
-    async saveLayout() {
-      const positions = this.activeWidgetsList.map((w, index) => ({ id: w.id, x: 0, y: index, w: w.width, h: w.height }))
-      try {
-        await dashboardWidgetsAPI.reorder(positions)
-      } catch (e) {
-        console.error('Failed to save layout', e)
+    initGrid() {
+      if (this.grid) {
+        this.grid.destroy(false);
       }
+      this.grid = GridStack.init({
+        cellHeight: 180,
+        margin: 16,
+        column: 4, // 4-column dashboard layout
+        disableResize: !this.canDragDrop,
+        disableDrag: !this.canDragDrop,
+        handle: '.draggable-header',
+        animate: true,
+        float: true // Allows widgets to be freely placed without auto-snapping up
+      }, this.$refs.gridContainer);
+
+      this.grid.on('change', (event, items) => {
+        if (!items) return;
+        const positions = items.map(item => ({
+          id: item.id,
+          x: item.x,
+          y: item.y,
+          w: item.w,
+          h: item.h
+        }));
+        dashboardWidgetsAPI.reorder(positions).catch(e => console.error('Failed to save layout', e));
+      });
     },
     pipeWidth(count) {
       return (count / this.maxPipeCount * 100) + '%'
@@ -281,6 +290,9 @@ export default {
           await this.resetDefaults()
           return
         }
+        this.$nextTick(() => {
+          this.initGrid()
+        })
         this.loadWidgetData()
       } catch (e) {
         toast.error('Failed to load dashboard')
@@ -289,7 +301,7 @@ export default {
       }
     },
     async loadWidgetData() {
-      const types = [...new Set(this.activeWidgetsList.map(w => w.widget_type))]
+      const types = [...new Set(this.activeWidgets.map(w => w.widget_type))]
       for (const type of types) {
         try {
           const res = await dashboardWidgetsAPI.getWidgetData(type)
@@ -362,20 +374,10 @@ export default {
 
 .luxury-badge { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; padding: 4px 10px; background: rgba(212, 175, 55, 0.1); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 6px; color: #D4AF37; font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
 
-.dashboard-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
-.widget-card { background: rgba(15, 15, 15, 0.8) !important; border: 1px solid rgba(212, 175, 55, 0.2) !important; border-radius: 12px; padding: 0; overflow: hidden; transition: transform 0.2s ease, box-shadow 0.2s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
-.ghost-widget {
-  opacity: 0.4;
-  border: 2px dashed #D4AF37 !important;
-  background: rgba(212, 175, 55, 0.05) !important;
-}
-.w-1 { grid-column: span 1; }
-.w-2 { grid-column: span 2; }
-.w-3 { grid-column: span 3; }
-.w-4 { grid-column: span 4; }
-.h-1 { min-height: 200px; }
-.h-2 { min-height: 360px; }
-.h-3 { min-height: 520px; }
+.empty-state-wrap { padding-top: 40px; }
+.grid-stack { background: transparent; }
+.grid-stack-item-content { border-radius: 12px; overflow: hidden; }
+.widget-card { height: 100%; background: rgba(15, 15, 15, 0.8) !important; border: 1px solid rgba(212, 175, 55, 0.2) !important; border-radius: 12px; padding: 0; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
 
 .widget-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px 10px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); background: rgba(0,0,0,0.4); }
 .draggable-header { cursor: grab; }
@@ -383,7 +385,7 @@ export default {
 .widget-header h3 { font-size: 13px; font-weight: 600; color: #D4AF37; margin: 0; text-transform: uppercase; letter-spacing: 0.04em; }
 .widget-controls { display: flex; gap: 4px; }
 
-.widget-body { padding: 16px; }
+.widget-body { padding: 16px; flex: 1; overflow-y: auto; }
 
 /* Stat Card */
 .widget-stat { text-align: center; padding: 20px 0; }
@@ -486,12 +488,4 @@ export default {
 .spinner { width: 32px; height: 32px; border: 3px solid rgba(212, 175, 55, 0.2); border-top-color: #D4AF37; border-radius: 50%; animation: spin 0.8s linear infinite; }
 @keyframes spin { to { transform: rotate(360deg); } }
 
-@media (max-width: 1024px) {
-  .dashboard-grid { grid-template-columns: repeat(2, 1fr); }
-  .w-3, .w-4 { grid-column: span 2; }
-}
-@media (max-width: 640px) {
-  .dashboard-grid { grid-template-columns: 1fr; }
-  .w-1, .w-2, .w-3, .w-4 { grid-column: span 1; }
-}
 </style>
