@@ -21,18 +21,18 @@
       </div>
     </div>
 
-    <div v-if="!loading" class="dashboard-grid">
-      <div 
-        v-for="(widget, index) in activeWidgets" 
-        :key="widget.id" 
-        :class="['widget-card', 'w-' + widget.width, 'h-' + widget.height, { 'is-dragging': dragIndex === index, 'drag-over': dragOverIndex === index }]"
-        :draggable="canDragDrop"
-        @dragstart="onDragStart(index, $event)"
-        @dragenter.prevent="onDragEnter(index, $event)"
-        @dragover.prevent
-        @drop="onDrop(index)"
-        @dragend="onDragEnd"
-      >
+    <draggable
+      v-if="!loading && activeWidgetsList.length > 0"
+      v-model="activeWidgetsList"
+      class="dashboard-grid"
+      item-key="id"
+      handle=".draggable-header"
+      :animation="200"
+      :disabled="!canDragDrop"
+      ghost-class="ghost-widget"
+    >
+      <template #item="{ element: widget }">
+        <div :class="['widget-card', 'w-' + widget.width, 'h-' + widget.height]">
         <div class="widget-header" :class="{ 'draggable-header': canDragDrop }">
           <h3>{{ widget.title }}</h3>
           <div class="widget-controls">
@@ -144,8 +144,11 @@
           <div v-else class="widget-empty">Widget loading...</div>
         </div>
       </div>
+      </template>
+    </draggable>
 
-      <div v-if="activeWidgets.length === 0" class="empty-state">
+    <div v-else-if="!loading && activeWidgetsList.length === 0" class="dashboard-grid">
+      <div class="empty-state">
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--gray-300)" stroke-width="1.5"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
         <h3>No widgets yet</h3>
         <p>Add widgets to build your custom dashboard</p>
@@ -181,9 +184,13 @@
 import { dashboardWidgetsAPI } from '../api'
 import toast from '../utils/toast'
 import authService from '../services/auth'
+import draggable from 'vuedraggable'
 
 export default {
   name: 'CustomDashboard',
+  components: {
+    draggable
+  },
   data() {
     return {
       widgets: [],
@@ -191,9 +198,6 @@ export default {
       loading: true,
       resetting: false,
       showAddWidget: false,
-      dragIndex: null,
-      dragOverIndex: null,
-      pendingDropIndex: null,
       availableWidgets: [
         { type: 'stat_card', name: 'Stat Card', desc: 'Key metric overview', icon: '📊', width: 1, height: 1 },
         { type: 'pipeline_chart', name: 'Pipeline Chart', desc: 'Deals by stage', icon: '📈', width: 2, height: 1 },
@@ -209,8 +213,17 @@ export default {
     }
   },
   computed: {
-    activeWidgets() {
-      return this.widgets.filter(w => w.is_visible).sort((a, b) => (a.position_y || 0) - (b.position_y || 0))
+    activeWidgetsList: {
+      get() {
+        return this.widgets.filter(w => w.is_visible).sort((a, b) => (a.position_y || 0) - (b.position_y || 0))
+      },
+      set(newOrder) {
+        newOrder.forEach((w, index) => {
+          const target = this.widgets.find(x => x.id === w.id)
+          if (target) target.position_y = index
+        })
+        this.saveLayout()
+      }
     },
     canDragDrop() {
       const user = authService.getUser() || {}
@@ -241,38 +254,8 @@ export default {
       if (diff < 1440) return `${Math.floor(diff / 60)}h ago`
       return dt.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' })
     },
-    onDragStart(index, event) {
-      if (!this.canDragDrop) return
-      this.dragIndex = index
-      event.dataTransfer.effectAllowed = 'move'
-    },
-    onDragEnter(index, event) {
-      if (!this.canDragDrop || this.dragIndex === null || this.dragIndex === index) return
-      this.dragOverIndex = index
-    },
-    onDrop(index) {
-      // Defer the data swap until the browser finishes the physical drop
-      this.pendingDropIndex = index
-    },
-    onDragEnd(event) {
-      // Now that the browser released the element, it is safe to let Vue update the array
-      if (this.dragIndex !== null && this.pendingDropIndex !== null && this.dragIndex !== this.pendingDropIndex) {
-        const widgets = [...this.activeWidgets]
-        const moved = widgets.splice(this.dragIndex, 1)[0]
-        widgets.splice(this.pendingDropIndex, 0, moved)
-        
-        widgets.forEach((w, i) => {
-          const target = this.widgets.find(x => x.id === w.id)
-          if (target) target.position_y = i
-        })
-        this.saveLayout()
-      }
-      this.dragIndex = null
-      this.dragOverIndex = null
-      this.pendingDropIndex = null
-    },
     async saveLayout() {
-      const positions = this.activeWidgets.map((w, index) => ({ id: w.id, x: 0, y: index, w: w.width, h: w.height }))
+      const positions = this.activeWidgetsList.map((w, index) => ({ id: w.id, x: 0, y: index, w: w.width, h: w.height }))
       try {
         await dashboardWidgetsAPI.reorder(positions)
       } catch (e) {
@@ -306,7 +289,7 @@ export default {
       }
     },
     async loadWidgetData() {
-      const types = [...new Set(this.activeWidgets.map(w => w.widget_type))]
+      const types = [...new Set(this.activeWidgetsList.map(w => w.widget_type))]
       for (const type of types) {
         try {
           const res = await dashboardWidgetsAPI.getWidgetData(type)
@@ -381,11 +364,11 @@ export default {
 
 .dashboard-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; }
 .widget-card { background: rgba(15, 15, 15, 0.8) !important; border: 1px solid rgba(212, 175, 55, 0.2) !important; border-radius: 12px; padding: 0; overflow: hidden; transition: transform 0.2s ease, box-shadow 0.2s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
-.widget-card.is-dragging { opacity: 0.3; transform: scale(0.98); border: 2px dashed rgba(212, 175, 55, 0.5) !important; }
-.widget-card.drag-over { 
-  border: 2px dashed #D4AF37 !important; 
-  transform: translateY(4px); 
-} 
+.ghost-widget {
+  opacity: 0.4;
+  border: 2px dashed #D4AF37 !important;
+  background: rgba(212, 175, 55, 0.05) !important;
+}
 .w-1 { grid-column: span 1; }
 .w-2 { grid-column: span 2; }
 .w-3 { grid-column: span 3; }
