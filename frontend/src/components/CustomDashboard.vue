@@ -249,6 +249,7 @@ export default {
         this.grid.destroy(false);
       }
       this.grid = GridStack.init({
+        cols: 12,            // Enable 2D grid (default 1 = 1D single column)
         cellHeight: 180,
         margin: 16,
         disableResize: !this.canDragDrop,
