@@ -36,10 +36,6 @@
         :key="element.key"
         class="grid-stack-item"
         :gs-id="element.key"
-        :gs-x="element.x || 0"
-        :gs-y="element.y || 0"
-        :gs-w="element.w || 1"
-        :gs-h="element.h || 1"
       >
         <div class="grid-stack-item-content stat-card card" @click="onStatCardClick(element.key)" role="button" tabindex="0">
           <span class="drag-handle" title="Drag to reorder" @click.stop>
@@ -692,8 +688,6 @@ export default {
         this.loadTickets()
       ])
       this.initializeStatCards()
-      await this.$nextTick()
-      this.initGrid()
       this.initializeCharts()
     } catch (error) {
       console.error('Failed to load dashboard data:', error)
@@ -737,18 +731,21 @@ export default {
           if (parsed.length && (parsed[0].w === undefined || parsed[0].w === 1)) {
             console.log("Old layout detected, resetting to default 2D layout.");
             this.setDefaultLayout()
-            this.$nextTick(() => this.initGrid()); // Re-init grid after setting defaults
           } else {
             this.statCards = parsed
             this.updateStatCards()
           }
         } catch (e) {
           this.setDefaultLayout()
-          this.$nextTick(() => this.initGrid()); // Re-init grid after setting defaults
         }
       } else {
         this.setDefaultLayout()
       }
+      setTimeout(() => {
+        if (this.$refs.topStatsGrid) {
+          this.initGrid()
+        }
+      }, 100)
     },
     setDefaultLayout() {
       if (this.isEmployeeOnly) {
@@ -1338,6 +1335,7 @@ export default {
 </script>
 
 <style scoped>
+@import "gridstack/dist/gridstack.min.css";
 /* ═══ Dashboard — Corporate Clean ═══ */
 .dashboard {
   padding: 1.5rem 2rem 3rem;

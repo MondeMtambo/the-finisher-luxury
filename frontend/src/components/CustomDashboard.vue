@@ -27,10 +27,6 @@
         :key="widget.id"
         class="grid-stack-item"
         :gs-id="widget.id"
-        :gs-x="widget.position_x || 0"
-        :gs-y="widget.position_y || 0"
-        :gs-w="widget.width || 1"
-        :gs-h="widget.height || 1"
       >
         <div class="grid-stack-item-content widget-card">
         <div class="widget-header" :class="{ 'draggable-header': canDragDrop }">
@@ -260,6 +256,14 @@ export default {
         float: true // Allows widgets to be freely placed without auto-snapping up
       }, this.$refs.gridContainer);
 
+      this.grid.load(this.activeWidgets.map(w => ({
+        id: String(w.id),
+        x: w.position_x || 0,
+        y: w.position_y || 0,
+        w: w.width || 3,
+        h: w.height || 1
+      })));
+
       this.grid.on('change', (event, items) => {
         if (!items) return;
         const positions = items.map(item => ({
@@ -269,6 +273,16 @@ export default {
           w: item.w,
           h: item.h
         }));
+
+        items.forEach(item => {
+          const target = this.widgets.find(x => String(x.id) === String(item.id));
+          if (target) {
+            target.position_x = item.x;
+            target.position_y = item.y;
+            target.width = item.w;
+            target.height = item.h;
+          }
+        });
         dashboardWidgetsAPI.reorder(positions).catch(e => console.error('Failed to save layout', e));
       });
     },
@@ -302,9 +316,11 @@ export default {
         }
         this.widgets = fetchedWidgets
 
-        this.$nextTick(() => {
-          this.initGrid()
-        })
+        setTimeout(() => {
+          if (this.$refs.gridContainer) {
+            this.initGrid()
+          }
+        }, 100)
         this.loadWidgetData()
       } catch (e) {
         toast.error('Failed to load dashboard')
@@ -378,6 +394,7 @@ export default {
 </script>
 
 <style scoped>
+@import "gridstack/dist/gridstack.min.css";
 .page-wrap { padding: 24px; max-width: 1400px; margin: 0 auto; }
 .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
 .page-header h1 { font-size: 24px; font-weight: 700; color: #ffffff; margin: 0; }
