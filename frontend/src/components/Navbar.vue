@@ -459,6 +459,16 @@ export default {
       const jobTitle = user.job_title || (user.profile && user.profile.job_title) || ''
       const roleDisplay = (user.role && typeof user.role === 'object' && user.role.display) || ''
       this.userRole = jobTitle || roleDisplay || ''
+      
+      // Avatar Injection Logic
+      let savedAvatar = localStorage.getItem(`avatar_${user.username}`)
+      if (!savedAvatar) {
+        const random = getRandomAvatar()
+        savedAvatar = random.id
+        localStorage.setItem(`avatar_${user.username}`, savedAvatar)
+      }
+      const avatarObj = getAvatarById(savedAvatar)
+      this.userAvatarSvg = avatarObj ? avatarObj.svg : null
       const isOwnerAdmin = (user?.username || '').toLowerCase() === 'adminluxury'
       this.isAdmin = Boolean(user.is_superuser || isOwnerAdmin)
       const hasClientAdminPermission = !!(user.permissions && user.permissions.is_admin)

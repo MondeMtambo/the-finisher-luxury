@@ -25,12 +25,12 @@
       <div 
         v-for="(widget, index) in activeWidgets" 
         :key="widget.id" 
-        :class="['widget-card', 'w-' + widget.width, 'h-' + widget.height, { 'is-dragging': dragIndex === index }]"
+        :class="['widget-card', 'w-' + widget.width, 'h-' + widget.height, { 'is-dragging': dragIndex === index, 'drag-over': dragOverIndex === index }]"
         :draggable="canDragDrop"
         @dragstart="onDragStart(index, $event)"
         @dragenter.prevent="onDragEnter(index, $event)"
         @dragover.prevent
-        @drop="onDrop"
+        @drop="onDrop(index)"
         @dragend="onDragEnd"
       >
         <div class="widget-header" :class="{ 'draggable-header': canDragDrop }">
@@ -192,6 +192,7 @@ export default {
       resetting: false,
       showAddWidget: false,
       dragIndex: null,
+      dragOverIndex: null,
       availableWidgets: [
         { type: 'stat_card', name: 'Stat Card', desc: 'Key metric overview', icon: '📊', width: 1, height: 1 },
         { type: 'pipeline_chart', name: 'Pipeline Chart', desc: 'Deals by stage', icon: '📈', width: 2, height: 1 },
@@ -247,24 +248,28 @@ export default {
     },
     onDragEnter(index, event) {
       if (!this.canDragDrop || this.dragIndex === null || this.dragIndex === index) return
-      const widgets = [...this.activeWidgets]
-      const moved = widgets.splice(this.dragIndex, 1)[0]
-      widgets.splice(index, 0, moved)
-      widgets.forEach((w, i) => w.position_y = i)
-      this.widgets = this.widgets.map(w => {
-        const updated = widgets.find(aw => aw.id === w.id)
-        return updated ? updated : w
-      })
-      this.dragIndex = index
+      this.dragOverIndex = index
     },
-    onDrop() {
+    onDrop(index) {
+      if (this.dragIndex !== null && this.dragOverIndex !== null && this.dragIndex !== this.dragOverIndex) {
+        const widgets = [...this.activeWidgets]
+        const moved = widgets.splice(this.dragIndex, 1)[0]
+        widgets.splice(this.dragOverIndex, 0, moved)
+        
+        widgets.forEach((w, i) => w.position_y = i)
+        this.widgets = this.widgets.map(w => {
+          const updated = widgets.find(aw => aw.id === w.id)
+          return updated ? updated : w
+        })
+        this.saveLayout()
+      }
       this.dragIndex = null
-      this.saveLayout()
+      this.dragOverIndex = null
     },
     onDragEnd(event) {
       event.target.classList.remove('dragging-active')
       this.dragIndex = null
-      this.saveLayout()
+      this.dragOverIndex = null
     },
     async saveLayout() {
       const positions = this.activeWidgets.map((w, index) => ({ id: w.id, x: 0, y: index, w: w.width, h: w.height }))
@@ -378,6 +383,10 @@ export default {
 .widget-card { background: rgba(15, 15, 15, 0.8) !important; border: 1px solid rgba(212, 175, 55, 0.2) !important; border-radius: 12px; padding: 0; overflow: hidden; transition: transform 0.2s ease, box-shadow 0.2s ease; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
 .widget-card.is-dragging { opacity: 0.4; transform: scale(0.98); border-color: #D4AF37 !important; }
 .widget-card.dragging-active { opacity: 0; }
+.widget-card.drag-over { 
+  border: 2px dashed #D4AF37 !important; 
+  transform: translateY(4px); 
+}
 .w-1 { grid-column: span 1; }
 .w-2 { grid-column: span 2; }
 .w-3 { grid-column: span 3; }
