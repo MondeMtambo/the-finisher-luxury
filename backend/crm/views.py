@@ -2334,6 +2334,7 @@ class DashboardWidgetViewSet(viewsets.ModelViewSet):
             {'widget_type': 'stat_card', 'title': 'Total Contacts', 'position_x': 0, 'position_y': 0, 'width': 3, 'height': 1},
             {'widget_type': 'stat_card', 'title': 'Total Deals', 'position_x': 3, 'position_y': 0, 'width': 3, 'height': 1},
             {'widget_type': 'stat_card', 'title': 'Revenue', 'position_x': 6, 'position_y': 0, 'width': 3, 'height': 1},
+            {'widget_type': 'completed_tickets', 'title': 'Completed Tickets', 'position_x': 9, 'position_y': 0, 'width': 3, 'height': 1},
             {'widget_type': 'pipeline_chart', 'title': 'Pipeline', 'position_x': 0, 'position_y': 1, 'width': 6, 'height': 1},
             {'widget_type': 'activity_feed', 'title': 'Activity Feed', 'position_x': 6, 'position_y': 1, 'width': 3, 'height': 2},
             {'widget_type': 'deal_funnel', 'title': 'Deal Funnel', 'position_x': 0, 'position_y': 2, 'width': 6, 'height': 1},
@@ -2346,7 +2347,7 @@ class DashboardWidgetViewSet(viewsets.ModelViewSet):
 
     @action(detail=False, methods=['get'], url_path='widget-data/(?P<widget_type>[a-z_]+)')
     def widget_data(self, request, widget_type=None):
-        """Return live data for a specific widget type."""
+        """Return live data for a specific widget type - NORMALIZED FORMAT."""
         user = request.user
         data = {}
 
@@ -2354,10 +2355,12 @@ class DashboardWidgetViewSet(viewsets.ModelViewSet):
             contacts = Contact.objects.all()
             deals = Deal.objects.all()
             companies = Company.objects.all()
+            tickets = Ticket.objects.all()
         else:
             contacts = Contact.objects.filter(user=user)
             deals = Deal.objects.filter(user=user)
             companies = Company.objects.filter(user=user)
+            tickets = Ticket.objects.filter(assigned_to=user)
 
         if widget_type == 'stat_card':
             data = {
@@ -2369,31 +2372,78 @@ class DashboardWidgetViewSet(viewsets.ModelViewSet):
                 'won_deals': deals.filter(stage='closed_won').count(),
             }
         elif widget_type == 'pipeline_chart':
+            # FIXED: Returns ARRAY format [{stage, count}] not dict
             stages = ['lead', 'qualified', 'proposal', 'negotiation', 'closed_won', 'closed_lost']
-            data = {stage: deals.filter(stage=stage).count() for stage in stages}
+            data = [
+                {'stage': stage, 'count': deals.filter(stage=stage).count()}
+                for stage in stages
+            ]
         elif widget_type == 'revenue_chart':
+            # FIXED: Returns object with 'months' array inside
             from django.db.models.functions import TruncMonth
             monthly = deals.filter(stage='closed_won').annotate(
                 month=TruncMonth('created_at')
             ).values('month').annotate(
                 total=Sum('value'), count=Count('id')
             ).order_by('month')[:12]
-            data = [{'month': str(m['month'].strftime('%Y-%m') if m['month'] else ''), 'total': float(m['total']), 'count': m['count']} for m in monthly]
+            months = [
+                {
+                    'label': m['month'].strftime('%b') if m['month'] else '',
+                    'value': float(m['total'] or 0)
+                }
+                for m in monthly
+            ]
+            total = float(deals.filter(stage='closed_won').aggregate(t=Sum('value'))['t'] or 0)
+            data = {'months': months, 'total': total}
         elif widget_type == 'deal_funnel':
             stages = ['lead', 'qualified', 'proposal', 'negotiation', 'closed_won']
-            data = [{'stage': s, 'count': deals.filter(stage=s).count(),
-                     'value': float(deals.filter(stage=s).aggregate(v=Sum('value'))['v'] or 0)} for s in stages]
+            data = [
+                {
+                    'stage': s,
+                    'count': deals.filter(stage=s).count(),
+                    'value': float(deals.filter(stage=s).aggregate(v=Sum('value'))['v'] or 0)
+                }
+                for s in stages
+            ]
         elif widget_type == 'activity_feed':
             if user.is_superuser:
                 activities = ActivityLog.objects.all()[:10]
             else:
                 activities = ActivityLog.objects.filter(user=user)[:10]
-            data = [{'action': a.action, 'entity_type': a.entity_type,
-                     'entity_name': a.entity_name, 'created_at': str(a.created_at)} for a in activities]
+            data = [
+                {
+                    'id': a.id,
+                    'action': a.action,
+                    'entity_type': a.entity_type,
+                    'entity_name': a.entity_name,
+                    'created_at': str(a.created_at)
+                }
+                for a in activities
+            ]
         elif widget_type == 'top_contacts':
             top = contacts.order_by('-last_contact_date')[:5]
-            data = [{'id': c.id, 'name': f"{c.first_name} {c.last_name}",
-                     'email': c.email, 'health_score': c.health_score} for c in top]
+            data = [
+                {
+                    'id': c.id,
+                    'first_name': c.first_name,
+                    'last_name': c.last_name,
+                    'company_name': c.company.name if c.company else '—',
+                    'email': c.email,
+                    'health_score': c.health_score or 0
+                }
+                for c in top
+            ]
+        elif widget_type == 'completed_tickets':
+            # NEW: Completed ticket stats
+            completed = tickets.filter(status='completed')
+            total_tickets = tickets.count()
+            data = {
+                'completed': completed.count(),
+                'total': total_tickets,
+                'completion_rate': round((completed.count() / total_tickets * 100) if total_tickets > 0 else 0, 1),
+                'open': tickets.filter(status='open').count(),
+                'in_progress': tickets.filter(status='in_progress').count(),
+            }
         elif widget_type == 'campaign_stats':
             if user.is_superuser:
                 campaigns = EmailCampaign.objects.all()
@@ -2406,22 +2456,39 @@ class DashboardWidgetViewSet(viewsets.ModelViewSet):
                 'total_sent': sum(c.sent_count for c in campaigns),
                 'total_opens': sum(c.open_count for c in campaigns),
                 'total_clicks': sum(c.click_count for c in campaigns),
-                'recent': [{'name': c.name, 'status': c.status, 'open_rate': c.open_rate} for c in campaigns[:5]]
+                'recent': [
+                    {'name': c.name, 'status': c.status, 'open_rate': c.open_rate}
+                    for c in campaigns[:5]
+                ]
             }
         elif widget_type == 'recent_deals':
             recent = deals.order_by('-created_at')[:5]
-            data = [{'id': d.id, 'title': d.title, 'value': float(d.value),
-                     'stage': d.stage, 'created_at': str(d.created_at)} for d in recent]
+            data = [
+                {
+                    'id': d.id,
+                    'title': d.title,
+                    'value': float(d.value),
+                    'stage': d.stage,
+                    'created_at': str(d.created_at)
+                }
+                for d in recent
+            ]
         elif widget_type == 'tasks_due':
             if user.is_superuser:
-                tickets = Ticket.objects.filter(status__in=['open', 'in_progress'])
+                all_tickets = Ticket.objects.filter(status__in=['open', 'in_progress'])
             else:
-                tickets = Ticket.objects.filter(assigned_to=user, status__in=['open', 'in_progress'])
-            due_today = tickets.filter(due_at__date=timezone.now().date())
-            overdue = tickets.filter(due_at__lt=timezone.now())
+                all_tickets = Ticket.objects.filter(assigned_to=user, status__in=['open', 'in_progress'])
+            due_today = all_tickets.filter(due_at__date=timezone.now().date())
+            overdue = all_tickets.filter(due_at__lt=timezone.now())
             data = {
-                'due_today': [{'id': t.id, 'title': t.title, 'priority': t.priority} for t in due_today[:5]],
-                'overdue': [{'id': t.id, 'title': t.title, 'priority': t.priority} for t in overdue[:5]],
+                'due_today': [
+                    {'id': t.id, 'title': t.title, 'priority': t.priority}
+                    for t in due_today[:5]
+                ],
+                'overdue': [
+                    {'id': t.id, 'title': t.title, 'priority': t.priority}
+                    for t in overdue[:5]
+                ],
             }
         elif widget_type == 'team_leaderboard':
             if user.is_superuser:

@@ -68,6 +68,17 @@
             </div>
           </div>
 
+          <div v-else-if="widget.widget_type === 'completed_tickets'" class="widget-completed-stats">
+            <div class="stat-big">{{ widgetData.completed_tickets?.completed ?? 0 }}</div>
+            <div class="stat-sub">Completed Tickets</div>
+            <div class="stat-breakdown">
+              <div class="stat-item"><span class="stat-label">Total:</span> {{ widgetData.completed_tickets?.total ?? 0 }}</div>
+              <div class="stat-item"><span class="stat-label">Rate:</span> {{ widgetData.completed_tickets?.completion_rate ?? 0 }}%</div>
+              <div class="stat-item"><span class="stat-label">Open:</span> {{ widgetData.completed_tickets?.open ?? 0 }}</div>
+              <div class="stat-item"><span class="stat-label">In Progress:</span> {{ widgetData.completed_tickets?.in_progress ?? 0 }}</div>
+            </div>
+          </div>
+
           <div v-else-if="widget.widget_type === 'activity_feed'" class="widget-feed">
             <div v-for="item in (widgetData.activity_feed || []).slice(0, 6)" :key="item.id" class="feed-item">
               <div class="feed-dot"></div>
@@ -192,6 +203,7 @@ export default {
         { type: 'stat_card', name: 'Stat Card', desc: 'Key metric overview', icon: '📊', width: 3, height: 1 },
         { type: 'pipeline_chart', name: 'Pipeline Chart', desc: 'Deals by stage', icon: '📈', width: 6, height: 1 },
         { type: 'revenue_chart', name: 'Revenue Chart', desc: 'Revenue over time', icon: '💰', width: 6, height: 1 },
+        { type: 'completed_tickets', name: 'Completed Tickets', desc: 'Task completion stats', icon: '✔️', width: 3, height: 1 },
         { type: 'activity_feed', name: 'Activity Feed', desc: 'Recent activities', icon: '📋', width: 3, height: 2 },
         { type: 'deal_funnel', name: 'Deal Funnel', desc: 'Sales funnel visual', icon: '🔽', width: 6, height: 1 },
         { type: 'top_contacts', name: 'Top Contacts', desc: 'Highest-scoring contacts', icon: '⭐', width: 3, height: 1 },
@@ -285,27 +297,39 @@ export default {
           
           // Normalize data based on widget type
           if (type === 'pipeline_chart') {
-            this.widgetData[type] = Array.isArray(data) ? data : (data.results || data.data || [])
+            // Pipeline returns array [{stage, count}]
+            this.widgetData[type] = Array.isArray(data) ? data : []
           } else if (type === 'revenue_chart') {
-            this.widgetData[type] = data && typeof data === 'object' ? data : {}
+            // Revenue chart should have {months: [...], total: ...}
+            this.widgetData[type] = (data && typeof data === 'object') ? data : { months: [], total: 0 }
           } else if (type === 'activity_feed') {
-            this.widgetData[type] = Array.isArray(data) ? data : (data.results || data.data || [])
+            this.widgetData[type] = Array.isArray(data) ? data : []
           } else if (type === 'deal_funnel') {
-            this.widgetData[type] = Array.isArray(data) ? data : (data.results || data.data || [])
+            this.widgetData[type] = Array.isArray(data) ? data : []
           } else if (type === 'top_contacts') {
-            this.widgetData[type] = Array.isArray(data) ? data : (data.results || data.data || [])
+            this.widgetData[type] = Array.isArray(data) ? data : []
           } else if (type === 'team_leaderboard') {
-            this.widgetData[type] = Array.isArray(data) ? data : (data.results || data.data || [])
+            this.widgetData[type] = Array.isArray(data) ? data : []
           } else if (type === 'tasks_due') {
-            this.widgetData[type] = Array.isArray(data) ? data : (data.results || data.data || [])
+            this.widgetData[type] = (data && typeof data === 'object') ? data : { due_today: [], overdue: [] }
           } else if (type === 'recent_deals') {
-            this.widgetData[type] = Array.isArray(data) ? data : (data.results || data.data || [])
+            this.widgetData[type] = Array.isArray(data) ? data : []
+          } else if (type === 'completed_tickets') {
+            // Completed tickets returns {completed, total, completion_rate, open, in_progress}
+            this.widgetData[type] = (data && typeof data === 'object') ? data : { completed: 0, total: 0, completion_rate: 0, open: 0, in_progress: 0 }
           } else {
             this.widgetData[type] = data
           }
         } catch (e) {
           console.error(`Failed to load ${type} data:`, e)
-          this.widgetData[type] = type.includes('chart') || type.includes('funnel') || type.includes('feed') || type.includes('contacts') || type.includes('leaderboard') || type.includes('tasks') || type.includes('deals') ? [] : {}
+          // Fallback to empty/default for each type
+          if (['pipeline_chart', 'activity_feed', 'deal_funnel', 'top_contacts', 'team_leaderboard', 'recent_deals'].includes(type)) {
+            this.widgetData[type] = []
+          } else if (['revenue_chart', 'tasks_due', 'completed_tickets', 'campaign_stats'].includes(type)) {
+            this.widgetData[type] = {}
+          } else {
+            this.widgetData[type] = null
+          }
         }
       }
       
@@ -491,6 +515,13 @@ export default {
 .widget-stat { text-align: center; padding: 20px 0; }
 .stat-big { font-size: 40px; font-weight: 800; color: #ffffff; text-shadow: 0 0 12px rgba(212, 175, 55, 0.3); }
 .stat-sub { font-size: 13px; color: #9ca3af; margin-top: 4px; }
+
+/* Completed Tickets Stats */
+.widget-completed-stats { text-align: center; padding: 20px 0; }
+.stat-breakdown { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; font-size: 12px; }
+.stat-item { display: flex; justify-content: space-between; padding: 6px 8px; background: rgba(255,255,255,0.02); border-radius: 4px; }
+.stat-label { color: #9ca3af; }
+.stat-item span:last-child { color: #D4AF37; font-weight: 600; }
 
 /* Pipeline */
 .pipe-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
