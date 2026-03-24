@@ -10,10 +10,17 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
           Upload CSV
         </button>
-        <button class="btn btn-primary" @click="showAddModal = true">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-          Add Client
-        </button>
+        <div class="add-menu">
+          <button class="btn btn-primary" @click="toggleAddMenu">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Client
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </button>
+          <div v-if="showAddMenu" class="dropdown-menu">
+            <button class="dropdown-item" @click="openAddClient('individual')">Add Individual Client</button>
+            <button class="dropdown-item" @click="openAddClient('business')">Add Business Client</button>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -28,6 +35,7 @@
       <table class="data-table" v-if="filteredContacts.length">
         <thead>
           <tr>
+            <th>Type</th>
             <th>Name</th>
             <th>Email</th>
             <th>Company</th>
@@ -38,6 +46,11 @@
         </thead>
         <tbody>
           <tr v-for="contact in filteredContacts" :key="contact.id">
+            <td>
+              <span class="badge" :class="contact.client_type === 'individual' ? 'badge-individual' : 'badge-business'">
+                {{ contact.client_type === 'individual' ? 'Individual' : 'Business' }}
+              </span>
+            </td>
             <td>
               <strong>{{ contact.first_name }} {{ contact.last_name }}</strong>
               <span v-if="contact.is_self_employed" class="badge badge-green" style="margin-left:0.5rem;">Self-employed</span>
@@ -97,12 +110,36 @@
     <div v-if="showAddModal || showEditModal" class="modal-overlay" @click="closeModal">
       <div class="modal-panel" @click.stop>
         <div class="modal-header">
-          <h3>{{ showAddModal ? 'Add New Client' : 'Edit Client' }}</h3>
+          <h3>{{ showAddModal ? (contactForm.client_type === 'individual' ? 'Add Individual Client' : 'Add Business Client') : 'Edit Client' }}</h3>
           <button class="modal-close" @click="closeModal">&times;</button>
         </div>
         <div class="modal-body">
           <form @submit.prevent="saveContact" novalidate>
             <div v-if="formErrors.general" class="alert alert-danger">{{ formErrors.general }}</div>
+
+            <div v-if="showAddModal" class="form-group">
+              <label class="form-label">Client Type</label>
+              <div class="type-selector">
+                <button 
+                  type="button" 
+                  class="type-btn" 
+                  :class="{ active: contactForm.client_type === 'individual' }" 
+                  @click="contactForm.client_type = 'individual'"
+                >
+                  <span class="type-icon">👤</span>
+                  <span class="type-name">Individual</span>
+                </button>
+                <button 
+                  type="button" 
+                  class="type-btn" 
+                  :class="{ active: contactForm.client_type === 'business' }" 
+                  @click="contactForm.client_type = 'business'"
+                >
+                  <span class="type-icon">🏢</span>
+                  <span class="type-name">Business</span>
+                </button>
+              </div>
+            </div>
 
             <div class="form-row-2col">
               <div class="form-group">
@@ -117,7 +154,7 @@
               </div>
             </div>
 
-            <div class="form-group">
+            <div v-if="contactForm.client_type === 'business'" class="form-group">
               <label class="form-check-row">
                 <input type="checkbox" v-model="contactForm.is_self_employed">
                 <span>Self-employed / Independent</span>
@@ -131,7 +168,7 @@
               <p v-if="formErrors.email" class="form-error">{{ formErrors.email }}</p>
             </div>
 
-            <div class="form-group">
+            <div v-if="contactForm.client_type === 'business'" class="form-group">
               <label class="form-label">{{ contactForm.is_self_employed ? 'Business Trading Name' : 'Company Name' }}</label>
               <div class="input-dropdown-wrap">
                 <input class="form-input" v-model="contactForm.company_name_manual"
@@ -152,13 +189,13 @@
               <p v-if="formErrors.phone" class="form-error">{{ formErrors.phone }}</p>
             </div>
 
-            <div v-if="!contactForm.is_self_employed" class="form-group">
+            <div v-if="contactForm.client_type === 'business' && !contactForm.is_self_employed" class="form-group">
               <label class="form-label">Direct Company Line</label>
               <input class="form-input" v-model="contactForm.company_direct_line" placeholder="+27 11 234 5678" required>
               <p v-if="formErrors.company_direct_line" class="form-error">{{ formErrors.company_direct_line }}</p>
             </div>
 
-            <div v-if="companies.length" class="form-group">
+            <div v-if="contactForm.client_type === 'business' && companies.length" class="form-group">
               <label class="form-label">Link to Company (optional)</label>
               <select class="form-input" v-model="contactForm.company" :disabled="contactForm.is_self_employed">
                 <option value="">Do not link yet</option>
@@ -209,6 +246,7 @@ export default {
       showAddModal: false,
       showEditModal: false,
       showUploadModal: false,
+      showAddMenu: false,
       selectedFile: null,
       uploading: false,
       uploadMessage: '',
@@ -221,7 +259,8 @@ export default {
         is_self_employed: false,
         company_direct_line: '',
         company_name_manual: '',
-        company: ''
+        company: '',
+        client_type: 'business'
       },
       editingId: null,
       formErrors: {},
@@ -319,6 +358,14 @@ export default {
         console.error('Error loading companies:', error)
       }
     },
+    toggleAddMenu() {
+      this.showAddMenu = !this.showAddMenu
+    },
+    openAddClient(clientType) {
+      this.contactForm.client_type = clientType
+      this.showAddModal = true
+      this.showAddMenu = false
+    },
     refreshSelfEmployedGeneratedName(force = false) {
       const newName = this.computeSelfEmployedGeneratedName()
       const previousGenerated = this.selfEmployedGeneratedName
@@ -398,13 +445,14 @@ export default {
         is_self_employed: Boolean(contact.is_self_employed),
         company_direct_line: contact.company_direct_line || '',
         company_name_manual: contact.company_name_manual || contact.company_name || '',
-        company: contact.company || ''
+        company: contact.company || '',
+        client_type: contact.client_type || 'business'
       }
       this.editingId = contact.id
       this.showEditModal = true
       this.formErrors = {}
       this.companyInputFocused = false
-  this.refreshSelfEmployedGeneratedName(false)
+      this.refreshSelfEmployedGeneratedName(false)
     },
     async deleteContact(id) {
       const ok = await modal.danger('Delete Contact', 'Are you sure you want to delete this contact? This action cannot be undone.')
@@ -420,6 +468,7 @@ export default {
     closeModal() {
       this.showAddModal = false
       this.showEditModal = false
+      this.showAddMenu = false
       this.resetForm()
     },
     handleFileSelect(event) {
@@ -547,7 +596,8 @@ export default {
         is_self_employed: false,
         company_direct_line: '',
         company_name_manual: '',
-        company: ''
+        company: '',
+        client_type: 'business'
       }
       this.formErrors = {}
       this.formSubmitting = false
@@ -601,6 +651,50 @@ export default {
 .dropdown-suggestions { position: absolute; top: 100%; left: 0; right: 0; background: #fff; border: 1px solid var(--gray-200); border-radius: var(--radius-md); max-height: 200px; overflow-y: auto; box-shadow: var(--shadow-md); z-index: 20; list-style: none; padding: 0; margin: 0.25rem 0 0; }
 .dropdown-suggestions li { padding: 0.6rem 0.75rem; font-size: 0.875rem; cursor: pointer; }
 .dropdown-suggestions li:hover { background: var(--primary-50); }
+
+/* Type selector */
+.type-selector { 
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; 
+  margin-bottom: 1rem;
+}
+.type-btn { 
+  display: flex; flex-direction: column; align-items: center; gap: 0.75rem; 
+  padding: 1rem; border: 2px solid var(--gray-300); border-radius: var(--radius-md); 
+  background: var(--gray-50); cursor: pointer; 
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.type-btn:hover { border-color: var(--primary); background: #eff6ff; }
+.type-btn.active { 
+  border-color: var(--primary); background: var(--primary); color: white; 
+}
+.type-icon { font-size: 2rem; }
+.type-name { font-size: 0.875rem; font-weight: 600; }
+
+/* Client type badges */
+.badge-individual { background: #fef3c7; color: #92400e; }
+.badge-business { background: #dbeafe; color: #1e3a8a; }
+
+/* Dropdown menu */
+.add-menu { position: relative; }
+.dropdown-menu { 
+  position: absolute; top: 100%; right: 0; 
+  background: var(--gray-50); border: 1px solid var(--gray-200); 
+  border-radius: var(--radius-md); min-width: 200px; 
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+  z-index: 100; margin-top: 0.5rem;
+}
+.dropdown-item { 
+  display: block; width: 100%; padding: 0.75rem 1rem; 
+  background: none; border: none; text-align: left; 
+  font-size: 0.875rem; cursor: pointer; 
+  transition: background 0.2s;
+  font-family: inherit;
+}
+.dropdown-item:hover { background: var(--gray-100); }
+.dropdown-item:first-child { border-radius: var(--radius-md) var(--radius-md) 0 0; }
+.dropdown-item:last-child { border-radius: 0 0 var(--radius-md) var(--radius-md); }
+
 @media (max-width: 768px) {
   .page-wrap { padding: 1rem; }
   .page-header { flex-direction: column; }
