@@ -338,7 +338,13 @@ export default {
 </script>
 
 <style scoped>
-.page-wrap { padding: 24px; max-width: 1400px; margin: 0 auto; }
+.page-wrap {
+  padding: 24px;
+  max-width: 1400px;
+  margin: 0 auto;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+}
 .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
 .page-header h1 { font-size: 24px; font-weight: 700; color: #ffffff; margin: 0; }
 .page-subtitle { color: #9ca3af; font-size: 14px; margin-top: 4px; }
