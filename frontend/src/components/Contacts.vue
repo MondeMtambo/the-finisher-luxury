@@ -169,6 +169,31 @@
             </div>
 
             <div v-if="contactForm.client_type === 'business'" class="form-group">
+              <label class="form-label">Select Company/Organization</label>
+              <div class="company-search-wrap">
+                <input 
+                  class="form-input" 
+                  v-model="contactForm.company_search"
+                  @focus="showCompanyDropdown = true"
+                  @blur="onCompanySearchBlur"
+                  @input="onCompanySearchInput"
+                  placeholder="Search company (ABSA, FNB, Discovery, etc.)"
+                  type="text"
+                >
+                <ul v-if="showCompanyDropdown && filteredCompanies.length" class="company-dropdown">
+                  <li v-for="company in filteredCompanies" :key="company.id" @mousedown.prevent="selectCompany(company)">
+                    <span class="company-logo">{{ company.logo }}</span>
+                    <div class="company-info">
+                      <strong>{{ company.name }}</strong>
+                      <span class="company-type">{{ company.type }}</span>
+                    </div>
+                  </li>
+                </ul>
+              </div>
+              <p v-if="selectedCompany" class="form-hint">✓ {{ selectedCompany.name }} selected</p>
+            </div>
+
+            <div v-if="contactForm.client_type === 'business' && !contactForm.company_search" class="form-group">
               <label class="form-label">{{ contactForm.is_self_employed ? 'Business Trading Name' : 'Company Name' }}</label>
               <div class="input-dropdown-wrap">
                 <input class="form-input" v-model="contactForm.company_name_manual"
@@ -187,6 +212,23 @@
               <label class="form-label">Phone</label>
               <input class="form-input" v-model="contactForm.phone" :placeholder="companyNumberPlaceholder">
               <p v-if="formErrors.phone" class="form-error">{{ formErrors.phone }}</p>
+            </div>
+
+            <div v-if="selectedCompany && selectedCompany.requiredFields && selectedCompany.requiredFields.length" class="dynamic-fields-section">
+              <div class="section-divider">
+                <h4>{{ selectedCompany.name }} - Additional Details</h4>
+                <span class="section-icon">{{ selectedCompany.logo }}</span>
+              </div>
+              
+              <div v-for="fieldKey in selectedCompany.requiredFields" :key="fieldKey" class="form-group">
+                <component 
+                  :is="getDynamicFieldComponent(fieldKey)"
+                  :field-key="fieldKey"
+                  :field-def="getDynamicFieldDef(fieldKey)"
+                  :value="contactForm.dynamicFields[fieldKey]"
+                  @input="contactForm.dynamicFields[fieldKey] = $event"
+                />
+              </div>
             </div>
 
             <div v-if="contactForm.client_type === 'business' && !contactForm.is_self_employed" class="form-group">
@@ -219,6 +261,10 @@
 import { contactsAPI, companiesAPI } from '../api'
 import saCompanies from '../utils/saCompanies'
 import modal from '../utils/modal'
+import { searchCompanies, findCompanyByName, getRequiredFields, DYNAMIC_FIELDS } from '../utils/companyTypes'
+import DynamicSelectField from './DynamicSelectField.vue'
+import DynamicTextField from './DynamicTextField.vue'
+import DynamicNumberField from './DynamicNumberField.vue'
 
 const PERSONAL_EMAIL_DOMAINS = new Set([
   'gmail.com',
@@ -238,6 +284,11 @@ const PERSONAL_EMAIL_DOMAINS = new Set([
 
 export default {
   name: 'Contacts',
+  components: {
+    DynamicSelectField,
+    DynamicTextField,
+    DynamicNumberField
+  },
   data() {
     return {
       contacts: [],
@@ -260,13 +311,19 @@ export default {
         company_direct_line: '',
         company_name_manual: '',
         company: '',
-        client_type: 'business'
+        client_type: 'business',
+        company_search: '',
+        dynamicFields: {}
       },
       editingId: null,
       formErrors: {},
       formSubmitting: false,
       companyInputFocused: false,
-      selfEmployedGeneratedName: ''
+      selfEmployedGeneratedName: '',
+      showCompanyDropdown: false,
+      filteredCompanies: [],
+      selectedCompany: null,
+      companySearchTimeout: null
     }
   },
   watch: {
@@ -365,6 +422,58 @@ export default {
       this.contactForm.client_type = clientType
       this.showAddModal = true
       this.showAddMenu = false
+      this.resetCompanySelection()
+    },
+    onCompanySearchInput() {
+      clearTimeout(this.companySearchTimeout)
+      this.companySearchTimeout = setTimeout(() => {
+        const query = (this.contactForm.company_search || '').trim()
+        if (query.length > 0) {
+          this.filteredCompanies = searchCompanies(query)
+          this.showCompanyDropdown = true
+        } else {
+          this.filteredCompanies = []
+          this.showCompanyDropdown = false
+        }
+      }, 300)
+    },
+    onCompanySearchBlur() {
+      setTimeout(() => {
+        this.showCompanyDropdown = false
+      }, 200)
+    },
+    selectCompany(company) {
+      this.selectedCompany = company
+      this.contactForm.company_search = company.name
+      this.contactForm.company_name_manual = company.name
+      this.showCompanyDropdown = false
+      this.filteredCompanies = []
+      
+      // Initialize dynamic fields object
+      this.contactForm.dynamicFields = {}
+      if (company.requiredFields && company.requiredFields.length) {
+        company.requiredFields.forEach(field => {
+          this.contactForm.dynamicFields[field] = ''
+        })
+      }
+    },
+    resetCompanySelection() {
+      this.selectedCompany = null
+      this.filteredCompanies = []
+      this.showCompanyDropdown = false
+      this.contactForm.company_search = ''
+      this.contactForm.dynamicFields = {}
+    },
+    getDynamicFieldComponent(fieldKey) {
+      const fieldDef = DYNAMIC_FIELDS[fieldKey]
+      if (!fieldDef) return 'div'
+      
+      if (fieldDef.type === 'select') return 'DynamicSelectField'
+      if (fieldDef.type === 'number') return 'DynamicNumberField'
+      return 'DynamicTextField'
+    },
+    getDynamicFieldDef(fieldKey) {
+      return DYNAMIC_FIELDS[fieldKey] || {}
     },
     refreshSelfEmployedGeneratedName(force = false) {
       const newName = this.computeSelfEmployedGeneratedName()
@@ -597,13 +706,16 @@ export default {
         company_direct_line: '',
         company_name_manual: '',
         company: '',
-        client_type: 'business'
+        client_type: 'business',
+        company_search: '',
+        dynamicFields: {}
       }
       this.formErrors = {}
       this.formSubmitting = false
       this.companyInputFocused = false
       this.editingId = null
       this.selfEmployedGeneratedName = ''
+      this.resetCompanySelection()
     },
     isPersonalEmailDomain(email) {
       const domain = email.split('@').pop().toLowerCase()
@@ -694,6 +806,45 @@ export default {
 .dropdown-item:hover { background: var(--gray-100); }
 .dropdown-item:first-child { border-radius: var(--radius-md) var(--radius-md) 0 0; }
 .dropdown-item:last-child { border-radius: 0 0 var(--radius-md) var(--radius-md); }
+
+/* Company Search */
+.company-search-wrap { position: relative; }
+.company-dropdown { 
+  position: absolute; top: 100%; left: 0; right: 0; 
+  background: #fff; border: 1px solid var(--gray-200); 
+  border-radius: var(--radius-md); max-height: 250px; overflow-y: auto; 
+  box-shadow: var(--shadow-md); z-index: 20; list-style: none; 
+  padding: 0; margin: 0.25rem 0 0;
+}
+.company-dropdown li { 
+  display: flex; align-items: center; gap: 0.75rem; 
+  padding: 0.75rem 1rem; font-size: 0.875rem; 
+  cursor: pointer; border-bottom: 1px solid var(--gray-100);
+  transition: background 0.2s;
+}
+.company-dropdown li:hover { background: var(--primary-50); }
+.company-dropdown li:last-child { border-bottom: none; }
+.company-logo { font-size: 1.5rem; }
+.company-info { display: flex; flex-direction: column; }
+.company-info strong { color: var(--gray-900); font-weight: 600; }
+.company-type { font-size: 0.75rem; color: var(--gray-500); text-transform: capitalize; }
+
+/* Dynamic Fields Section */
+.dynamic-fields-section { 
+  margin-top: 1.5rem; padding: 1rem; 
+  background: #f9fafb; border-left: 4px solid var(--primary); 
+  border-radius: var(--radius-md);
+}
+.section-divider { 
+  display: flex; align-items: center; justify-content: space-between; 
+  margin-bottom: 1rem; padding-bottom: 0.75rem; 
+  border-bottom: 1px solid var(--gray-300);
+}
+.section-divider h4 { 
+  margin: 0; font-size: 0.95rem; font-weight: 700; 
+  color: var(--gray-900);
+}
+.section-icon { font-size: 1.5rem; }
 
 @media (max-width: 768px) {
   .page-wrap { padding: 1rem; }
