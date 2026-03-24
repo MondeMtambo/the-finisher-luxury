@@ -213,10 +213,14 @@ export default {
       return isAdmin || ['luxury', 'premium', 'ultimate', 'enterprise'].includes(tier)
     },
     maxPipeCount() {
-      return Math.max(...(this.widgetData.pipeline_chart || []).map(s => s.count), 1)
+      const data = this.widgetData.pipeline_chart
+      const arr = Array.isArray(data) ? data : []
+      return Math.max(...arr.map(s => s.count), 1)
     },
     maxRevValue() {
-      return Math.max(...(this.widgetData.revenue_chart?.months || []).map(m => m.value), 1)
+      const data = this.widgetData.revenue_chart?.months
+      const arr = Array.isArray(data) ? data : []
+      return Math.max(...arr.map(m => m.value), 1)
     }
   },
   mounted() {
@@ -277,9 +281,31 @@ export default {
       for (const type of types) {
         try {
           const res = await dashboardWidgetsAPI.getWidgetData(type)
-          this.widgetData[type] = res.data
-        } catch {
-          this.widgetData[type] = null
+          let data = res.data || {}
+          
+          // Normalize data based on widget type
+          if (type === 'pipeline_chart') {
+            this.widgetData[type] = Array.isArray(data) ? data : (data.results || data.data || [])
+          } else if (type === 'revenue_chart') {
+            this.widgetData[type] = data && typeof data === 'object' ? data : {}
+          } else if (type === 'activity_feed') {
+            this.widgetData[type] = Array.isArray(data) ? data : (data.results || data.data || [])
+          } else if (type === 'deal_funnel') {
+            this.widgetData[type] = Array.isArray(data) ? data : (data.results || data.data || [])
+          } else if (type === 'top_contacts') {
+            this.widgetData[type] = Array.isArray(data) ? data : (data.results || data.data || [])
+          } else if (type === 'team_leaderboard') {
+            this.widgetData[type] = Array.isArray(data) ? data : (data.results || data.data || [])
+          } else if (type === 'tasks_due') {
+            this.widgetData[type] = Array.isArray(data) ? data : (data.results || data.data || [])
+          } else if (type === 'recent_deals') {
+            this.widgetData[type] = Array.isArray(data) ? data : (data.results || data.data || [])
+          } else {
+            this.widgetData[type] = data
+          }
+        } catch (e) {
+          console.error(`Failed to load ${type} data:`, e)
+          this.widgetData[type] = type.includes('chart') || type.includes('funnel') || type.includes('feed') || type.includes('contacts') || type.includes('leaderboard') || type.includes('tasks') || type.includes('deals') ? [] : {}
         }
       }
       
