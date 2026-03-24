@@ -2,13 +2,45 @@
   <div class="page-wrap">
     <div class="page-header">
       <div>
-        <h1>Companies</h1>
-        <p class="page-subtitle">Manage your company profiles</p>
+        <h1>Clients</h1>
+        <p class="page-subtitle">Manage company and individual clients</p>
       </div>
-      <button class="btn btn-primary" @click="openAddCompany" :disabled="!canAddCompany">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-        Add Company
-      </button>
+      <div class="header-actions">
+        <div class="btn-group">
+          <button 
+            class="btn btn-secondary" 
+            :class="{ active: filterType === 'all' }" 
+            @click="filterType = 'all'"
+          >
+            All Clients
+          </button>
+          <button 
+            class="btn btn-secondary" 
+            :class="{ active: filterType === 'company' }" 
+            @click="filterType = 'company'"
+          >
+            Companies
+          </button>
+          <button 
+            class="btn btn-secondary" 
+            :class="{ active: filterType === 'individual' }" 
+            @click="filterType = 'individual'"
+          >
+            Individuals
+          </button>
+        </div>
+        <div class="add-menu">
+          <button class="btn btn-primary" @click="toggleAddMenu" :disabled="!canAddCompany">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Client
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
+          </button>
+          <div v-if="showAddMenu" class="dropdown-menu">
+            <button class="dropdown-item" @click="openAddClient('company')">Add Company</button>
+            <button class="dropdown-item" @click="openAddClient('individual')">Add Individual Client</button>
+          </div>
+        </div>
+      </div>
     </div>
 
     <div v-if="!canAddCompany" class="info-bar info-bar--amber">
@@ -27,6 +59,7 @@
       <table class="data-table" v-if="filteredCompanies.length">
         <thead>
           <tr>
+            <th>Type</th>
             <th>Name</th>
             <th>Email</th>
             <th>Phone</th>
@@ -36,6 +69,11 @@
         </thead>
         <tbody>
           <tr v-for="company in filteredCompanies" :key="company.id">
+            <td>
+              <span class="badge" :class="company.client_type === 'individual' ? 'badge-gold' : 'badge-blue'">
+                {{ company.client_type === 'individual' ? 'Individual' : 'Company' }}
+              </span>
+            </td>
             <td><strong>{{ company.name }}</strong></td>
             <td>{{ company.email || '---' }}</td>
             <td>{{ company.phone || '---' }}</td>
@@ -51,34 +89,62 @@
       </table>
       <div v-else class="empty-state">
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--gray-300)" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v3"/></svg>
-        <p>No companies found.</p>
+        <p>No clients found.</p>
       </div>
     </div>
 
     <div v-if="showAddModal || showEditModal" class="modal-overlay" @click="closeModal">
       <div class="modal-panel" @click.stop>
         <div class="modal-header">
-          <h3>{{ showAddModal ? 'Add New Company' : 'Edit Company' }}</h3>
+          <h3>{{ showAddModal ? (companyForm.client_type === 'individual' ? 'Add Individual Client' : 'Add Company') : 'Edit Client' }}</h3>
           <button class="modal-close" @click="closeModal">&times;</button>
         </div>
         <div class="modal-body">
           <form @submit.prevent="saveCompany">
-            <div class="form-group">
-              <label class="form-label">Company Name</label>
-              <input class="form-input" v-model="companyForm.name" placeholder="Company Name" required>
+            <div v-if="showAddModal" class="form-group">
+              <label class="form-label">Client Type</label>
+              <div class="type-selector">
+                <button 
+                  type="button" 
+                  class="type-btn" 
+                  :class="{ active: companyForm.client_type === 'company' }" 
+                  @click="companyForm.client_type = 'company'"
+                >
+                  <span class="type-icon">🏢</span>
+                  <span class="type-name">Company</span>
+                </button>
+                <button 
+                  type="button" 
+                  class="type-btn" 
+                  :class="{ active: companyForm.client_type === 'individual' }" 
+                  @click="companyForm.client_type = 'individual'"
+                >
+                  <span class="type-icon">👤</span>
+                  <span class="type-name">Individual</span>
+                </button>
+              </div>
             </div>
+            
+            <div class="form-group">
+              <label class="form-label">{{ companyForm.client_type === 'individual' ? 'Full Name' : 'Company Name' }}</label>
+              <input class="form-input" v-model="companyForm.name" :placeholder="companyForm.client_type === 'individual' ? 'John Doe' : 'Company Name'" required>
+            </div>
+            
             <div class="form-group">
               <label class="form-label">Email</label>
               <input class="form-input" v-model="companyForm.email" type="email" placeholder="Email">
             </div>
+            
             <div class="form-group">
               <label class="form-label">Phone</label>
               <input class="form-input" v-model="companyForm.phone" placeholder="Phone">
             </div>
-            <div class="form-group">
+            
+            <div v-if="companyForm.client_type === 'company'" class="form-group">
               <label class="form-label">Address</label>
-              <textarea class="form-input" v-model="companyForm.address" placeholder="Address" rows="3"></textarea>
+              <textarea class="form-input" v-model="companyForm.address" placeholder="Business Address" rows="3"></textarea>
             </div>
+            
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" @click="closeModal">Cancel</button>
               <button type="submit" class="btn btn-primary">Save</button>
@@ -105,21 +171,26 @@ export default {
       searchTerm: '',
       showAddModal: false,
       showEditModal: false,
+      showAddMenu: false,
+      filterType: 'all',
       companyForm: {
         name: '',
         email: '',
         phone: '',
-        address: ''
+        address: '',
+        client_type: 'company'
       },
       editingId: null
     }
   },
   computed: {
     filteredCompanies() {
-      return this.companies.filter(company => 
-        company.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        (company.email && company.email.toLowerCase().includes(this.searchTerm.toLowerCase()))
-      )
+      return this.companies.filter(company => {
+        const matchesSearch = company.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+          (company.email && company.email.toLowerCase().includes(this.searchTerm.toLowerCase()))
+        const matchesType = this.filterType === 'all' || company.client_type === this.filterType
+        return matchesSearch && matchesType
+      })
     },
     canAddCompany() {
       return this.contactCount > 0
@@ -151,14 +222,19 @@ export default {
         console.error('Error loading companies:', error)
       }
     },
-    async openAddCompany() {
+    toggleAddMenu() {
+      this.showAddMenu = !this.showAddMenu
+    },
+    async openAddClient(clientType) {
       await this.refreshPrerequisites()
       if (!this.canAddCompany) {
-        await modal.warning('Contact Required', 'Capture at least one contact before creating a company profile. Add a contact first, then come back here.')
+        await modal.warning('Contact Required', 'Capture at least one contact before creating a client profile. Add a contact first, then come back here.')
         this.$router.push('/contacts')
         return
       }
+      this.companyForm.client_type = clientType
       this.showAddModal = true
+      this.showAddMenu = false
     },
     async saveCompany() {
       try {
@@ -193,11 +269,13 @@ export default {
     closeModal() {
       this.showAddModal = false
       this.showEditModal = false
+      this.showAddMenu = false
       this.companyForm = {
         name: '',
         email: '',
         phone: '',
-        address: ''
+        address: '',
+        client_type: 'company'
       }
       this.editingId = null
     }
@@ -223,9 +301,65 @@ export default {
 .col-actions { width: 160px; }
 .cell-truncate { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .row-actions { display: flex; gap: 0.5rem; }
+
+/* Header actions layout */
+.header-actions { display: flex; gap: 1rem; align-items: center; }
+.btn-group { display: flex; gap: 0.5rem; }
+.btn-group .btn { padding: 0.5rem 1rem; font-size: 0.875rem; }
+.btn-group .btn.active { background: var(--primary); color: white; }
+
+/* Add menu dropdown */
+.add-menu { position: relative; }
+.dropdown-menu { 
+  position: absolute; top: 100%; right: 0; 
+  background: var(--gray-50); border: 1px solid var(--gray-200); 
+  border-radius: var(--radius-md); min-width: 200px; 
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
+  z-index: 100; margin-top: 0.5rem;
+}
+.dropdown-item { 
+  display: block; width: 100%; padding: 0.75rem 1rem; 
+  background: none; border: none; text-align: left; 
+  font-size: 0.875rem; cursor: pointer; 
+  transition: background 0.2s;
+}
+.dropdown-item:hover { background: var(--gray-100); }
+.dropdown-item:first-child { border-radius: var(--radius-md) var(--radius-md) 0 0; }
+.dropdown-item:last-child { border-radius: 0 0 var(--radius-md) var(--radius-md); }
+
+/* Type selector for modal */
+.type-selector { 
+  display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; 
+  margin-bottom: 1rem;
+}
+.type-btn { 
+  display: flex; flex-direction: column; align-items: center; gap: 0.75rem; 
+  padding: 1rem; border: 2px solid var(--gray-300); border-radius: var(--radius-md); 
+  background: var(--gray-50); cursor: pointer; 
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.type-btn:hover { border-color: var(--primary); background: #eff6ff; }
+.type-btn.active { 
+  border-color: var(--primary); background: var(--primary); color: white; 
+}
+.type-icon { font-size: 2rem; }
+.type-name { font-size: 0.875rem; font-weight: 600; }
+
+/* Client type badges */
+.badge { 
+  display: inline-block; padding: 0.25rem 0.75rem; 
+  border-radius: var(--radius-full); font-size: 0.75rem; 
+  font-weight: 700; white-space: nowrap;
+}
+.badge-gold { background: #fef3c7; color: #92400e; }
+.badge-blue { background: #dbeafe; color: #1e3a8a; }
+
 @media (max-width: 768px) {
   .page-wrap { padding: 1rem; }
   .page-header { flex-direction: column; }
+  .header-actions { flex-direction: column; width: 100%; }
+  .btn-group { width: 100%; flex-wrap: wrap; }
   .table-card { overflow-x: auto; }
 }
 </style>
