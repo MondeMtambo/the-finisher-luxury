@@ -21,14 +21,12 @@
       </div>
     </div>
 
-    <div v-if="!loading && activeWidgets.length > 0" class="grid-stack" ref="gridContainer">
+    <div v-if="!loading && activeWidgets.length > 0" class="dashboard-grid">
       <div 
         v-for="widget in activeWidgets" 
         :key="widget.id"
-        class="grid-stack-item"
-        :gs-id="widget.id"
       >
-        <div class="grid-stack-item-content widget-card">
+        <div class="widget-card">
         <div class="widget-header" :class="{ 'draggable-header': canDragDrop }">
           <h3>{{ widget.title }}</h3>
           <div class="widget-controls">
@@ -180,14 +178,11 @@
 import { dashboardWidgetsAPI } from '../api'
 import toast from '../utils/toast'
 import authService from '../services/auth'
-import 'gridstack/dist/gridstack.min.css'
-import { GridStack } from 'gridstack'
 
 export default {
   name: 'CustomDashboard',
   data() {
     return {
-      grid: null,
       widgets: [],
       widgetData: {},
       loading: true,
@@ -240,52 +235,6 @@ export default {
       if (diff < 1440) return `${Math.floor(diff / 60)}h ago`
       return dt.toLocaleDateString('en-ZA', { day: 'numeric', month: 'short' })
     },
-    initGrid() {
-      if (this.grid) {
-        this.grid.destroy(false);
-      }
-      this.grid = GridStack.init({
-        column: 12,
-        cellHeight: 180,
-        margin: 16,
-        disableResize: !this.canDragDrop,
-        disableDrag: !this.canDragDrop,
-        disableOneColumnMode: true,
-        handle: '.draggable-header',
-        animate: true,
-        float: true // Allows widgets to be freely placed without auto-snapping up
-      }, this.$refs.gridContainer);
-
-      this.grid.load(this.activeWidgets.map(w => ({
-        id: String(w.id),
-        x: w.position_x || 0,
-        y: w.position_y || 0,
-        w: w.width || 3,
-        h: w.height || 1
-      })));
-
-      this.grid.on('change', (event, items) => {
-        if (!items) return;
-        const positions = items.map(item => ({
-          id: item.id,
-          x: item.x,
-          y: item.y,
-          w: item.w,
-          h: item.h
-        }));
-
-        items.forEach(item => {
-          const target = this.widgets.find(x => String(x.id) === String(item.id));
-          if (target) {
-            target.position_x = item.x;
-            target.position_y = item.y;
-            target.width = item.w;
-            target.height = item.h;
-          }
-        });
-        dashboardWidgetsAPI.reorder(positions).catch(e => console.error('Failed to save layout', e));
-      });
-    },
     pipeWidth(count) {
       return (count / this.maxPipeCount * 100) + '%'
     },
@@ -316,11 +265,6 @@ export default {
         }
         this.widgets = fetchedWidgets
 
-        setTimeout(() => {
-          if (this.$refs.gridContainer) {
-            this.initGrid()
-          }
-        }, 100)
         this.loadWidgetData()
       } catch (e) {
         toast.error('Failed to load dashboard')
@@ -394,7 +338,6 @@ export default {
 </script>
 
 <style scoped>
-@import "gridstack/dist/gridstack.min.css";
 .page-wrap { padding: 24px; max-width: 1400px; margin: 0 auto; }
 .page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px; flex-wrap: wrap; gap: 12px; }
 .page-header h1 { font-size: 24px; font-weight: 700; color: #ffffff; margin: 0; }
@@ -403,9 +346,9 @@ export default {
 
 .luxury-badge { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; padding: 4px 10px; background: rgba(212, 175, 55, 0.1); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 6px; color: #D4AF37; font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
 
-.empty-state-wrap { padding-top: 40px; }
-.grid-stack { background: transparent; }
-.grid-stack-item-content { border-radius: 12px; overflow: hidden; }
+.dashboard-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 2rem; }
+.empty-state-wrap { padding-top: 40px; grid-column: 1 / -1; }
+
 .widget-card { height: 100%; background: rgba(15, 15, 15, 0.8) !important; border: 1px solid rgba(212, 175, 55, 0.2) !important; border-radius: 12px; padding: 0; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
 
 .widget-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px 10px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); background: rgba(0,0,0,0.4); }
