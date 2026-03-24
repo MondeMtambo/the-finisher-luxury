@@ -295,11 +295,22 @@ def save_user_profile(sender, instance, **kwargs):
 
 
 class Company(models.Model):
+    CLIENT_TYPE_CHOICES = [
+        ('company', 'Company / Organization'),
+        ('individual', 'Individual / Sole Proprietor'),
+    ]
+    
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='companies')
     name = models.CharField(max_length=200)
     email = models.EmailField(blank=True)
     phone = models.CharField(max_length=20, blank=True)
     address = models.TextField(blank=True)
+    client_type = models.CharField(
+        max_length=20,
+        choices=CLIENT_TYPE_CHOICES,
+        default='company',
+        help_text="Client type: Organization or Individual"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
