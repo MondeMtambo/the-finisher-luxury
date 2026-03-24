@@ -33,6 +33,8 @@ ALLOWED_HOSTS = [
     'the-finisher-luxury-be.onrender.com',
     'the-finisher-luxury-be.fly.dev',
     '.onrender.com',
+    'thefinishercrm.tech',
+    'www.thefinishercrm.tech',
 ]
 
 
