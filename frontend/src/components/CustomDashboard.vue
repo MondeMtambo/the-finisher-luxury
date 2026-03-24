@@ -346,18 +346,114 @@ export default {
 
 .luxury-badge { display: inline-flex; align-items: center; gap: 6px; margin-top: 10px; padding: 4px 10px; background: rgba(212, 175, 55, 0.1); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 6px; color: #D4AF37; font-size: 11px; font-weight: 600; letter-spacing: 0.05em; text-transform: uppercase; }
 
-.dashboard-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 2rem; }
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 20px;
+  margin-bottom: 2rem;
+}
+@media (min-width: 1200px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+@media (max-width: 768px) {
+  .dashboard-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
 .empty-state-wrap { padding-top: 40px; grid-column: 1 / -1; }
 
-.widget-card { height: 100%; background: rgba(15, 15, 15, 0.8) !important; border: 1px solid rgba(212, 175, 55, 0.2) !important; border-radius: 12px; padding: 0; display: flex; flex-direction: column; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
+.widget-card {
+  height: 100%;
+  background: rgba(15, 15, 15, 0.7) !important;
+  border: 1px solid rgba(212, 175, 55, 0.15) !important;
+  border-radius: 16px;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.4), inset 0 1px 0 rgba(212, 175, 55, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(12px);
+  position: relative;
+}
+.widget-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: linear-gradient(90deg, transparent, #D4AF37, transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+.widget-card:hover {
+  transform: translateY(-4px);
+  border-color: rgba(212, 175, 55, 0.3) !important;
+  box-shadow: 0 12px 32px rgba(212, 175, 55, 0.15), inset 0 1px 0 rgba(212, 175, 55, 0.2) !important;
+}
+.widget-card:hover::before {
+  opacity: 1;
+}
 
-.widget-header { display: flex; justify-content: space-between; align-items: center; padding: 14px 16px 10px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); background: rgba(0,0,0,0.4); }
-.draggable-header { cursor: grab; }
+.widget-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 20px 14px;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.1);
+  background: linear-gradient(135deg, rgba(20, 20, 25, 0.6) 0%, rgba(15, 15, 20, 0.4) 100%);
+  position: relative;
+  transition: background 0.3s ease;
+}
+.widget-card:hover .widget-header {
+  background: linear-gradient(135deg, rgba(25, 25, 30, 0.8) 0%, rgba(20, 20, 25, 0.6) 100%);
+}
+.widget-header::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, #D4AF37, transparent);
+  opacity: 0.5;
+}
+.draggable-header { cursor: grab; transition: color 0.2s ease; }
 .draggable-header:active { cursor: grabbing; }
-.widget-header h3 { font-size: 13px; font-weight: 600; color: #D4AF37; margin: 0; text-transform: uppercase; letter-spacing: 0.04em; }
+.widget-header h3 {
+  font-size: 14px;
+  font-weight: 700;
+  color: #D4AF37;
+  margin: 0;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  text-shadow: 0 0 8px rgba(212, 175, 55, 0.2);
+}
 .widget-controls { display: flex; gap: 4px; }
 
-.widget-body { padding: 16px; flex: 1; overflow-y: auto; }
+.widget-body {
+  padding: 20px;
+  flex: 1;
+  overflow-y: auto;
+  background: linear-gradient(180deg, rgba(15, 15, 15, 0.3) 0%, rgba(10, 10, 15, 0.1) 100%);
+}
+.widget-body::-webkit-scrollbar {
+  width: 6px;
+}
+.widget-body::-webkit-scrollbar-track {
+  background: rgba(212, 175, 55, 0.05);
+  border-radius: 3px;
+}
+.widget-body::-webkit-scrollbar-thumb {
+  background: rgba(212, 175, 55, 0.3);
+  border-radius: 3px;
+}
+.widget-body::-webkit-scrollbar-thumb:hover {
+  background: rgba(212, 175, 55, 0.5);
+}
 
 /* Stat Card */
 .widget-stat { text-align: center; padding: 20px 0; }
