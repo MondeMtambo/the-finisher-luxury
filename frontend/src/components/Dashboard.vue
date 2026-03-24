@@ -30,14 +30,12 @@
       </div>
     </div>
 
-    <div class="grid-stack top-stats-grid" ref="topStatsGrid">
+    <div class="top-stats-grid">
       <div 
         v-for="element in statCards" 
         :key="element.key"
-        class="grid-stack-item"
-        :gs-id="element.key"
       >
-        <div class="grid-stack-item-content stat-card card" @click="onStatCardClick(element.key)" role="button" tabindex="0">
+        <div class="stat-card card" @click="onStatCardClick(element.key)" role="button" tabindex="0">
           <span class="drag-handle" title="Drag to reorder" @click.stop>
             <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor"><circle cx="4" cy="2" r="1.5"/><circle cx="10" cy="2" r="1.5"/><circle cx="4" cy="7" r="1.5"/><circle cx="10" cy="7" r="1.5"/><circle cx="4" cy="12" r="1.5"/><circle cx="10" cy="12" r="1.5"/></svg>
           </span>
@@ -402,7 +400,6 @@ export default {
   },
   data() {
     return {
-      grid: null,
       statCards: [],
       charts: {},
       
@@ -741,11 +738,6 @@ export default {
       } else {
         this.setDefaultLayout()
       }
-      setTimeout(() => {
-        if (this.$refs.topStatsGrid) {
-          this.initGrid()
-        }
-      }, 100)
     },
     setDefaultLayout() {
       if (this.isEmployeeOnly) {
@@ -801,41 +793,6 @@ export default {
     saveLayout() {
       
       localStorage.setItem('dashboardLayout', JSON.stringify(this.statCards))
-    },
-    initGrid() {
-      if (this.grid) {
-        this.grid.destroy(false);
-      }
-      this.grid = GridStack.init({
-        column: 12,
-        cellHeight: 110,
-        margin: 16,
-        handle: '.drag-handle',
-        animate: true,
-        float: true,
-        disableOneColumnMode: true, // Prevent snapping to 1 column on smaller screens
-        disableResize: false, // Allow resizing
-        disableDrag: false,   // Allow dragging
-      }, this.$refs.topStatsGrid);
-
-      this.grid.load(this.statCards.map(card => ({
-        id: card.key,
-        x: card.x, y: card.y, w: card.w, h: card.h
-      })));
-
-      this.grid.on('change', (event, items) => {
-        if (!items) return;
-        items.forEach(item => {
-          const card = this.statCards.find(c => c.key === item.id);
-          if (card) {
-            card.x = item.x;
-            card.y = item.y;
-            card.w = item.w;
-            card.h = item.h;
-          }
-        });
-        this.saveLayout();
-      });
     },
     initializeCharts() {
       
@@ -1335,7 +1292,6 @@ export default {
 </script>
 
 <style scoped>
-@import "gridstack/dist/gridstack.min.css";
 /* ═══ Dashboard — Corporate Clean ═══ */
 .dashboard {
   padding: 1.5rem 2rem 3rem;
@@ -1421,8 +1377,12 @@ export default {
   border: 1px solid rgba(212, 175, 55, 0.2);
 }
 
-.top-stats-grid { margin-bottom: 2rem; background: transparent; }
-.grid-stack-item-content { border-radius: var(--radius-md); }
+.top-stats-grid { 
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  margin-bottom: 2rem; 
+}
 .stat-card {
   display: flex;
   align-items: center;
