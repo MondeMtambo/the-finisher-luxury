@@ -33,6 +33,7 @@ urlpatterns = [
     path('api/auth/verify-mfa/', auth_views.VerifyMFAView.as_view(), name='verify_mfa'),
     path('api/auth/refresh/', TokenRefreshView.as_view(), name='token_refresh'),
     path('api/auth/profile/', auth_views.UserProfileView.as_view(), name='user_profile'),
+    path('api/auth/force-change-password/', auth_views.ForceChangePasswordView.as_view(), name='force_change_password'),
     path('api/auth/change-password/', auth_views.ChangePasswordView.as_view(), name='change_password'),
     path('api/auth/password-reset/', auth_views.PasswordResetRequestView.as_view(), name='password_reset'),
     path('api/auth/password-reset/verify-otp/', auth_views.PasswordResetVerifyOTPView.as_view(), name='password_reset_verify_otp'),

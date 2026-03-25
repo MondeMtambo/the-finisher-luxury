@@ -44,6 +44,42 @@
       </form>
     </div>
 
+    <div class="auth-card" v-if="showForceChangeModal">
+      <div class="auth-brand">
+        <div class="brand-mark">🔒</div>
+        <h1>Change Temporary Password</h1>
+        <p class="brand-sub">You must change this temporary password before continuing</p>
+      </div>
+
+      <div class="mfa-container">
+        <p class="mfa-message">
+          Changing password for <strong>{{ fpEmail }}</strong>
+        </p>
+
+        <div class="form-group">
+          <label class="form-label" for="newPassword">New Password</label>
+          <input id="newPassword" class="form-input" v-model="forceNewPassword" type="password" placeholder="Enter a new password" required>
+        </div>
+
+        <div class="form-group">
+          <label class="form-label" for="newPassword2">Confirm Password</label>
+          <input id="newPassword2" class="form-input" v-model="forceNewPassword2" type="password" placeholder="Confirm new password" required>
+        </div>
+
+        <div v-if="error" class="alert alert-danger">{{ error }}</div>
+
+        <button @click="submitForceChange" class="btn btn-primary btn-block" :disabled="loading">
+          {{ loading ? 'Applying...' : 'Change Password' }}
+        </button>
+
+        <div class="mfa-actions">
+          <button @click="() => { showForceChangeModal = false }" class="btn-link">
+            Back to Login
+          </button>
+        </div>
+      </div>
+    </div>
+
     <div class="auth-card" v-if="showMFAModal">
       <div class="auth-brand">
         <div class="brand-mark">✓</div>
@@ -107,6 +143,12 @@ export default {
         password: '',
         acceptPolicy: false
       },
+      // Force-change-password flow
+      showForceChangeModal: false,
+      forceNewPassword: '',
+      forceNewPassword2: '',
+      fpUserId: null,
+      fpEmail: '',
       loading: false,
       error: '',
       
@@ -142,6 +184,15 @@ export default {
         })
         
         
+        if (loginResponse.data.requires_password_reset) {
+          // Prompt user to change the temporary password
+          this.fpUserId = loginResponse.data.user_id
+          this.fpEmail = loginResponse.data.email
+          this.showForceChangeModal = true
+          this.loading = false
+          return
+        }
+
         if (loginResponse.data.requires_mfa) {
           this.mfaUserId = loginResponse.data.user_id
           this.mfaEmail = loginResponse.data.email
@@ -195,6 +246,36 @@ export default {
         console.error('Login failed:', error)
         const data = error.response?.data
         this.error = data?.detail || data?.message || data?.error || error.message || 'Invalid login details'
+      } finally {
+        this.loading = false
+      }
+    },
+
+    async submitForceChange() {
+      if (!this.forceNewPassword || this.forceNewPassword !== this.forceNewPassword2) {
+        toast.error('Passwords must match')
+        return
+      }
+      this.loading = true
+      try {
+        const resp = await authAPI.forceChangePassword({
+          user_id: this.fpUserId,
+          old_password: this.form.password,
+          password: this.forceNewPassword,
+          password2: this.forceNewPassword2
+        })
+
+        if (resp.data.requires_mfa) {
+          this.showForceChangeModal = false
+          this.mfaUserId = resp.data.user_id
+          this.mfaEmail = resp.data.email
+          this.showMFAModal = true
+          toast.info('Verification code sent', 'Check your email for the 6-digit code')
+        }
+
+      } catch (error) {
+        console.error('Force change failed:', error)
+        toast.error(error.message || 'Failed to change password')
       } finally {
         this.loading = false
       }

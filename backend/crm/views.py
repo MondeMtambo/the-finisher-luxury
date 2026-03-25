@@ -1720,7 +1720,14 @@ class ClientEmployeeManagementView(APIView):
                 temp_password = ''.join(random.choices(string.ascii_letters + string.digits, k=12))
                 target_user.set_password(temp_password)
                 target_user.save()
-                
+                # Mark user profile to require password change on next login
+                try:
+                    if hasattr(target_user, 'profile'):
+                        target_user.profile.requires_password_reset = True
+                        target_user.profile.save()
+                except Exception:
+                    pass
+
                 return Response({
                     'message': 'Password reset successfully',
                     'temporary_password': temp_password,

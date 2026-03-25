@@ -110,6 +110,7 @@ class UserProfile(models.Model):
     notes = models.TextField(blank=True, help_text="Additional notes about employee")
 
     requires_password_reset = models.BooleanField(default=False, help_text="Force user to change password at next login")
+    password_changed_at = models.DateTimeField(null=True, blank=True, help_text="When the user last changed their password")
 
     registration_ip = models.GenericIPAddressField(blank=True, null=True, help_text="IP address used during registration")
     last_login_ip = models.GenericIPAddressField(blank=True, null=True, help_text="Most recent login IP address")

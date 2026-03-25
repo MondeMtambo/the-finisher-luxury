@@ -90,6 +90,15 @@ class LoginView(TokenObtainPairView):
                         ip = request.META.get('REMOTE_ADDR')
 
                     profile = user.profile
+                    # If admin forced a password reset, don't return tokens — require change first
+                    if getattr(profile, 'requires_password_reset', False):
+                        # Remove tokens from response if present
+                        response.data.pop('access', None)
+                        response.data.pop('refresh', None)
+                        response.data['requires_password_reset'] = True
+                        response.data['user_id'] = user.id
+                        response.data['email'] = user.email
+                        return response
                     if not profile.registration_ip and ip:
                         profile.registration_ip = ip
                     profile.last_login_ip = ip
@@ -458,3 +467,72 @@ class LogoutView(APIView):
             return Response({
                 'error': 'Something went wrong.'
             }, status=status.HTTP_400_BAD_REQUEST)
+
+
+class ForceChangePasswordView(APIView):
+    """
+    Force change password flow for admin-reset temporary passwords.
+    POST /api/auth/force-change-password/
+    Body: { user_id, old_password, password, password2 }
+    Returns: requires_mfa True + user info (then frontend calls verify MFA to obtain tokens)
+    """
+    permission_classes = (AllowAny,)
+
+    def post(self, request):
+        user_id = request.data.get('user_id')
+        old_password = request.data.get('old_password', '')
+        password = request.data.get('password', '')
+        password2 = request.data.get('password2', '')
+
+        if not user_id or not old_password or not password or not password2:
+            return Response({'error': 'Missing parameters'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if password != password2:
+            return Response({'error': 'Passwords do not match'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            user = User.objects.get(id=user_id)
+        except User.DoesNotExist:
+            return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        if not user.check_password(old_password):
+            return Response({'error': 'Old password incorrect'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            # Apply new password
+            user.set_password(password)
+            user.save()
+
+            # Update profile flags
+            if hasattr(user, 'profile'):
+                profile = user.profile
+                profile.requires_password_reset = False
+                from django.utils import timezone
+                profile.password_changed_at = timezone.now()
+                profile.save()
+
+                # Blacklist outstanding refresh tokens for user (if token_blacklist enabled)
+                try:
+                    from rest_framework_simplejwt.token_blacklist.models import OutstandingToken, BlacklistedToken
+                    for ot in OutstandingToken.objects.filter(user=user):
+                        try:
+                            BlacklistedToken.objects.get_or_create(token=ot)
+                        except Exception:
+                            pass
+                except Exception:
+                    pass
+
+            # Send MFA code to re-verify identity
+            code, success, msg = create_mfa_code(user)
+            email_status = 'sent' if success else 'failed'
+
+            return Response({
+                'requires_mfa': True,
+                'user_id': user.id,
+                'email': user.email,
+                'message': 'Verification code sent' if success else 'Failed to send verification code',
+                'email_send_status': email_status,
+            }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({'error': f'Failed to change password: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

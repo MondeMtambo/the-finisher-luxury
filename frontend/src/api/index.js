@@ -213,6 +213,7 @@ export const authAPI = {
   register: (data) => api.post('/auth/register/', data),
   login: (data) => api.post('/auth/login/', data),
   verifyMFA: (data) => api.post('/auth/verify-mfa/', data),
+  forceChangePassword: (data) => api.post('/auth/force-change-password/', data),
   refresh: (refreshToken) => api.post('/auth/refresh/', { refresh: refreshToken }),
   logout: () => api.post('/auth/logout/'),
   getProfile: () => api.get('/auth/profile/'),
