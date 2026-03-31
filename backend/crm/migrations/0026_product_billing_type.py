@@ -3,6 +3,16 @@
 from django.db import migrations, models
 
 
+def add_billing_type_if_not_exists(apps, schema_editor):
+    # Use ALTER TABLE ... ADD COLUMN IF NOT EXISTS to avoid errors if column already exists
+    schema_editor.execute(
+        """
+        ALTER TABLE crm_product
+        ADD COLUMN IF NOT EXISTS billing_type varchar(30) NOT NULL DEFAULT 'standard';
+        """
+    )
+
+
 class Migration(migrations.Migration):
 
     dependencies = [
@@ -10,9 +20,16 @@ class Migration(migrations.Migration):
     ]
 
     operations = [
-        migrations.AddField(
-            model_name='product',
-            name='billing_type',
-            field=models.CharField(choices=[('standard', 'Standard (one-off)'), ('recurring', 'Recurring (subscription)')], default='standard', help_text='Billing type for the product', max_length=30),
+        migrations.SeparateDatabaseAndState(
+            database_operations=[
+                migrations.RunPython(add_billing_type_if_not_exists),
+            ],
+            state_operations=[
+                migrations.AddField(
+                    model_name='product',
+                    name='billing_type',
+                    field=models.CharField(choices=[('standard', 'Standard (one-off)'), ('recurring', 'Recurring (subscription)')], default='standard', help_text='Billing type for the product', max_length=30),
+                ),
+            ],
         ),
     ]
