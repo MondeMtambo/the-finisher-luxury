@@ -2106,7 +2106,8 @@ class ProductViewSet(viewsets.ModelViewSet):
                 logger.info("Creating product: %s", serializer.initial_data)
             except Exception:
                 logger.info("Creating product (could not read initial_data)")
-            serializer.save(created_by=user, company_name=company_name)
+            # Provide a default billing_type to avoid DB NOT NULL errors if column exists
+            serializer.save(created_by=user, company_name=company_name, billing_type='standard')
         except Exception as exc:
             # Log full traceback to help diagnose 500s in production
             tb = traceback.format_exc()
