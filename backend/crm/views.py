@@ -2079,25 +2079,40 @@ class ProductViewSet(viewsets.ModelViewSet):
         return Product.objects.filter(company_name=company_name)
 
     def perform_create(self, serializer):
+        import logging
+        import traceback
+        logger = logging.getLogger(__name__)
         user = self.request.user
         from django.core.exceptions import ValidationError
         from .models import Company
-        if user.is_superuser:
-            company_name = 'MTAMBO HOLDINGS'
-        else:
-            company = getattr(user, 'profile', None)
-            company_name = company.company_name if company else ''
-            # Quick admin fix: if admin and no company_name, set default
-            if (not company_name or not company_name.strip()) and hasattr(user, 'profile'):
-                company_name = f"{user.first_name} {user.last_name} Company".strip()
-                user.profile.company_name = company_name
-                user.profile.save()
-            # Ensure Company object exists for this user and company_name
-            if company_name:
-                company_obj, created = Company.objects.get_or_create(user=user, name=company_name)
-        if not company_name:
-            raise ValidationError("Company name is required to create a product.")
-        serializer.save(created_by=user, company_name=company_name)
+        try:
+            if user.is_superuser:
+                company_name = 'MTAMBO HOLDINGS'
+            else:
+                company = getattr(user, 'profile', None)
+                company_name = company.company_name if company else ''
+                # Quick admin fix: if admin and no company_name, set default
+                if (not company_name or not company_name.strip()) and hasattr(user, 'profile'):
+                    company_name = f"{user.first_name} {user.last_name} Company".strip()
+                    user.profile.company_name = company_name
+                    user.profile.save()
+                # Ensure Company object exists for this user and company_name
+                if company_name:
+                    company_obj, created = Company.objects.get_or_create(user=user, name=company_name)
+            if not company_name:
+                raise ValidationError("Company name is required to create a product.")
+            # Log the incoming payload for debugging
+            try:
+                logger.info("Creating product: %s", serializer.initial_data)
+            except Exception:
+                logger.info("Creating product (could not read initial_data)")
+            serializer.save(created_by=user, company_name=company_name)
+        except Exception as exc:
+            # Log full traceback to help diagnose 500s in production
+            tb = traceback.format_exc()
+            logger.error("Exception in ProductViewSet.perform_create: %s\n%s", str(exc), tb)
+            # Re-raise to preserve original behavior (will produce 500)
+            raise
 
 
 class LineItemViewSet(viewsets.ModelViewSet):
