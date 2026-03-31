@@ -100,9 +100,7 @@ class RegisterSerializer(serializers.ModelSerializer):
             profile = user.profile
 
             if not company_name or not company_name.strip():
-
-                company_name = 'Default Company'
-            
+                company_name = f"{user.first_name} {user.last_name} Company".strip()
             profile.company_name = company_name
             profile.phone = phone
             profile.tier = tier
@@ -114,7 +112,6 @@ class RegisterSerializer(serializers.ModelSerializer):
                 profile.notes = f'[AUTO-FLAG] Unlisted company registration. Company: {company_name}. Requires manual verification.'
             else:
                 profile.payment_status = 'paid'  # Known partner company
-            
             profile.trial_ends_at = None  # No trial needed
 
             profile.job_title = job_title
@@ -129,12 +126,13 @@ class RegisterSerializer(serializers.ModelSerializer):
             profile.marketing_consent = marketing_consent
             profile.terms_accepted_at = timezone.now()  # Record when terms were accepted
 
-
-
             profile.role = 'admin'
-            
             profile.save()
-        
+
+            # Ensure Company object exists for this user and company_name
+            from .models import Company
+            if company_name:
+                Company.objects.get_or_create(user=user, name=company_name)
         return user
 
 

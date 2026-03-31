@@ -2080,11 +2080,23 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         user = self.request.user
+        from django.core.exceptions import ValidationError
+        from .models import Company
         if user.is_superuser:
             company_name = 'MTAMBO HOLDINGS'
         else:
             company = getattr(user, 'profile', None)
             company_name = company.company_name if company else ''
+            # Quick admin fix: if admin and no company_name, set default
+            if (not company_name or not company_name.strip()) and hasattr(user, 'profile'):
+                company_name = f"{user.first_name} {user.last_name} Company".strip()
+                user.profile.company_name = company_name
+                user.profile.save()
+            # Ensure Company object exists for this user and company_name
+            if company_name:
+                company_obj, created = Company.objects.get_or_create(user=user, name=company_name)
+        if not company_name:
+            raise ValidationError("Company name is required to create a product.")
         serializer.save(created_by=user, company_name=company_name)
 
 
