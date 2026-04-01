@@ -26,6 +26,7 @@ import Products from '../components/Products.vue'
 import EmailCampaigns from '../components/EmailCampaigns.vue'
 import Workflows from '../components/Workflows.vue'
 import CustomDashboard from '../components/CustomDashboard.vue'
+import WebsiteLeads from '../components/WebsiteLeads.vue'
 import PrivacyPolicy from '../components/docs/PrivacyPolicy.vue'
 import TermsOfService from '../components/docs/TermsOfService.vue'
 import PopiaCompliance from '../components/docs/PopiaCompliance.vue'
@@ -169,6 +170,12 @@ const routes = [
     name: 'CustomDashboard',
     component: CustomDashboard,
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/website-leads',
+    name: 'WebsiteLeads',
+    component: WebsiteLeads,
+    meta: { requiresAuth: true, requiresAdmin: true }
   },
   {
     path: '/admin/team',

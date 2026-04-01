@@ -284,6 +284,7 @@ export const performanceAPI = {
 export const systemAPI = {
   getPrerequisites: () => api.get('/prerequisites/'),
   getAdminOverview: () => api.get('/admin/overview/'),
+  getWebsiteLeadInbox: (params = {}) => api.get('/admin/website-leads/inbox/', { params }),
   getUserManagement: () => api.get('/admin/users/'),
   getClientsEmployees: () => api.get('/admin/clients-employees/'),
   banUser: (userId, reason) => api.post('/admin/users/', { action: 'ban', user_id: userId, reason }),
@@ -294,6 +295,12 @@ export const systemAPI = {
   toggleUserActive: (userId) => api.post('/admin/clients-employees/', { action: 'toggle_active', user_id: userId }),
   banClient: (userId, reason) => api.post('/admin/clients-employees/', { action: 'ban', user_id: userId, reason }),
   unbanClient: (userId) => api.post('/admin/clients-employees/', { action: 'unban', user_id: userId })
+}
+
+export const websiteLeadsAPI = {
+  getAll: (params = {}) => api.get('/website-leads/', { params }),
+  updateWorkflow: (id, data) => api.post(`/website-leads/${id}/update_workflow/`, data),
+  reply: (id, data) => api.post(`/website-leads/${id}/reply/`, data)
 }
 
 export const employeesAPI = {
