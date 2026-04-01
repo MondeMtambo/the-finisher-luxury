@@ -178,7 +178,7 @@ def public_lead_capture(request):
         if message:
             ActivityLog.objects.create(
                 user=lead_owner,
-                action='lead_message',
+                action='create',
                 entity_type='contact',
                 entity_id=contact.id,
                 entity_name=f"{first_name} {last_name}",
