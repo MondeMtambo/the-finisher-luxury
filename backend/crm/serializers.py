@@ -287,6 +287,12 @@ class WebsiteLeadUpdateSerializer(serializers.Serializer):
     meeting_notes = serializers.CharField(required=False, allow_blank=True)
 
 
+class WebsiteLeadReplySerializer(serializers.Serializer):
+    subject = serializers.CharField(max_length=200)
+    message = serializers.CharField()
+    response_notes = serializers.CharField(required=False, allow_blank=True)
+
+
 class TicketSerializer(serializers.ModelSerializer):
     contact_name = serializers.CharField(source='deal.contact.__str__', read_only=True)
     company_name = serializers.CharField(source='deal.company.name', read_only=True)

@@ -9,6 +9,7 @@ from django.db import IntegrityError, transaction
 from django.db.models import Q, Count, Sum
 from django.contrib.auth.models import User
 from django.conf import settings
+from django.core.mail import send_mail
 from django.utils import timezone
 import csv
 import io
@@ -42,6 +43,7 @@ from .serializers import (
     DashboardLayoutSerializer,
     WebsiteLeadSerializer,
     WebsiteLeadUpdateSerializer,
+    WebsiteLeadReplySerializer,
 )
 from .tier_limits import LUXURY_TIER_LIMITS
 
@@ -818,6 +820,58 @@ class WebsiteLeadViewSet(viewsets.ReadOnlyModelViewSet):
         )
 
         return Response(WebsiteLeadSerializer(lead).data, status=status.HTTP_200_OK)
+
+    @action(detail=True, methods=['post'])
+    def reply(self, request, pk=None):
+        lead = self.get_object()
+        serializer = WebsiteLeadReplySerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        payload = serializer.validated_data
+
+        subject = payload['subject'].strip()
+        message = payload['message'].strip()
+        response_notes = payload.get('response_notes', '').strip()
+
+        if not subject or not message:
+            return Response({'error': 'Subject and message are required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            send_mail(
+                subject,
+                message,
+                settings.DEFAULT_FROM_EMAIL,
+                [lead.contact.email],
+                fail_silently=False,
+            )
+        except Exception as exc:
+            return Response(
+                {'error': f'Failed to send reply email: {str(exc)}'},
+                status=status.HTTP_502_BAD_GATEWAY,
+            )
+
+        lead.response_status = 'responded'
+        lead.responded_at = timezone.now()
+        lead.response_notes = response_notes or lead.response_notes
+        lead.handled_by = request.user
+        lead.save(update_fields=['response_status', 'responded_at', 'response_notes', 'handled_by'])
+
+        log_activity(
+            user=request.user,
+            action='update',
+            entity_type='contact',
+            entity_id=lead.contact.id,
+            entity_name=f"{lead.contact.first_name} {lead.contact.last_name}",
+            details=f"Website lead reply sent to {lead.contact.email} | subject={subject}",
+        )
+
+        return Response(
+            {
+                'success': True,
+                'message': 'Reply sent successfully.',
+                'lead': WebsiteLeadSerializer(lead).data,
+            },
+            status=status.HTTP_200_OK,
+        )
 
 
 class TicketViewSet(viewsets.ModelViewSet):
