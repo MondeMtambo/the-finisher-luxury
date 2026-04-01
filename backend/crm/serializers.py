@@ -576,7 +576,7 @@ class ProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = [
             'id', 'name', 'description', 'sku', 'price', 'cost', 'tax_rate',
-            'is_active', 'category', 'unit', 'company_name', 'margin',
+            'is_active', 'category', 'unit', 'company_name', 'billing_type', 'margin',
             'price_incl_tax', 'created_at', 'updated_at'
         ]
         read_only_fields = ['id', 'created_at', 'updated_at']

@@ -13,6 +13,7 @@ import csv
 import io
 from .models import Contact, Company, Deal, ActivityLog, UserProfile, DeletedUserLog, Ticket, Notification, Asset, AssetCategory, Division, OnboardingLog, OffboardingRequest, Product, LineItem, EmailTemplate, EmailCampaign, CampaignRecipient, Workflow, WorkflowAction, WorkflowLog, DashboardWidget, DashboardLayout
 from .utils import is_owner_admin_user, normalize_company_name
+from .whatsapp import send_lead_welcome_message
 from .serializers import (
     ContactSerializer, 
     CompanySerializer, 
@@ -93,6 +94,183 @@ def health(request):
         'status': 'ok',
         'service': 'the-finisher-luxury',
     }, status=status.HTTP_200_OK)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+def public_lead_capture(request):
+    """
+    Public lead capture endpoint - captures leads from website forms.
+    No authentication required.
+    
+    Expected POST data:
+    {
+        "first_name": "John",
+        "last_name": "Doe",
+        "email": "john@example.com",
+        "phone": "+27821234567",
+        "message": "Interested in your services"
+    }
+    
+    Returns:
+    {
+        "success": true,
+        "lead_id": 123,
+        "message": "Lead captured successfully",
+        "whatsapp_sent": true
+    }
+    """
+    try:
+        data = request.data
+        first_name = data.get('first_name', '').strip()
+        last_name = data.get('last_name', '').strip()
+        email = data.get('email', '').strip()
+        phone = data.get('phone', '').strip()
+        message = data.get('message', '').strip()
+        
+        # Validate required fields
+        if not all([first_name, last_name, email, phone]):
+            return Response({
+                'success': False,
+                'error': 'Missing required fields: first_name, last_name, email, phone'
+            }, status=status.HTTP_400_BAD_REQUEST)
+        
+        # Get or create the lead "owner" user (system admin user who owns all public leads)
+        # Create a default lead owner if it doesn't exist
+        lead_owner, _ = User.objects.get_or_create(
+            username='lead_system',
+            defaults={
+                'email': 'leads@finisher-luxury.com',
+                'first_name': 'System',
+                'last_name': 'Lead Manager',
+                'is_staff': True,
+            }
+        )
+        
+        # Check if contact already exists
+        existing_contact = Contact.objects.filter(
+            email__iexact=email,
+            user=lead_owner
+        ).first()
+        
+        if existing_contact:
+            # Update existing contact
+            existing_contact.first_name = first_name
+            existing_contact.last_name = last_name
+            existing_contact.phone = phone
+            existing_contact.company_name_manual = data.get('company', '')
+            existing_contact.save()
+            contact = existing_contact
+            is_new = False
+        else:
+            # Create new contact
+            contact = Contact.objects.create(
+                user=lead_owner,
+                first_name=first_name,
+                last_name=last_name,
+                email=email,
+                phone=phone,
+                company_name_manual=data.get('company', ''),
+            )
+            is_new = True
+        
+        # Save message as activity/note
+        if message:
+            ActivityLog.objects.create(
+                user=lead_owner,
+                action='lead_message',
+                entity_type='contact',
+                entity_id=contact.id,
+                entity_name=f"{first_name} {last_name}",
+                details=f"Lead message: {message}"
+            )
+        
+        # Send WhatsApp welcome message
+        whatsapp_result = send_lead_welcome_message(
+            contact_name=first_name,
+            phone=phone,
+            calendar_link='https://calendly.com/mtamboholdings' if data.get('calendar_enabled') else None
+        )
+        
+        # Trigger workflows for new leads
+        if is_new:
+            trigger_workflows_for_lead(contact, lead_owner)
+        
+        return Response({
+            'success': True,
+            'lead_id': contact.id,
+            'message': 'Lead captured successfully. Check your WhatsApp!',
+            'whatsapp_sent': whatsapp_result['success'],
+            'whatsapp_error': whatsapp_result.get('error'),
+        }, status=status.HTTP_201_CREATED)
+        
+    except Exception as e:
+        logger.error(f"Error capturing lead: {str(e)}", exc_info=True)
+        return Response({
+            'success': False,
+            'error': f'Error capturing lead: {str(e)}'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+def trigger_workflows_for_lead(contact, lead_owner):
+    """
+    Trigger workflows with 'contact_created' trigger for new leads.
+    """
+    import logging
+    logger = logging.getLogger(__name__)
+    
+    try:
+        workflows = Workflow.objects.filter(
+            trigger_type='contact_created',
+            company_name__iexact='Mtambo Holdings',
+            is_active=True
+        )
+        
+        for workflow in workflows:
+            try:
+                workflow_log = WorkflowLog.objects.create(
+                    workflow=workflow,
+                    trigger_entity_type='contact',
+                    trigger_entity_id=contact.id,
+                    trigger_entity_name=f"{contact.first_name} {contact.last_name}",
+                    actions_executed=[],
+                    status='success'
+                )
+                
+                # Execute workflow actions
+                for action in workflow.actions.all().order_by('order'):
+                    try:
+                        if action.action_type == 'send_whatsapp':
+                            # WhatsApp already sent above, but can add more here
+                            pass
+                        elif action.action_type == 'send_email':
+                            # Email notifications can be added here
+                            pass
+                        elif action.action_type == 'notify_user':
+                            Notification.objects.create(
+                                user=lead_owner,
+                                message=f"New lead from {contact.first_name} {contact.last_name}",
+                                related_entity_type='contact',
+                                related_entity_id=contact.id
+                            )
+                    except Exception as e:
+                        logger.warning(f"Error executing workflow action {action.id}: {str(e)}")
+                        workflow_log.status = 'partial'
+                
+                workflow_log.save()
+                workflow.run_count += 1
+                workflow.last_run_at = timezone.now()
+                workflow.save()
+                
+            except Exception as e:
+                logger.error(f"Error running workflow {workflow.id}: {str(e)}")
+    
+    except Exception as e:
+        logger.error(f"Error triggering workflows: {str(e)}")
+
+
+import logging
+logger = logging.getLogger(__name__)
 
 
 def log_activity(user, action, entity_type, entity_id, entity_name, details=''):

@@ -976,6 +976,11 @@ class Product(models.Model):
     category = models.CharField(max_length=100, blank=True, help_text="Product category (e.g. Software, Service, Hardware)")
     unit = models.CharField(max_length=50, default='each', help_text="Unit of measure (each, hour, month, licence)")
     company_name = models.CharField(max_length=200, help_text="Company that owns this product")
+    BILLING_TYPE_CHOICES = [
+        ('standard', 'Standard (one-off)'),
+        ('recurring', 'Recurring (subscription)'),
+    ]
+    billing_type = models.CharField(max_length=30, choices=BILLING_TYPE_CHOICES, default='standard', help_text="Billing type for the product")
     created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, related_name='products_created')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -1172,6 +1177,7 @@ class WorkflowAction(models.Model):
     """Single action within a workflow (executed in order)."""
     ACTION_TYPES = [
         ('send_email', 'Send Email'),
+        ('send_whatsapp', 'Send WhatsApp'),
         ('create_task', 'Create Task/Ticket'),
         ('notify_user', 'Send Notification'),
         ('change_stage', 'Change Deal Stage'),

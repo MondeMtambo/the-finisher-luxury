@@ -233,6 +233,11 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 EMAIL_TIMEOUT = 15  # seconds - give Gmail SMTP enough time from cloud hosts
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='no-reply@example.com')
 
+# Twilio WhatsApp Configuration
+TWILIO_ACCOUNT_SID = config('TWILIO_ACCOUNT_SID', default='')
+TWILIO_AUTH_TOKEN = config('TWILIO_AUTH_TOKEN', default='')
+TWILIO_WHATSAPP_FROM = config('TWILIO_WHATSAPP_FROM', default='')  # e.g., 'whatsapp:+1234567890'
+
 # MFA Settings
 MFA_CODE_LENGTH = 6
 MFA_CODE_EXPIRY_MINUTES = 5
