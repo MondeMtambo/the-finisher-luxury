@@ -8,10 +8,11 @@ from rest_framework.parsers import MultiPartParser, FormParser
 from django.db import IntegrityError, transaction
 from django.db.models import Q, Count, Sum
 from django.contrib.auth.models import User
+from django.conf import settings
 from django.utils import timezone
 import csv
 import io
-from .models import Contact, Company, Deal, ActivityLog, UserProfile, DeletedUserLog, Ticket, Notification, Asset, AssetCategory, Division, OnboardingLog, OffboardingRequest, Product, LineItem, EmailTemplate, EmailCampaign, CampaignRecipient, Workflow, WorkflowAction, WorkflowLog, DashboardWidget, DashboardLayout
+from .models import Contact, Company, Deal, ActivityLog, UserProfile, DeletedUserLog, Ticket, Notification, Asset, AssetCategory, Division, OnboardingLog, OffboardingRequest, Product, LineItem, EmailTemplate, EmailCampaign, CampaignRecipient, Workflow, WorkflowAction, WorkflowLog, DashboardWidget, DashboardLayout, WebsiteLead
 from .utils import is_owner_admin_user, normalize_company_name
 from .whatsapp import send_lead_welcome_message
 from .serializers import (
@@ -39,6 +40,8 @@ from .serializers import (
     WorkflowLogSerializer,
     DashboardWidgetSerializer,
     DashboardLayoutSerializer,
+    WebsiteLeadSerializer,
+    WebsiteLeadUpdateSerializer,
 )
 from .tier_limits import LUXURY_TIER_LIMITS
 
@@ -135,17 +138,50 @@ def public_lead_capture(request):
                 'error': 'Missing required fields: first_name, last_name, email, phone'
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        # Get or create the lead "owner" user (system admin user who owns all public leads)
-        # Create a default lead owner if it doesn't exist
-        lead_owner, _ = User.objects.get_or_create(
-            username='lead_system',
+        # Resolve configured owner first (your real admin account), then fallback to lead_system.
+        configured_owner_email = getattr(settings, 'PUBLIC_LEAD_OWNER_EMAIL', '').strip()
+        configured_owner_username = getattr(settings, 'PUBLIC_LEAD_OWNER_USERNAME', '').strip()
+        configured_company = getattr(settings, 'PUBLIC_LEAD_COMPANY_NAME', 'Mtambo Holdings').strip() or 'Mtambo Holdings'
+
+        lead_owner = None
+        if configured_owner_email:
+            lead_owner = User.objects.filter(email__iexact=configured_owner_email).first()
+        if not lead_owner and configured_owner_username:
+            lead_owner = User.objects.filter(username=configured_owner_username).first()
+
+        if not lead_owner:
+            lead_owner, _ = User.objects.get_or_create(
+                username='lead_system',
+                defaults={
+                    'email': 'leads@finisher-luxury.com',
+                    'first_name': 'System',
+                    'last_name': 'Lead Manager',
+                    'is_staff': False,
+                }
+            )
+
+        if lead_owner.username == 'lead_system' and lead_owner.is_staff:
+            lead_owner.is_staff = False
+            lead_owner.save(update_fields=['is_staff'])
+
+        # Ensure the lead owner profile is tagged to the configured company so company admins can see these contacts.
+        lead_profile, _ = UserProfile.objects.get_or_create(
+            user=lead_owner,
             defaults={
-                'email': 'leads@finisher-luxury.com',
-                'first_name': 'System',
-                'last_name': 'Lead Manager',
-                'is_staff': True,
+                'role': 'admin',
+                'company_name': configured_company,
+                'payment_status': 'paid',
             }
         )
+        profile_updates = []
+        if not lead_profile.company_name:
+            lead_profile.company_name = configured_company
+            profile_updates.append('company_name')
+        if lead_owner.username == 'lead_system' and lead_profile.role != 'admin':
+            lead_profile.role = 'admin'
+            profile_updates.append('role')
+        if profile_updates:
+            lead_profile.save(update_fields=profile_updates)
         
         # Check if contact already exists
         existing_contact = Contact.objects.filter(
@@ -184,6 +220,25 @@ def public_lead_capture(request):
                 entity_name=f"{first_name} {last_name}",
                 details=f"Lead message: {message}"
             )
+
+        website_source = data.get('source', 'contact_form')
+        if website_source not in ['contact_form', 'chat_widget']:
+            website_source = 'contact_form'
+
+        website_lead, _ = WebsiteLead.objects.get_or_create(
+            contact=contact,
+            defaults={
+                'owner': lead_owner,
+                'source': website_source,
+                'inbound_message': message,
+            }
+        )
+        if not website_lead.owner_id:
+            website_lead.owner = lead_owner
+        website_lead.source = website_source
+        if message:
+            website_lead.inbound_message = message
+        website_lead.save()
         
         # Send WhatsApp welcome message
         whatsapp_result = send_lead_welcome_message(
@@ -673,8 +728,96 @@ class ActivityLogViewSet(viewsets.ReadOnlyModelViewSet):
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
+        user = self.request.user
 
-        return ActivityLog.objects.filter(user=self.request.user)
+        if user.is_superuser or user.is_staff:
+            return ActivityLog.objects.all()
+
+        profile = getattr(user, 'profile', None)
+        if profile and profile.is_admin and profile.company_name:
+            company = normalize_company_name(profile.company_name)
+            return ActivityLog.objects.filter(
+                user__profile__company_name__iexact=company
+            )
+
+        return ActivityLog.objects.filter(user=user)
+
+
+class WebsiteLeadViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = WebsiteLeadSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        profile = getattr(user, 'profile', None)
+
+        if not (user.is_superuser or user.is_staff or (profile and profile.is_admin)):
+            raise PermissionDenied('Only administrators can access website lead inbox.')
+
+        if user.is_superuser or user.is_staff:
+            return WebsiteLead.objects.select_related('contact', 'owner', 'handled_by').all()
+
+        company = normalize_company_name(profile.company_name or '')
+        return WebsiteLead.objects.select_related('contact', 'owner', 'handled_by').filter(
+            owner__profile__company_name__iexact=company
+        )
+
+    @action(detail=True, methods=['post'])
+    def update_workflow(self, request, pk=None):
+        lead = self.get_object()
+        serializer = WebsiteLeadUpdateSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        data = serializer.validated_data
+
+        update_fields = []
+
+        if 'response_status' in data:
+            lead.response_status = data['response_status']
+            update_fields.append('response_status')
+            if data['response_status'] == 'responded':
+                lead.responded_at = timezone.now()
+                update_fields.append('responded_at')
+
+        if 'response_notes' in data:
+            lead.response_notes = data['response_notes']
+            update_fields.append('response_notes')
+
+        if 'call_notes' in data:
+            lead.call_notes = data['call_notes']
+            lead.called_at = timezone.now()
+            update_fields.extend(['call_notes', 'called_at'])
+
+        if 'meeting_status' in data:
+            lead.meeting_status = data['meeting_status']
+            update_fields.append('meeting_status')
+
+        if 'meeting_datetime' in data:
+            lead.meeting_datetime = data['meeting_datetime']
+            update_fields.append('meeting_datetime')
+
+        if 'meeting_notes' in data:
+            lead.meeting_notes = data['meeting_notes']
+            update_fields.append('meeting_notes')
+
+        lead.handled_by = request.user
+        update_fields.append('handled_by')
+
+        if update_fields:
+            lead.save(update_fields=list(dict.fromkeys(update_fields)))
+
+        ActivityLog.objects.create(
+            user=request.user,
+            action='update',
+            entity_type='contact',
+            entity_id=lead.contact.id,
+            entity_name=f"{lead.contact.first_name} {lead.contact.last_name}",
+            details=(
+                f"Website lead workflow updated | response_status={lead.response_status} | "
+                f"meeting_status={lead.meeting_status}"
+            )
+        )
+
+        return Response(WebsiteLeadSerializer(lead).data, status=status.HTTP_200_OK)
 
 
 class TicketViewSet(viewsets.ModelViewSet):
@@ -996,6 +1139,16 @@ class AdminOverviewView(APIView):
             won_value=Sum('value', filter=Q(stage='closed_won')),
         )
 
+        if request.user.is_superuser or request.user.is_staff:
+            lead_scope = WebsiteLead.objects.all()
+        else:
+            lead_scope = WebsiteLead.objects.filter(owner=request.user)
+            if not lead_scope.exists():
+                profile = getattr(request.user, 'profile', None)
+                if profile and profile.company_name:
+                    company = normalize_company_name(profile.company_name)
+                    lead_scope = WebsiteLead.objects.filter(owner__profile__company_name__iexact=company)
+
         support_catalog = [
             {
                 'name': 'Velocity Titans',
@@ -1025,8 +1178,62 @@ class AdminOverviewView(APIView):
                 'closed_won': analytics['closed_won'] or 0,
                 'pipeline_value': str(analytics['pipeline_value'] or 0),
                 'won_value': str(analytics['won_value'] or 0),
+                'website_leads_total': lead_scope.count(),
+                'website_leads_new': lead_scope.filter(response_status='new').count(),
+                'website_leads_responded': lead_scope.filter(response_status='responded').count(),
             },
             'support_catalog': support_catalog
+        })
+
+
+class AdminWebsiteLeadInboxView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        if not has_user_management_access(request):
+            raise PermissionDenied('Admin access required.')
+
+        if request.user.is_superuser or request.user.is_staff:
+            base_qs = WebsiteLead.objects.select_related('contact', 'owner', 'handled_by').all()
+        else:
+            base_qs = WebsiteLead.objects.select_related('contact', 'owner', 'handled_by').filter(owner=request.user)
+            if not base_qs.exists():
+                profile = getattr(request.user, 'profile', None)
+                if profile and profile.company_name:
+                    company = normalize_company_name(profile.company_name)
+                    base_qs = WebsiteLead.objects.select_related('contact', 'owner', 'handled_by').filter(
+                        owner__profile__company_name__iexact=company
+                    )
+
+        response_status = request.query_params.get('status', '').strip().lower()
+        if response_status in {'new', 'responded', 'closed'}:
+            results_qs = base_qs.filter(response_status=response_status)
+        else:
+            results_qs = base_qs
+
+        meeting_status = request.query_params.get('meeting_status', '').strip().lower()
+        if meeting_status in {'none', 'proposed', 'accepted', 'declined', 'completed'}:
+            results_qs = results_qs.filter(meeting_status=meeting_status)
+
+        try:
+            limit = int(request.query_params.get('limit', 50))
+        except (TypeError, ValueError):
+            limit = 50
+        limit = max(1, min(200, limit))
+
+        results = results_qs.order_by('-inbound_received_at')[:limit]
+
+        return Response({
+            'summary': {
+                'total': base_qs.count(),
+                'new': base_qs.filter(response_status='new').count(),
+                'responded': base_qs.filter(response_status='responded').count(),
+                'closed': base_qs.filter(response_status='closed').count(),
+                'meeting_proposed': base_qs.filter(meeting_status='proposed').count(),
+                'meeting_accepted': base_qs.filter(meeting_status='accepted').count(),
+                'meeting_declined': base_qs.filter(meeting_status='declined').count(),
+            },
+            'results': WebsiteLeadSerializer(results, many=True).data,
         })
 
 

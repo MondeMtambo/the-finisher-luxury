@@ -547,6 +547,58 @@ class ActivityLog(models.Model):
         return f"{self.user.username} {self.action} {self.entity_type} '{self.entity_name}'"
 
 
+class WebsiteLead(models.Model):
+    SOURCE_CHOICES = [
+        ('contact_form', 'Contact Form'),
+        ('chat_widget', 'Chat Widget'),
+    ]
+
+    RESPONSE_STATUS_CHOICES = [
+        ('new', 'New'),
+        ('responded', 'Responded'),
+        ('closed', 'Closed'),
+    ]
+
+    MEETING_STATUS_CHOICES = [
+        ('none', 'No Meeting'),
+        ('proposed', 'Proposed'),
+        ('accepted', 'Accepted'),
+        ('declined', 'Declined'),
+        ('completed', 'Completed'),
+    ]
+
+    contact = models.OneToOneField(Contact, on_delete=models.CASCADE, related_name='website_lead')
+    owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='website_leads')
+    source = models.CharField(max_length=20, choices=SOURCE_CHOICES, default='contact_form')
+    inbound_message = models.TextField(blank=True)
+    inbound_received_at = models.DateTimeField(default=timezone.now)
+
+    response_status = models.CharField(max_length=20, choices=RESPONSE_STATUS_CHOICES, default='new')
+    responded_at = models.DateTimeField(null=True, blank=True)
+    response_notes = models.TextField(blank=True)
+
+    called_at = models.DateTimeField(null=True, blank=True)
+    call_notes = models.TextField(blank=True)
+
+    meeting_status = models.CharField(max_length=20, choices=MEETING_STATUS_CHOICES, default='none')
+    meeting_datetime = models.DateTimeField(null=True, blank=True)
+    meeting_notes = models.TextField(blank=True)
+
+    handled_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='handled_website_leads')
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-inbound_received_at']
+        indexes = [
+            models.Index(fields=['owner', '-inbound_received_at']),
+            models.Index(fields=['response_status', 'meeting_status']),
+        ]
+
+    def __str__(self):
+        return f"WebsiteLead({self.contact.email})"
+
+
 class Ticket(models.Model):
     STATUS_CHOICES = [
         ('open', 'Open'),

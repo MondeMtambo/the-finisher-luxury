@@ -2,7 +2,8 @@ from rest_framework import serializers
 from .models import (Contact, Company, Deal, ActivityLog, Ticket, Notification, UserProfile,
                      Asset, AssetCategory, Division, OnboardingLog, OffboardingRequest,
                      Product, LineItem, EmailTemplate, EmailCampaign, CampaignRecipient,
-                     Workflow, WorkflowAction, WorkflowLog, DashboardWidget, DashboardLayout)
+                     Workflow, WorkflowAction, WorkflowLog, DashboardWidget, DashboardLayout,
+                     WebsiteLead)
 from django.contrib.auth.models import User
 from django.core.validators import validate_email
 import phonenumbers
@@ -225,6 +226,65 @@ class ActivityLogSerializer(serializers.ModelSerializer):
         model = ActivityLog
         fields = ['id', 'action', 'entity_type', 'entity_id', 'entity_name', 'details', 'created_at']
         read_only_fields = fields
+
+
+class WebsiteLeadSerializer(serializers.ModelSerializer):
+    contact_name = serializers.CharField(source='contact.__str__', read_only=True)
+    contact_email = serializers.CharField(source='contact.email', read_only=True)
+    contact_phone = serializers.CharField(source='contact.phone', read_only=True)
+    owner_username = serializers.CharField(source='owner.username', read_only=True)
+    handled_by_username = serializers.CharField(source='handled_by.username', read_only=True)
+
+    class Meta:
+        model = WebsiteLead
+        fields = [
+            'id',
+            'contact',
+            'contact_name',
+            'contact_email',
+            'contact_phone',
+            'owner',
+            'owner_username',
+            'source',
+            'inbound_message',
+            'inbound_received_at',
+            'response_status',
+            'responded_at',
+            'response_notes',
+            'called_at',
+            'call_notes',
+            'meeting_status',
+            'meeting_datetime',
+            'meeting_notes',
+            'handled_by',
+            'handled_by_username',
+            'created_at',
+            'updated_at',
+        ]
+        read_only_fields = [
+            'id',
+            'contact',
+            'owner',
+            'owner_username',
+            'inbound_message',
+            'inbound_received_at',
+            'handled_by',
+            'handled_by_username',
+            'created_at',
+            'updated_at',
+        ]
+
+
+class WebsiteLeadUpdateSerializer(serializers.Serializer):
+    response_status = serializers.ChoiceField(choices=['new', 'responded', 'closed'], required=False)
+    response_notes = serializers.CharField(required=False, allow_blank=True)
+    call_notes = serializers.CharField(required=False, allow_blank=True)
+    meeting_status = serializers.ChoiceField(
+        choices=['none', 'proposed', 'accepted', 'declined', 'completed'],
+        required=False
+    )
+    meeting_datetime = serializers.DateTimeField(required=False, allow_null=True)
+    meeting_notes = serializers.CharField(required=False, allow_blank=True)
 
 
 class TicketSerializer(serializers.ModelSerializer):

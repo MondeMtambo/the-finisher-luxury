@@ -24,6 +24,7 @@ router.register(r'email-campaigns', views.EmailCampaignViewSet, basename='emailc
 router.register(r'workflows', views.WorkflowViewSet, basename='workflow')
 router.register(r'dashboard-widgets', views.DashboardWidgetViewSet, basename='dashboardwidget')
 router.register(r'dashboard-layouts', views.DashboardLayoutViewSet, basename='dashboardlayout')
+router.register(r'website-leads', views.WebsiteLeadViewSet, basename='websitelead')
 
 urlpatterns = [
     path('', views.api_overview, name='api_overview'),
@@ -49,6 +50,7 @@ urlpatterns = [
     path('api/performance/me/', views.performance_me, name='performance_me'),
     path('api/performance/user/<int:user_id>/', views.performance_user, name='performance_user'),
     path('api/admin/overview/', views.AdminOverviewView.as_view(), name='admin_overview'),
+    path('api/admin/website-leads/inbox/', views.AdminWebsiteLeadInboxView.as_view(), name='admin_website_leads_inbox'),
     path('api/admin/users/', views.UserManagementView.as_view(), name='user_management'),
     path('api/admin/clients-employees/', views.ClientEmployeeManagementView.as_view(), name='client_employee_management'),
 ]

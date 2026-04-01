@@ -2,7 +2,8 @@ from django.contrib import admin
 from .models import (Contact, Company, Deal, UserProfile, DeletedUserLog,
                      Asset, AssetCategory, Division, OnboardingLog, OffboardingRequest,
                      Product, LineItem, EmailTemplate, EmailCampaign, CampaignRecipient,
-                     Workflow, WorkflowAction, WorkflowLog, DashboardWidget, DashboardLayout)
+                     Workflow, WorkflowAction, WorkflowLog, DashboardWidget, DashboardLayout,
+                     WebsiteLead)
 
 
 @admin.register(UserProfile)
@@ -130,3 +131,11 @@ class DashboardWidgetAdmin(admin.ModelAdmin):
 @admin.register(DashboardLayout)
 class DashboardLayoutAdmin(admin.ModelAdmin):
     list_display = ['user', 'name', 'is_default', 'created_at']
+
+
+@admin.register(WebsiteLead)
+class WebsiteLeadAdmin(admin.ModelAdmin):
+    list_display = ['contact', 'owner', 'source', 'response_status', 'meeting_status', 'handled_by', 'inbound_received_at']
+    search_fields = ['contact__first_name', 'contact__last_name', 'contact__email', 'owner__username']
+    list_filter = ['source', 'response_status', 'meeting_status', 'inbound_received_at']
+    readonly_fields = ['inbound_received_at', 'created_at', 'updated_at']
