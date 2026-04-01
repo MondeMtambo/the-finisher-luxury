@@ -66,6 +66,9 @@
             <td>{{ formatDate(lead.inbound_received_at) }}</td>
             <td>
               <div class="row-actions">
+                <button class="btn btn-sm btn-secondary" @click="quickMarkResponded(lead)">Responded</button>
+                <button class="btn btn-sm btn-secondary" @click="quickMarkMeetingAccepted(lead)">Meeting Accepted</button>
+                <button class="btn btn-sm btn-secondary" @click="quickMarkClosed(lead)">Close</button>
                 <button class="btn btn-sm btn-primary" @click="openReply(lead)">Reply</button>
                 <button class="btn btn-sm btn-secondary" @click="openCallLog(lead)">Log Call</button>
                 <button class="btn btn-sm btn-secondary" @click="openMeeting(lead)">Meeting</button>
@@ -218,6 +221,43 @@ export default {
       } catch (error) {
         console.error('Failed to load website leads inbox:', error)
         toast.error(error.message || 'Failed to load website leads inbox')
+      }
+    },
+    async quickMarkResponded(lead) {
+      try {
+        await websiteLeadsAPI.updateWorkflow(lead.id, {
+          response_status: 'responded'
+        })
+        toast.success('Lead marked as responded')
+        await this.loadInbox()
+      } catch (error) {
+        console.error('Failed to mark responded:', error)
+        toast.error(error.message || 'Failed to update lead')
+      }
+    },
+    async quickMarkMeetingAccepted(lead) {
+      try {
+        await websiteLeadsAPI.updateWorkflow(lead.id, {
+          response_status: 'responded',
+          meeting_status: 'accepted'
+        })
+        toast.success('Lead marked as meeting accepted')
+        await this.loadInbox()
+      } catch (error) {
+        console.error('Failed to mark meeting accepted:', error)
+        toast.error(error.message || 'Failed to update lead')
+      }
+    },
+    async quickMarkClosed(lead) {
+      try {
+        await websiteLeadsAPI.updateWorkflow(lead.id, {
+          response_status: 'closed'
+        })
+        toast.success('Lead closed')
+        await this.loadInbox()
+      } catch (error) {
+        console.error('Failed to close lead:', error)
+        toast.error(error.message || 'Failed to close lead')
       }
     },
     statusClass(value) {
