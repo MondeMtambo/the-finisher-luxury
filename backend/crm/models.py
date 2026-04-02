@@ -556,6 +556,7 @@ class WebsiteLead(models.Model):
     RESPONSE_STATUS_CHOICES = [
         ('new', 'New'),
         ('responded', 'Responded'),
+        ('promoted', 'Promoted'),
         ('closed', 'Closed'),
     ]
 
@@ -583,6 +584,9 @@ class WebsiteLead(models.Model):
     meeting_status = models.CharField(max_length=20, choices=MEETING_STATUS_CHOICES, default='none')
     meeting_datetime = models.DateTimeField(null=True, blank=True)
     meeting_notes = models.TextField(blank=True)
+
+    spam_score = models.IntegerField(default=0, help_text="Automated lead quality score")
+    is_spam_risk = models.BooleanField(default=False, help_text="Flagged by Bullshit Filter")
 
     handled_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='handled_website_leads')
     created_at = models.DateTimeField(auto_now_add=True)

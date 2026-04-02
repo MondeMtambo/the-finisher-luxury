@@ -219,6 +219,38 @@ def public_lead_capture(request):
                 details=f"Lead message: {message}"
             )
 
+        # The Bullshit Filter Engine
+        spam_score = 0
+        is_spam_risk = False
+        
+        # Domain check
+        email_domain = email.split('@')[-1].lower() if '@' in email else ''
+        free_domains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'live.com', 'icloud.com']
+        spam_domains = ['tempmail.com', '10minutemail.com', 'mailinator.com', 'guerrillamail.com']
+        
+        if email_domain in spam_domains:
+            spam_score -= 50
+            is_spam_risk = True
+        elif email_domain not in free_domains:
+            spam_score += 50  # Corporate domain
+            
+        # Keyword check
+        msg_lower = message.lower()
+        spam_keywords = ['seo', 'boost your traffic', 'generate leads', 'dear sir/madam', 'crypto', 'investment', 'guarantee', 'marketing agency', 'web design services']
+        good_keywords = ['budget', 'quote', 'timeline', 'looking to hire', 'project', 'pricing', 'interested in']
+        
+        for kw in spam_keywords:
+            if kw in msg_lower:
+                spam_score -= 20
+                is_spam_risk = True
+                
+        for kw in good_keywords:
+            if kw in msg_lower:
+                spam_score += 20
+                
+        if spam_score < 0:
+            is_spam_risk = True
+
         website_source = data.get('source', 'contact_form')
         if website_source not in ['contact_form', 'chat_widget']:
             website_source = 'contact_form'
@@ -236,6 +268,8 @@ def public_lead_capture(request):
         website_lead.source = website_source
         if message:
             website_lead.inbound_message = message
+        website_lead.spam_score = spam_score
+        website_lead.is_spam_risk = is_spam_risk
         website_lead.save()
         
         # Send WhatsApp welcome message
@@ -867,6 +901,49 @@ class WebsiteLeadViewSet(viewsets.ReadOnlyModelViewSet):
             status=status.HTTP_200_OK,
         )
 
+    @action(detail=True, methods=['post'])
+    def promote_to_deal(self, request, pk=None):
+        lead = self.get_object()
+        
+        if lead.response_status == 'promoted':
+            return Response({'error': 'This lead has already been promoted to a deal.'}, status=status.HTTP_400_BAD_REQUEST)
+            
+        contact = lead.contact
+        ensure_company_for_contact(contact)
+        
+        deal_value = request.data.get('value', 0.00)
+        deal_title = request.data.get('title', f"Lead Deal: {contact.first_name} {contact.last_name}")
+        
+        with transaction.atomic():
+            deal = Deal.objects.create(
+                user=lead.owner,
+                title=deal_title,
+                contact=contact,
+                company=contact.company,
+                value=deal_value,
+                stage='lead'
+            )
+            
+            lead.response_status = 'promoted'
+            lead.handled_by = request.user
+            lead.save(update_fields=['response_status', 'handled_by'])
+            
+            log_activity(
+                user=request.user,
+                action='create',
+                entity_type='deal',
+                entity_id=deal.id,
+                entity_name=deal.title,
+                details=f"Promoted from Website Lead ({contact.email})"
+            )
+            
+        return Response({
+            'success': True,
+            'message': 'Lead successfully promoted to Deal!',
+            'deal': DealSerializer(deal).data,
+            'lead': WebsiteLeadSerializer(lead).data
+        }, status=status.HTTP_200_OK)
+
 
 class TicketViewSet(viewsets.ModelViewSet):
     serializer_class = TicketSerializer
@@ -1247,7 +1324,7 @@ class AdminWebsiteLeadInboxView(APIView):
             base_qs = WebsiteLead.objects.select_related('contact', 'owner', 'handled_by').filter(owner=request.user)
 
         response_status = request.query_params.get('status', '').strip().lower()
-        if response_status in {'new', 'responded', 'closed'}:
+        if response_status in {'new', 'responded', 'promoted', 'closed'}:
             results_qs = base_qs.filter(response_status=response_status)
         else:
             results_qs = base_qs
@@ -1269,6 +1346,7 @@ class AdminWebsiteLeadInboxView(APIView):
                 'total': base_qs.count(),
                 'new': base_qs.filter(response_status='new').count(),
                 'responded': base_qs.filter(response_status='responded').count(),
+                'promoted': base_qs.filter(response_status='promoted').count(),
                 'closed': base_qs.filter(response_status='closed').count(),
                 'meeting_proposed': base_qs.filter(meeting_status='proposed').count(),
                 'meeting_accepted': base_qs.filter(meeting_status='accepted').count(),
