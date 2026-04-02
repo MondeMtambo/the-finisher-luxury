@@ -258,6 +258,8 @@ class WebsiteLeadSerializer(serializers.ModelSerializer):
             'meeting_notes',
             'handled_by',
             'handled_by_username',
+            'spam_score',
+            'is_spam_risk',
             'created_at',
             'updated_at',
         ]
@@ -270,6 +272,8 @@ class WebsiteLeadSerializer(serializers.ModelSerializer):
             'inbound_received_at',
             'handled_by',
             'handled_by_username',
+            'spam_score',
+            'is_spam_risk',
             'created_at',
             'updated_at',
         ]
