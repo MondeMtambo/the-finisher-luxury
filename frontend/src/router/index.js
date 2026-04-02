@@ -175,7 +175,7 @@ const routes = [
     path: '/website-leads',
     name: 'WebsiteLeads',
     component: WebsiteLeads,
-    meta: { requiresAuth: true, requiresAdmin: true }
+    meta: { requiresAuth: true, requiresClientAdmin: true }
   },
   {
     path: '/admin/team',
