@@ -14,7 +14,7 @@ from django.utils import timezone
 import csv
 import io
 from .models import Contact, Company, Deal, ActivityLog, UserProfile, DeletedUserLog, Ticket, Notification, Asset, AssetCategory, Division, OnboardingLog, OffboardingRequest, Product, LineItem, EmailTemplate, EmailCampaign, CampaignRecipient, Workflow, WorkflowAction, WorkflowLog, DashboardWidget, DashboardLayout, WebsiteLead
-from .utils import is_owner_admin_user, normalize_company_name
+from .utils import OWNER_ADMIN_USERNAME, is_owner_admin_user, normalize_company_name
 from .whatsapp import send_lead_welcome_message
 from .serializers import (
     ContactSerializer, 
@@ -140,31 +140,27 @@ def public_lead_capture(request):
                 'error': 'Missing required fields: first_name, last_name, email, phone'
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        # Resolve configured owner first (your real admin account), then fallback to lead_system.
+        # Resolve website lead owner to configured account, defaulting to the owner admin username.
         configured_owner_email = getattr(settings, 'PUBLIC_LEAD_OWNER_EMAIL', '').strip()
-        configured_owner_username = getattr(settings, 'PUBLIC_LEAD_OWNER_USERNAME', '').strip()
+        configured_owner_username = (
+            getattr(settings, 'PUBLIC_LEAD_OWNER_USERNAME', '').strip() or OWNER_ADMIN_USERNAME
+        )
         configured_company = getattr(settings, 'PUBLIC_LEAD_COMPANY_NAME', 'Mtambo Holdings').strip() or 'Mtambo Holdings'
 
         lead_owner = None
         if configured_owner_email:
             lead_owner = User.objects.filter(email__iexact=configured_owner_email).first()
         if not lead_owner and configured_owner_username:
-            lead_owner = User.objects.filter(username=configured_owner_username).first()
+            lead_owner = User.objects.filter(username__iexact=configured_owner_username).first()
 
         if not lead_owner:
-            lead_owner, _ = User.objects.get_or_create(
-                username='lead_system',
-                defaults={
-                    'email': 'leads@finisher-luxury.com',
-                    'first_name': 'System',
-                    'last_name': 'Lead Manager',
-                    'is_staff': False,
-                }
-            )
-
-        if lead_owner.username == 'lead_system' and lead_owner.is_staff:
-            lead_owner.is_staff = False
-            lead_owner.save(update_fields=['is_staff'])
+            return Response({
+                'success': False,
+                'error': (
+                    'Website lead owner account not found. '
+                    f'Expected username "{configured_owner_username}" or configured owner email.'
+                )
+            }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
         # Ensure the lead owner profile is tagged to the configured company so company admins can see these contacts.
         lead_profile, _ = UserProfile.objects.get_or_create(
@@ -179,7 +175,7 @@ def public_lead_capture(request):
         if not lead_profile.company_name:
             lead_profile.company_name = configured_company
             profile_updates.append('company_name')
-        if lead_owner.username == 'lead_system' and lead_profile.role != 'admin':
+        if lead_profile.role != 'admin':
             lead_profile.role = 'admin'
             profile_updates.append('role')
         if profile_updates:
@@ -751,17 +747,15 @@ class WebsiteLeadViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        profile = getattr(user, 'profile', None)
 
-        if not (user.is_superuser or user.is_staff or (profile and profile.is_admin)):
-            raise PermissionDenied('Only administrators can access website lead inbox.')
+        if not (user.is_superuser or is_owner_admin_user(user)):
+            raise PermissionDenied('Only the owner admin can access website lead inbox.')
 
-        if user.is_superuser or user.is_staff:
+        if user.is_superuser:
             return WebsiteLead.objects.select_related('contact', 'owner', 'handled_by').all()
 
-        company = normalize_company_name(profile.company_name or '')
         return WebsiteLead.objects.select_related('contact', 'owner', 'handled_by').filter(
-            owner__profile__company_name__iexact=company
+            owner=user
         )
 
     @action(detail=True, methods=['post'])
@@ -1244,20 +1238,13 @@ class AdminWebsiteLeadInboxView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        if not has_user_management_access(request):
-            raise PermissionDenied('Admin access required.')
+        if not (request.user.is_superuser or is_owner_admin_user(request.user)):
+            raise PermissionDenied('Only the owner admin can access website lead inbox.')
 
-        if request.user.is_superuser or request.user.is_staff:
+        if request.user.is_superuser:
             base_qs = WebsiteLead.objects.select_related('contact', 'owner', 'handled_by').all()
         else:
             base_qs = WebsiteLead.objects.select_related('contact', 'owner', 'handled_by').filter(owner=request.user)
-            if not base_qs.exists():
-                profile = getattr(request.user, 'profile', None)
-                if profile and profile.company_name:
-                    company = normalize_company_name(profile.company_name)
-                    base_qs = WebsiteLead.objects.select_related('contact', 'owner', 'handled_by').filter(
-                        owner__profile__company_name__iexact=company
-                    )
 
         response_status = request.query_params.get('status', '').strip().lower()
         if response_status in {'new', 'responded', 'closed'}:
