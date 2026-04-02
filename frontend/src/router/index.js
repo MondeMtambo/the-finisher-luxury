@@ -175,7 +175,7 @@ const routes = [
     path: '/website-leads',
     name: 'WebsiteLeads',
     component: WebsiteLeads,
-    meta: { requiresAuth: true, requiresClientAdmin: true }
+    meta: { requiresAuth: true, requiresOwnerAdmin: true }
   },
   {
     path: '/admin/team',
@@ -276,6 +276,28 @@ router.beforeEach(async (to, from, next) => {
       const refreshedOwnerAdmin = user?.username && user.username.toLowerCase() === 'adminluxury'
       if (!(user && (user.is_superuser || refreshedOwnerAdmin))) {
   next('/dashboard')
+        return
+      }
+    }
+  }
+
+  if (to.meta.requiresOwnerAdmin) {
+    let user = authService.getUser()
+    const isOwnerAdmin = user?.username && user.username.toLowerCase() === 'adminluxury'
+    if (!isOwnerAdmin) {
+      try {
+        const response = await authAPI.getProfile()
+        authService.setUser(response.data)
+        user = response.data
+      } catch (error) {
+        console.warn('Owner admin verification failed:', error)
+        next('/dashboard')
+        return
+      }
+
+      const refreshedOwnerAdmin = user?.username && user.username.toLowerCase() === 'adminluxury'
+      if (!refreshedOwnerAdmin) {
+        next('/dashboard')
         return
       }
     }
