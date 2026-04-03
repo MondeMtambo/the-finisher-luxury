@@ -474,19 +474,40 @@ export default {
         const q = this.searchQuery.toLowerCase().trim()
         const results = []
 
-        const toArray = (payload) => {
-          if (Array.isArray(payload)) return payload
-          if (!payload || typeof payload !== 'object') return []
-          if (Array.isArray(payload.results)) return payload.results
-          if (Array.isArray(payload.users)) return payload.users
-          if (Array.isArray(payload.items)) return payload.items
-          if (Array.isArray(payload.rows)) return payload.rows
-          if (Array.isArray(payload.companies)) return payload.companies
-          if (Array.isArray(payload.deals)) return payload.deals
-          if (Array.isArray(payload.tickets)) return payload.tickets
-          if (Array.isArray(payload.data)) return payload.data
-          return []
+        const addIntent = (words, action, icon, title, subtitle) => {
+          if (words.some(w => q.includes(w))) {
+            results.push({ type: 'action', action, icon, title, subtitle, score: 150 })
+          }
         }
+        
+        if (q.includes('new') || q.includes('add') || q.includes('create') || q.includes('make')) {
+          addIntent(['contact', 'client', 'person', 'customer'], '/contacts', '✨', 'Create New Contact', 'AI Quick Action')
+          addIntent(['deal', 'pipeline', 'opportunity', 'sale'], '/deals', '🚀', 'Create New Deal', 'AI Quick Action')
+          addIntent(['company', 'org', 'business'], '/companies', '🏢', 'Add New Company', 'AI Quick Action')
+          addIntent(['ticket', 'task', 'issue', 'problem'], '/tickets', '🎫', 'Create New Ticket', 'AI Quick Action')
+          addIntent(['user', 'employee', 'staff', 'team'], '/admin/console', '👥', 'Manage Staff', 'AI Quick Action')
+          addIntent(['product', 'service', 'item'], '/products', '📦', 'Add New Product', 'AI Quick Action')
+          addIntent(['asset', 'equipment', 'device'], '/assets', '💻', 'Add New Asset', 'AI Quick Action')
+          addIntent(['campaign', 'email', 'newsletter'], '/campaigns', '📧', 'Create New Campaign', 'AI Quick Action')
+          addIntent(['workflow', 'automation', 'rule'], '/workflows', '⚡', 'Create New Workflow', 'AI Quick Action')
+        }
+        addIntent(['setting', 'config', 'preference', 'setup', 'profile'], '/settings', '⚙️', 'System Settings', 'AI Navigation')
+        addIntent(['report', 'export', 'download', 'analytics', 'stats'], '/reports', '📊', 'View Reports', 'AI Navigation')
+        addIntent(['help', 'support', 'tutorial', 'guide', 'how to'], '/help', '❓', 'Help Center', 'AI Navigation')
+
+        const token = localStorage.getItem('thefinisher_access_token');
+        const apiBase = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:8000/api' : 'https://the-finisher-luxury-be.fly.dev/api';
+        
+        const fetchResource = async (endpoint) => {
+          try {
+            const res = await fetch(`${apiBase}${endpoint}`, { headers: { 'Authorization': `Bearer ${token}` } });
+            if (res.ok) {
+              const data = await res.json();
+              return Array.isArray(data) ? data : (data.results || data.users || data.items || data.data || []);
+            }
+          } catch (e) {}
+          return [];
+        };
 
         const scoreMatch = (haystack) => {
           const text = String(haystack || '').toLowerCase()
@@ -495,7 +516,13 @@ export default {
           if (text.startsWith(q)) return 90
           if (text.includes(q)) return 70
           const qTokens = q.split(/\s+/).filter(Boolean)
-          if (qTokens.length && qTokens.every(t => text.includes(t))) return 60
+          if (qTokens.length === 0) return 0
+          let matches = 0;
+          for (const token of qTokens) {
+            if (text.includes(token)) matches++;
+          }
+          if (matches === qTokens.length) return 60;
+          if (matches > 0) return (matches / qTokens.length) * 40;
           return 0
         }
 
@@ -506,136 +533,79 @@ export default {
           }
         }
 
-        if (q.includes('new') || q.includes('add') || q.includes('create')) {
-          if (q.includes('contact') || q.includes('client')) {
-            pushUnique({ type: 'action', action: '/contacts', icon: '✨', title: 'Create New Contact', subtitle: 'AI Quick Action', score: 130 })
-          }
-          if (q.includes('deal') || q.includes('pipeline')) {
-            pushUnique({ type: 'action', action: '/deals', icon: '🚀', title: 'Create New Deal', subtitle: 'AI Quick Action', score: 130 })
-          }
-          if (q.includes('company') || q.includes('org')) {
-            pushUnique({ type: 'action', action: '/companies', icon: '🏢', title: 'Add New Company', subtitle: 'AI Quick Action', score: 130 })
-          }
-          if (q.includes('ticket') || q.includes('task')) {
-            pushUnique({ type: 'action', action: '/tickets', icon: '🎫', title: 'Create New Ticket', subtitle: 'AI Quick Action', score: 130 })
-          }
-          if (q.includes('user') || q.includes('employee') || q.includes('staff')) {
-            pushUnique({ type: 'action', action: '/admin/console', icon: '👥', title: 'Manage Staff', subtitle: 'AI Quick Action', score: 130 })
-          }
-        }
-        if (q.includes('setting') || q.includes('config')) {
-          pushUnique({ type: 'action', action: '/settings', icon: '⚙️', title: 'System Settings', subtitle: 'AI Quick Action', score: 130 })
-        }
-
         try {
-          const promises = [
-            contactsAPI.getAll(),
-            companiesAPI.getAll(),
-            dealsAPI.getAll(),
-            ticketsAPI.getAll()
-          ]
+          const [
+            contacts, companies, deals, tickets, leads, users, products, assets, campaigns, workflows
+          ] = await Promise.all([
+            fetchResource('/contacts/'),
+            fetchResource('/companies/'),
+            fetchResource('/deals/'),
+            fetchResource('/tickets/'),
+            this.isOwnerAdminUser ? fetchResource('/website-leads/') : Promise.resolve([]),
+            this.isAdmin ? fetchResource('/admin/users/') : Promise.resolve([]),
+            fetchResource('/products/'),
+            fetchResource('/assets/'),
+            fetchResource('/email-campaigns/'),
+            fetchResource('/workflows/')
+          ]);
 
-          if (this.isOwnerAdminUser) {
-            promises.push(websiteLeadsAPI.getAll().catch(() => ({ data: [] })))
-          }
-          if (this.isAdmin) {
-            promises.push(systemAPI.getUserManagement().catch(() => ({ data: { users: [] } })))
-          }
+          contacts.forEach(c => {
+            const score = scoreMatch(`${c.first_name} ${c.last_name} ${c.email} ${c.phone||''} ${c.company_name||''} ${c.company_name_manual||''}`);
+            if (score > 0) pushUnique({ type: 'contact', id: c.id, icon: '👤', title: `${c.first_name} ${c.last_name}`, subtitle: c.email || c.company_name || 'Client', score });
+          });
 
-          const res = await Promise.allSettled(promises)
-          const contactsRes = res[0]
-          const companiesRes = res[1]
-          const dealsRes = res[2]
-          const ticketsRes = res[3]
-          const leadsRes = this.isOwnerAdminUser ? res[4] : null
-          const usersRes = this.isAdmin ? res[res.length - 1] : null
+          companies.forEach(c => {
+            const score = scoreMatch(`${c.name} ${c.email||''} ${c.phone||''} ${c.address||''}`);
+            if (score > 0) pushUnique({ type: 'company', id: c.id, icon: '🏢', title: c.name || 'Company', subtitle: c.email || 'Registered company', score });
+          });
 
-          const contacts = contactsRes.status === 'fulfilled' ? toArray(contactsRes.value.data) : []
-          const companies = companiesRes.status === 'fulfilled' ? toArray(companiesRes.value.data) : []
-          const deals = dealsRes.status === 'fulfilled' ? toArray(dealsRes.value.data) : []
-          const tickets = ticketsRes.status === 'fulfilled' ? toArray(ticketsRes.value.data) : []
-          const leads = leadsRes && leadsRes.status === 'fulfilled' ? toArray(leadsRes.value.data) : []
-          const users = usersRes && usersRes.status === 'fulfilled' ? toArray(usersRes.value.data) : []
+          deals.forEach(d => {
+            const score = scoreMatch(`${d.title} ${d.contact_name||''} ${d.company_name||''} ${d.stage||''} ${d.value||''}`);
+            if (score > 0) pushUnique({ type: 'deal', id: d.id, icon: '💼', title: d.title || 'Deal', subtitle: `R${d.value||0} • ${String(d.stage||'lead').replace('_', ' ')}`, score });
+          });
 
-          contacts
-            .map(c => ({ c, score: scoreMatch(`${c.first_name} ${c.last_name} ${c.email} ${c.phone || ''}`) }))
-            .filter(x => x.score > 0)
-            .sort((a, b) => b.score - a.score)
-            .slice(0, 4)
-            .map(x => x.c)
-            .forEach(c => pushUnique({
-              type: 'contact', id: c.id, icon: '👤',
-              title: `${c.first_name} ${c.last_name}`, subtitle: c.email || 'Client', score: scoreMatch(`${c.first_name} ${c.last_name} ${c.email} ${c.phone || ''}`)
-            }))
+          tickets.forEach(t => {
+            const score = scoreMatch(`${t.title} ${t.description||''} ${t.status||''} ${t.priority||''} ${t.assigned_to_username||''}`);
+            if (score > 0) pushUnique({ type: 'ticket', id: t.id, icon: '🎫', title: t.title, subtitle: `Ticket • ${t.status||'open'}`, score });
+          });
 
-          companies
-            .map(c => ({ c, score: scoreMatch(`${c.name || ''} ${c.email || ''} ${c.phone || ''}`) }))
-            .filter(x => x.score > 0)
-            .sort((a, b) => b.score - a.score)
-            .slice(0, 4)
-            .map(x => x.c)
-            .forEach(c => pushUnique({
-              type: 'company', id: c.id, icon: '🏢', title: c.name || 'Company', subtitle: c.email || 'Registered company', score: scoreMatch(`${c.name || ''} ${c.email || ''} ${c.phone || ''}`)
-            }))
+          leads.forEach(l => {
+            const score = scoreMatch(`${l.contact_name||''} ${l.contact_email||''} ${l.inbound_message||''}`);
+            if (score > 0) pushUnique({ type: 'website_lead', id: l.id, icon: '🌐', title: l.contact_name || 'Website Lead', subtitle: l.contact_email || 'Website inquiry', score });
+          });
 
-          deals
-            .map(d => ({ d, score: scoreMatch(`${d.title || ''} ${d.contact_name || ''} ${d.company_name || ''} ${d.stage || ''}`) }))
-            .filter(x => x.score > 0)
-            .sort((a, b) => b.score - a.score)
-            .slice(0, 4)
-            .map(x => x.d)
-            .forEach(d => pushUnique({
-              type: 'deal', id: d.id, icon: '💼', title: d.title || 'Deal', subtitle: `R${d.value || 0} • ${String(d.stage || 'lead').replace('_', ' ')}`, score: scoreMatch(`${d.title || ''} ${d.contact_name || ''} ${d.company_name || ''} ${d.stage || ''}`)
-            }))
+          users.forEach(u => {
+            const score = scoreMatch(`${u.first_name||''} ${u.last_name||''} ${u.email||''} ${u.username||''}`);
+            if (score > 0) pushUnique({ type: 'user', id: u.id, icon: '🛡️', title: `${u.first_name||''} ${u.last_name||''}`.trim() || u.username, subtitle: `Staff (@${u.username})`, score });
+          });
 
-          tickets
-            .map(t => ({ t, score: scoreMatch(`${t.title || ''} ${t.status || ''} ${t.priority || ''}`) }))
-            .filter(x => x.score > 0)
-            .sort((a, b) => b.score - a.score)
-            .slice(0, 3)
-            .map(x => x.t)
-            .forEach(t => pushUnique({
-              type: 'ticket', id: t.id, icon: '🎫', title: t.title, subtitle: `Ticket • ${t.status || 'open'}`, score: scoreMatch(`${t.title || ''} ${t.status || ''} ${t.priority || ''}`)
-            }))
+          products.forEach(p => {
+            const score = scoreMatch(`${p.name||''} ${p.description||''} ${p.sku||''} ${p.category||''}`);
+            if (score > 0) pushUnique({ type: 'product', id: p.id, icon: '📦', title: p.name, subtitle: `SKU: ${p.sku||'N/A'} • R${p.price||0}`, score });
+          });
 
-          leads
-            .map(l => ({ l, score: scoreMatch(`${l.contact_name || ''} ${l.contact_email || ''} ${l.inbound_message || ''}`) }))
-            .filter(x => x.score > 0)
-            .sort((a, b) => b.score - a.score)
-            .slice(0, 3)
-            .map(x => x.l)
-            .forEach(l => pushUnique({
-              type: 'website_lead', id: l.id, icon: '🌐', title: l.contact_name || 'Website Lead', subtitle: l.contact_email || 'Website inquiry', score: scoreMatch(`${l.contact_name || ''} ${l.contact_email || ''} ${l.inbound_message || ''}`)
-            }))
+          assets.forEach(a => {
+            const score = scoreMatch(`${a.name||''} ${a.asset_tag||''} ${a.serial_number||''} ${a.model||''} ${a.category_name||''}`);
+            if (score > 0) pushUnique({ type: 'asset', id: a.id, icon: '💻', title: a.name, subtitle: `Tag: ${a.asset_tag||'N/A'} • ${a.status_display||'Active'}`, score });
+          });
 
-          users
-            .map(u => ({ u, score: scoreMatch(`${u.first_name} ${u.last_name} ${u.email} ${u.username}`) }))
-            .filter(x => x.score > 0)
-            .sort((a, b) => b.score - a.score)
-            .slice(0, 3)
-            .map(x => x.u)
-            .forEach(u => pushUnique({
-              type: 'user', id: u.id, icon: '🛡️', title: `${u.first_name} ${u.last_name}`, subtitle: `Staff (@${u.username})`, score: scoreMatch(`${u.first_name} ${u.last_name} ${u.email} ${u.username}`)
-            }))
+          campaigns.forEach(c => {
+            const score = scoreMatch(`${c.name||''} ${c.subject||''} ${c.status||''}`);
+            if (score > 0) pushUnique({ type: 'campaign', id: c.id, icon: '📧', title: c.name, subtitle: `Status: ${c.status||'draft'}`, score });
+          });
 
-          if ((q.includes('deal') || q.includes('pipeline') || q.includes('opportunit')) && deals.length) {
-            deals.slice(0, 5).forEach(d => pushUnique({
-              type: 'deal', id: d.id, icon: '💼', title: d.title || 'Deal', subtitle: `R${d.value || 0} • ${String(d.stage || 'lead').replace('_', ' ')}`, score: 65
-            }))
-          }
+          workflows.forEach(w => {
+            const score = scoreMatch(`${w.name||''} ${w.description||''} ${w.trigger_type||''}`);
+            if (score > 0) pushUnique({ type: 'workflow', id: w.id, icon: '⚡', title: w.name, subtitle: `Trigger: ${w.trigger_type||'unknown'}`, score });
+          });
 
-          if ((q.includes('company') || q.includes('companie') || q.includes('client') || q.includes('business')) && companies.length) {
-            companies.slice(0, 5).forEach(c => pushUnique({
-              type: 'company', id: c.id, icon: '🏢', title: c.name || 'Company', subtitle: c.email || 'Registered company', score: 65
-            }))
-          }
         } catch (e) {
-          // Keep actions and any partial results if one endpoint shape is malformed.
+          console.error("Search fetch error:", e);
         }
 
         this.searchResults = results
           .sort((a, b) => (b.score || 0) - (a.score || 0))
-          .slice(0, 14)
+          .slice(0, 15) // Show top 15 results
         this.isSearching = false
       }, 400)
     },
@@ -678,7 +648,17 @@ export default {
       } else if (result.type === 'user') {
         this.$router.push('/admin/console');
       } else {
-        const routes = { contact: '/contacts', company: '/companies', deal: '/deals', ticket: '/tickets', website_lead: '/website-leads' }
+        const routes = { 
+          contact: '/contacts', 
+          company: '/companies', 
+          deal: '/deals', 
+          ticket: '/tickets', 
+          website_lead: '/website-leads',
+          product: '/products',
+          asset: '/assets',
+          campaign: '/campaigns',
+          workflow: '/workflows'
+        }
         this.$router.push(routes[result.type] || '/dashboard')
       }
       this.searchQuery = ''
