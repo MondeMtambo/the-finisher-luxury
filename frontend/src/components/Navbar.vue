@@ -230,7 +230,7 @@
 
 <script>
 import authService from '../services/auth'
-import { authAPI, systemAPI, contactsAPI, companiesAPI, dealsAPI, notificationsAPI } from '../api'
+import { authAPI, systemAPI, contactsAPI, companiesAPI, dealsAPI, ticketsAPI, websiteLeadsAPI, notificationsAPI } from '../api'
 import toast from '../utils/toast'
 import modal from '../utils/modal'
 import { getRandomAvatar, getAvatarById } from '../utils/avatars.js'
@@ -470,6 +470,26 @@ export default {
       this.searchTimeout = setTimeout(async () => {
         const q = this.searchQuery.toLowerCase().trim()
         const results = []
+
+        const toArray = (payload) => {
+          if (Array.isArray(payload)) return payload
+          if (!payload || typeof payload !== 'object') return []
+          if (Array.isArray(payload.results)) return payload.results
+          if (Array.isArray(payload.users)) return payload.users
+          if (Array.isArray(payload.data)) return payload.data
+          return []
+        }
+
+        const scoreMatch = (haystack) => {
+          const text = String(haystack || '').toLowerCase()
+          if (!text) return 0
+          if (text === q) return 120
+          if (text.startsWith(q)) return 90
+          if (text.includes(q)) return 70
+          const qTokens = q.split(/\s+/).filter(Boolean)
+          if (qTokens.length && qTokens.every(t => text.includes(t))) return 60
+          return 0
+        }
         
         // AI Intent Parsing
         if (q.includes('new') || q.includes('add') || q.includes('create')) {
@@ -497,8 +517,13 @@ export default {
           const promises = [
             contactsAPI.getAll(), 
             companiesAPI.getAll(), 
-            dealsAPI.getAll()
+            dealsAPI.getAll(),
+            ticketsAPI.getAll()
           ];
+
+          if (this.isOwnerAdminUser) {
+            promises.push(websiteLeadsAPI.getAll().catch(() => ({ data: [] })))
+          }
 
           // Fetch staff if admin
           if (this.isAdmin) {
@@ -510,37 +535,73 @@ export default {
           const contactsRes = res[0];
           const companiesRes = res[1];
           const dealsRes = res[2];
-          const usersRes = this.isAdmin ? res[3] : null;
+          const ticketsRes = res[3];
+          const leadsRes = this.isOwnerAdminUser ? res[4] : null;
+          const usersRes = this.isAdmin ? res[res.length - 1] : null;
 
           if (contactsRes.status === 'fulfilled') {
-            (contactsRes.value.data || [])
-              .filter(c => `${c.first_name} ${c.last_name} ${c.email} ${c.phone||''}`.toLowerCase().includes(q))
-              .slice(0, 3)
+            toArray(contactsRes.value.data)
+              .map(c => ({ c, score: scoreMatch(`${c.first_name} ${c.last_name} ${c.email} ${c.phone || ''}`) }))
+              .filter(x => x.score > 0)
+              .sort((a, b) => b.score - a.score)
+              .slice(0, 4)
+              .map(x => x.c)
               .forEach(c => results.push({
                 type: 'contact', id: c.id, icon: '👤',
                 title: `${c.first_name} ${c.last_name}`, subtitle: c.email || 'Client'
               }))
           }
           if (companiesRes.status === 'fulfilled') {
-            (companiesRes.value.data || [])
-              .filter(c => c.name.toLowerCase().includes(q))
-              .slice(0, 3)
+            toArray(companiesRes.value.data)
+              .map(c => ({ c, score: scoreMatch(c.name) }))
+              .filter(x => x.score > 0)
+              .sort((a, b) => b.score - a.score)
+              .slice(0, 4)
+              .map(x => x.c)
               .forEach(c => results.push({
                 type: 'company', id: c.id, icon: '🏢', title: c.name, subtitle: 'Company'
               }))
           }
           if (dealsRes.status === 'fulfilled') {
-            (dealsRes.value.data || [])
-              .filter(d => d.title.toLowerCase().includes(q) || (d.contact_name||'').toLowerCase().includes(q))
-              .slice(0, 3)
+            toArray(dealsRes.value.data)
+              .map(d => ({ d, score: scoreMatch(`${d.title || ''} ${d.contact_name || ''} ${d.stage || ''}`) }))
+              .filter(x => x.score > 0)
+              .sort((a, b) => b.score - a.score)
+              .slice(0, 4)
+              .map(x => x.d)
               .forEach(d => results.push({
                 type: 'deal', id: d.id, icon: '💼', title: d.title, subtitle: `R${d.value} • ${d.stage.replace('_', ' ')}`
               }))
           }
-          if (usersRes && usersRes.status === 'fulfilled') {
-            (usersRes.value.data.users || [])
-              .filter(u => `${u.first_name} ${u.last_name} ${u.email} ${u.username}`.toLowerCase().includes(q))
+          if (ticketsRes.status === 'fulfilled') {
+            toArray(ticketsRes.value.data)
+              .map(t => ({ t, score: scoreMatch(`${t.title || ''} ${t.status || ''} ${t.priority || ''}`) }))
+              .filter(x => x.score > 0)
+              .sort((a, b) => b.score - a.score)
               .slice(0, 3)
+              .map(x => x.t)
+              .forEach(t => results.push({
+                type: 'ticket', id: t.id, icon: '🎫', title: t.title, subtitle: `Ticket • ${t.status || 'open'}`
+              }))
+          }
+          if (leadsRes && leadsRes.status === 'fulfilled') {
+            toArray(leadsRes.value.data)
+              .map(l => ({ l, score: scoreMatch(`${l.contact_name || ''} ${l.contact_email || ''} ${l.inbound_message || ''}`) }))
+              .filter(x => x.score > 0)
+              .sort((a, b) => b.score - a.score)
+              .slice(0, 3)
+              .map(x => x.l)
+              .forEach(l => results.push({
+                type: 'website_lead', id: l.id, icon: '🌐', title: l.contact_name || 'Website Lead', subtitle: l.contact_email || 'Website inquiry'
+              }))
+          }
+          if (usersRes && usersRes.status === 'fulfilled') {
+            toArray(usersRes.value.data)
+              .map(u => ({ u, score: scoreMatch(`${u.first_name} ${u.last_name} ${u.email} ${u.username}`) }))
+              .filter(x => x.score > 0)
+              .sort((a, b) => b.score - a.score)
+              .slice(0, 3)
+              .map(x => x.u)
               .forEach(u => results.push({
                 type: 'user', id: u.id, icon: '🛡️', title: `${u.first_name} ${u.last_name}`, subtitle: `Staff (@${u.username})`
               }))
@@ -558,7 +619,7 @@ export default {
       } else if (result.type === 'user') {
         this.$router.push('/admin/console');
       } else {
-        const routes = { contact: '/contacts', company: '/companies', deal: '/deals', website_lead: '/website-leads' }
+        const routes = { contact: '/contacts', company: '/companies', deal: '/deals', ticket: '/tickets', website_lead: '/website-leads' }
         this.$router.push(routes[result.type] || '/dashboard')
       }
       this.searchQuery = ''
