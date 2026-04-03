@@ -568,7 +568,11 @@ class WebsiteLead(models.Model):
         ('completed', 'Completed'),
     ]
 
-    contact = models.OneToOneField(Contact, on_delete=models.CASCADE, related_name='website_lead')
+    contact = models.OneToOneField(Contact, on_delete=models.SET_NULL, null=True, blank=True, related_name='website_lead')
+    first_name = models.CharField(max_length=100, blank=True)
+    last_name = models.CharField(max_length=100, blank=True)
+    email = models.EmailField(blank=True)
+    phone = models.CharField(max_length=20, blank=True)
     owner = models.ForeignKey(User, on_delete=models.CASCADE, related_name='website_leads')
     source = models.CharField(max_length=20, choices=SOURCE_CHOICES, default='contact_form')
     inbound_message = models.TextField(blank=True)

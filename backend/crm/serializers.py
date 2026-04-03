@@ -229,9 +229,9 @@ class ActivityLogSerializer(serializers.ModelSerializer):
 
 
 class WebsiteLeadSerializer(serializers.ModelSerializer):
-    contact_name = serializers.CharField(source='contact.__str__', read_only=True)
-    contact_email = serializers.CharField(source='contact.email', read_only=True)
-    contact_phone = serializers.CharField(source='contact.phone', read_only=True)
+    contact_name = serializers.SerializerMethodField()
+    contact_email = serializers.SerializerMethodField()
+    contact_phone = serializers.SerializerMethodField()
     owner_username = serializers.CharField(source='owner.username', read_only=True)
     handled_by_username = serializers.CharField(source='handled_by.username', read_only=True)
 
@@ -277,6 +277,17 @@ class WebsiteLeadSerializer(serializers.ModelSerializer):
             'created_at',
             'updated_at',
         ]
+
+    def get_contact_name(self, obj):
+        if obj.contact:
+            return f"{obj.contact.first_name} {obj.contact.last_name}".strip()
+        return f"{obj.first_name} {obj.last_name}".strip()
+
+    def get_contact_email(self, obj):
+        return obj.contact.email if obj.contact else obj.email
+
+    def get_contact_phone(self, obj):
+        return obj.contact.phone if obj.contact else obj.phone
 
 
 class WebsiteLeadUpdateSerializer(serializers.Serializer):

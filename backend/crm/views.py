@@ -181,44 +181,6 @@ def public_lead_capture(request):
         if profile_updates:
             lead_profile.save(update_fields=profile_updates)
         
-        # Check if contact already exists
-        existing_contact = Contact.objects.filter(
-            email__iexact=email,
-            user=lead_owner
-        ).first()
-        
-        if existing_contact:
-            # Update existing contact
-            existing_contact.first_name = first_name
-            existing_contact.last_name = last_name
-            existing_contact.phone = phone
-            existing_contact.company_name_manual = data.get('company', '')
-            existing_contact.save()
-            contact = existing_contact
-            is_new = False
-        else:
-            # Create new contact
-            contact = Contact.objects.create(
-                user=lead_owner,
-                first_name=first_name,
-                last_name=last_name,
-                email=email,
-                phone=phone,
-                company_name_manual=data.get('company', ''),
-            )
-            is_new = True
-        
-        # Save message as activity/note
-        if message:
-            ActivityLog.objects.create(
-                user=lead_owner,
-                action='create',
-                entity_type='contact',
-                entity_id=contact.id,
-                entity_name=f"{first_name} {last_name}",
-                details=f"Lead message: {message}"
-            )
-
         # The Bullshit Filter Engine
         spam_score = 0
         is_spam_risk = False
@@ -255,22 +217,18 @@ def public_lead_capture(request):
         if website_source not in ['contact_form', 'chat_widget']:
             website_source = 'contact_form'
 
-        website_lead, _ = WebsiteLead.objects.get_or_create(
-            contact=contact,
-            defaults={
-                'owner': lead_owner,
-                'source': website_source,
-                'inbound_message': message,
-            }
+        # 👻 Ghost Lead Creation - We STOP creating fake contacts here!
+        website_lead = WebsiteLead.objects.create(
+            owner=lead_owner,
+            first_name=first_name,
+            last_name=last_name,
+            email=email,
+            phone=phone,
+            source=website_source,
+            inbound_message=message,
+            spam_score=spam_score,
+            is_spam_risk=is_spam_risk
         )
-        if not website_lead.owner_id:
-            website_lead.owner = lead_owner
-        website_lead.source = website_source
-        if message:
-            website_lead.inbound_message = message
-        website_lead.spam_score = spam_score
-        website_lead.is_spam_risk = is_spam_risk
-        website_lead.save()
         
         # Send WhatsApp welcome message
         whatsapp_result = send_lead_welcome_message(
@@ -279,13 +237,9 @@ def public_lead_capture(request):
             calendar_link='https://calendly.com/mtamboholdings' if data.get('calendar_enabled') else None
         )
         
-        # Trigger workflows for new leads
-        if is_new:
-            trigger_workflows_for_lead(contact, lead_owner)
-        
         return Response({
             'success': True,
-            'lead_id': contact.id,
+            'lead_id': website_lead.id,
             'message': 'Lead captured successfully. Check your WhatsApp!',
             'whatsapp_sent': whatsapp_result['success'],
             'whatsapp_error': whatsapp_result.get('error'),
@@ -834,13 +788,15 @@ class WebsiteLeadViewSet(viewsets.ReadOnlyModelViewSet):
 
         if update_fields:
             lead.save(update_fields=list(dict.fromkeys(update_fields)))
+            
+        entity_name = f"{lead.contact.first_name} {lead.contact.last_name}" if lead.contact else f"{lead.first_name} {lead.last_name}"
 
         ActivityLog.objects.create(
             user=request.user,
             action='update',
-            entity_type='contact',
-            entity_id=lead.contact.id,
-            entity_name=f"{lead.contact.first_name} {lead.contact.last_name}",
+            entity_type='website_lead',
+            entity_id=lead.id,
+            entity_name=entity_name,
             details=(
                 f"Website lead workflow updated | response_status={lead.response_status} | "
                 f"meeting_status={lead.meeting_status}"
@@ -859,6 +815,7 @@ class WebsiteLeadViewSet(viewsets.ReadOnlyModelViewSet):
         subject = payload['subject'].strip()
         message = payload['message'].strip()
         response_notes = payload.get('response_notes', '').strip()
+        target_email = lead.contact.email if lead.contact else lead.email
 
         if not subject or not message:
             return Response({'error': 'Subject and message are required.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -869,6 +826,7 @@ class WebsiteLeadViewSet(viewsets.ReadOnlyModelViewSet):
                 message,
                 settings.DEFAULT_FROM_EMAIL,
                 [lead.contact.email],
+                [target_email],
                 fail_silently=False,
             )
         except Exception as exc:
@@ -882,14 +840,16 @@ class WebsiteLeadViewSet(viewsets.ReadOnlyModelViewSet):
         lead.response_notes = response_notes or lead.response_notes
         lead.handled_by = request.user
         lead.save(update_fields=['response_status', 'responded_at', 'response_notes', 'handled_by'])
+        
+        entity_name = f"{lead.contact.first_name} {lead.contact.last_name}" if lead.contact else f"{lead.first_name} {lead.last_name}"
 
         log_activity(
             user=request.user,
             action='update',
-            entity_type='contact',
-            entity_id=lead.contact.id,
-            entity_name=f"{lead.contact.first_name} {lead.contact.last_name}",
-            details=f"Website lead reply sent to {lead.contact.email} | subject={subject}",
+            entity_type='website_lead',
+            entity_id=lead.id,
+            entity_name=entity_name,
+            details=f"Website lead reply sent to {target_email} | subject={subject}",
         )
 
         return Response(
@@ -915,6 +875,25 @@ class WebsiteLeadViewSet(viewsets.ReadOnlyModelViewSet):
         deal_title = request.data.get('title', f"Lead Deal: {contact.first_name} {contact.last_name}")
         
         with transaction.atomic():
+            contact = lead.contact
+            if not contact:
+                contact = Contact.objects.filter(email__iexact=lead.email, user=lead.owner).first()
+                if not contact:
+                    contact = Contact.objects.create(
+                        user=lead.owner,
+                        first_name=lead.first_name,
+                        last_name=lead.last_name,
+                        email=lead.email,
+                        phone=lead.phone,
+                        company_name_manual=f"{lead.first_name} {lead.last_name} Business"
+                    )
+                lead.contact = contact
+            
+            ensure_company_for_contact(contact)
+            
+            deal_value = request.data.get('value', 0.00)
+            deal_title = request.data.get('title', f"Lead Deal: {contact.first_name} {contact.last_name}")
+            
             deal = Deal.objects.create(
                 user=lead.owner,
                 title=deal_title,
@@ -926,7 +905,7 @@ class WebsiteLeadViewSet(viewsets.ReadOnlyModelViewSet):
             
             lead.response_status = 'promoted'
             lead.handled_by = request.user
-            lead.save(update_fields=['response_status', 'handled_by'])
+            lead.save(update_fields=['contact', 'response_status', 'handled_by'])
             
             log_activity(
                 user=request.user,
@@ -1264,7 +1243,7 @@ class AdminOverviewView(APIView):
             won_value=Sum('value', filter=Q(stage='closed_won')),
         )
 
-        if request.user.is_superuser or request.user.is_staff:
+        if request.user.is_superuser or request.user.is_staff or is_owner_admin_user(request.user):
             lead_scope = WebsiteLead.objects.all()
         else:
             lead_scope = WebsiteLead.objects.filter(owner=request.user)
@@ -1318,7 +1297,7 @@ class AdminWebsiteLeadInboxView(APIView):
         if not (request.user.is_superuser or is_owner_admin_user(request.user)):
             raise PermissionDenied('Only the owner admin can access website lead inbox.')
 
-        if request.user.is_superuser:
+        if request.user.is_superuser or is_owner_admin_user(request.user):
             base_qs = WebsiteLead.objects.select_related('contact', 'owner', 'handled_by').all()
         else:
             base_qs = WebsiteLead.objects.select_related('contact', 'owner', 'handled_by').filter(owner=request.user)
