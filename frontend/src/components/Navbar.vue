@@ -32,6 +32,12 @@
 
       <div class="topbar-right">
 
+        <!-- Live Digital Clock -->
+        <div class="live-clock" title="System Live Sync Active">
+          <span class="pulse-dot"></span>
+          <span class="clock-time">{{ currentTime }}</span>
+        </div>
+
         <div class="notif-wrapper" ref="notifWrapper">
           <button class="topbar-icon-btn" title="Notifications" @click.stop="toggleNotifications">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
@@ -197,6 +203,11 @@
       </nav>
 
       <div class="sidebar-footer">
+        <!-- Dynamic Copyright -->
+        <div v-if="!sidebarCollapsed" class="sidebar-copyright">
+          <p>&copy; {{ currentYear }} Mtambo Holdings.<br/>All Rights Reserved.</p>
+        </div>
+
         <div v-if="!sidebarCollapsed" class="plan-badge" :class="{ 'plan-ultimate': isAdmin }">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
           <span>{{ isAdmin ? 'ULTIMATE' : 'LUXURY Edition' }}</span>
@@ -244,7 +255,10 @@ export default {
       hasContacts: false,
       hasCompanies: false,
       hasLinkedContacts: false,
-      checkingPrereqs: false
+      checkingPrereqs: false,
+      currentTime: '',
+      currentYear: new Date().getFullYear(),
+      clockInterval: null
     }
   },
   computed: {
@@ -282,6 +296,9 @@ export default {
     window.addEventListener('resize', this.handleResize)
     document.addEventListener('click', this.handleClickOutside)
     this.updateLayoutOffsets()
+
+    this.updateClock()
+    this.clockInterval = setInterval(this.updateClock, 1000)
   },
   watch: {
     '$route.path'(newPath) {
@@ -300,6 +317,7 @@ export default {
   },
   beforeUnmount() {
     if (this.notificationInterval) clearInterval(this.notificationInterval)
+    if (this.clockInterval) clearInterval(this.clockInterval)
     window.removeEventListener('resize', this.handleResize)
     document.removeEventListener('click', this.handleClickOutside)
     document.documentElement.style.setProperty('--sidebar-current-width', '0px')
@@ -320,6 +338,9 @@ export default {
       if (this.showUserMenu && this.$refs.userWrapper && !this.$refs.userWrapper.contains(e.target)) {
         this.showUserMenu = false
       }
+    },
+    updateClock() {
+      this.currentTime = new Date().toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
     },
     toggleSidebar() {
       if (window.innerWidth <= 768) {
@@ -1026,6 +1047,44 @@ export default {
   color: #000;
 }
 .plan-badge.plan-ultimate svg { color: #000; }
+
+/* Live Clock & Copyright Styles */
+.live-clock {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(212, 175, 55, 0.05);
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  margin-right: 0.5rem;
+}
+.pulse-dot {
+  width: 6px;
+  height: 6px;
+  background: #D4AF37;
+  border-radius: 50%;
+  animation: f-pulse 1.5s infinite ease-in-out;
+}
+.clock-time {
+  color: #D4AF37;
+  font-weight: 600;
+  font-size: 0.8125rem;
+  font-family: monospace;
+  letter-spacing: 1px;
+}
+.sidebar-copyright {
+  text-align: center;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+.sidebar-copyright p {
+  font-size: 0.7rem;
+  color: #9ca3af;
+  margin: 0;
+  line-height: 1.5;
+}
 
 /* Mobile Overlay */
 .mobile-overlay {
