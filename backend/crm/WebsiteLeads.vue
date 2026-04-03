@@ -66,58 +66,71 @@
       <!-- Right Panel (The Detail View) -->
       <div class="detail-panel">
         <div v-if="!activeLead" class="empty-detail">
-          <svg width="48" height="48" fill="none" stroke="var(--gray-500)" stroke-width="1.5"><rect x="3" y="3" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
-          <h3>Select a lead to view details</h3>
+          <div class="empty-icon">
+            <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="rgba(212, 175, 55, 0.5)" stroke-width="1">
+              <path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path>
+              <polyline points="22,6 12,13 2,6"></polyline>
+            </svg>
+          </div>
+          <h3>Select an inquiry</h3>
+          <p>Your luxury command center awaits.</p>
         </div>
         
-        <div v-else class="lead-detail-content">
-          <div class="detail-header">
-            <h2>{{ activeLead.contact_name }}</h2>
-            <div class="detail-contact-info">
-              <span>📧 {{ activeLead.contact_email }}</span>
-              <span v-if="activeLead.contact_phone">📱 {{ activeLead.contact_phone }}</span>
+        <template v-else>
+          <div class="detail-scroll-area">
+            <div class="detail-header">
+              <h2>{{ activeLead.contact_name }}</h2>
+              <div class="detail-contact-info">
+                <span>📧 {{ activeLead.contact_email }}</span>
+                <span v-if="activeLead.contact_phone">📱 {{ activeLead.contact_phone }}</span>
+              </div>
+              <div class="detail-quality">
+                <span v-if="activeLead.is_spam_risk" class="quality-flag flag-red">🔴 Flagged by Bullshit Filter (Score: {{ activeLead.spam_score }})</span>
+                <span v-else-if="activeLead.spam_score >= 20" class="quality-flag flag-green">🟢 High Quality Lead (Score: {{ activeLead.spam_score }})</span>
+                <span v-else class="quality-flag flag-yellow">🟡 Standard Lead (Score: {{ activeLead.spam_score }})</span>
+              </div>
             </div>
-            <div class="detail-quality">
-              <span v-if="activeLead.is_spam_risk" class="quality-flag flag-red">🔴 Flagged by Bullshit Filter (Score: {{ activeLead.spam_score }})</span>
-              <span v-else-if="activeLead.spam_score >= 20" class="quality-flag flag-green">🟢 High Quality Lead (Score: {{ activeLead.spam_score }})</span>
-              <span v-else class="quality-flag flag-yellow">🟡 Standard Lead (Score: {{ activeLead.spam_score }})</span>
+
+            <div class="detail-message-box">
+              <h4>Message</h4>
+              <div class="message-body">
+                <p>{{ activeLead.inbound_message || "No message provided." }}</p>
+              </div>
+            </div>
+
+            <div class="audit-trail">
+              <h4>Activity Audit Trail</h4>
+              <ul>
+                <li><strong>Received:</strong> {{ formatFullDate(activeLead.inbound_received_at) }} via {{ activeLead.source }}</li>
+                <li v-if="activeLead.handled_by_username"><strong>Last Handled By:</strong> {{ activeLead.handled_by_username }}</li>
+                <li v-if="activeLead.responded_at"><strong>Replied:</strong> {{ formatFullDate(activeLead.responded_at) }}</li>
+                <li v-if="activeLead.response_status === 'promoted'"><strong>Status:</strong> Successfully Promoted to Deal</li>
+              </ul>
             </div>
           </div>
 
-          <div class="detail-message-box">
-            <h4>Message</h4>
-            <div class="message-body">
-              <p>{{ activeLead.inbound_message || "No message provided." }}</p>
-            </div>
-          </div>
-
-          <div class="audit-trail">
-            <h4>Activity Audit Trail</h4>
-            <ul>
-              <li><strong>Received:</strong> {{ formatFullDate(activeLead.inbound_received_at) }} via {{ activeLead.source }}</li>
-              <li v-if="activeLead.handled_by_username"><strong>Last Handled By:</strong> {{ activeLead.handled_by_username }}</li>
-              <li v-if="activeLead.responded_at"><strong>Replied:</strong> {{ formatFullDate(activeLead.responded_at) }}</li>
-              <li v-if="activeLead.response_status === 'promoted'"><strong>Status:</strong> Successfully Promoted to Deal</li>
-            </ul>
-          </div>
-
-          <!-- 1-Click Actions -->
-          <div class="detail-actions" v-if="activeLead.response_status !== 'promoted'">
-            <button class="action-btn btn-engage" @click="openReplyModal">
-              ✉️ Reply / Engage
+          <!-- Fixed Action Footer -->
+          <div class="detail-footer" v-if="activeLead.response_status !== 'promoted'">
+            <button class="action-btn btn-engage" @click="openReplyModal" title="Reply to Inquiry">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path><polyline points="9 22 9 12 15 12 15 22"></polyline></svg>
+              Reply
             </button>
-            <button class="action-btn btn-reject" @click="markAsSpam(activeLead)">
-              🗑️ Reject / Spam
+            <button class="action-btn btn-reject" @click="markAsSpam(activeLead)" title="Mark as Spam">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path><line x1="10" y1="11" x2="10" y2="17"></line><line x1="14" y1="11" x2="14" y2="17"></line></svg>
+              Reject
             </button>
             <button class="action-btn btn-promote" @click="promoteToDeal(activeLead)">
-              🚀 PROMOTE TO DEAL
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M13.5 2L22 10.5l-9.5 9.5a2.12 2.12 0 0 1-3 0l-7.5-7.5a2.12 2.12 0 0 1 0-3L11.5 2z"></path><path d="M12 12l4-4"></path></svg>
+              PROMOTE TO DEAL
             </button>
           </div>
-          <div class="detail-actions" v-else>
-            <div class="promoted-alert">✅ This lead has been successfully promoted to your Deal Pipeline.</div>
+          <div class="detail-footer promoted-footer" v-else>
+            <div class="promoted-alert">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+              This lead has been successfully promoted to your Deal Pipeline.
+            </div>
           </div>
-
-        </div>
+        </template>
       </div>
     </div>
 
@@ -407,9 +420,9 @@ export default {
 /* Split Screen */
 .triage-container {
   display: grid;
-  grid-template-columns: 350px 1fr;
+  grid-template-columns: 380px 1fr;
   gap: 1.5rem;
-  height: 65vh;
+  height: calc(100vh - 280px);
   min-height: 600px;
 }
 
@@ -479,7 +492,9 @@ export default {
   background: linear-gradient(135deg, rgba(15,15,15,0.95) 0%, rgba(5,5,5,0.95) 100%);
   border: 1px solid rgba(212, 175, 55, 0.2);
   border-radius: var(--radius-lg);
-  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
   color: #ffffff;
 }
@@ -491,16 +506,30 @@ export default {
   height: 100%;
   color: var(--gray-400);
 }
-.empty-detail h3 {
-  margin-top: 1rem;
-  font-weight: 500;
+.empty-icon {
+  margin-bottom: 1.5rem;
+  animation: float 4s ease-in-out infinite;
 }
-.lead-detail-content {
-  padding: 2rem;
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.empty-detail h3 {
+  font-size: 1.5rem;
+  color: #D4AF37;
+  margin-bottom: 0.5rem;
+}
+.empty-detail p {
+  color: #9ca3af;
+}
+.detail-scroll-area {
+  flex: 1;
+  overflow-y: auto;
+  padding: 2.5rem;
 }
 .detail-header {
   border-bottom: 1px solid rgba(212, 175, 55, 0.2);
-  padding-bottom: 1.5rem;
+  padding-bottom: 1.25rem;
   margin-bottom: 1.5rem;
 }
 .detail-header h2 {
@@ -578,50 +607,62 @@ export default {
   color: #D4AF37;
 }
 
-.detail-actions {
+.detail-footer {
+  padding: 1.5rem 2.5rem;
+  background: rgba(0, 0, 0, 0.4);
+  border-top: 1px solid rgba(212, 175, 55, 0.15);
   display: flex;
   gap: 1rem;
-  padding-top: 1.5rem;
-  border-top: 1px solid rgba(212, 175, 55, 0.2);
-  justify-content: flex-end;
   align-items: center;
-  flex-wrap: wrap;
+}
+.promoted-footer {
+  justify-content: center;
 }
 .action-btn {
-  padding: 0.75rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.875rem 1.5rem;
   font-weight: 600;
   border-radius: var(--radius-md);
   cursor: pointer;
-  border: 1px solid transparent;
-  font-size: 0.9375rem;
+  font-size: 0.875rem;
   transition: all 0.3s ease;
   text-transform: uppercase;
   letter-spacing: 1px;
+  border: none;
 }
 .btn-engage {
-  background: transparent;
-  color: #D4AF37;
-  border-color: #D4AF37;
+  background: rgba(255, 255, 255, 0.05);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.1);
 }
-.btn-engage:hover { background: rgba(212, 175, 55, 0.1); }
+.btn-engage:hover { 
+  background: rgba(255, 255, 255, 0.1); 
+  border-color: #D4AF37;
+  color: #D4AF37;
+}
 
 .btn-reject {
-  background: transparent;
+  background: rgba(239, 68, 68, 0.05);
   color: #ef4444;
-  border-color: #ef4444;
+  border: 1px solid rgba(239, 68, 68, 0.2);
 }
-.btn-reject:hover { background: rgba(239, 68, 68, 0.1); }
+.btn-reject:hover { 
+  background: rgba(239, 68, 68, 0.15); 
+  box-shadow: 0 0 15px rgba(239, 68, 68, 0.2);
+}
 
 .btn-promote {
   background: linear-gradient(135deg, #D4AF37 0%, #AA8010 100%);
   color: #000;
-  flex: 1;
-  border: none;
-  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+  margin-left: auto;
+  font-size: 1rem;
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
 }
 .btn-promote:hover {
   transform: translateY(-2px);
-  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.5);
 }
 
 .promoted-alert {
