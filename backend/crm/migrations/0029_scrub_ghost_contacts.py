@@ -2,13 +2,14 @@
 
 from django.db import migrations
 
+
 def scrub_ghost_contacts(apps, schema_editor):
     WebsiteLead = apps.get_model('crm', 'WebsiteLead')
-    
+
     # All website leads that haven't been officially promoted
     # but still have a Contact linked (the old logic flaw that polluted the CRM)
     ghost_leads = WebsiteLead.objects.filter(contact__isnull=False).exclude(response_status='promoted')
-    
+
     for lead in ghost_leads:
         # 1. Back up contact details into the lead itself just in case
         if not lead.first_name:
@@ -26,10 +27,12 @@ def scrub_ghost_contacts(apps, schema_editor):
         # and removes it from the actual "Clients" tab.
         lead.contact.delete()
 
+
 class Migration(migrations.Migration):
     dependencies = [
         ('crm', '0028_websitelead_spam_fields'),
     ]
+
     operations = [
         migrations.RunPython(scrub_ghost_contacts),
     ]
