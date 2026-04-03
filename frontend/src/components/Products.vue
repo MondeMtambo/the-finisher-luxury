@@ -47,9 +47,15 @@
       </select>
     </div>
 
+    <div v-if="isAdmin" class="catalog-switcher">
+      <button class="switch-btn" :class="{ active: catalogView === 'all' }" @click="catalogView = 'all'">All</button>
+      <button class="switch-btn" :class="{ active: catalogView === 'master' }" @click="catalogView = 'master'">MTAMBO Holdings</button>
+      <button class="switch-btn" :class="{ active: catalogView === 'company' }" @click="catalogView = 'company'">Company Products</button>
+    </div>
+
     <div v-if="!loading" class="catalog-container">
       <template v-if="filteredProducts.length > 0">
-        <div v-if="isAdmin" class="split-catalog">
+        <div v-if="isAdmin && catalogView === 'all'" class="split-catalog">
           <section class="catalog-section">
             <div class="section-header">
               <h2>MTAMBO Holdings</h2>
@@ -141,6 +147,98 @@
                       <span v-if="product.margin !== null" class="metric-val" :class="product.margin >= 30 ? 'text-gold' : product.margin >= 15 ? 'text-blue' : 'text-red'">{{ product.margin.toFixed(1) }}%</span>
                       <span v-else class="metric-val text-muted">—</span>
                     </div>
+                  </div>
+                </div>
+                <div class="card-footer">
+                  <div class="audit-trail">
+                    <div class="audit-avatar">{{ (product.created_by_name || 'S').charAt(0).toUpperCase() }}</div>
+                    <div class="audit-info">
+                      <div class="audit-name">{{ product.created_by_name || 'System' }}</div>
+                      <div class="audit-date">{{ formatDate(product.created_at) }}</div>
+                    </div>
+                    <div class="audit-company">{{ product.company_name || 'Other Company' }}</div>
+                  </div>
+                  <div class="action-btns">
+                    <button class="btn-icon" @click="editProduct(product)" title="Edit">✎</button>
+                    <button class="btn-icon danger" @click="deleteProduct(product)" title="Delete">×</button>
+                  </div>
+                </div>
+              </article>
+            </div>
+            <div v-else class="empty-state">No company products match the current filters.</div>
+          </section>
+        </div>
+
+        <div v-else-if="isAdmin && catalogView === 'master'" class="split-catalog">
+          <section class="catalog-section">
+            <div class="section-header">
+              <h2>MTAMBO Holdings</h2>
+              <span class="badge badge-gray">{{ masterProducts.length }} items</span>
+            </div>
+            <div v-if="masterProducts.length > 0" class="product-grid">
+              <article v-for="product in masterProducts" :key="product.id" :class="['product-card', getMarginClass(product)]">
+                <div class="card-header">
+                  <div class="header-main">
+                    <div class="product-name">{{ product.name }}</div>
+                    <div class="product-sku">{{ product.sku || 'No SKU' }}</div>
+                  </div>
+                  <div class="header-badges">
+                    <span class="badge badge-blue">{{ product.category || 'Uncategorized' }}</span>
+                    <span :class="['badge', product.is_active ? 'badge-green' : 'badge-red']">{{ product.is_active ? 'Active' : 'Inactive' }}</span>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <div class="product-desc">{{ product.description || 'No description provided.' }}</div>
+                  <div class="product-metrics">
+                    <div class="metric"><span class="metric-lbl">Price excl</span><span class="metric-val text-gold">R{{ formatNumber(product.price) }}</span></div>
+                    <div class="metric"><span class="metric-lbl">Price incl</span><span class="metric-val text-blue">R{{ formatNumber(product.price_incl_tax) }}</span></div>
+                    <div class="metric"><span class="metric-lbl">Margin</span><span v-if="product.margin !== null" class="metric-val" :class="product.margin >= 30 ? 'text-gold' : product.margin >= 15 ? 'text-blue' : 'text-red'">{{ product.margin.toFixed(1) }}%</span><span v-else class="metric-val text-muted">—</span></div>
+                  </div>
+                </div>
+                <div class="card-footer">
+                  <div class="audit-trail">
+                    <div class="audit-avatar">{{ (product.created_by_name || 'S').charAt(0).toUpperCase() }}</div>
+                    <div class="audit-info">
+                      <div class="audit-name">{{ product.created_by_name || 'System' }}</div>
+                      <div class="audit-date">{{ formatDate(product.created_at) }}</div>
+                    </div>
+                    <div class="audit-company">{{ product.company_name || 'MTAMBO HOLDINGS' }}</div>
+                  </div>
+                  <div class="action-btns">
+                    <button class="btn-icon" @click="editProduct(product)" title="Edit">✎</button>
+                    <button class="btn-icon danger" @click="deleteProduct(product)" title="Delete">×</button>
+                  </div>
+                </div>
+              </article>
+            </div>
+            <div v-else class="empty-state">No MTAMBO Holdings products match the current filters.</div>
+          </section>
+        </div>
+
+        <div v-else-if="isAdmin && catalogView === 'company'" class="split-catalog">
+          <section class="catalog-section">
+            <div class="section-header">
+              <h2>Company Products</h2>
+              <span class="badge badge-gray">{{ tenantProducts.length }} items</span>
+            </div>
+            <div v-if="tenantProducts.length > 0" class="product-grid">
+              <article v-for="product in tenantProducts" :key="product.id" :class="['product-card', getMarginClass(product)]">
+                <div class="card-header">
+                  <div class="header-main">
+                    <div class="product-name">{{ product.name }}</div>
+                    <div class="product-sku">{{ product.sku || 'No SKU' }}</div>
+                  </div>
+                  <div class="header-badges">
+                    <span class="badge badge-blue">{{ product.category || 'Uncategorized' }}</span>
+                    <span :class="['badge', product.is_active ? 'badge-green' : 'badge-red']">{{ product.is_active ? 'Active' : 'Inactive' }}</span>
+                  </div>
+                </div>
+                <div class="card-body">
+                  <div class="product-desc">{{ product.description || 'No description provided.' }}</div>
+                  <div class="product-metrics">
+                    <div class="metric"><span class="metric-lbl">Price excl</span><span class="metric-val text-gold">R{{ formatNumber(product.price) }}</span></div>
+                    <div class="metric"><span class="metric-lbl">Price incl</span><span class="metric-val text-blue">R{{ formatNumber(product.price_incl_tax) }}</span></div>
+                    <div class="metric"><span class="metric-lbl">Margin</span><span v-if="product.margin !== null" class="metric-val" :class="product.margin >= 30 ? 'text-gold' : product.margin >= 15 ? 'text-blue' : 'text-red'">{{ product.margin.toFixed(1) }}%</span><span v-else class="metric-val text-muted">—</span></div>
                   </div>
                 </div>
                 <div class="card-footer">
@@ -319,6 +417,7 @@ export default {
       showModal: false,
       isEditing: false,
       editId: null,
+      catalogView: 'all',
       search: '',
       filterCategory: '',
       filterStatus: '',
@@ -502,6 +601,39 @@ export default {
 .filter-bar { display: flex; gap: 12px; margin-bottom: 20px; flex-wrap: wrap; }
 .search-input { flex: 1; min-width: 200px; }
 .filter-select { width: 180px; }
+
+.catalog-switcher {
+  display: inline-flex;
+  gap: 8px;
+  padding: 6px;
+  margin-bottom: 22px;
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid rgba(212, 175, 55, 0.18);
+  border-radius: 14px;
+  flex-wrap: wrap;
+}
+.switch-btn {
+  border: 1px solid transparent;
+  background: transparent;
+  color: #cbd5e1;
+  padding: 8px 14px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  transition: all 0.2s ease;
+}
+.switch-btn:hover {
+  border-color: rgba(212, 175, 55, 0.28);
+  color: #fff;
+}
+.switch-btn.active {
+  background: rgba(212, 175, 55, 0.14);
+  color: #D4AF37;
+  border-color: rgba(212, 175, 55, 0.38);
+}
 
 .catalog-container { margin-top: 10px; }
 .split-catalog { display: flex; flex-direction: column; gap: 40px; }
