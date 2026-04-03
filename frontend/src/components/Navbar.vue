@@ -411,8 +411,19 @@ export default {
       try {
         const confirmed = await modal.confirm(notif.title || 'Notification', notif.message || '', 'info', { confirmText: 'Open', cancelText: 'Close' })
         if (confirmed) {
-          const routes = { ticket: '/tickets', deal: '/deals', contact: '/contacts', company: '/companies' }
-          const route = routes[notif.entity_type]
+          const messageText = `${notif.title || ''} ${notif.message || ''}`.toLowerCase()
+          const routes = {
+            ticket: '/tickets',
+            deal: '/deals',
+            contact: '/contacts',
+            company: '/companies',
+            website_lead: '/website-leads'
+          }
+          const leadLikeNotification = notif.entity_type === 'website_lead'
+            || messageText.includes('lead_system')
+            || messageText.includes('website lead')
+            || messageText.includes('new contact created')
+          const route = routes[notif.entity_type] || (leadLikeNotification ? '/website-leads' : null)
           if (route) {
             const query = notif.entity_type === 'ticket' && notif.entity_id ? `?ticket=${notif.entity_id}` : ''
             this.$router.push(route + query)
@@ -472,7 +483,7 @@ export default {
     },
     hideSearchResults() { setTimeout(() => { this.showSearchResults = false }, 200) },
     navigateToResult(result) {
-      const routes = { contact: '/contacts', company: '/companies', deal: '/deals' }
+      const routes = { contact: '/contacts', company: '/companies', deal: '/deals', website_lead: '/website-leads' }
       this.$router.push(routes[result.type] || '/dashboard')
       this.searchQuery = ''
       this.showSearchResults = false

@@ -248,6 +248,19 @@ def public_lead_capture(request):
             spam_score=spam_score,
             is_spam_risk=is_spam_risk
         )
+
+        Notification.objects.create(
+            recipient=lead_owner,
+            title='New Website Lead',
+            message=f'New website inquiry from {first_name} {last_name}',
+            entity_type='website_lead',
+            entity_id=website_lead.id,
+            meta={
+                'source': website_source,
+                'spam_score': spam_score,
+                'is_spam_risk': is_spam_risk,
+            },
+        )
         
         # Send WhatsApp welcome message
         whatsapp_result = send_lead_welcome_message(
@@ -308,10 +321,11 @@ def trigger_workflows_for_lead(contact, lead_owner):
                             pass
                         elif action.action_type == 'notify_user':
                             Notification.objects.create(
-                                user=lead_owner,
-                                message=f"New lead from {contact.first_name} {contact.last_name}",
-                                related_entity_type='contact',
-                                related_entity_id=contact.id
+                                recipient=lead_owner,
+                                title='New Website Lead',
+                                message=f"New website inquiry from {contact.first_name} {contact.last_name}",
+                                entity_type='website_lead',
+                                entity_id=contact.id
                             )
                     except Exception as e:
                         logger.warning(f"Error executing workflow action {action.id}: {str(e)}")
