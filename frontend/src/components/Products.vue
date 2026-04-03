@@ -248,6 +248,12 @@ export default {
         const matchCompany = !this.filterCompany || p.company_name === this.filterCompany
         return matchSearch && matchCategory && matchStatus && matchCompany
       })
+    },
+    masterProducts() {
+      return this.filteredProducts.filter(p => !p.company_name || p.company_name.toUpperCase() === 'MTAMBO HOLDINGS')
+    },
+    tenantProducts() {
+      return this.filteredProducts.filter(p => p.company_name && p.company_name.toUpperCase() !== 'MTAMBO HOLDINGS')
     }
   },
   mounted() {
@@ -266,6 +272,28 @@ export default {
     formatDate(val) {
       if (!val) return '—';
       return new Date(val).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
+    },
+    getMarginClass(product) {
+      if (product.margin === null) return 'margin-glow-none'
+      if (product.margin >= 30) return 'margin-glow-high'
+      if (product.margin >= 15) return 'margin-glow-mid'
+      return 'margin-glow-low'
+    },
+    duplicateProduct(product) {
+      this.form = {
+        name: product.name + ' (Copy)',
+        description: product.description || '',
+        sku: product.sku ? product.sku + '-COPY' : '',
+        price: product.price,
+        cost: product.cost || '',
+        tax_rate: product.tax_rate,
+        category: product.category || '',
+        unit: product.unit || 'each',
+        is_active: product.is_active
+      }
+      this.isEditing = false
+      this.editId = null
+      this.showModal = true
     },
     async fetchProducts() {
       this.loading = true
@@ -359,20 +387,56 @@ export default {
 .search-input { flex: 1; min-width: 200px; }
 .filter-select { width: 180px; }
 
-.table-wrap { overflow-x: auto; background: rgba(17, 20, 24, 0.85); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 12px; box-shadow: 0 10px 25px rgba(0,0,0,0.5); }
-.data-table { width: 100%; border-collapse: collapse; }
-.data-table th { text-align: left; padding: 12px 16px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.05em; color: #9ca3af; border-bottom: 2px solid rgba(212, 175, 55, 0.2); background: rgba(0,0,0,0.2); }
-.data-table td { padding: 12px 16px; border-bottom: 1px solid rgba(255,255,255,0.05); font-size: 14px; color: #fff; }
-.data-table tr:last-child td { border-bottom: none; }
-.data-table tr:hover { background: rgba(212, 175, 55, 0.05); }
+.catalog-container { margin-top: 10px; }
+.split-catalog { display: flex; flex-direction: column; gap: 40px; }
+.catalog-section { margin-bottom: 20px; }
+.section-header { display: flex; align-items: center; gap: 12px; margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid rgba(212, 175, 55, 0.2); }
+.section-header h2 { font-size: 20px; font-weight: 700; color: #D4AF37; margin: 0; text-transform: uppercase; letter-spacing: 1px; }
 
-.product-name { font-weight: 600; color: #fff; }
-.product-desc { font-size: 12px; color: #9ca3af; max-width: 250px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.text-right { text-align: right; }
-.text-center { text-align: center; }
-.text-muted { color: #6b7280; }
+.product-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(340px, 1fr)); gap: 20px; }
+.product-card { background: rgba(15, 15, 15, 0.85); backdrop-filter: blur(10px); border: 1px solid rgba(255, 255, 255, 0.1); border-radius: 12px; display: flex; flex-direction: column; transition: all 0.3s ease; overflow: hidden; position: relative; }
+.product-card:hover { transform: translateY(-4px); }
+
+.margin-glow-high { border-top: 3px solid #D4AF37; box-shadow: 0 4px 20px rgba(212, 175, 55, 0.15); }
+.margin-glow-high:hover { box-shadow: 0 8px 30px rgba(212, 175, 55, 0.3); }
+.margin-glow-mid { border-top: 3px solid #3b82f6; box-shadow: 0 4px 20px rgba(59, 130, 246, 0.15); }
+.margin-glow-mid:hover { box-shadow: 0 8px 30px rgba(59, 130, 246, 0.3); }
+.margin-glow-low { border-top: 3px solid #ef4444; box-shadow: 0 4px 20px rgba(239, 68, 68, 0.15); }
+.margin-glow-low:hover { box-shadow: 0 8px 30px rgba(239, 68, 68, 0.3); }
+.margin-glow-none { border-top: 3px solid rgba(255, 255, 255, 0.1); }
+
+.card-header { padding: 20px; border-bottom: 1px solid rgba(255, 255, 255, 0.05); display: flex; justify-content: space-between; align-items: flex-start; gap: 15px; }
+.header-main { flex: 1; min-width: 0; }
+.product-name { margin: 0 0 5px 0; font-size: 16px; font-weight: 700; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.product-sku { background: rgba(0,0,0,0.4); color: #9ca3af; padding: 2px 6px; border-radius: 4px; font-size: 11px; border: 1px solid rgba(255,255,255,0.1); }
+.header-badges { display: flex; flex-direction: column; gap: 6px; align-items: flex-end; }
+
+.card-body { padding: 20px; flex: 1; }
+.product-desc { margin: 0 0 20px 0; font-size: 13px; color: #9ca3af; line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+
+.product-metrics { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; background: rgba(0,0,0,0.3); padding: 15px; border-radius: 8px; border: 1px solid rgba(255, 255, 255, 0.03); }
+.metric { display: flex; flex-direction: column; gap: 4px; }
+.metric-lbl { font-size: 10px; text-transform: uppercase; color: #6b7280; font-weight: 600; letter-spacing: 0.5px; }
+.metric-val { font-size: 14px; font-weight: 700; color: #f3f4f6; }
+.text-gold { color: #D4AF37 !important; }
+.text-blue { color: #60a5fa !important; }
+.text-red { color: #f87171 !important; }
+
+.card-footer { padding: 15px 20px; background: rgba(0,0,0,0.4); border-top: 1px solid rgba(255, 255, 255, 0.05); display: flex; justify-content: space-between; align-items: center; gap: 15px; }
+.audit-trail { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; }
+.audit-avatar { width: 32px; height: 32px; border-radius: 8px; background: linear-gradient(135deg, #1f2937, #111827); border: 1px solid rgba(255,255,255,0.1); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 14px; color: #D4AF37; flex-shrink: 0; }
+.audit-info { display: flex; flex-direction: column; }
+.audit-name { font-size: 12px; font-weight: 600; color: #e5e7eb; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; }
+.audit-date { font-size: 10px; color: #6b7280; margin-top: 2px; }
+.audit-company { margin-left: auto; font-size: 11px; padding: 3px 8px; background: rgba(255,255,255,0.05); border-radius: 4px; color: #9ca3af; white-space: nowrap; border: 1px solid rgba(255,255,255,0.1); }
 
 .action-btns { display: flex; gap: 6px; }
+.btn-icon { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; width: 32px; height: 32px; border-radius: 8px; display: flex; align-items: center; justify-content: center; cursor: pointer; transition: all 0.2s; font-size: 14px; }
+.btn-icon:hover { background: rgba(212, 175, 55, 0.1); border-color: #D4AF37; transform: translateY(-2px); }
+.btn-icon.danger:hover { background: rgba(239, 68, 68, 0.1); border-color: #ef4444; }
+
+.empty-state { grid-column: 1 / -1; padding: 40px; text-align: center; background: rgba(0,0,0,0.2); border: 2px dashed rgba(255,255,255,0.1); border-radius: 12px; color: #9ca3af; font-size: 14px; }
+.text-muted { color: #6b7280; }
 
 .badge { display: inline-block; padding: 2px 10px; border-radius: 20px; font-size: 11px; font-weight: 600; }
 .badge-green { background: rgba(34, 197, 94, 0.15); color: #4ade80; border: 1px solid rgba(34, 197, 94, 0.3); }
