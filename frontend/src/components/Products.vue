@@ -32,6 +32,10 @@
 
     <div class="filter-bar">
       <input v-model="search" placeholder="Search products..." class="form-input search-input" />
+      <select v-if="isAdmin" v-model="filterCompany" class="form-input filter-select">
+        <option value="">All Companies</option>
+        <option v-for="comp in companies" :key="comp" :value="comp">{{ comp }}</option>
+      </select>
       <select v-model="filterCategory" class="form-input filter-select">
         <option value="">All Categories</option>
         <option v-for="cat in categories" :key="cat" :value="cat">{{ cat }}</option>
@@ -50,10 +54,12 @@
             <th>Product</th>
             <th>SKU</th>
             <th>Category</th>
+            <th v-if="isAdmin">Company</th>
             <th>Price (excl)</th>
             <th>Price (incl)</th>
             <th>Margin</th>
             <th>Status</th>
+            <th>Added By</th>
             <th>Actions</th>
           </tr>
         </thead>
@@ -65,6 +71,9 @@
             </td>
             <td><code>{{ product.sku || '—' }}</code></td>
             <td><span class="badge badge-blue">{{ product.category || 'Uncategorized' }}</span></td>
+            <td v-if="isAdmin">
+              <span class="badge badge-gray" style="font-size: 10px;">{{ product.company_name || 'MTAMBO HOLDINGS' }}</span>
+            </td>
             <td class="text-right">R{{ formatNumber(product.price) }}</td>
             <td class="text-right">R{{ formatNumber(product.price_incl_tax) }}</td>
             <td class="text-right">
@@ -79,6 +88,12 @@
               </span>
             </td>
             <td>
+              <div style="font-size: 13px;">
+                <strong style="color: #fff;">{{ product.created_by_name || 'System' }}</strong>
+                <div class="text-muted" style="font-size: 11px; margin-top: 2px;">{{ formatDate(product.created_at) }}</div>
+              </div>
+            </td>
+            <td>
               <div class="action-btns">
                 <button class="btn btn-sm btn-secondary" @click="editProduct(product)">Edit</button>
                 <button class="btn btn-sm btn-danger" @click="deleteProduct(product)">Delete</button>
@@ -86,7 +101,7 @@
             </td>
           </tr>
           <tr v-if="filteredProducts.length === 0">
-            <td colspan="8" class="text-center text-muted">No products found</td>
+            <td :colspan="isAdmin ? 10 : 9" class="text-center text-muted">No products found</td>
           </tr>
         </tbody>
       </table>
@@ -191,15 +206,25 @@ export default {
       search: '',
       filterCategory: '',
       filterStatus: '',
+      filterCompany: '',
       form: this.emptyForm()
     }
   },
   computed: {
+    isAdmin() {
+      try {
+        const user = JSON.parse(localStorage.getItem('thefinisher_user') || '{}');
+        return user.is_superuser || (user.username || '').toLowerCase() === 'adminluxury';
+      } catch(e) { return false; }
+    },
     activeCount() {
       return this.products.filter(p => p.is_active).length
     },
     categories() {
       return [...new Set(this.products.map(p => p.category).filter(Boolean))].sort()
+    },
+    companies() {
+      return [...new Set(this.products.map(p => p.company_name).filter(Boolean))].sort()
     },
     totalValue() {
       if (!this.filteredProducts.length) return 0
@@ -220,7 +245,8 @@ export default {
         const matchStatus = !this.filterStatus ||
           (this.filterStatus === 'active' && p.is_active) ||
           (this.filterStatus === 'inactive' && !p.is_active)
-        return matchSearch && matchCategory && matchStatus
+        const matchCompany = !this.filterCompany || p.company_name === this.filterCompany
+        return matchSearch && matchCategory && matchStatus && matchCompany
       })
     }
   },
@@ -236,6 +262,10 @@ export default {
     },
     formatNumber(n) {
       return parseFloat(n || 0).toLocaleString('en-ZA', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    },
+    formatDate(val) {
+      if (!val) return '—';
+      return new Date(val).toLocaleDateString('en-ZA', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })
     },
     async fetchProducts() {
       this.loading = true

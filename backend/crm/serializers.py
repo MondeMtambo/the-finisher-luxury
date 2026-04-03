@@ -652,16 +652,22 @@ class AssetListSerializer(serializers.ModelSerializer):
 class ProductSerializer(serializers.ModelSerializer):
     margin = serializers.ReadOnlyField()
     price_incl_tax = serializers.ReadOnlyField()
+    created_by_name = serializers.SerializerMethodField()
 
     class Meta:
         model = Product
         fields = [
             'id', 'name', 'description', 'sku', 'price', 'cost', 'tax_rate',
             'is_active', 'category', 'unit', 'company_name', 'billing_type', 'margin',
-            'price_incl_tax', 'created_at', 'updated_at'
+            'price_incl_tax', 'created_by_name', 'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
-        read_only_fields = ['id', 'company_name', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'company_name', 'created_by_name', 'created_at', 'updated_at']
+
+    def get_created_by_name(self, obj):
+        if obj.created_by:
+            name = obj.created_by.get_full_name().strip()
+            return name if name else obj.created_by.username
+        return "System"
 
 
 class LineItemSerializer(serializers.ModelSerializer):
