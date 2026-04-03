@@ -28,8 +28,11 @@
                 <div v-for="result in searchResults" :key="result.type + result.id" @mousedown.prevent="navigateToResult(result)" class="search-result" :class="{'ai-action': result.type === 'action'}">
                   <span class="result-icon">{{ result.icon }}</span>
                   <div class="result-content">
-                    <div class="result-title">{{ result.title }}</div>
-                    <div class="result-sub">{{ result.subtitle }}</div>
+                    <div class="result-title-row">
+                      <div class="result-title" v-html="highlightSearchText(result.title)"></div>
+                      <span v-if="result.score" class="match-badge" :class="`match-${getSearchBadge(result).className}`">{{ getSearchBadge(result).label }}</span>
+                    </div>
+                    <div class="result-sub" v-html="highlightSearchText(result.subtitle)"></div>
                   </div>
                   <svg v-if="result.type === 'action'" class="action-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                 </div>
@@ -459,13 +462,13 @@ export default {
     },
     handleSearch() {
       clearTimeout(this.searchTimeout)
-      if (this.searchQuery.length < 2) { 
-        this.searchResults = []; 
-        this.isSearching = false;
-        return;
+      if (this.searchQuery.length < 2) {
+        this.searchResults = []
+        this.isSearching = false
+        return
       }
-      
-      this.isSearching = true;
+
+      this.isSearching = true
 
       this.searchTimeout = setTimeout(async () => {
         const q = this.searchQuery.toLowerCase().trim()
@@ -476,6 +479,11 @@ export default {
           if (!payload || typeof payload !== 'object') return []
           if (Array.isArray(payload.results)) return payload.results
           if (Array.isArray(payload.users)) return payload.users
+          if (Array.isArray(payload.items)) return payload.items
+          if (Array.isArray(payload.rows)) return payload.rows
+          if (Array.isArray(payload.companies)) return payload.companies
+          if (Array.isArray(payload.deals)) return payload.deals
+          if (Array.isArray(payload.tickets)) return payload.tickets
           if (Array.isArray(payload.data)) return payload.data
           return []
         }
@@ -490,129 +498,180 @@ export default {
           if (qTokens.length && qTokens.every(t => text.includes(t))) return 60
           return 0
         }
-        
-        // AI Intent Parsing
+
+        const pushUnique = (item) => {
+          const key = `${item.type}:${item.id || item.title}`
+          if (!results.some(r => `${r.type}:${r.id || r.title}` === key)) {
+            results.push(item)
+          }
+        }
+
         if (q.includes('new') || q.includes('add') || q.includes('create')) {
           if (q.includes('contact') || q.includes('client')) {
-            results.push({ type: 'action', action: '/contacts', icon: '✨', title: 'Create New Contact', subtitle: 'AI Quick Action' });
+            pushUnique({ type: 'action', action: '/contacts', icon: '✨', title: 'Create New Contact', subtitle: 'AI Quick Action', score: 130 })
           }
           if (q.includes('deal') || q.includes('pipeline')) {
-            results.push({ type: 'action', action: '/deals', icon: '🚀', title: 'Create New Deal', subtitle: 'AI Quick Action' });
+            pushUnique({ type: 'action', action: '/deals', icon: '🚀', title: 'Create New Deal', subtitle: 'AI Quick Action', score: 130 })
           }
           if (q.includes('company') || q.includes('org')) {
-            results.push({ type: 'action', action: '/companies', icon: '🏢', title: 'Add New Company', subtitle: 'AI Quick Action' });
+            pushUnique({ type: 'action', action: '/companies', icon: '🏢', title: 'Add New Company', subtitle: 'AI Quick Action', score: 130 })
           }
           if (q.includes('ticket') || q.includes('task')) {
-            results.push({ type: 'action', action: '/tickets', icon: '🎫', title: 'Create New Ticket', subtitle: 'AI Quick Action' });
+            pushUnique({ type: 'action', action: '/tickets', icon: '🎫', title: 'Create New Ticket', subtitle: 'AI Quick Action', score: 130 })
           }
           if (q.includes('user') || q.includes('employee') || q.includes('staff')) {
-            results.push({ type: 'action', action: '/admin/console', icon: '👥', title: 'Manage Staff', subtitle: 'AI Quick Action' });
+            pushUnique({ type: 'action', action: '/admin/console', icon: '👥', title: 'Manage Staff', subtitle: 'AI Quick Action', score: 130 })
           }
         }
         if (q.includes('setting') || q.includes('config')) {
-          results.push({ type: 'action', action: '/settings', icon: '⚙️', title: 'System Settings', subtitle: 'AI Quick Action' });
+          pushUnique({ type: 'action', action: '/settings', icon: '⚙️', title: 'System Settings', subtitle: 'AI Quick Action', score: 130 })
         }
 
         try {
           const promises = [
-            contactsAPI.getAll(), 
-            companiesAPI.getAll(), 
+            contactsAPI.getAll(),
+            companiesAPI.getAll(),
             dealsAPI.getAll(),
             ticketsAPI.getAll()
-          ];
+          ]
 
           if (this.isOwnerAdminUser) {
             promises.push(websiteLeadsAPI.getAll().catch(() => ({ data: [] })))
           }
-
-          // Fetch staff if admin
           if (this.isAdmin) {
-             promises.push(systemAPI.getUserManagement().catch(() => ({ data: { users: [] } })));
+            promises.push(systemAPI.getUserManagement().catch(() => ({ data: { users: [] } })))
           }
 
-          const res = await Promise.allSettled(promises);
-          
-          const contactsRes = res[0];
-          const companiesRes = res[1];
-          const dealsRes = res[2];
-          const ticketsRes = res[3];
-          const leadsRes = this.isOwnerAdminUser ? res[4] : null;
-          const usersRes = this.isAdmin ? res[res.length - 1] : null;
+          const res = await Promise.allSettled(promises)
+          const contactsRes = res[0]
+          const companiesRes = res[1]
+          const dealsRes = res[2]
+          const ticketsRes = res[3]
+          const leadsRes = this.isOwnerAdminUser ? res[4] : null
+          const usersRes = this.isAdmin ? res[res.length - 1] : null
 
-          if (contactsRes.status === 'fulfilled') {
-            toArray(contactsRes.value.data)
-              .map(c => ({ c, score: scoreMatch(`${c.first_name} ${c.last_name} ${c.email} ${c.phone || ''}`) }))
-              .filter(x => x.score > 0)
-              .sort((a, b) => b.score - a.score)
-              .slice(0, 4)
-              .map(x => x.c)
-              .forEach(c => results.push({
-                type: 'contact', id: c.id, icon: '👤',
-                title: `${c.first_name} ${c.last_name}`, subtitle: c.email || 'Client'
-              }))
+          const contacts = contactsRes.status === 'fulfilled' ? toArray(contactsRes.value.data) : []
+          const companies = companiesRes.status === 'fulfilled' ? toArray(companiesRes.value.data) : []
+          const deals = dealsRes.status === 'fulfilled' ? toArray(dealsRes.value.data) : []
+          const tickets = ticketsRes.status === 'fulfilled' ? toArray(ticketsRes.value.data) : []
+          const leads = leadsRes && leadsRes.status === 'fulfilled' ? toArray(leadsRes.value.data) : []
+          const users = usersRes && usersRes.status === 'fulfilled' ? toArray(usersRes.value.data) : []
+
+          contacts
+            .map(c => ({ c, score: scoreMatch(`${c.first_name} ${c.last_name} ${c.email} ${c.phone || ''}`) }))
+            .filter(x => x.score > 0)
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 4)
+            .map(x => x.c)
+            .forEach(c => pushUnique({
+              type: 'contact', id: c.id, icon: '👤',
+              title: `${c.first_name} ${c.last_name}`, subtitle: c.email || 'Client', score: scoreMatch(`${c.first_name} ${c.last_name} ${c.email} ${c.phone || ''}`)
+            }))
+
+          companies
+            .map(c => ({ c, score: scoreMatch(`${c.name || ''} ${c.email || ''} ${c.phone || ''}`) }))
+            .filter(x => x.score > 0)
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 4)
+            .map(x => x.c)
+            .forEach(c => pushUnique({
+              type: 'company', id: c.id, icon: '🏢', title: c.name || 'Company', subtitle: c.email || 'Registered company', score: scoreMatch(`${c.name || ''} ${c.email || ''} ${c.phone || ''}`)
+            }))
+
+          deals
+            .map(d => ({ d, score: scoreMatch(`${d.title || ''} ${d.contact_name || ''} ${d.company_name || ''} ${d.stage || ''}`) }))
+            .filter(x => x.score > 0)
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 4)
+            .map(x => x.d)
+            .forEach(d => pushUnique({
+              type: 'deal', id: d.id, icon: '💼', title: d.title || 'Deal', subtitle: `R${d.value || 0} • ${String(d.stage || 'lead').replace('_', ' ')}`, score: scoreMatch(`${d.title || ''} ${d.contact_name || ''} ${d.company_name || ''} ${d.stage || ''}`)
+            }))
+
+          tickets
+            .map(t => ({ t, score: scoreMatch(`${t.title || ''} ${t.status || ''} ${t.priority || ''}`) }))
+            .filter(x => x.score > 0)
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 3)
+            .map(x => x.t)
+            .forEach(t => pushUnique({
+              type: 'ticket', id: t.id, icon: '🎫', title: t.title, subtitle: `Ticket • ${t.status || 'open'}`, score: scoreMatch(`${t.title || ''} ${t.status || ''} ${t.priority || ''}`)
+            }))
+
+          leads
+            .map(l => ({ l, score: scoreMatch(`${l.contact_name || ''} ${l.contact_email || ''} ${l.inbound_message || ''}`) }))
+            .filter(x => x.score > 0)
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 3)
+            .map(x => x.l)
+            .forEach(l => pushUnique({
+              type: 'website_lead', id: l.id, icon: '🌐', title: l.contact_name || 'Website Lead', subtitle: l.contact_email || 'Website inquiry', score: scoreMatch(`${l.contact_name || ''} ${l.contact_email || ''} ${l.inbound_message || ''}`)
+            }))
+
+          users
+            .map(u => ({ u, score: scoreMatch(`${u.first_name} ${u.last_name} ${u.email} ${u.username}`) }))
+            .filter(x => x.score > 0)
+            .sort((a, b) => b.score - a.score)
+            .slice(0, 3)
+            .map(x => x.u)
+            .forEach(u => pushUnique({
+              type: 'user', id: u.id, icon: '🛡️', title: `${u.first_name} ${u.last_name}`, subtitle: `Staff (@${u.username})`, score: scoreMatch(`${u.first_name} ${u.last_name} ${u.email} ${u.username}`)
+            }))
+
+          if ((q.includes('deal') || q.includes('pipeline') || q.includes('opportunit')) && deals.length) {
+            deals.slice(0, 5).forEach(d => pushUnique({
+              type: 'deal', id: d.id, icon: '💼', title: d.title || 'Deal', subtitle: `R${d.value || 0} • ${String(d.stage || 'lead').replace('_', ' ')}`, score: 65
+            }))
           }
-          if (companiesRes.status === 'fulfilled') {
-            toArray(companiesRes.value.data)
-              .map(c => ({ c, score: scoreMatch(c.name) }))
-              .filter(x => x.score > 0)
-              .sort((a, b) => b.score - a.score)
-              .slice(0, 4)
-              .map(x => x.c)
-              .forEach(c => results.push({
-                type: 'company', id: c.id, icon: '🏢', title: c.name, subtitle: 'Company'
-              }))
+
+          if ((q.includes('company') || q.includes('companie') || q.includes('client') || q.includes('business')) && companies.length) {
+            companies.slice(0, 5).forEach(c => pushUnique({
+              type: 'company', id: c.id, icon: '🏢', title: c.name || 'Company', subtitle: c.email || 'Registered company', score: 65
+            }))
           }
-          if (dealsRes.status === 'fulfilled') {
-            toArray(dealsRes.value.data)
-              .map(d => ({ d, score: scoreMatch(`${d.title || ''} ${d.contact_name || ''} ${d.stage || ''}`) }))
-              .filter(x => x.score > 0)
-              .sort((a, b) => b.score - a.score)
-              .slice(0, 4)
-              .map(x => x.d)
-              .forEach(d => results.push({
-                type: 'deal', id: d.id, icon: '💼', title: d.title, subtitle: `R${d.value} • ${d.stage.replace('_', ' ')}`
-              }))
-          }
-          if (ticketsRes.status === 'fulfilled') {
-            toArray(ticketsRes.value.data)
-              .map(t => ({ t, score: scoreMatch(`${t.title || ''} ${t.status || ''} ${t.priority || ''}`) }))
-              .filter(x => x.score > 0)
-              .sort((a, b) => b.score - a.score)
-              .slice(0, 3)
-              .map(x => x.t)
-              .forEach(t => results.push({
-                type: 'ticket', id: t.id, icon: '🎫', title: t.title, subtitle: `Ticket • ${t.status || 'open'}`
-              }))
-          }
-          if (leadsRes && leadsRes.status === 'fulfilled') {
-            toArray(leadsRes.value.data)
-              .map(l => ({ l, score: scoreMatch(`${l.contact_name || ''} ${l.contact_email || ''} ${l.inbound_message || ''}`) }))
-              .filter(x => x.score > 0)
-              .sort((a, b) => b.score - a.score)
-              .slice(0, 3)
-              .map(x => x.l)
-              .forEach(l => results.push({
-                type: 'website_lead', id: l.id, icon: '🌐', title: l.contact_name || 'Website Lead', subtitle: l.contact_email || 'Website inquiry'
-              }))
-          }
-          if (usersRes && usersRes.status === 'fulfilled') {
-            toArray(usersRes.value.data)
-              .map(u => ({ u, score: scoreMatch(`${u.first_name} ${u.last_name} ${u.email} ${u.username}`) }))
-              .filter(x => x.score > 0)
-              .sort((a, b) => b.score - a.score)
-              .slice(0, 3)
-              .map(x => x.u)
-              .forEach(u => results.push({
-                type: 'user', id: u.id, icon: '🛡️', title: `${u.first_name} ${u.last_name}`, subtitle: `Staff (@${u.username})`
-              }))
-          }
-        } catch (e) { /* silent */ }
-        
+        } catch (e) {
+          // Keep actions and any partial results if one endpoint shape is malformed.
+        }
+
         this.searchResults = results
-        this.isSearching = false;
+          .sort((a, b) => (b.score || 0) - (a.score || 0))
+          .slice(0, 14)
+        this.isSearching = false
       }, 400)
     },
     hideSearchResults() { setTimeout(() => { this.showSearchResults = false }, 250) },
+    getSearchBadge(result) {
+      if (!result || result.type === 'action') {
+        return { label: 'Intent', className: 'intent' }
+      }
+      const score = Number(result.score || 0)
+      if (score >= 100) return { label: 'Exact', className: 'exact' }
+      if (score >= 85) return { label: 'Strong', className: 'strong' }
+      if (score >= 65) return { label: 'Related', className: 'related' }
+      return { label: 'Match', className: 'match' }
+    },
+    escapeHtml(value) {
+      return String(value || '')
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;')
+    },
+    highlightSearchText(value) {
+      const raw = String(value || '')
+      const safe = this.escapeHtml(raw)
+      const query = String(this.searchQuery || '').trim().toLowerCase()
+      if (!query || query.length < 2) return safe
+
+      const tokens = query.split(/\s+/).filter(Boolean).slice(0, 5)
+      let highlighted = safe
+      tokens.forEach((token) => {
+        const escaped = token.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')
+        highlighted = highlighted.replace(new RegExp(`(${escaped})`, 'ig'), '<mark>$1</mark>')
+      })
+      return highlighted
+    },
     navigateToResult(result) {
       if (result.type === 'action') {
         this.$router.push(result.action);
@@ -869,8 +928,56 @@ export default {
 }
 .search-result:hover { background: rgba(212, 175, 55, 0.1); }
 .result-icon { font-size: 18px; }
+.result-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
 .result-title { font-size: 14px; font-weight: 500; color: #fff; }
 .result-sub { font-size: 12px; color: #9ca3af; }
+.match-badge {
+  display: inline-flex;
+  align-items: center;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  padding: 2px 8px;
+  border: 1px solid transparent;
+  white-space: nowrap;
+}
+.match-exact {
+  color: #f8e29a;
+  background: rgba(212, 175, 55, 0.18);
+  border-color: rgba(212, 175, 55, 0.45);
+}
+.match-strong {
+  color: #facc15;
+  background: rgba(250, 204, 21, 0.14);
+  border-color: rgba(250, 204, 21, 0.38);
+}
+.match-related {
+  color: #93c5fd;
+  background: rgba(59, 130, 246, 0.16);
+  border-color: rgba(147, 197, 253, 0.4);
+}
+.match-match {
+  color: #d1d5db;
+  background: rgba(156, 163, 175, 0.12);
+  border-color: rgba(156, 163, 175, 0.3);
+}
+.match-intent {
+  color: #bbf7d0;
+  background: rgba(34, 197, 94, 0.15);
+  border-color: rgba(34, 197, 94, 0.35);
+}
+.result-content :deep(mark) {
+  background: rgba(212, 175, 55, 0.28);
+  color: #fff5d0;
+  border-radius: 3px;
+  padding: 0 2px;
+}
 
 .topbar-right {
   display: flex;
