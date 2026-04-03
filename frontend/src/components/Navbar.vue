@@ -14,18 +14,27 @@
             @input="handleSearch"
             @focus="showSearchResults = true"
             @blur="hideSearchResults"
-            placeholder="Search clients, deals, tickets..."
-            class="search-input"
+            placeholder="Ask AI to find clients, deals, or type 'New...'"
+            class="search-input ai-search"
           >
-          <div v-if="showSearchResults && searchQuery.length > 0" class="search-dropdown">
-            <div v-if="searchResults.length === 0" class="search-empty">No results found</div>
-            <div v-else v-for="result in searchResults" :key="result.type + result.id" @mousedown="navigateToResult(result)" class="search-result">
-              <span class="result-icon">{{ result.icon }}</span>
-              <div>
-                <div class="result-title">{{ result.title }}</div>
-                <div class="result-sub">{{ result.subtitle }}</div>
-              </div>
+          <div v-if="showSearchResults && searchQuery.length > 0" class="search-dropdown ai-dropdown">
+            <div v-if="isSearching" class="search-loading">
+              <span class="ai-pulse"></span> Deep Scanning Matrix...
             </div>
+            <template v-else>
+              <div v-if="searchResults.length === 0" class="search-empty">No results found for "{{ searchQuery }}"</div>
+              <div v-else>
+                <div class="search-section-title">AI Top Matches</div>
+                <div v-for="result in searchResults" :key="result.type + result.id" @mousedown.prevent="navigateToResult(result)" class="search-result" :class="{'ai-action': result.type === 'action'}">
+                  <span class="result-icon">{{ result.icon }}</span>
+                  <div class="result-content">
+                    <div class="result-title">{{ result.title }}</div>
+                    <div class="result-sub">{{ result.subtitle }}</div>
+                  </div>
+                  <svg v-if="result.type === 'action'" class="action-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </div>
+              </div>
+            </template>
           </div>
         </div>
       </div>
@@ -236,6 +245,7 @@ export default {
       searchResults: [],
       showSearchResults: false,
       searchTimeout: null,
+      isSearching: false,
       showNotifications: false,
       showUserMenu: false,
       notifications: [],
@@ -449,42 +459,108 @@ export default {
     },
     handleSearch() {
       clearTimeout(this.searchTimeout)
-      if (this.searchQuery.length < 2) { this.searchResults = []; return }
+      if (this.searchQuery.length < 2) { 
+        this.searchResults = []; 
+        this.isSearching = false;
+        return;
+      }
+      
+      this.isSearching = true;
+
       this.searchTimeout = setTimeout(async () => {
-        const q = this.searchQuery.toLowerCase()
+        const q = this.searchQuery.toLowerCase().trim()
         const results = []
+        
+        // AI Intent Parsing
+        if (q.includes('new') || q.includes('add') || q.includes('create')) {
+          if (q.includes('contact') || q.includes('client')) {
+            results.push({ type: 'action', action: '/contacts', icon: '✨', title: 'Create New Contact', subtitle: 'AI Quick Action' });
+          }
+          if (q.includes('deal') || q.includes('pipeline')) {
+            results.push({ type: 'action', action: '/deals', icon: '🚀', title: 'Create New Deal', subtitle: 'AI Quick Action' });
+          }
+          if (q.includes('company') || q.includes('org')) {
+            results.push({ type: 'action', action: '/companies', icon: '🏢', title: 'Add New Company', subtitle: 'AI Quick Action' });
+          }
+          if (q.includes('ticket') || q.includes('task')) {
+            results.push({ type: 'action', action: '/tickets', icon: '🎫', title: 'Create New Ticket', subtitle: 'AI Quick Action' });
+          }
+          if (q.includes('user') || q.includes('employee') || q.includes('staff')) {
+            results.push({ type: 'action', action: '/admin/console', icon: '👥', title: 'Manage Staff', subtitle: 'AI Quick Action' });
+          }
+        }
+        if (q.includes('setting') || q.includes('config')) {
+          results.push({ type: 'action', action: '/settings', icon: '⚙️', title: 'System Settings', subtitle: 'AI Quick Action' });
+        }
+
         try {
-          const [contacts, companies, deals] = await Promise.allSettled([
-            contactsAPI.getAll(), companiesAPI.getAll(), dealsAPI.getAll()
-          ])
-          if (contacts.status === 'fulfilled') {
-            (contacts.value.data || []).filter(c =>
-              `${c.first_name} ${c.last_name} ${c.email}`.toLowerCase().includes(q)
-            ).slice(0, 3).forEach(c => results.push({
-              type: 'contact', id: c.id, icon: '\u{1F464}',
-              title: `${c.first_name} ${c.last_name}`, subtitle: c.email || 'Contact'
-            }))
+          const promises = [
+            contactsAPI.getAll(), 
+            companiesAPI.getAll(), 
+            dealsAPI.getAll()
+          ];
+
+          // Fetch staff if admin
+          if (this.isAdmin) {
+             promises.push(systemAPI.getUserManagement().catch(() => ({ data: { users: [] } })));
           }
-          if (companies.status === 'fulfilled') {
-            (companies.value.data || []).filter(c => c.name.toLowerCase().includes(q))
-            .slice(0, 3).forEach(c => results.push({
-              type: 'company', id: c.id, icon: '\u{1F3E2}', title: c.name, subtitle: 'Company'
-            }))
+
+          const res = await Promise.allSettled(promises);
+          
+          const contactsRes = res[0];
+          const companiesRes = res[1];
+          const dealsRes = res[2];
+          const usersRes = this.isAdmin ? res[3] : null;
+
+          if (contactsRes.status === 'fulfilled') {
+            (contactsRes.value.data || [])
+              .filter(c => `${c.first_name} ${c.last_name} ${c.email} ${c.phone||''}`.toLowerCase().includes(q))
+              .slice(0, 3)
+              .forEach(c => results.push({
+                type: 'contact', id: c.id, icon: '👤',
+                title: `${c.first_name} ${c.last_name}`, subtitle: c.email || 'Client'
+              }))
           }
-          if (deals.status === 'fulfilled') {
-            (deals.value.data || []).filter(d => d.title.toLowerCase().includes(q))
-            .slice(0, 3).forEach(d => results.push({
-              type: 'deal', id: d.id, icon: '\u{1F4BC}', title: d.title, subtitle: `R${d.value}`
-            }))
+          if (companiesRes.status === 'fulfilled') {
+            (companiesRes.value.data || [])
+              .filter(c => c.name.toLowerCase().includes(q))
+              .slice(0, 3)
+              .forEach(c => results.push({
+                type: 'company', id: c.id, icon: '🏢', title: c.name, subtitle: 'Company'
+              }))
+          }
+          if (dealsRes.status === 'fulfilled') {
+            (dealsRes.value.data || [])
+              .filter(d => d.title.toLowerCase().includes(q) || (d.contact_name||'').toLowerCase().includes(q))
+              .slice(0, 3)
+              .forEach(d => results.push({
+                type: 'deal', id: d.id, icon: '💼', title: d.title, subtitle: `R${d.value} • ${d.stage.replace('_', ' ')}`
+              }))
+          }
+          if (usersRes && usersRes.status === 'fulfilled') {
+            (usersRes.value.data.users || [])
+              .filter(u => `${u.first_name} ${u.last_name} ${u.email} ${u.username}`.toLowerCase().includes(q))
+              .slice(0, 3)
+              .forEach(u => results.push({
+                type: 'user', id: u.id, icon: '🛡️', title: `${u.first_name} ${u.last_name}`, subtitle: `Staff (@${u.username})`
+              }))
           }
         } catch (e) { /* silent */ }
+        
         this.searchResults = results
-      }, 300)
+        this.isSearching = false;
+      }, 400)
     },
-    hideSearchResults() { setTimeout(() => { this.showSearchResults = false }, 200) },
+    hideSearchResults() { setTimeout(() => { this.showSearchResults = false }, 250) },
     navigateToResult(result) {
-      const routes = { contact: '/contacts', company: '/companies', deal: '/deals', website_lead: '/website-leads' }
-      this.$router.push(routes[result.type] || '/dashboard')
+      if (result.type === 'action') {
+        this.$router.push(result.action);
+      } else if (result.type === 'user') {
+        this.$router.push('/admin/console');
+      } else {
+        const routes = { contact: '/contacts', company: '/companies', deal: '/deals', website_lead: '/website-leads' }
+        this.$router.push(routes[result.type] || '/dashboard')
+      }
       this.searchQuery = ''
       this.showSearchResults = false
     },
@@ -675,6 +751,53 @@ export default {
   overflow-y: auto;
 }
 .search-empty { padding: 20px; text-align: center; color: #9ca3af; font-size: 13px; }
+.ai-search {
+  background: rgba(212, 175, 55, 0.05);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  transition: all 0.3s ease;
+}
+.ai-search:focus {
+  box-shadow: 0 0 15px rgba(212, 175, 55, 0.2);
+  border-color: #D4AF37;
+  background: rgba(0, 0, 0, 0.6);
+}
+.ai-dropdown {
+  border-top: 2px solid #D4AF37;
+  background: linear-gradient(180deg, rgba(15,15,15,0.98) 0%, rgba(5,5,5,0.98) 100%);
+}
+.search-loading {
+  padding: 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: #D4AF37;
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 1px;
+}
+.ai-pulse {
+  width: 10px;
+  height: 10px;
+  background: #D4AF37;
+  border-radius: 50%;
+  animation: pulse-animation 1s infinite alternate;
+}
+.search-section-title {
+  padding: 10px 16px 4px;
+  font-size: 11px;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: var(--gray-500);
+  font-weight: 700;
+}
+.ai-action {
+  background: rgba(212, 175, 55, 0.05);
+  border-left: 2px solid #D4AF37;
+}
+.ai-action .result-title { color: #D4AF37; }
+.ai-action .result-sub { color: rgba(212, 175, 55, 0.7); }
+.action-arrow { margin-left: auto; color: #D4AF37; opacity: 0.5; }
+.result-content { flex: 1; }
 .search-result {
   display: flex;
   align-items: center;
