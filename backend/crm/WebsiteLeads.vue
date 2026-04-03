@@ -1,10 +1,11 @@
 <template>
-  <div class="leads-master-page">
+  <div class="leads-master-page luxury-theme">
     <div class="page-header">
-      <div>
+      <div class="header-title-row">
         <h1>VIP Leads Triage</h1>
-        <p class="page-subtitle">Master Inbox & Lead Qualification Command Center</p>
+        <div class="live-badge"><span class="pulse-dot"></span> LIVE SYNC</div>
       </div>
+        <p class="page-subtitle">Master Inbox & Lead Qualification Command Center</p>
     </div>
 
     <!-- Top KPI Dashboard -->
@@ -163,7 +164,8 @@ export default {
       replyForm: {
         subject: '',
         message: ''
-      }
+      },
+      pollingInterval: null
     }
   },
   computed: {
@@ -177,6 +179,15 @@ export default {
   },
   async mounted() {
     await this.loadInbox();
+    
+    // The "Live Engine" - silently checks for new leads every 5 seconds
+    this.pollingInterval = setInterval(() => {
+      this.loadInbox(true);
+    }, 5000);
+  },
+  beforeUnmount() {
+    // Clean up the engine when you leave the page
+    if (this.pollingInterval) clearInterval(this.pollingInterval);
   },
   methods: {
     async fetchApi(endpoint, options = {}) {
@@ -197,7 +208,7 @@ export default {
       this.filter = status;
       this.loadInbox();
     },
-    async loadInbox() {
+    async loadInbox(silent = false) {
       try {
         let endpoint = '/admin/website-leads/inbox/';
         if (this.filter !== 'all') {
@@ -207,13 +218,14 @@ export default {
         this.summary = data.summary || {};
         this.leads = data.results || [];
         
-        // Auto-select first lead if none selected
-        if (this.leads.length > 0) {
-          if (!this.activeLead || !this.leads.find(l => l.id === this.activeLead.id)) {
-            this.activeLead = this.leads[0];
-          }
-        } else {
-          this.activeLead = null;
+        // Smoothly maintain the active lead without flickering
+        if (this.activeLead) {
+          const stillExists = this.leads.find(l => l.id === this.activeLead.id);
+          if (stillExists) this.activeLead = stillExists;
+          else if (!silent && this.leads.length > 0) this.activeLead = this.leads[0];
+          else if (!silent) this.activeLead = null;
+        } else if (this.leads.length > 0 && !silent) {
+          this.activeLead = this.leads[0];
         }
       } catch (error) {
         console.error('Failed to load inbox:', error);
@@ -298,15 +310,53 @@ export default {
 </script>
 
 <style scoped>
+.luxury-theme {
+  color: #fff;
+}
+
 .leads-master-page {
   padding: 2rem;
   max-width: 1400px;
   margin: 0 auto;
 }
 
+.header-title-row {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.live-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(212, 175, 55, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+  color: #D4AF37;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+}
+
+.pulse-dot {
+  width: 8px;
+  height: 8px;
+  background-color: #D4AF37;
+  border-radius: 50%;
+  animation: pulse-animation 1.5s infinite;
+}
+
+@keyframes pulse-animation {
+  0% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.7); }
+  70% { box-shadow: 0 0 0 10px rgba(212, 175, 55, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
+}
+
 .page-header h1 {
   font-size: 1.875rem;
-  color: var(--gray-900);
+  color: #D4AF37;
   margin: 0 0 0.5rem 0;
 }
 .page-subtitle {
@@ -323,36 +373,36 @@ export default {
   margin-bottom: 2rem;
 }
 .kpi-card {
-  background: white;
-  border: 1px solid var(--border-color);
+  background: linear-gradient(135deg, rgba(15,15,15,0.95) 0%, rgba(5,5,5,0.95) 100%);
+  border: 1px solid rgba(212, 175, 55, 0.2);
   border-radius: var(--radius-lg);
   padding: 1.5rem;
   text-align: center;
   cursor: pointer;
-  transition: all 0.2s ease;
-  box-shadow: var(--shadow-sm);
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
 }
 .kpi-card:hover, .kpi-card.active {
-  transform: translateY(-2px);
-  border-color: var(--primary-500);
-  box-shadow: var(--shadow-md);
+  transform: translateY(-4px);
+  border-color: #D4AF37;
+  box-shadow: 0 8px 25px rgba(212, 175, 55, 0.2);
 }
 .kpi-val {
   font-size: 2rem;
   font-weight: 700;
   margin-bottom: 0.5rem;
-  color: var(--gray-900);
+  color: #ffffff;
 }
 .kpi-lbl {
   font-size: 0.875rem;
-  color: var(--gray-500);
+  color: #9ca3af;
   font-weight: 500;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
-.text-blue { color: var(--blue-600); }
-.text-amber { color: var(--amber-600); }
-.text-green { color: var(--green-600); }
+.text-blue { color: #60a5fa !important; }
+.text-amber { color: #fbbf24 !important; }
+.text-green { color: #34d399 !important; }
 
 /* Split Screen */
 .triage-container {
@@ -365,13 +415,13 @@ export default {
 
 /* Left Panel (Inbox) */
 .inbox-panel {
-  background: white;
-  border: 1px solid var(--border-color);
+  background: linear-gradient(135deg, rgba(15,15,15,0.95) 0%, rgba(5,5,5,0.95) 100%);
+  border: 1px solid rgba(212, 175, 55, 0.2);
   border-radius: var(--radius-lg);
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
 }
 .inbox-feed {
   flex: 1;
@@ -384,22 +434,24 @@ export default {
 }
 .lead-card {
   padding: 1.25rem;
-  border-bottom: 1px solid var(--gray-100);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.1);
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.3s ease;
+  background: transparent;
 }
 .lead-card:hover {
-  background: var(--gray-50);
+  background: rgba(212, 175, 55, 0.05);
 }
 .lead-card.active {
-  background: var(--blue-50);
-  border-left: 4px solid var(--primary-500);
+  background: rgba(212, 175, 55, 0.15);
+  border-left: 4px solid #D4AF37;
 }
 .lead-card-header {
   display: flex;
   justify-content: space-between;
   margin-bottom: 0.25rem;
   font-size: 0.9375rem;
+  color: #ffffff;
 }
 .time-ago {
   font-size: 0.75rem;
@@ -407,7 +459,7 @@ export default {
 }
 .lead-email {
   font-size: 0.8125rem;
-  color: var(--gray-600);
+  color: #9ca3af;
   margin-bottom: 0.5rem;
 }
 .lead-preview {
@@ -424,11 +476,12 @@ export default {
 
 /* Right Panel (Details) */
 .detail-panel {
-  background: white;
-  border: 1px solid var(--border-color);
+  background: linear-gradient(135deg, rgba(15,15,15,0.95) 0%, rgba(5,5,5,0.95) 100%);
+  border: 1px solid rgba(212, 175, 55, 0.2);
   border-radius: var(--radius-lg);
   overflow-y: auto;
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  color: #ffffff;
 }
 .empty-detail {
   display: flex;
@@ -446,19 +499,19 @@ export default {
   padding: 2rem;
 }
 .detail-header {
-  border-bottom: 1px solid var(--border-color);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
   padding-bottom: 1.5rem;
   margin-bottom: 1.5rem;
 }
 .detail-header h2 {
   font-size: 1.5rem;
   margin: 0 0 0.5rem 0;
-  color: var(--gray-900);
+  color: #D4AF37;
 }
 .detail-contact-info {
   display: flex;
   gap: 1.5rem;
-  color: var(--gray-600);
+  color: #d1d5db;
   font-size: 0.9375rem;
   margin-bottom: 1rem;
 }
@@ -477,21 +530,22 @@ export default {
 .flag-yellow { background: #fef3c7; color: #92400e; }
 
 .detail-message-box {
-  background: var(--gray-50);
+  background: rgba(0, 0, 0, 0.5);
   border-radius: var(--radius-md);
   padding: 1.5rem;
   margin-bottom: 2rem;
-  border: 1px solid var(--gray-200);
+  border: 1px solid rgba(212, 175, 55, 0.1);
 }
 .detail-message-box h4 {
   margin: 0 0 1rem 0;
-  color: var(--gray-700);
+  color: #D4AF37;
   font-size: 0.875rem;
   text-transform: uppercase;
+  letter-spacing: 1px;
 }
 .message-body {
   white-space: pre-wrap;
-  color: var(--gray-800);
+  color: #e5e7eb;
   line-height: 1.6;
 }
 
@@ -500,9 +554,10 @@ export default {
 }
 .audit-trail h4 {
   margin: 0 0 1rem 0;
-  color: var(--gray-700);
+  color: #D4AF37;
   font-size: 0.875rem;
   text-transform: uppercase;
+  letter-spacing: 1px;
 }
 .audit-trail ul {
   list-style: none;
@@ -511,7 +566,7 @@ export default {
 }
 .audit-trail li {
   font-size: 0.875rem;
-  color: var(--gray-600);
+  color: #d1d5db;
   margin-bottom: 0.5rem;
   padding-left: 1.5rem;
   position: relative;
@@ -520,46 +575,53 @@ export default {
   content: "•";
   position: absolute;
   left: 0;
-  color: var(--primary-500);
+  color: #D4AF37;
 }
 
 .detail-actions {
   display: flex;
   gap: 1rem;
   padding-top: 1.5rem;
-  border-top: 1px solid var(--border-color);
+  border-top: 1px solid rgba(212, 175, 55, 0.2);
+  justify-content: flex-end;
+  align-items: center;
+  flex-wrap: wrap;
 }
 .action-btn {
   padding: 0.75rem 1.5rem;
   font-weight: 600;
   border-radius: var(--radius-md);
   cursor: pointer;
-  border: none;
+  border: 1px solid transparent;
   font-size: 0.9375rem;
-  transition: all 0.2s;
+  transition: all 0.3s ease;
+  text-transform: uppercase;
+  letter-spacing: 1px;
 }
 .btn-engage {
-  background: var(--blue-50);
-  color: var(--blue-700);
+  background: transparent;
+  color: #D4AF37;
+  border-color: #D4AF37;
 }
-.btn-engage:hover { background: var(--blue-100); }
+.btn-engage:hover { background: rgba(212, 175, 55, 0.1); }
 
 .btn-reject {
-  background: var(--red-50);
-  color: var(--red-700);
+  background: transparent;
+  color: #ef4444;
+  border-color: #ef4444;
 }
-.btn-reject:hover { background: var(--red-100); }
+.btn-reject:hover { background: rgba(239, 68, 68, 0.1); }
 
 .btn-promote {
-  background: var(--primary-500);
-  color: white;
+  background: linear-gradient(135deg, #D4AF37 0%, #AA8010 100%);
+  color: #000;
   flex: 1;
-  box-shadow: 0 4px 6px rgba(212, 175, 55, 0.2);
+  border: none;
+  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
 }
 .btn-promote:hover {
-  background: var(--primary-600);
   transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(212, 175, 55, 0.3);
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4);
 }
 
 .promoted-alert {
