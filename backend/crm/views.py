@@ -62,6 +62,25 @@ def has_user_management_access(request):
     return False
 
 
+def visible_contacts_queryset(user):
+    """Return contacts that should appear in client-facing CRM views.
+
+    Website inquiries are handled in the dedicated Website Leads inbox and must
+    not leak into the Clients tab or contact totals.
+    """
+    queryset = Contact.objects.select_related('company').filter(website_lead__isnull=True)
+
+    if user.is_superuser or user.is_staff:
+        return queryset
+
+    profile = getattr(user, 'profile', None)
+    if profile and profile.is_admin and profile.company_name:
+        company = normalize_company_name(profile.company_name)
+        return queryset.filter(user__profile__company_name__iexact=company)
+
+    return queryset.filter(user=user)
+
+
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def api_overview(request):
@@ -387,18 +406,7 @@ class ContactViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-
-        if user.is_superuser or user.is_staff:
-            return Contact.objects.all()
-
-        profile = getattr(user, 'profile', None)
-        if profile and profile.is_admin and profile.company_name:
-            company = normalize_company_name(profile.company_name)
-            return Contact.objects.filter(
-                user__profile__company_name__iexact=company
-            )
-
-        return Contact.objects.filter(user=user)
+        return visible_contacts_queryset(user)
 
     def perform_create(self, serializer):
 
@@ -547,7 +555,7 @@ class CompanyViewSet(viewsets.ModelViewSet):
         if not (user.is_superuser or user.is_staff or (getattr(user, 'profile', None) and user.profile.is_admin)):
             raise PermissionDenied('Only administrators can create companies.')
 
-        if not Contact.objects.filter(user=user).exists():
+        if not visible_contacts_queryset(user).exists():
             raise ValidationError({
                 'error': 'You need at least one contact before you can register a company.',
                 'action': 'Capture a contact with their company name, then create the company profile.'
@@ -1206,7 +1214,7 @@ class AdminOverviewView(APIView):
         for user in admin_users:
             companies = []
             for company in user.companies.all().order_by('name'):
-                contacts_qs = company.contact_set.filter(user=user).order_by('first_name', 'last_name')
+                contacts_qs = visible_contacts_queryset(user).filter(company=company).order_by('first_name', 'last_name')
                 deals_qs = company.deals.filter(user=user)
                 companies.append({
                     'id': company.id,
@@ -1231,7 +1239,7 @@ class AdminOverviewView(APIView):
                 'username': user.username,
                 'email': user.email,
                 'companies': companies,
-                'total_contacts': Contact.objects.filter(user=user).count(),
+                'total_contacts': visible_contacts_queryset(user).count(),
                 'total_deals': Deal.objects.filter(user=user).count(),
             })
 
@@ -1352,7 +1360,7 @@ class UserManagementView(APIView):
         for user in users:
             profile = user.profile if hasattr(user, 'profile') else None
 
-            contact_count = Contact.objects.filter(user=user).count()
+            contact_count = visible_contacts_queryset(user).count()
             company_count = Company.objects.filter(user=user).count()
             deal_count = Deal.objects.filter(user=user).count()
             
@@ -1503,7 +1511,7 @@ class UserManagementView(APIView):
 
                 profile = user.profile
 
-                contact_count = Contact.objects.filter(user=user).count()
+                contact_count = visible_contacts_queryset(user).count()
                 company_count = Company.objects.filter(user=user).count()
                 deal_count = Deal.objects.filter(user=user).count()
 
@@ -2123,7 +2131,7 @@ class ClientEmployeeManagementView(APIView):
                     'employees': 0
                 }
 
-            contact_count = Contact.objects.filter(user=user).count()
+            contact_count = visible_contacts_queryset(user).count()
             company_count = Company.objects.filter(user=user).count()
             deal_count = Deal.objects.filter(user=user).count()
             ticket_count = Ticket.objects.filter(Q(assigned_to=user) | Q(created_by=user)).distinct().count()
@@ -2875,7 +2883,7 @@ class DashboardWidgetViewSet(viewsets.ModelViewSet):
             companies = Company.objects.all()
             tickets = Ticket.objects.all()
         else:
-            contacts = Contact.objects.filter(user=user)
+            contacts = visible_contacts_queryset(user)
             deals = Deal.objects.filter(user=user)
             companies = Company.objects.filter(user=user)
             tickets = Ticket.objects.filter(assigned_to=user)
