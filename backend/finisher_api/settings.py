@@ -176,8 +176,8 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 # Frontend URL (for password reset links)
 FRONTEND_URL = config('FRONTEND_URL', default='https://thefinisher.tech')
 
-# CORS Settings - Strict domain whitelisting (POPIA Sec 19)
-CORS_ALLOW_ALL_ORIGINS = DEBUG
+# CORS Settings - Domain whitelisting & permissive preflights
+CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOWED_ORIGINS = [
     'https://thefinisher.tech',
     'https://www.thefinisher.tech',

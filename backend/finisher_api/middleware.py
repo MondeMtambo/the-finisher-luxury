@@ -8,21 +8,25 @@ class CORSMiddleware:
         self.get_response = get_response
 
     def __call__(self, request):
+        origin = request.headers.get('Origin') or '*'
+
         # Handle preflight OPTIONS requests
         if request.method == 'OPTIONS':
             response = HttpResponse()
-            response['Access-Control-Allow-Origin'] = '*'
+            response['Access-Control-Allow-Origin'] = origin
             response['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD'
-            response['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Requested-With, Accept'
-            response['Access-Control-Max-Age'] = '3600'
+            response['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Requested-With, Accept, Origin'
+            response['Access-Control-Allow-Credentials'] = 'true'
+            response['Access-Control-Max-Age'] = '86400'
             return response
-        
+
         response = self.get_response(request)
-        
+
         # Add CORS headers to all responses
-        response['Access-Control-Allow-Origin'] = '*'
+        response['Access-Control-Allow-Origin'] = origin
         response['Access-Control-Allow-Methods'] = 'GET, POST, PUT, DELETE, PATCH, OPTIONS, HEAD'
-        response['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Requested-With, Accept'
-        
+        response['Access-Control-Allow-Headers'] = 'Content-Type, Authorization, X-Requested-With, Accept, Origin'
+        response['Access-Control-Allow-Credentials'] = 'true'
+
         return response
 
