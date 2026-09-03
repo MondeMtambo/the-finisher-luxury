@@ -48,10 +48,13 @@ def validate_pre_auth_token(token: str, max_age: int = 300):
 def is_mfa_required(user) -> bool:
     """
     MFA Policy:
-    Required for ALL authenticated accounts in THE FINISHER LUXURY.
-    Privileged administrators, executives, and users are strictly protected.
+    Required for ALL accounts when an email delivery provider is configured.
+    Prevents lockouts when EMAIL_HOST_PASSWORD is not yet provisioned.
     """
     if not hasattr(user, 'profile'):
+        return False
+    email_active = bool(getattr(settings, 'EMAIL_HOST_PASSWORD', '')) or getattr(settings, 'EMAIL_BACKEND', '').endswith('console.EmailBackend')
+    if not email_active:
         return False
     return getattr(user.profile, 'mfa_enabled', True)
 
