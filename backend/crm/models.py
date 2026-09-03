@@ -5,6 +5,7 @@ from django.core.exceptions import ValidationError
 from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
+from django.utils.text import slugify
 from datetime import timedelta, datetime
 import uuid
 import phonenumbers
@@ -39,7 +40,6 @@ class Organization(models.Model):
 
     def save(self, *args, **kwargs):
         if not self.slug:
-            from django.utils.text import slugify
             base_slug = slugify(self.name) or 'org'
             slug = base_slug
             counter = 1
@@ -403,20 +403,14 @@ class DeletedUserLog(models.Model):
 
 
 @receiver(post_save, sender=User)
-def create_user_profile(sender, instance, created, **kwargs):
+def create_or_update_user_profile(sender, instance, created, **kwargs):
     """
-    Automatically create UserProfile when User is created.
+    Safely create or update UserProfile when a User is created or saved.
+    Uses get_or_create to eliminate duplicate key race conditions.
     """
     if created:
-        UserProfile.objects.create(user=instance)
-
-
-@receiver(post_save, sender=User)
-def save_user_profile(sender, instance, **kwargs):
-    """
-    Save UserProfile when User is saved.
-    """
-    if hasattr(instance, 'profile'):
+        UserProfile.objects.get_or_create(user=instance)
+    elif hasattr(instance, 'profile'):
         instance.profile.save()
 
 
