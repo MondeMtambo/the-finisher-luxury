@@ -4,12 +4,12 @@
       <button class="back-btn" @click="$router.push('/')">← Back to Home</button>
 
       <h1>Disclaimer &amp; Privacy Notice</h1>
-      <p class="subtitle"><strong>Company:</strong> MTAMBO HOLDINGS &bull; <strong>Product:</strong> THE FINISHER LUXURY CRM</p>
+      <p class="subtitle"><strong>Company:</strong> <a href="https://mtamboholdings.dev" target="_blank" rel="noopener noreferrer" class="gold-link">Mtambo Holdings Group</a> &bull; <strong>Product:</strong> THE FINISHER LUXURY CRM</p>
       <p class="last-updated">Effective date: 2 November 2026</p>
 
       <section class="copyright-section">
         <h2>Copyright &amp; Intellectual Property Protection</h2>
-        <p><strong>&copy; 2026 MTAMBO HOLDINGS. All Rights Reserved.</strong><br>THE FINISHER LUXURY CRM is proprietary software owned exclusively by MTAMBO HOLDINGS. This application, including all source code, design elements, user interfaces, features, documentation, and associated materials, is protected by South African and international copyright laws.</p>
+        <p><strong>&copy; 2026 <a href="https://mtamboholdings.dev" target="_blank" rel="noopener noreferrer" class="gold-link">Mtambo Holdings Group</a>. All Rights Reserved.</strong><br>THE FINISHER LUXURY CRM is proprietary software owned exclusively by Mtambo Holdings Group. This application, including all source code, design elements, user interfaces, features, documentation, and associated materials, is protected by South African and international copyright laws.</p>
         <ul>
           <li><strong>No Reproduction:</strong> Unauthorized copying, reproduction, modification, or distribution of any part of this software is strictly prohibited.</li>
           <li><strong>No Reverse Engineering:</strong> Users are prohibited from decompiling, disassembling, or reverse engineering the software.</li>
@@ -91,7 +91,7 @@
       </section>
 
       <div class="legal-footer">
-        <p><strong>&copy; 2026 MTAMBO HOLDINGS. All rights reserved.</strong></p>
+        <p><strong>&copy; 2026 <a href="https://mtamboholdings.dev" target="_blank" rel="noopener noreferrer" class="gold-link">Mtambo Holdings Group</a>. All rights reserved.</strong></p>
         <p>THE FINISHER LUXURY CRM - PREMIUM LUXURY EDITION</p>
         <p>Protected by South African and International Copyright Laws</p>
         <p class="warn-footer">Unauthorized use, reproduction, or distribution is strictly prohibited and subject to legal prosecution.</p>
@@ -236,6 +236,19 @@ strong {
   margin-top: 1rem !important;
   text-transform: uppercase;
   letter-spacing: 1px;
+}
+
+.gold-link {
+  color: #D4AF37;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  cursor: pointer;
+}
+.gold-link:hover {
+  color: #F3E5AB;
+  text-decoration: underline;
+  text-shadow: 0 0 8px rgba(212, 175, 55, 0.4);
 }
 
 .note {

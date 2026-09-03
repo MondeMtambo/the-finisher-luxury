@@ -481,7 +481,7 @@ export default {
     </tbody>
   </table>
   <div class="footer">
-    <p>© 2026 MTAMBO HOLDINGS - THE FINISHER LUXURY CRM</p>
+    <p>© 2026 <a href="https://mtamboholdings.dev" target="_blank" style="color:inherit;font-weight:bold;">Mtambo Holdings Group</a> - THE FINISHER LUXURY CRM</p>
     <p>Total Contacts: ${this.contacts.length}</p>
     <p>Report generated on ${timestamp}</p>
   </div>
@@ -533,7 +533,7 @@ export default {
     </tbody>
   </table>
   <div class="footer">
-    <p>© 2026 MTAMBO HOLDINGS - THE FINISHER LUXURY CRM</p>
+    <p>© 2026 <a href="https://mtamboholdings.dev" target="_blank" style="color:inherit;font-weight:bold;">Mtambo Holdings Group</a> - THE FINISHER LUXURY CRM</p>
     <p>Total Companies: ${this.companies.length}</p>
   </div>
 </body>
@@ -598,7 +598,7 @@ export default {
     </tbody>
   </table>
   <div class="footer">
-    <p>© 2026 MTAMBO HOLDINGS - THE FINISHER LUXURY CRM</p>
+    <p>© 2026 <a href="https://mtamboholdings.dev" target="_blank" style="color:inherit;font-weight:bold;">Mtambo Holdings Group</a> - THE FINISHER LUXURY CRM</p>
     <p>Total Deals: ${this.deals.length} | Pipeline Value: R${total}</p>
     <p>Report generated on ${timestamp}</p>
   </div>
@@ -655,7 +655,7 @@ export default {
     </tbody>
   </table>
   <div class="footer">
-    <p>© 2026 MTAMBO HOLDINGS - THE FINISHER LUXURY CRM</p>
+    <p>© 2026 <a href="https://mtamboholdings.dev" target="_blank" style="color:inherit;font-weight:bold;">Mtambo Holdings Group</a> - THE FINISHER LUXURY CRM</p>
     <p>Total Activities: ${this.activities.length}</p>
     <p>Report generated on ${timestamp}</p>
   </div>
@@ -748,7 +748,7 @@ export default {
     </tbody>
   </table>
   <div class="footer">
-    <p>© 2026 MTAMBO HOLDINGS - THE FINISHER LUXURY CRM</p>
+    <p>© 2026 <a href="https://mtamboholdings.dev" target="_blank" style="color:inherit;font-weight:bold;">Mtambo Holdings Group</a> - THE FINISHER LUXURY CRM</p>
     <p>Total Tickets: ${this.tickets.length} | Completed: ${this.completedTicketsCount}</p>
     <p>Report generated on ${timestamp}</p>
   </div>
@@ -889,7 +889,7 @@ export default {
   </div>
 
   <div class="footer">
-    <h3>© 2026 MTAMBO HOLDINGS</h3>
+    <h3>© 2026 <a href="https://mtamboholdings.dev" target="_blank" style="color:inherit;font-weight:bold;">Mtambo Holdings Group</a></h3>
     <p>THE FINISHER LUXURY CRM - Premium Edition</p>
     <p>Report generated on ${timestamp}</p>
   </div>

@@ -217,7 +217,13 @@
       <div class="sidebar-footer">
         <!-- Dynamic Copyright -->
         <div v-if="!sidebarCollapsed" class="sidebar-copyright">
-          <p>&copy; {{ currentYear }} Mtambo Holdings.<br/>All Rights Reserved.</p>
+          <p>
+            &copy; {{ currentYear }}
+            <a href="https://mtamboholdings.dev" target="_blank" rel="noopener noreferrer" class="copyright-link" title="Visit Mtambo Holdings Group">
+              Mtambo Holdings Group
+            </a>
+            <br/>All Rights Reserved.
+          </p>
         </div>
 
         <div v-if="!sidebarCollapsed" class="plan-badge" :class="{ 'plan-ultimate': isAdmin }">
@@ -1366,6 +1372,20 @@ export default {
   color: #9ca3af;
   margin: 0;
   line-height: 1.5;
+}
+.sidebar-copyright .copyright-link {
+  color: #D4AF37;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  display: inline-block;
+  cursor: pointer;
+}
+.sidebar-copyright .copyright-link:hover {
+  color: #F3E5AB;
+  text-decoration: underline;
+  text-shadow: 0 0 8px rgba(212, 175, 55, 0.4);
+  transform: translateY(-1px);
 }
 
 /* Mobile Overlay */

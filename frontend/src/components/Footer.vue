@@ -6,7 +6,7 @@
           <div class="fb-mark">F</div>
           <div>
             <div class="fb-name">&copy; THE FINISHER LUXURY</div>
-            <div class="fb-sub">MTAMBO HOLDINGS CRM SUITE</div>
+            <div class="fb-sub">MTAMBO HOLDINGS GROUP CRM SUITE</div>
           </div>
         </div>
         <nav class="footer-nav">
@@ -36,7 +36,12 @@
         </nav>
       </div>
       <div class="footer-bottom">
-        <p>&copy; 2026 MTAMBO HOLDINGS. All rights reserved.</p>
+        <p>
+          &copy; 2026
+          <a href="https://mtamboholdings.dev" target="_blank" rel="noopener noreferrer" class="footer-copyright-link" title="Visit Mtambo Holdings Group">
+            Mtambo Holdings Group
+          </a>. All rights reserved.
+        </p>
         <div class="fb-notice">
           <p>THE FINISHER LUXURY CRM - PREMIUM LUXURY EDITION</p>
           <p class="fb-warn">Protected by Copyright Law &bull; Unauthorized Use Prohibited</p>
@@ -71,7 +76,7 @@ export default {
   },
   methods: {
     showRights() {
-      modal.alert('All Rights Reserved', '🏆 THE FINISHER LUXURY CRM\n\n© 2026 MTAMBO HOLDINGS — Proprietary & Confidential\n\nThis software is protected by:\n• South African Copyright Law\n• International Intellectual Property Treaties\n• Trade Secret Protection\n• Patent Pending Technologies\n\nUnauthorised use is strictly prohibited. Any attempt to copy, reproduce, modify, distribute, or reverse engineer this software will result in immediate legal action.\n\nLicensing: legal@mtamboholdings.co.za', 'info')
+      modal.alert('All Rights Reserved', '🏆 THE FINISHER LUXURY CRM\n\n© 2026 MTAMBO HOLDINGS GROUP — Proprietary & Confidential\n\nThis software is protected by:\n• South African Copyright Law\n• International Intellectual Property Treaties\n• Trade Secret Protection\n• Patent Pending Technologies\n\nUnauthorised use is strictly prohibited. Any attempt to copy, reproduce, modify, distribute, or reverse engineer this software will result in immediate legal action.\n\nWebsite: https://mtamboholdings.dev\nLicensing: legal@mtamboholdings.co.za', 'info')
     }
   }
 }
@@ -91,6 +96,19 @@ export default {
 .fn-col a:hover { color:#fff; }
 .footer-bottom { border-top:1px solid rgba(255,255,255,.08); padding-top:1rem; display:flex; flex-direction:column; align-items:center; gap:.5rem; text-align:center; }
 .footer-bottom p { font-size:.75rem; color:#9ca3af; margin:0; }
+.footer-copyright-link {
+  color: #D4AF37;
+  text-decoration: none;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  display: inline-block;
+  cursor: pointer;
+}
+.footer-copyright-link:hover {
+  color: #F3E5AB;
+  text-decoration: underline;
+  text-shadow: 0 0 8px rgba(212, 175, 55, 0.4);
+}
 .fb-notice { background:rgba(37,99,235,.08); border:1px solid rgba(37,99,235,.2); border-radius:var(--radius-sm); padding:.375rem .75rem; }
 .fb-notice p { margin:.125rem 0; font-size:.75rem; color:var(--primary-500); font-weight:600; }
 .fb-warn { font-size:.6875rem !important; color:#9ca3af !important; font-weight:500 !important; }
