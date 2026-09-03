@@ -76,18 +76,15 @@ def initialize_supabase(admin_password=""):
 
     # 3. Create or Update Master Admin Account (Monde Mtambo)
     print("\n[3/3] Setting up Master Executive Account...")
-    import secrets
-    resolved_password = admin_password or os.environ.get('DEFAULT_ADMIN_PASSWORD')
-    if not resolved_password:
-        resolved_password = secrets.token_urlsafe(16)
-        print(f"  [Security] Generated dynamic master executive password: {resolved_password}")
-
+    explicit_password = admin_password or os.environ.get('DEFAULT_ADMIN_PASSWORD')
     admin_user = User.objects.filter(username='adminluxury').first()
     if not admin_user:
+        import secrets
+        initial_password = explicit_password or secrets.token_urlsafe(16)
         admin_user = User.objects.create_user(
             username='adminluxury',
             email='monde@mtamboholdings.com',
-            password=resolved_password,
+            password=initial_password,
             first_name='Monde',
             last_name='Mtambo',
             is_staff=True,
@@ -99,10 +96,12 @@ def initialize_supabase(admin_password=""):
         admin_user.last_name = 'Mtambo'
         admin_user.email = 'monde@mtamboholdings.com'
         admin_user.is_staff = True
-        if resolved_password:
-            admin_user.set_password(resolved_password)
+        admin_user.is_superuser = True
+        if explicit_password:
+            admin_user.set_password(explicit_password)
+            print(f"✓ Updated master password from explicit configuration")
         admin_user.save()
-        print(f"✓ Updated master user: {admin_user.username} ({admin_user.first_name} {admin_user.last_name})")
+        print(f"✓ Master user ready: {admin_user.username} ({admin_user.first_name} {admin_user.last_name})")
 
     # Link Profile to Organization
     profile, _ = UserProfile.objects.get_or_create(user=admin_user)
