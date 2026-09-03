@@ -83,7 +83,7 @@ def initialize_supabase(admin_password=""):
         initial_password = explicit_password or secrets.token_urlsafe(16)
         admin_user = User.objects.create_user(
             username='adminluxury',
-            email='monde@mtamboholdings.com',
+            email='MondeM@mtamboholdings.dev',
             password=initial_password,
             first_name='Monde',
             last_name='Mtambo',
@@ -94,7 +94,7 @@ def initialize_supabase(admin_password=""):
     else:
         admin_user.first_name = 'Monde'
         admin_user.last_name = 'Mtambo'
-        admin_user.email = 'monde@mtamboholdings.com'
+        admin_user.email = 'MondeM@mtamboholdings.dev'
         admin_user.is_staff = True
         admin_user.is_superuser = True
         if explicit_password:

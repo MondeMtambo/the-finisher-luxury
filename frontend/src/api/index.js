@@ -11,27 +11,9 @@ const api = axios.create({
   }
 })
 
-// ─── Server Wake-Up Banner ───
-let wakeUpBanner = null
-function showWakeUpBanner() {
-  if (wakeUpBanner) return
-  wakeUpBanner = document.createElement('div')
-  wakeUpBanner.id = 'server-wakeup-banner'
-  wakeUpBanner.innerHTML = `
-    <div style="position:fixed;top:0;left:0;right:0;z-index:99999;background:linear-gradient(135deg,#1e3a5f,#0f172a);color:#93c5fd;padding:12px 20px;text-align:center;font-size:14px;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:10px;box-shadow:0 2px 12px rgba(0,0,0,0.4)">
-      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#60a5fa" stroke-width="2" style="animation:spin 1s linear infinite"><circle cx="12" cy="12" r="10" stroke-dasharray="30 70"/></svg>
-      <span>Server is waking up — this may take up to 60 seconds on the first load...</span>
-    </div>
-    <style>@keyframes spin{to{transform:rotate(360deg)}}</style>
-  `
-  document.body.appendChild(wakeUpBanner)
-}
-function hideWakeUpBanner() {
-  if (wakeUpBanner) {
-    wakeUpBanner.remove()
-    wakeUpBanner = null
-  }
-}
+// ─── Server Wake-Up Banner (Disabled) ───
+function showWakeUpBanner() {}
+function hideWakeUpBanner() {}
 
 // ─── Retry Logic for Cold Starts ───
 const MAX_RETRIES = 2
@@ -201,7 +183,7 @@ api.interceptors.response.use(
 
       error.message = message
     } else if (error.request) {
-      error.message = 'Server is starting up — please wait a moment and try again'
+      error.message = 'Unable to reach the server. Please check your connection or try again.'
     }
 
     return Promise.reject(error)
