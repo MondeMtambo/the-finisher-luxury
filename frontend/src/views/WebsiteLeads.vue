@@ -175,7 +175,7 @@ export default {
   computed: {
     apiBase() {
       const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
-      return isLocal ? 'http://localhost:8000/api' : 'https://the-finisher-luxury-be.fly.dev/api';
+      return isLocal ? 'http://localhost:8000/api' : 'https://the-finisher-luxury-api.onrender.com/api';
     },
     token() {
       return localStorage.getItem('thefinisher_access_token');

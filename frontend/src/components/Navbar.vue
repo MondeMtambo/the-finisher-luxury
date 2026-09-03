@@ -496,7 +496,7 @@ export default {
         addIntent(['help', 'support', 'tutorial', 'guide', 'how to'], '/help', '❓', 'Help Center', 'AI Navigation')
 
         const token = localStorage.getItem('thefinisher_access_token');
-        const apiBase = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:8000/api' : 'https://the-finisher-luxury-be.fly.dev/api';
+        const apiBase = (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') ? 'http://localhost:8000/api' : 'https://the-finisher-luxury-api.onrender.com/api';
         
         const fetchResource = async (endpoint) => {
           try {

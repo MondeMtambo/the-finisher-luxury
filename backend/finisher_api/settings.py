@@ -30,8 +30,7 @@ DEBUG = config('DEBUG', default=False, cast=bool)
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
-    'the-finisher-luxury-be.onrender.com',
-    'the-finisher-luxury-be.fly.dev',
+    'the-finisher-luxury-api.onrender.com',
     '.onrender.com',
     'thefinishercrm.tech',
     'www.thefinishercrm.tech',
