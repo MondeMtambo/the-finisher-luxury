@@ -99,9 +99,8 @@ def initialize_supabase(admin_password=""):
         admin_user.last_name = 'Mtambo'
         admin_user.email = 'monde@mtamboholdings.com'
         admin_user.is_staff = True
-        admin_user.is_superuser = True
-        if admin_password:
-            admin_user.set_password(admin_password)
+        if resolved_password:
+            admin_user.set_password(resolved_password)
         admin_user.save()
         print(f"✓ Updated master user: {admin_user.username} ({admin_user.first_name} {admin_user.last_name})")
 

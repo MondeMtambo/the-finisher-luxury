@@ -45,6 +45,9 @@ const resolveBase = () => {
       if (stored) {
         if (stored === 'local') {
           base = 'http://localhost:8000/api'
+        } else if (stored.includes('fly.dev') || stored.endsWith('the-finisher-luxury.onrender.com') || stored.endsWith('the-finisher-luxury.onrender.com/api')) {
+          localStorage.removeItem('API_BASE_OVERRIDE')
+          base = PRODUCTION_BACKEND
         } else if (/^https?:\/\//i.test(stored)) {
           base = withApiPath(stored)
         }
