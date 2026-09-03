@@ -4,6 +4,9 @@ set -euo pipefail
 echo "[entrypoint] Running Django migrations..."
 python manage.py migrate --noinput || { echo "Migration failed"; exit 1; }
 
+echo "[entrypoint] Provisioning Supabase master tables and executive account..."
+python seed_supabase.py || { echo "Seed step notice: proceeding"; }
+
 echo "[entrypoint] Collecting static files..."
 python manage.py collectstatic --noinput || { echo "Collectstatic failed"; exit 1; }
 

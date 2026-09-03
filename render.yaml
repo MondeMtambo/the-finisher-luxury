@@ -6,7 +6,7 @@ services:
     plan: free
     rootDir: backend
     buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
-    startCommand: gunicorn finisher_api.wsgi:application
+    startCommand: python manage.py migrate --noinput && python seed_supabase.py && gunicorn finisher_api.wsgi:application
     autoDeploy: true
     envVars:
       - key: PYTHON_VERSION
