@@ -76,12 +76,18 @@ def initialize_supabase(admin_password=""):
 
     # 3. Create or Update Master Admin Account (Monde Mtambo)
     print("\n[3/3] Setting up Master Executive Account...")
+    import secrets
+    resolved_password = admin_password or os.environ.get('DEFAULT_ADMIN_PASSWORD')
+    if not resolved_password:
+        resolved_password = secrets.token_urlsafe(16)
+        print(f"  [Security] Generated dynamic master executive password: {resolved_password}")
+
     admin_user = User.objects.filter(username='adminluxury').first()
     if not admin_user:
         admin_user = User.objects.create_user(
             username='adminluxury',
             email='monde@mtamboholdings.com',
-            password=admin_password or 'LuxuryAdmin@2026!',
+            password=resolved_password,
             first_name='Monde',
             last_name='Mtambo',
             is_staff=True,
