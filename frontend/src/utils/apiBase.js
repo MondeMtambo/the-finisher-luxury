@@ -1,7 +1,7 @@
 // Utility for determining the API base URL consistently across the app
 
-// Hardcoded production backend — single source of truth
-const PRODUCTION_BACKEND = 'https://the-finisher-luxury-be.fly.dev/api'
+// Hardcoded production backend — Render backend
+const PRODUCTION_BACKEND = 'https://the-finisher-luxury.onrender.com/api'
 
 const ensureProtocol = (url) => {
   if (!url) return url
@@ -29,9 +29,9 @@ const resolveBase = () => {
   if (isLocalHost) {
     base = 'http://localhost:8000/api'
   } else {
-    // In production, ALWAYS use the hardcoded backend URL
-    // VITE_API_URL is ignored in production to prevent misconfiguration
-    base = PRODUCTION_BACKEND
+    // In production, use VITE_API_URL if injected, otherwise default to Render backend
+    const envApi = typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL
+    base = envApi ? withApiPath(envApi) : PRODUCTION_BACKEND
   }
 
   if (isBrowser) {
