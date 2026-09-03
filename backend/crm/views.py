@@ -14,8 +14,9 @@ from django.utils import timezone
 from datetime import timedelta, datetime
 import csv
 import io
-from .models import Contact, Company, Deal, ActivityLog, UserProfile, DeletedUserLog, Ticket, Notification, Asset, AssetCategory, Division, OnboardingLog, OffboardingRequest, Product, LineItem, EmailTemplate, EmailCampaign, CampaignRecipient, Workflow, WorkflowAction, WorkflowLog, DashboardWidget, DashboardLayout, WebsiteLead
+from .models import Contact, Company, Deal, ActivityLog, UserProfile, DeletedUserLog, Ticket, Notification, Asset, AssetCategory, Division, OnboardingLog, OffboardingRequest, Product, LineItem, EmailTemplate, EmailCampaign, CampaignRecipient, Workflow, WorkflowAction, WorkflowLog, DashboardWidget, DashboardLayout, WebsiteLead, SecurityAuditTrail
 from .utils import OWNER_ADMIN_USERNAME, is_owner_admin_user, normalize_company_name
+from .audit_utils import record_audit_event
 from .whatsapp import send_lead_welcome_message
 from .serializers import (
     ContactSerializer, 
@@ -33,6 +34,7 @@ from .serializers import (
     OffboardingRequestSerializer,
     OffboardingRequestCreateSerializer,
     ProductSerializer,
+    SecurityAuditTrailSerializer,
     LineItemSerializer,
     EmailTemplateSerializer,
     EmailCampaignSerializer,
@@ -3274,3 +3276,88 @@ class BillingWebhookView(APIView):
             return Response({'status': 'acknowledged'})
         except PaymentTransaction.DoesNotExist:
             return Response({'error': 'Transaction not found'}, status=404)
+
+
+class SecurityAuditTrailViewSet(viewsets.ReadOnlyModelViewSet):
+    """
+    Enterprise Security Audit Trail ViewSet (POPIA Section 19 & ISO 27001).
+    Restricted to Security Administrators and System Owners.
+    """
+    serializer_class = SecurityAuditTrailSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        user = self.request.user
+        if not (user.is_superuser or is_owner_admin_user(user) or (getattr(user, 'profile', None) and user.profile.is_admin)):
+            raise PermissionDenied("Access restricted to verified Security Administrators under POPIA regulations.")
+
+        qs = SecurityAuditTrail.objects.select_related('user', 'organization').all()
+
+        if not (user.is_superuser or is_owner_admin_user(user)):
+            profile = getattr(user, 'profile', None)
+            if profile and profile.organization:
+                qs = qs.filter(organization=profile.organization)
+            else:
+                qs = qs.filter(user=user)
+
+        event_type = self.request.query_params.get('event_type')
+        if event_type:
+            qs = qs.filter(event_type=event_type)
+
+        severity = self.request.query_params.get('severity')
+        if severity:
+            qs = qs.filter(severity=severity.upper())
+
+        search = self.request.query_params.get('search')
+        if search:
+            qs = qs.filter(
+                Q(description__icontains=search) |
+                Q(username_attempted__icontains=search) |
+                Q(ip_address__icontains=search)
+            )
+
+        return qs[:250]
+
+    @action(detail=False, methods=['get'], url_path='export-compliance-log')
+    def export_compliance_log(self, request):
+        """
+        Export formal POPIA Compliance Audit Log CSV.
+        """
+        user = request.user
+        if not (user.is_superuser or is_owner_admin_user(user)):
+            raise PermissionDenied("Only System Owner can export POPIA compliance logs.")
+
+        logs = self.get_queryset()
+
+        import csv
+        from django.http import HttpResponse
+        response = HttpResponse(content_type='text/csv')
+        response['Content-Disposition'] = f'attachment; filename="POPIA_Audit_Trail_{timezone.now().strftime("%Y%m%d_%H%M%S")}.csv"'
+
+        writer = csv.writer(response)
+        writer.writerow(['Audit ID', 'Timestamp (UTC)', 'Severity', 'Event Type', 'Actor', 'IP Address', 'User Agent', 'Description'])
+
+        for log in logs:
+            actor = log.user.username if log.user else (log.username_attempted or 'Anonymous')
+            writer.writerow([
+                str(log.id),
+                log.timestamp.strftime('%Y-%m-%d %H:%M:%S UTC'),
+                log.severity,
+                log.event_type,
+                actor,
+                log.ip_address or 'N/A',
+                (log.user_agent or 'N/A')[:100],
+                log.description,
+            ])
+
+        # Record this export in the audit log itself (Non-repudiation!)
+        record_audit_event(
+            'DATA_EXPORT',
+            f"POPIA Compliance Audit Log exported by {user.username} ({logs.count()} records)",
+            user=user,
+            request=request,
+            severity='INFO',
+            metadata={'export_type': 'POPIA_AUDIT_CSV', 'record_count': logs.count()}
+        )
+
+        return response

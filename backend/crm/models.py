@@ -1455,3 +1455,53 @@ class DashboardLayout(models.Model):
 
     def __str__(self):
         return f"{self.user.username} - {self.name}"
+
+
+class SecurityAuditTrail(models.Model):
+    """
+    Enterprise Security Audit Trail for THE FINISHER LUXURY.
+    POPIA Section 19 & ISO 27001 compliant non-repudiation logging.
+    Records authentication events, data exports, privilege mutations, and security violations.
+    """
+    EVENT_TYPES = [
+        ('AUTH_LOGIN_SUCCESS', 'Login Success'),
+        ('AUTH_LOGIN_FAILED', 'Login Failed'),
+        ('AUTH_LOGOUT', 'Logout'),
+        ('MFA_CHALLENGE', 'MFA Verification Challenge'),
+        ('MFA_VERIFIED', 'MFA Verification Success'),
+        ('DATA_EXPORT', 'POPIA Data Export (CSV/PDF)'),
+        ('DATA_DELETE', 'Record Deletion / Purge'),
+        ('PRIVILEGE_CHANGE', 'User Role / Plan Mutation'),
+        ('SECURITY_POLICY_VIOLATION', 'Security Policy Violation'),
+    ]
+
+    SEVERITY_LEVELS = [
+        ('INFO', 'Informational'),
+        ('WARNING', 'Warning / Anomaly'),
+        ('CRITICAL', 'Critical Security Alert'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='security_audit_logs')
+    username_attempted = models.CharField(max_length=150, blank=True)
+    organization = models.ForeignKey(Organization, on_delete=models.SET_NULL, null=True, blank=True, related_name='security_audit_logs')
+    event_type = models.CharField(max_length=50, choices=EVENT_TYPES, db_index=True)
+    severity = models.CharField(max_length=20, choices=SEVERITY_LEVELS, default='INFO', db_index=True)
+    description = models.TextField()
+    ip_address = models.GenericIPAddressField(null=True, blank=True, db_index=True)
+    user_agent = models.TextField(blank=True)
+    metadata = models.JSONField(default=dict, blank=True)
+    timestamp = models.DateTimeField(default=timezone.now, db_index=True)
+
+    class Meta:
+        verbose_name = 'Security Audit Trail'
+        verbose_name_plural = 'Security Audit Trails'
+        ordering = ['-timestamp']
+        indexes = [
+            models.Index(fields=['event_type', '-timestamp']),
+            models.Index(fields=['ip_address', '-timestamp']),
+        ]
+
+    def __str__(self):
+        actor = self.user.username if self.user else (self.username_attempted or 'Anonymous')
+        return f"[{self.severity}] {self.event_type} - {actor} ({self.timestamp:%Y-%m-%d %H:%M:%S})"

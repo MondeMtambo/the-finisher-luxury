@@ -25,6 +25,7 @@ router.register(r'workflows', views.WorkflowViewSet, basename='workflow')
 router.register(r'dashboard-widgets', views.DashboardWidgetViewSet, basename='dashboardwidget')
 router.register(r'dashboard-layouts', views.DashboardLayoutViewSet, basename='dashboardlayout')
 router.register(r'website-leads', views.WebsiteLeadViewSet, basename='websitelead')
+router.register(r'audit-trail', views.SecurityAuditTrailViewSet, basename='audittrail')
 
 urlpatterns = [
     path('', views.api_overview, name='api_overview'),

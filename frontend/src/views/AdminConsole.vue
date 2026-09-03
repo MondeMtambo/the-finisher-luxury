@@ -205,6 +205,100 @@
              </div>
          </div>
       </div>
+
+      <!-- POPIA Section 19 Enterprise Security Audit Trail -->
+      <div class="section-container audit-deck-container">
+        <div class="section-header-flex">
+          <div>
+            <div class="badge-popia">POPIA SECTION 19 SAFEGUARD</div>
+            <h2 class="section-title">Institutional Security Audit Trail</h2>
+            <p class="text-muted">Cryptographic, immutable logging of all logins, data exports, and administrative mutations.</p>
+          </div>
+          <div class="audit-actions">
+            <button class="btn btn-secondary btn-sm" @click="fetchAuditLogs" :disabled="loadingAudit">
+              🔄 {{ loadingAudit ? 'Refreshing...' : 'Refresh Logs' }}
+            </button>
+            <button class="btn btn-gold btn-sm" @click="exportPopiaCert">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+              Export POPIA Audit Log (CSV)
+            </button>
+          </div>
+        </div>
+
+        <!-- Audit Filters -->
+        <div class="audit-filter-bar">
+          <div class="filter-group">
+            <label>Event Type:</label>
+            <select v-model="auditFilterEvent" @change="fetchAuditLogs" class="form-input form-input-sm">
+              <option value="">All Security Events</option>
+              <option value="AUTH_LOGIN_SUCCESS">Login Success</option>
+              <option value="AUTH_LOGIN_FAILED">Login Failed</option>
+              <option value="AUTH_LOGOUT">Logout</option>
+              <option value="MFA_VERIFIED">MFA Verified</option>
+              <option value="DATA_EXPORT">POPIA Data Export</option>
+              <option value="PRIVILEGE_CHANGE">Privilege / Plan Change</option>
+              <option value="SECURITY_POLICY_VIOLATION">Policy Violation</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label>Severity:</label>
+            <select v-model="auditFilterSeverity" @change="fetchAuditLogs" class="form-input form-input-sm">
+              <option value="">All Severities</option>
+              <option value="INFO">Informational</option>
+              <option value="WARNING">Warning</option>
+              <option value="CRITICAL">Critical Alert</option>
+            </select>
+          </div>
+          <div class="filter-group flex-1">
+            <label>Search:</label>
+            <input type="text" v-model="auditSearch" @input="debounceAuditSearch" placeholder="Search IP, actor, or description..." class="form-input form-input-sm" />
+          </div>
+        </div>
+
+        <!-- Audit Table -->
+        <div class="table-container">
+          <div v-if="loadingAudit" class="audit-loading">
+            <div class="spinner"></div>
+            <span>Fetching encrypted audit records from Supabase...</span>
+          </div>
+          <table v-else-if="auditLogs.length > 0" class="admin-table">
+            <thead>
+              <tr>
+                <th>Timestamp (UTC)</th>
+                <th>Severity</th>
+                <th>Event Type</th>
+                <th>Actor / User</th>
+                <th>IP Address</th>
+                <th>Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="log in auditLogs" :key="log.id">
+                <td class="text-sm font-mono whitespace-nowrap">{{ formatAuditTimestamp(log.timestamp) }}</td>
+                <td>
+                  <span :class="`badge-audit badge-${(log.severity || 'info').toLowerCase()}`">{{ log.severity }}</span>
+                </td>
+                <td>
+                  <span class="event-badge">{{ log.event_type_display || log.event_type }}</span>
+                </td>
+                <td>
+                  <strong>{{ log.actor }}</strong>
+                  <div v-if="log.organization_name" class="text-xs text-muted">{{ log.organization_name }}</div>
+                </td>
+                <td class="font-mono text-sm">
+                  <span class="ip-pill">{{ log.ip_address || 'Internal' }}</span>
+                </td>
+                <td class="text-sm audit-desc">
+                  {{ log.description }}
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div v-else class="audit-empty">
+            <p>🛡️ No audit events matching current filters. All systems secure.</p>
+          </div>
+        </div>
+      </div>
     </template>
 
     <!-- MODALS -->
@@ -375,7 +469,14 @@ export default {
       quickDeleteUser: null,
       quickDeleteReason: '',
       quickDeleteCustomReason: '',
-      filteredDeleteUsers: []
+      filteredDeleteUsers: [],
+      // POPIA Audit Trail
+      auditLogs: [],
+      loadingAudit: false,
+      auditFilterEvent: '',
+      auditFilterSeverity: '',
+      auditSearch: '',
+      auditDebounceTimer: null
     }
   },
   computed: {
@@ -419,6 +520,7 @@ export default {
         this.userSummary = usersRes.summary || this.userSummary;
         this.clientsEmployeesData = ceRes.companies || [];
         this.clientEmployeeStats = ceRes.stats || this.clientEmployeeStats;
+        await this.fetchAuditLogs();
       } catch (err) {
         this.error = err.message;
         this.dispatchEvent('show-toast', { message: err.message, type: 'error' });
@@ -434,6 +536,62 @@ export default {
         const res = await this.fetchApi('/admin/clients-employees/', { method: 'POST', body: JSON.stringify({ action, ...payload }) });
         await this.loadAllData();
         return res;
+    },
+    // POPIA Audit Trail Methods
+    async fetchAuditLogs() {
+      this.loadingAudit = true;
+      try {
+        let endpoint = '/audit-trail/?';
+        if (this.auditFilterEvent) endpoint += `event_type=${encodeURIComponent(this.auditFilterEvent)}&`;
+        if (this.auditFilterSeverity) endpoint += `severity=${encodeURIComponent(this.auditFilterSeverity)}&`;
+        if (this.auditSearch) endpoint += `search=${encodeURIComponent(this.auditSearch)}&`;
+        const res = await this.fetchApi(endpoint);
+        this.auditLogs = Array.isArray(res) ? res : (res.results || []);
+      } catch (e) {
+        console.warn('Failed to load audit logs:', e);
+      } finally {
+        this.loadingAudit = false;
+      }
+    },
+    debounceAuditSearch() {
+      clearTimeout(this.auditDebounceTimer);
+      this.auditDebounceTimer = setTimeout(() => {
+        this.fetchAuditLogs();
+      }, 350);
+    },
+    formatAuditTimestamp(ts) {
+      if (!ts) return '—';
+      try {
+        const d = new Date(ts);
+        return d.toISOString().replace('T', ' ').substring(0, 19);
+      } catch (_) {
+        return ts;
+      }
+    },
+    exportPopiaCert() {
+      const url = `${this.apiBase}/audit-trail/export-compliance-log/`;
+      const token = this.token;
+      fetch(url, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      .then(res => {
+        if (!res.ok) throw new Error('Export failed');
+        return res.blob();
+      })
+      .then(blob => {
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.download = `POPIA_Audit_Trail_${new Date().toISOString().substring(0,10)}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(downloadUrl);
+        setTimeout(() => this.fetchAuditLogs(), 500);
+      })
+      .catch(err => {
+        alert('Could not export POPIA Audit log: ' + err.message);
+      });
     },
     // Formatting Helpers
     formatDate(dateStr) {
@@ -648,4 +806,122 @@ export default {
 .suggestion-item { padding: 0.75rem; border-bottom: 1px solid rgba(255,255,255,0.05); cursor: pointer; transition: background 0.2s; }
 .suggestion-item:hover, .suggestion-item.selected { background: rgba(212, 175, 55, 0.1); }
 .selected-user-box { background: rgba(239, 68, 68, 0.05); border: 1px solid rgba(239, 68, 68, 0.3); padding: 1rem; border-radius: 8px; }
+
+/* POPIA Audit Trail Deck */
+.badge-popia {
+  display: inline-block;
+  font-size: 0.65rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: rgba(212, 175, 55, 0.15);
+  color: #D4AF37;
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  padding: 2px 8px;
+  border-radius: 4px;
+  margin-bottom: 0.5rem;
+}
+.section-header-flex {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+.audit-actions {
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+.btn-gold {
+  background: linear-gradient(135deg, #D4AF37 0%, #AA771C 100%);
+  color: #000;
+  font-weight: 700;
+  border: none;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  cursor: pointer;
+  border-radius: 6px;
+  padding: 0.5rem 1rem;
+  transition: all 0.2s ease;
+}
+.btn-gold:hover {
+  filter: brightness(1.15);
+  box-shadow: 0 0 12px rgba(212, 175, 55, 0.4);
+}
+.audit-filter-bar {
+  display: flex;
+  gap: 1rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+  flex-wrap: wrap;
+  align-items: center;
+}
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  color: #9ca3af;
+}
+.filter-group.flex-1 { flex: 1; min-width: 220px; }
+.form-input-sm {
+  padding: 0.35rem 0.65rem;
+  font-size: 0.8125rem;
+  height: auto;
+  border-radius: 4px;
+}
+.badge-audit {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+.badge-info {
+  background: rgba(59, 130, 246, 0.15);
+  color: #60a5fa;
+  border: 1px solid rgba(59, 130, 246, 0.3);
+}
+.badge-warning {
+  background: rgba(245, 158, 11, 0.15);
+  color: #fbbf24;
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}
+.badge-critical {
+  background: rgba(239, 68, 68, 0.2);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.4);
+}
+.event-badge {
+  font-size: 0.75rem;
+  color: #e5e7eb;
+  font-weight: 600;
+}
+.ip-pill {
+  background: rgba(255, 255, 255, 0.05);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  color: #d1d5db;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.audit-desc {
+  color: #d1d5db;
+  max-width: 420px;
+  line-height: 1.4;
+}
+.audit-loading, .audit-empty {
+  padding: 2.5rem;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 0.875rem;
+}
 </style>

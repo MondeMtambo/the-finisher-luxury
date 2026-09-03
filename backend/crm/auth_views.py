@@ -25,6 +25,7 @@ from .auth_serializers import (
 from .tier_limits import LUXURY_TIER_LIMITS, can_add_user, get_remaining_user_slots
 from .utils import get_client_ip, is_trusted_ip, MAX_ACCOUNTS_PER_IP, is_owner_admin_user
 from .models import Notification
+from .audit_utils import record_audit_event
 import os
 
 
@@ -105,6 +106,13 @@ class LoginView(TokenObtainPairView):
                     profile.save()
 
                     if user.profile.is_banned:
+                        record_audit_event(
+                            'SECURITY_POLICY_VIOLATION',
+                            f"Blocked authentication attempt for banned user: {user.username}",
+                            user=user,
+                            request=request,
+                            severity='WARNING'
+                        )
                         return Response({
                             'error': 'Account banned',
                             'message': f'Your account has been banned. Reason: {user.profile.ban_reason}',
@@ -128,6 +136,13 @@ class LoginView(TokenObtainPairView):
                         response.data.pop('refresh', None)
 
                         email_status = 'sent' if success else 'failed'
+                        record_audit_event(
+                            'MFA_CHALLENGE',
+                            f"MFA verification challenge dispatched to {user.email} (Delivery: {email_status})",
+                            user=user,
+                            request=request,
+                            severity='INFO'
+                        )
                         return Response({
                             'requires_mfa': True,
                             'user_id': user.id,
@@ -153,9 +168,25 @@ class LoginView(TokenObtainPairView):
                         pass
 
                     response.data['user'] = UserSerializer(user).data
+                    record_audit_event(
+                        'AUTH_LOGIN_SUCCESS',
+                        f"Executive VIP login verified for {user.username} ({getattr(user.profile, 'company_name', 'No Company')})",
+                        user=user,
+                        request=request,
+                        severity='INFO'
+                    )
                 
             except User.DoesNotExist:
                 pass
+        else:
+            attempted_user = (request.data.get('username') or '').strip()
+            record_audit_event(
+                'AUTH_LOGIN_FAILED',
+                f"Failed authentication attempt for username '{attempted_user}'",
+                username_attempted=attempted_user,
+                request=request,
+                severity='WARNING'
+            )
         
         return response
 
@@ -212,12 +243,26 @@ class VerifyMFAView(APIView):
         success, message = verify_mfa_code(user, mfa_code)
         
         if not success:
+            record_audit_event(
+                'AUTH_LOGIN_FAILED',
+                f"MFA verification code failed for {getattr(user, 'username', 'Unknown')}: {message}",
+                user=user,
+                request=request,
+                severity='WARNING'
+            )
             return Response({
                 'error': 'MFA verification failed',
                 'message': message
             }, status=status.HTTP_401_UNAUTHORIZED)
 
         refresh = RefreshToken.for_user(user)
+        record_audit_event(
+            'MFA_VERIFIED',
+            f"MFA verification successful for {user.username}",
+            user=user,
+            request=request,
+            severity='INFO'
+        )
         
         return Response({
             'access': str(refresh.access_token),
@@ -477,8 +522,14 @@ class LogoutView(APIView):
 
     def post(self, request):
         try:
-
-
+            if request.user and request.user.is_authenticated:
+                record_audit_event(
+                    'AUTH_LOGOUT',
+                    f"Session terminated for {request.user.username}",
+                    user=request.user,
+                    request=request,
+                    severity='INFO'
+                )
             return Response({
                 'message': 'Logged out successfully!'
             }, status=status.HTTP_200_OK)

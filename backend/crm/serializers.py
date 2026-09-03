@@ -3,7 +3,7 @@ from .models import (Contact, Company, Deal, ActivityLog, Ticket, Notification, 
                      Asset, AssetCategory, Division, OnboardingLog, OffboardingRequest,
                      Product, LineItem, EmailTemplate, EmailCampaign, CampaignRecipient,
                      Workflow, WorkflowAction, WorkflowLog, DashboardWidget, DashboardLayout,
-                     WebsiteLead)
+                     WebsiteLead, SecurityAuditTrail)
 from django.contrib.auth.models import User
 from django.core.validators import validate_email
 import phonenumbers
@@ -781,3 +781,25 @@ class DashboardLayoutSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'is_default', 'widget_config',
                   'created_at', 'updated_at']
         read_only_fields = ['id', 'created_at', 'updated_at']
+
+
+class SecurityAuditTrailSerializer(serializers.ModelSerializer):
+    actor = serializers.SerializerMethodField()
+    event_type_display = serializers.CharField(source='get_event_type_display', read_only=True)
+    organization_name = serializers.CharField(source='organization.name', read_only=True, default='')
+
+    class Meta:
+        model = SecurityAuditTrail
+        fields = [
+            'id', 'user', 'actor', 'username_attempted', 'organization',
+            'organization_name', 'event_type', 'event_type_display',
+            'severity', 'description', 'ip_address', 'user_agent',
+            'metadata', 'timestamp'
+        ]
+        read_only_fields = fields
+
+    def get_actor(self, obj):
+        if obj.user:
+            full = f"{obj.user.first_name} {obj.user.last_name}".strip()
+            return full or obj.user.username
+        return obj.username_attempted or 'Anonymous / System'
