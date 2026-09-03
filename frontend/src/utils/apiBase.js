@@ -1,7 +1,7 @@
 // Utility for determining the API base URL consistently across the app
 
-// Hardcoded production backend — Render backend
-const PRODUCTION_BACKEND = 'https://the-finisher-luxury.onrender.com/api'
+// Hardcoded production backend — Render Web Service backend
+const PRODUCTION_BACKEND = 'https://the-finisher-luxury-api.onrender.com/api'
 
 const ensureProtocol = (url) => {
   if (!url) return url
