@@ -53,4 +53,9 @@ urlpatterns = [
     path('api/admin/website-leads/inbox/', views.AdminWebsiteLeadInboxView.as_view(), name='admin_website_leads_inbox'),
     path('api/admin/users/', views.UserManagementView.as_view(), name='user_management'),
     path('api/admin/clients-employees/', views.ClientEmployeeManagementView.as_view(), name='client_employee_management'),
+
+    # Billing & 14-Day VIP Trial Management
+    path('api/billing/status/', views.OrganizationBillingStatusView.as_view(), name='billing_status'),
+    path('api/billing/checkout/', views.CreateCheckoutSessionView.as_view(), name='billing_checkout'),
+    path('api/billing/webhook/', views.BillingWebhookView.as_view(), name='billing_webhook'),
 ]

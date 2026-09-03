@@ -99,11 +99,12 @@ import re as _re
 DATABASE_URL = _re.sub(r'[&?]channel_binding=[^&]*', '', DATABASE_URL)
 
 if DATABASE_URL:
+    is_cloud_db = any(domain in DATABASE_URL for domain in ['neon.tech', 'supabase.co', 'supabase.com', 'pooler.supabase.com']) or not DEBUG
     DATABASES = {
         'default': dj_database_url.parse(
             DATABASE_URL,
             conn_max_age=600,
-            ssl_require='neon.tech' in DATABASE_URL,
+            ssl_require=is_cloud_db,
         )
     }
 else:
@@ -173,10 +174,20 @@ STATIC_ROOT = BASE_DIR / 'staticfiles'
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 # Frontend URL (for password reset links)
-FRONTEND_URL = config('FRONTEND_URL', default='http://localhost:3000')
+FRONTEND_URL = config('FRONTEND_URL', default='https://thefinisher.tech')
 
-# CORS Settings - Explicitly allow all origins and methods
-CORS_ALLOW_ALL_ORIGINS = True
+# CORS Settings - Strict domain whitelisting (POPIA Sec 19)
+CORS_ALLOW_ALL_ORIGINS = DEBUG
+CORS_ALLOWED_ORIGINS = [
+    'https://thefinisher.tech',
+    'https://www.thefinisher.tech',
+    'https://thefinishercrm.tech',
+    'https://www.thefinishercrm.tech',
+    'http://localhost:3000',
+    'http://localhost:5173',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:5173',
+]
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = [
     'accept',
@@ -205,8 +216,8 @@ REST_FRAMEWORK = {
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        # Default to AllowAny; secure endpoints specify IsAuthenticated explicitly
-        'rest_framework.permissions.AllowAny',
+        # Default to IsAuthenticated for zero-trust client data protection; public endpoints specify AllowAny explicitly
+        'rest_framework.permissions.IsAuthenticated',
     ],
     'DEFAULT_RENDERER_CLASSES': [
         'rest_framework.renderers.JSONRenderer',
@@ -223,15 +234,15 @@ SIMPLE_JWT = {
     'AUTH_TOKEN_CLASSES': ('rest_framework_simplejwt.tokens.AccessToken',),
 }
 
-# Email Configuration (Gmail SMTP for MFA OTPs)
+# Email Configuration (thefinisher.tech Domain Gateway)
 EMAIL_BACKEND = config('EMAIL_BACKEND', default='django.core.mail.backends.smtp.EmailBackend')
 EMAIL_HOST = config('EMAIL_HOST', default='smtp.gmail.com')
 EMAIL_PORT = config('EMAIL_PORT', default=587, cast=int)
 EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=True, cast=bool)
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
-EMAIL_TIMEOUT = 15  # seconds - give Gmail SMTP enough time from cloud hosts
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='no-reply@example.com')
+EMAIL_TIMEOUT = 15
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='security@thefinisher.tech')
 
 # Public website lead ownership settings
 PUBLIC_LEAD_OWNER_EMAIL = config('PUBLIC_LEAD_OWNER_EMAIL', default='').strip()

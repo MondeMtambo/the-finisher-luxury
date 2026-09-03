@@ -107,12 +107,29 @@ class RegisterSerializer(serializers.ModelSerializer):
             profile.registration_ip = registration_ip
             profile.last_login_ip = registration_ip
 
-            if is_unlisted_company:
-                profile.payment_status = 'pending'  # Requires manual verification
-                profile.notes = f'[AUTO-FLAG] Unlisted company registration. Company: {company_name}. Requires manual verification.'
-            else:
-                profile.payment_status = 'paid'  # Known partner company
-            profile.trial_ends_at = None  # No trial needed
+            # Provision Tenant Organization with 14-Day VIP Trial
+            from .models import Organization, OrganizationSubscription
+            org, _ = Organization.objects.get_or_create(
+                name=company_name,
+                defaults={
+                    'subscription_tier': 'trial',
+                    'trial_start_date': timezone.now(),
+                    'trial_end_date': timezone.now() + timedelta(days=14),
+                    'is_active': True,
+                }
+            )
+            profile.organization = org
+            OrganizationSubscription.objects.get_or_create(
+                organization=org,
+                defaults={
+                    'status': 'trial',
+                    'current_period_start': timezone.now(),
+                    'current_period_end': timezone.now() + timedelta(days=14),
+                }
+            )
+
+            profile.payment_status = 'trial'
+            profile.trial_ends_at = timezone.now() + timedelta(days=14)
 
             profile.job_title = job_title
             profile.industry = industry
@@ -129,10 +146,14 @@ class RegisterSerializer(serializers.ModelSerializer):
             profile.role = 'admin'
             profile.save()
 
-            # Ensure Company object exists for this user and company_name
+            # Ensure Company object exists for this user and organization
             from .models import Company
             if company_name:
-                Company.objects.get_or_create(user=user, name=company_name)
+                Company.objects.get_or_create(
+                    user=user, 
+                    name=company_name,
+                    defaults={'organization': org}
+                )
         return user
 
 

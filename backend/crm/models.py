@@ -6,9 +6,131 @@ from django.db.models.signals import post_save
 from django.dispatch import receiver
 from django.utils import timezone
 from datetime import timedelta, datetime
+import uuid
 import phonenumbers
 from phonenumbers import NumberParseException
 import random
+
+class Organization(models.Model):
+    """
+    Core Tenant Model for THE FINISHER LUXURY.
+    Every account, contact, deal, and asset strictly belongs to an Organization.
+    Provides complete multi-tenant client data protection (POPIA Section 19).
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=200, unique=True, help_text="Official organization / business entity name")
+    slug = models.SlugField(max_length=220, unique=True, blank=True)
+    subscription_tier = models.CharField(max_length=50, choices=[
+        ('trial', '14-Day VIP Trial'),
+        ('luxury', 'The Finisher Luxury Private OS'),
+        ('enterprise', 'Enterprise Custom Retainer'),
+    ], default='trial')
+    trial_start_date = models.DateTimeField(default=timezone.now)
+    trial_end_date = models.DateTimeField(blank=True, null=True)
+    is_active = models.BooleanField(default=True)
+    max_users = models.PositiveIntegerField(default=10)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Organization'
+        verbose_name_plural = 'Organizations'
+        ordering = ['-created_at']
+
+    def save(self, *args, **kwargs):
+        if not self.slug:
+            from django.utils.text import slugify
+            base_slug = slugify(self.name) or 'org'
+            slug = base_slug
+            counter = 1
+            while Organization.objects.filter(slug=slug).exclude(pk=self.pk).exists():
+                slug = f"{base_slug}-{counter}"
+                counter += 1
+            self.slug = slug
+        if not self.trial_end_date:
+            self.trial_end_date = self.trial_start_date + timedelta(days=14)
+        super().save(*args, **kwargs)
+
+    @property
+    def is_trial_active(self):
+        if not self.trial_end_date:
+            return False
+        return timezone.now() <= self.trial_end_date
+
+    @property
+    def days_remaining_in_trial(self):
+        if not self.trial_end_date:
+            return 0
+        diff = self.trial_end_date - timezone.now()
+        return max(0, diff.days)
+
+    def __str__(self):
+        return f"{self.name} ({self.subscription_tier})"
+
+
+class SubscriptionPlan(models.Model):
+    """Available subscription tiers for The Finisher Luxury."""
+    name = models.CharField(max_length=100)
+    tier = models.CharField(max_length=50, unique=True)
+    price_cents = models.PositiveIntegerField(help_text="Price in cents (e.g. 1250000 = R12,500.00)")
+    currency = models.CharField(max_length=10, default='ZAR')
+    billing_period = models.CharField(max_length=20, choices=[
+        ('monthly', 'Monthly'),
+        ('annual', 'Annual Upfront (Negative Working Capital)'),
+    ], default='monthly')
+    features = models.JSONField(default=list, blank=True)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.name} - {self.currency} {self.price_cents / 100:.2f}/{self.billing_period}"
+
+
+class OrganizationSubscription(models.Model):
+    """Tracks active subscription and billing state per organization."""
+    STATUS_CHOICES = [
+        ('trial', 'Trial Period'),
+        ('active', 'Active Paid'),
+        ('past_due', 'Past Due'),
+        ('canceled', 'Canceled'),
+    ]
+    organization = models.OneToOneField(Organization, on_delete=models.CASCADE, related_name='subscription')
+    plan = models.ForeignKey(SubscriptionPlan, on_delete=models.SET_NULL, null=True, blank=True, related_name='subscriptions')
+    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='trial')
+    current_period_start = models.DateTimeField(default=timezone.now)
+    current_period_end = models.DateTimeField(blank=True, null=True)
+    cancel_at_period_end = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"{self.organization.name} - {self.status}"
+
+
+class PaymentTransaction(models.Model):
+    """Audit log of corporate payment transactions and EFT/card webhooks."""
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, related_name='transactions')
+    gateway = models.CharField(max_length=50, choices=[
+        ('payfast', 'PayFast (South Africa)'),
+        ('peach', 'Peach Payments'),
+        ('ozow', 'Ozow Instant EFT'),
+        ('stripe', 'Stripe (International)'),
+        ('manual_eft', 'Direct Corporate EFT'),
+    ], default='payfast')
+    transaction_reference = models.CharField(max_length=120, unique=True)
+    amount_cents = models.PositiveIntegerField()
+    currency = models.CharField(max_length=10, default='ZAR')
+    status = models.CharField(max_length=30, choices=[
+        ('pending', 'Pending'),
+        ('successful', 'Successful'),
+        ('failed', 'Failed'),
+    ], default='pending')
+    raw_payload = models.JSONField(default=dict, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"{self.transaction_reference} - {self.amount_cents/100} {self.currency} ({self.status})"
+
 
 class UserProfile(models.Model):
     """
@@ -79,6 +201,7 @@ class UserProfile(models.Model):
     ]
     
     user = models.OneToOneField(User, on_delete=models.CASCADE, related_name='profile')
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, null=True, blank=True, related_name='members', help_text="Tenant organization")
     tier = models.CharField(max_length=20, choices=TIER_CHOICES, default='luxury')
     role = models.CharField(max_length=20, choices=ROLE_CHOICES, default='user')
     phone = models.CharField(max_length=20, blank=True)
@@ -139,7 +262,9 @@ class UserProfile(models.Model):
     offboarded_at = models.DateTimeField(null=True, blank=True, help_text="When this employee was offboarded")
 
     mfa_enabled = models.BooleanField(default=True, help_text="Whether MFA is enabled for this user")
-    mfa_code = models.CharField(max_length=6, blank=True, null=True, help_text="Current OTP code (6 digits)")
+    mfa_code = models.CharField(max_length=6, blank=True, null=True, help_text="Current OTP code (6 digits - legacy)")
+    mfa_code_hash = models.CharField(max_length=128, blank=True, null=True, help_text="Salted SHA-256 hash of active OTP")
+    mfa_salt = models.CharField(max_length=64, blank=True, null=True, help_text="Cryptographic salt for OTP")
     mfa_code_created_at = models.DateTimeField(null=True, blank=True, help_text="When the OTP code was generated")
     mfa_code_attempts = models.IntegerField(default=0, help_text="Failed MFA attempts counter")
     mfa_verified_at = models.DateTimeField(null=True, blank=True, help_text="Last successful MFA verification time")
@@ -301,6 +426,7 @@ class Company(models.Model):
         ('individual', 'Individual / Sole Proprietor'),
     ]
     
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, null=True, blank=True, related_name='client_companies', help_text="Tenant organization")
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='companies')
     name = models.CharField(max_length=200)
     email = models.EmailField(blank=True)
@@ -325,6 +451,7 @@ class Company(models.Model):
         return self.name
 
 class Contact(models.Model):
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, null=True, blank=True, related_name='contacts', help_text="Tenant organization")
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='contacts')
     first_name = models.CharField(max_length=100)
     last_name = models.CharField(max_length=100)
@@ -456,6 +583,7 @@ class Deal(models.Model):
         ('closed_lost', 'Closed Lost'),
     ]
     
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, null=True, blank=True, related_name='deals', help_text="Tenant organization")
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='deals')
     title = models.CharField(max_length=200)
     contact = models.ForeignKey(Contact, on_delete=models.CASCADE)
@@ -634,6 +762,7 @@ class Ticket(models.Model):
         ('operations', 'Operations'),
     ]
 
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, null=True, blank=True, related_name='tickets', help_text="Tenant organization")
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     deal = models.ForeignKey(Deal, on_delete=models.SET_NULL, null=True, blank=True, related_name='tickets')
@@ -875,6 +1004,7 @@ class Asset(models.Model):
 
     asset_tag = models.CharField(max_length=100, unique=True, 
                                  help_text="Unique asset identifier/tag")
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, null=True, blank=True, related_name='assets', help_text="Tenant organization")
     name = models.CharField(max_length=200, help_text="Asset name/description")
     category = models.ForeignKey(AssetCategory, on_delete=models.PROTECT, 
                                  related_name='assets')
@@ -1135,6 +1265,7 @@ class EmailCampaign(models.Model):
         ('failed', 'Failed'),
     ]
     name = models.CharField(max_length=200)
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, null=True, blank=True, related_name='email_campaigns', help_text="Tenant organization")
     subject = models.CharField(max_length=300)
     body_html = models.TextField()
     template = models.ForeignKey(EmailTemplate, on_delete=models.SET_NULL, null=True, blank=True)
@@ -1214,6 +1345,7 @@ class Workflow(models.Model):
         ('ticket_overdue', 'Ticket Past Due Date'),
     ]
     name = models.CharField(max_length=200)
+    organization = models.ForeignKey(Organization, on_delete=models.CASCADE, null=True, blank=True, related_name='workflows', help_text="Tenant organization")
     description = models.TextField(blank=True)
     trigger_type = models.CharField(max_length=30, choices=TRIGGER_CHOICES)
     trigger_config = models.JSONField(default=dict, blank=True,

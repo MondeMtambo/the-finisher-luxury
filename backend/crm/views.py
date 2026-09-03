@@ -11,6 +11,7 @@ from django.contrib.auth.models import User
 from django.conf import settings
 from django.core.mail import send_mail
 from django.utils import timezone
+from datetime import timedelta, datetime
 import csv
 import io
 from .models import Contact, Company, Deal, ActivityLog, UserProfile, DeletedUserLog, Ticket, Notification, Asset, AssetCategory, Division, OnboardingLog, OffboardingRequest, Product, LineItem, EmailTemplate, EmailCampaign, CampaignRecipient, Workflow, WorkflowAction, WorkflowLog, DashboardWidget, DashboardLayout, WebsiteLead
@@ -64,19 +65,34 @@ def has_user_management_access(request):
 
 def visible_contacts_queryset(user):
     """Return contacts that should appear in client-facing CRM views.
-
+    Enforces strict Organization multi-tenancy with hierarchical team access (POPIA Sec 19).
     Website inquiries are handled in the dedicated Website Leads inbox and must
     not leak into the Clients tab or contact totals.
     """
-    queryset = Contact.objects.select_related('company').filter(website_lead__isnull=True)
+    queryset = Contact.objects.select_related('company', 'organization').filter(website_lead__isnull=True)
 
     if user.is_superuser or user.is_staff:
         return queryset
 
     profile = getattr(user, 'profile', None)
-    if profile and profile.is_admin and profile.company_name:
+    if not profile:
+        return queryset.filter(user=user)
+
+    # 1. First-class Organization tenancy (Guaranteed zero cross-tenant data bleed)
+    if profile.organization:
+        return queryset.filter(organization=profile.organization)
+
+    # 2. Backward compatibility fallback for legacy company_name string
+    if profile.company_name:
         company = normalize_company_name(profile.company_name)
-        return queryset.filter(user__profile__company_name__iexact=company)
+        if profile.is_admin:
+            return queryset.filter(
+                Q(organization__name__iexact=company) |
+                Q(user__profile__company_name__iexact=company)
+            )
+        return queryset.filter(
+            Q(user=user) | Q(user__profile__company_name__iexact=company)
+        )
 
     return queryset.filter(user=user)
 
@@ -379,10 +395,18 @@ def ensure_company_for_contact(contact):
 
         return
 
-    company = Company.objects.filter(user=contact.user, name__iexact=company_name).first()
-    if not company:
+    org = getattr(contact, 'organization', None)
+    if org:
+        company = Company.objects.filter(organization=org, name__iexact=company_name).first()
+    else:
+        company = Company.objects.filter(user=contact.user, name__iexact=company_name).first()
 
-        company = Company.objects.create(user=contact.user, name=company_name)
+    if not company:
+        company = Company.objects.create(
+            user=contact.user, 
+            name=company_name,
+            organization=org
+        )
         log_activity(
             user=contact.user,
             action='create',
@@ -412,8 +436,7 @@ def ensure_company_for_contact(contact):
 
 class ContactViewSet(viewsets.ModelViewSet):
     """
-    Contact viewset with user isolation.
-    System admins see all contacts; client admins see company contacts.
+    Contact viewset with strict Organization multi-tenant isolation.
     """
     serializer_class = ContactSerializer
     permission_classes = [IsAuthenticated]
@@ -423,12 +446,13 @@ class ContactViewSet(viewsets.ModelViewSet):
         return visible_contacts_queryset(user)
 
     def perform_create(self, serializer):
-
         user = self.request.user
         if not (user.is_superuser or user.is_staff or (getattr(user, 'profile', None) and user.profile.is_admin)):
             raise PermissionDenied('Only administrators can create contacts.')
 
-        contact = serializer.save(user=user)
+        profile = getattr(user, 'profile', None)
+        org = getattr(profile, 'organization', None) if profile else None
+        contact = serializer.save(user=user, organization=org)
         ensure_company_for_contact(contact)
         log_activity(
             user=self.request.user,
@@ -556,10 +580,21 @@ class CompanyViewSet(viewsets.ModelViewSet):
             return Company.objects.all()
 
         profile = getattr(user, 'profile', None)
-        if profile and profile.is_admin and profile.company_name:
+        if not profile:
+            return Company.objects.filter(user=user)
+
+        if profile.organization:
+            return Company.objects.filter(organization=profile.organization)
+
+        if profile.company_name:
             company = normalize_company_name(profile.company_name)
+            if profile.is_admin:
+                return Company.objects.filter(
+                    Q(organization__name__iexact=company) |
+                    Q(user__profile__company_name__iexact=company)
+                )
             return Company.objects.filter(
-                user__profile__company_name__iexact=company
+                Q(user=user) | Q(user__profile__company_name__iexact=company)
             )
         return Company.objects.filter(user=user)
 
@@ -574,7 +609,9 @@ class CompanyViewSet(viewsets.ModelViewSet):
                 'error': 'You need at least one contact before you can register a company.',
                 'action': 'Capture a contact with their company name, then create the company profile.'
             })
-        company = serializer.save(user=user)
+        profile = getattr(user, 'profile', None)
+        org = getattr(profile, 'organization', None) if profile else None
+        company = serializer.save(user=user, organization=org)
         log_activity(
             user=self.request.user,
             action='create',
@@ -616,7 +653,7 @@ class CompanyViewSet(viewsets.ModelViewSet):
 
 class DealViewSet(viewsets.ModelViewSet):
     """
-    Deal viewset with user isolation.
+    Deal viewset with strict Organization multi-tenant isolation.
     """
     serializer_class = DealSerializer
     permission_classes = [IsAuthenticated]
@@ -628,10 +665,21 @@ class DealViewSet(viewsets.ModelViewSet):
             return Deal.objects.all()
 
         profile = getattr(user, 'profile', None)
-        if profile and profile.is_admin and profile.company_name:
+        if not profile:
+            return Deal.objects.filter(user=user)
+
+        if profile.organization:
+            return Deal.objects.filter(organization=profile.organization)
+
+        if profile.company_name:
             company = normalize_company_name(profile.company_name)
+            if profile.is_admin:
+                return Deal.objects.filter(
+                    Q(organization__name__iexact=company) |
+                    Q(user__profile__company_name__iexact=company)
+                )
             return Deal.objects.filter(
-                user__profile__company_name__iexact=company
+                Q(user=user) | Q(user__profile__company_name__iexact=company)
             )
         return Deal.objects.filter(user=user)
 
@@ -640,7 +688,9 @@ class DealViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if not (user.is_superuser or user.is_staff or (getattr(user, 'profile', None) and user.profile.is_admin)):
             raise PermissionDenied('Only administrators can create deals.')
-        deal = serializer.save(user=user)
+        profile = getattr(user, 'profile', None)
+        org = getattr(profile, 'organization', None) if profile else None
+        deal = serializer.save(user=user, organization=org)
         log_activity(
             user=self.request.user,
             action='create',
@@ -956,8 +1006,17 @@ class TicketViewSet(viewsets.ModelViewSet):
             return Ticket.objects.all()
         
         profile = getattr(user, 'profile', None)
-        if profile and profile.is_admin:
+        if not profile:
+            return Ticket.objects.filter(Q(created_by=user) | Q(assigned_to=user))
 
+        if profile.organization:
+            if profile.role in ['admin', 'executive', 'manager']:
+                return Ticket.objects.filter(organization=profile.organization)
+            return Ticket.objects.filter(
+                organization=profile.organization
+            ).filter(Q(created_by=user) | Q(assigned_to=user)).distinct()
+
+        if profile.is_admin:
             company_name = profile.company_name
             if company_name:
                 return Ticket.objects.filter(
@@ -965,27 +1024,29 @@ class TicketViewSet(viewsets.ModelViewSet):
                     Q(assigned_to__profile__company_name=company_name)
                 ).distinct()
             else:
-
                 return Ticket.objects.filter(
                     Q(created_by=user) | Q(assigned_to=user)
                 )
         else:
-
             return Ticket.objects.filter(Q(assigned_to=user) | Q(created_by=user)).distinct()
 
     def perform_create(self, serializer):
         user = self.request.user
         profile = getattr(user, 'profile', None)
+        org = getattr(profile, 'organization', None) if profile else None
 
         if not (user.is_superuser or user.is_staff or (profile and profile.is_admin)):
             assigned_to = serializer.validated_data.get('assigned_to')
             assigned_profile = getattr(assigned_to, 'profile', None)
-            if not assigned_profile or assigned_profile.role != 'admin':
-                raise PermissionDenied('You can only escalate tickets to your company administrator.')
+            if not assigned_profile or assigned_profile.role not in ['admin', 'executive', 'manager']:
+                raise PermissionDenied('You can only escalate tickets to your company leadership.')
 
-            if profile and assigned_profile and profile.company_name != assigned_profile.company_name:
+            if org and getattr(assigned_profile, 'organization', None) != org:
+                raise PermissionDenied('You can only assign within your organization.')
+            elif profile and assigned_profile and profile.company_name != assigned_profile.company_name:
                 raise PermissionDenied('You can only assign within your company.')
-        ticket = serializer.save(created_by=user)
+
+        ticket = serializer.save(created_by=user, organization=org)
 
         Notification.objects.create(
             recipient=ticket.assigned_to,
@@ -2477,12 +2538,25 @@ class AssetViewSet(viewsets.ModelViewSet):
             return Asset.objects.all().select_related('category', 'assigned_to', 'division', 'created_by')
         
         profile = getattr(user, 'profile', None)
-        if not profile or not profile.company_name:
+        if not profile:
+            return Asset.objects.none()
+
+        if profile.organization:
+            if profile.role in ['admin', 'manager', 'executive']:
+                return Asset.objects.filter(organization=profile.organization).select_related(
+                    'category', 'assigned_to', 'division', 'created_by'
+                )
+            return Asset.objects.filter(
+                organization=profile.organization,
+                assigned_to=user
+            ).select_related('category', 'assigned_to', 'division', 'created_by')
+
+        if not profile.company_name:
             return Asset.objects.none()
         
         company_name = normalize_company_name(profile.company_name)
 
-        if profile.role in ['admin', 'manager']:
+        if profile.role in ['admin', 'manager', 'executive']:
             return Asset.objects.filter(company_name__iexact=company_name).select_related(
                 'category', 'assigned_to', 'division', 'created_by'
             )
@@ -2499,18 +2573,14 @@ class AssetViewSet(viewsets.ModelViewSet):
         """
         user = self.request.user
         profile = getattr(user, 'profile', None)
+        org = getattr(profile, 'organization', None) if profile else None
 
         if not (user.is_superuser or user.is_staff):
-            if not profile or profile.role not in ['admin', 'manager']:
+            if not profile or profile.role not in ['admin', 'manager', 'executive']:
                 raise PermissionDenied('Only administrators and managers can create assets')
         
-        if user.is_superuser or user.is_staff:
-            serializer.save(created_by=user)
-        elif profile and profile.company_name:
-            company_name = normalize_company_name(profile.company_name)
-            serializer.save(company_name=company_name, created_by=user)
-        else:
-            raise ValidationError("User has no company association")
+        company_name = normalize_company_name(profile.company_name) if profile else ''
+        serializer.save(created_by=user, organization=org, company_name=company_name)
     
     @action(detail=False, methods=['get'])
     def stats(self, request):
@@ -2688,14 +2758,17 @@ class EmailCampaignViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if user.is_superuser:
             return EmailCampaign.objects.all()
-        company = getattr(user, 'profile', None)
-        company_name = company.company_name if company else ''
+        profile = getattr(user, 'profile', None)
+        if profile and profile.organization:
+            return EmailCampaign.objects.filter(organization=profile.organization)
+        company_name = profile.company_name if profile else ''
         return EmailCampaign.objects.filter(company_name=company_name)
 
     def perform_create(self, serializer):
-        company = getattr(self.request.user, 'profile', None)
-        company_name = company.company_name if company else ''
-        serializer.save(created_by=self.request.user, company_name=company_name)
+        profile = getattr(self.request.user, 'profile', None)
+        org = getattr(profile, 'organization', None) if profile else None
+        company_name = profile.company_name if profile else ''
+        serializer.save(created_by=self.request.user, organization=org, company_name=company_name)
 
     @action(detail=True, methods=['post'])
     def send(self, request, pk=None):
@@ -2706,8 +2779,10 @@ class EmailCampaignViewSet(viewsets.ModelViewSet):
 
         contact_ids = campaign.recipient_ids or []
         if not contact_ids:
-
-            contacts = Contact.objects.filter(user__profile__company_name=campaign.company_name)
+            if campaign.organization:
+                contacts = Contact.objects.filter(organization=campaign.organization)
+            else:
+                contacts = Contact.objects.filter(user__profile__company_name=campaign.company_name)
             if campaign.recipient_filter and campaign.recipient_filter.get('company_id'):
                 contacts = contacts.filter(company_id=campaign.recipient_filter['company_id'])
             contact_ids = list(contacts.values_list('id', flat=True))
@@ -2751,32 +2826,31 @@ class EmailCampaignViewSet(viewsets.ModelViewSet):
         contact_id = request.data.get('contact_id')
         try:
             recipient = CampaignRecipient.objects.get(campaign=campaign, contact_id=contact_id)
-            if not recipient.opened_at:
+            if recipient.status != 'opened':
                 recipient.status = 'opened'
                 recipient.opened_at = timezone.now()
                 recipient.save()
                 campaign.open_count += 1
                 campaign.save()
+            return Response({'tracked': True})
         except CampaignRecipient.DoesNotExist:
-            pass
-        return Response({'status': 'tracked'})
+            return Response({'error': 'Recipient not found'}, status=404)
 
     @action(detail=True, methods=['post'], url_path='track-click')
     def track_click(self, request, pk=None):
-        """Track a link click for a contact."""
+        """Track an email link click for a contact."""
         campaign = self.get_object()
         contact_id = request.data.get('contact_id')
         try:
             recipient = CampaignRecipient.objects.get(campaign=campaign, contact_id=contact_id)
-            if not recipient.clicked_at:
-                recipient.status = 'clicked'
-                recipient.clicked_at = timezone.now()
-                recipient.save()
-                campaign.click_count += 1
-                campaign.save()
+            recipient.status = 'clicked'
+            recipient.clicked_at = timezone.now()
+            recipient.save()
+            campaign.click_count += 1
+            campaign.save()
+            return Response({'tracked': True})
         except CampaignRecipient.DoesNotExist:
-            pass
-        return Response({'status': 'tracked'})
+            return Response({'error': 'Recipient not found'}, status=404)
 
 
 
@@ -2789,19 +2863,25 @@ class WorkflowViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if user.is_superuser:
             return Workflow.objects.prefetch_related('actions').all()
-        company = getattr(user, 'profile', None)
-        company_name = company.company_name if company else ''
+        profile = getattr(user, 'profile', None)
+        if profile and profile.organization:
+            return Workflow.objects.filter(organization=profile.organization).prefetch_related('actions')
+        company_name = profile.company_name if profile else ''
         return Workflow.objects.filter(company_name=company_name).prefetch_related('actions')
 
     def perform_create(self, serializer):
-        company = getattr(self.request.user, 'profile', None)
-        company_name = company.company_name if company else ''
+        profile = getattr(self.request.user, 'profile', None)
+        org = getattr(profile, 'organization', None) if profile else None
+        company_name = profile.company_name if profile else ''
 
         if not self.request.user.is_superuser:
-            count = Workflow.objects.filter(company_name=company_name).count()
-            if count >= 5:
-                raise ValidationError({'detail': 'LUXURY tier allows a maximum of 5 workflows. Upgrade to PREMIUM for unlimited.'})
-        serializer.save(created_by=self.request.user, company_name=company_name)
+            if org:
+                count = Workflow.objects.filter(organization=org).count()
+            else:
+                count = Workflow.objects.filter(company_name=company_name).count()
+            if count >= 10:
+                raise ValidationError({'detail': 'Workflow limit reached for tier. Contact concierge to expand.'})
+        serializer.save(created_by=self.request.user, organization=org, company_name=company_name)
 
     @action(detail=True, methods=['post'], url_path='add-action')
     def add_action(self, request, pk=None):
@@ -3061,3 +3141,136 @@ class DashboardLayoutViewSet(viewsets.ModelViewSet):
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
+
+
+from .models import Organization, OrganizationSubscription, SubscriptionPlan, PaymentTransaction
+
+class OrganizationBillingStatusView(APIView):
+    """
+    Get organization subscription and 14-day trial status.
+    GET /api/billing/status/
+    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        profile = getattr(user, 'profile', None)
+        org = getattr(profile, 'organization', None) if profile else None
+
+        if not org:
+            trial_days = getattr(profile, 'days_until_trial_end', 0) if profile else 0
+            return Response({
+                'organization_name': getattr(profile, 'company_name', 'Workspace'),
+                'subscription_tier': getattr(profile, 'tier', 'luxury'),
+                'status': getattr(profile, 'payment_status', 'trial'),
+                'is_trial_active': trial_days > 0,
+                'days_remaining': trial_days,
+                'can_access': getattr(profile, 'can_access', True) if profile else True,
+            })
+
+        sub = getattr(org, 'subscription', None)
+        status_val = sub.status if sub else org.subscription_tier
+        is_active = org.is_trial_active if status_val == 'trial' else (status_val == 'active')
+
+        return Response({
+            'organization_id': str(org.id),
+            'organization_name': org.name,
+            'subscription_tier': org.subscription_tier,
+            'status': status_val,
+            'is_trial_active': org.is_trial_active,
+            'days_remaining_in_trial': org.days_remaining_in_trial,
+            'trial_end_date': org.trial_end_date.isoformat() if org.trial_end_date else None,
+            'can_access': is_active or user.is_superuser,
+            'plan': {
+                'name': sub.plan.name if sub and sub.plan else 'The Finisher Luxury Private OS',
+                'currency': sub.plan.currency if sub and sub.plan else 'ZAR',
+                'price': (sub.plan.price_cents / 100) if sub and sub.plan else 12500.0,
+            }
+        })
+
+
+class CreateCheckoutSessionView(APIView):
+    """
+    Generate payment checkout session or corporate invoice request.
+    POST /api/billing/checkout/
+    Body: {tier, gateway, billing_period}
+    """
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        user = request.user
+        profile = getattr(user, 'profile', None)
+        org = getattr(profile, 'organization', None) if profile else None
+
+        if not org:
+            return Response({'error': 'Organization profile required for billing.'}, status=400)
+
+        gateway = request.data.get('gateway', 'payfast')
+        tier = request.data.get('tier', 'luxury')
+        billing_period = request.data.get('billing_period', 'annual')
+
+        import uuid
+        tx_ref = f"TFL-{org.slug[:6].upper()}-{uuid.uuid4().hex[:8].upper()}"
+
+        pricing = {
+            'luxury': {'monthly': 1250000, 'annual': 12000000},
+            'enterprise': {'monthly': 2500000, 'annual': 25000000}
+        }
+        amount_cents = pricing.get(tier, {}).get(billing_period, 1250000)
+
+        tx = PaymentTransaction.objects.create(
+            organization=org,
+            gateway=gateway,
+            transaction_reference=tx_ref,
+            amount_cents=amount_cents,
+            currency='ZAR',
+            status='pending',
+            raw_payload={'initiated_by': user.email, 'tier': tier, 'period': billing_period}
+        )
+
+        return Response({
+            'success': True,
+            'transaction_reference': tx_ref,
+            'amount_zar': amount_cents / 100,
+            'currency': 'ZAR',
+            'gateway': gateway,
+            'checkout_url': f"https://thefinisher.tech/billing/pay?ref={tx_ref}",
+            'instructions': 'For direct corporate EFT payments, please use the transaction reference as beneficiary payment reference.'
+        }, status=status.HTTP_201_CREATED)
+
+
+class BillingWebhookView(APIView):
+    """
+    Payment Gateway Webhook Endpoint for PayFast / Peach / Ozow / Stripe.
+    POST /api/billing/webhook/
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        data = request.data
+        tx_ref = data.get('m_payment_id') or data.get('transaction_reference')
+        payment_status = data.get('payment_status', '').lower()
+
+        if not tx_ref:
+            return Response({'error': 'Missing transaction reference'}, status=400)
+
+        try:
+            tx = PaymentTransaction.objects.get(transaction_reference=tx_ref)
+            if payment_status in ['complete', 'paid', 'successful']:
+                tx.status = 'successful'
+                tx.raw_payload = data
+                tx.save(update_fields=['status', 'raw_payload'])
+
+                sub, _ = OrganizationSubscription.objects.get_or_create(organization=tx.organization)
+                sub.status = 'active'
+                sub.current_period_start = timezone.now()
+                sub.current_period_end = timezone.now() + timedelta(days=365)
+                sub.save()
+
+                tx.organization.subscription_tier = 'luxury'
+                tx.organization.is_active = True
+                tx.organization.save(update_fields=['subscription_tier', 'is_active'])
+
+            return Response({'status': 'acknowledged'})
+        except PaymentTransaction.DoesNotExist:
+            return Response({'error': 'Transaction not found'}, status=404)

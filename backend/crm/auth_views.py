@@ -14,7 +14,7 @@ from django.contrib.auth.models import User
 from django.core.mail import send_mail
 from django.conf import settings
 from .models import PasswordResetOTP, UserProfile
-from .mfa_utils import create_mfa_code, verify_mfa_code, is_mfa_required
+from .mfa_utils import create_mfa_code, verify_mfa_code, is_mfa_required, generate_pre_auth_token, validate_pre_auth_token
 from .auth_serializers import (
     RegisterSerializer, 
     UserSerializer, 
@@ -104,32 +104,34 @@ class LoginView(TokenObtainPairView):
                     profile.last_login_ip = ip
                     profile.save()
 
-                    skip_mfa = user.is_superuser or user.is_staff or is_owner_admin_user(user)
-
                     if user.profile.is_banned:
                         return Response({
                             'error': 'Account banned',
                             'message': f'Your account has been banned. Reason: {user.profile.ban_reason}',
-                        'contact': 'thefinishercrm@gmail.com'
+                            'contact': 'security@thefinisher.tech'
                         }, status=status.HTTP_403_FORBIDDEN)
 
                     if not user.profile.can_access:
                         return Response({
                             'error': 'Payment required',
-                            'message': 'Your account requires payment to continue. Please contact support.',
+                            'message': 'Your account requires payment or active trial to continue. Please contact concierge support.',
                             'payment_status': user.profile.payment_status,
-                        'contact': 'thefinishercrm@gmail.com'
+                            'contact': 'concierge@thefinisher.tech'
                         }, status=status.HTTP_402_PAYMENT_REQUIRED)
 
-                    if not skip_mfa and is_mfa_required(user):
-
+                    if is_mfa_required(user):
                         code, success, msg = create_mfa_code(user)
+                        pre_auth_token = generate_pre_auth_token(user)
 
+                        # Strip full JWT tokens from response until MFA completes
+                        response.data.pop('access', None)
+                        response.data.pop('refresh', None)
 
                         email_status = 'sent' if success else 'failed'
                         return Response({
                             'requires_mfa': True,
                             'user_id': user.id,
+                            'pre_auth_token': pre_auth_token,
                             'email': user.email,
                             'message': f'Verification code {email_status}. Check your email inbox.' if success else 'Email send failed. Click "Resend Code" to try again.',
                             'email_send_status': email_status,
@@ -166,29 +168,46 @@ from .auth_serializers import RegisterSerializer
 
 class VerifyMFAView(APIView):
     """
-    MFA verification endpoint
+    Bank-Grade MFA Verification Endpoint.
     POST /api/auth/verify-mfa/
-    Body: {user_id, mfa_code}
+    Body: {pre_auth_token (recommended) or user_id, mfa_code}
     """
     permission_classes = (AllowAny,)
     
     def post(self, request):
+        pre_auth_token = request.data.get('pre_auth_token')
         user_id = request.data.get('user_id')
         mfa_code = request.data.get('mfa_code', '').strip()
         
-        if not user_id or not mfa_code:
+        if not mfa_code or (not pre_auth_token and not user_id):
             return Response({
                 'error': 'Missing parameters',
-                'message': 'Both user_id and mfa_code are required'
+                'message': 'Both verification code and active session token are required.'
             }, status=status.HTTP_400_BAD_REQUEST)
         
-        try:
-            user = User.objects.get(id=user_id)
-        except User.DoesNotExist:
-            return Response({
-                'error': 'Invalid user',
-                'message': 'User not found'
-            }, status=status.HTTP_404_NOT_FOUND)
+        user = None
+        if pre_auth_token:
+            token_user_id, token_error = validate_pre_auth_token(pre_auth_token)
+            if token_error:
+                return Response({
+                    'error': 'Session expired',
+                    'message': token_error
+                }, status=status.HTTP_401_UNAUTHORIZED)
+            try:
+                user = User.objects.get(id=token_user_id)
+            except User.DoesNotExist:
+                return Response({
+                    'error': 'Invalid user',
+                    'message': 'User not found'
+                }, status=status.HTTP_404_NOT_FOUND)
+        elif user_id:
+            try:
+                user = User.objects.get(id=user_id)
+            except User.DoesNotExist:
+                return Response({
+                    'error': 'Invalid user',
+                    'message': 'User not found'
+                }, status=status.HTTP_404_NOT_FOUND)
 
         success, message = verify_mfa_code(user, mfa_code)
         
