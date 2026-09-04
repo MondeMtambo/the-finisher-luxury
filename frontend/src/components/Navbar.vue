@@ -50,6 +50,28 @@
           <span class="clock-time">{{ currentTime }}</span>
         </div>
 
+        <!-- Dual Theme Switcher (Dark / Light) -->
+        <button 
+          class="theme-toggle-btn" 
+          @click="toggleTheme" 
+          :title="currentTheme === 'dark' ? 'Switch to Executive Light Theme' : 'Switch to Luxury Dark Theme'"
+        >
+          <svg v-if="currentTheme === 'dark'" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <svg v-else width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+        </button>
+
         <div class="notif-wrapper" ref="notifWrapper">
           <button class="topbar-icon-btn" title="Notifications" @click.stop="toggleNotifications">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
@@ -214,7 +236,13 @@
       </nav>
 
       <div class="sidebar-footer">
-        <!-- Dynamic Copyright -->
+        <!-- Corporate Plan Badge (Positioned directly above copyright) -->
+        <div v-if="!sidebarCollapsed" class="plan-badge plan-ultimate">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          <span>CORPORATE PLAN / ULTIMATE</span>
+        </div>
+
+        <!-- Dynamic Copyright (At the very bottom) -->
         <div v-if="!sidebarCollapsed" class="sidebar-copyright">
           <p>
             &copy; {{ currentYear }}
@@ -223,11 +251,6 @@
             </a>
             <br/>All Rights Reserved.
           </p>
-        </div>
-
-        <div v-if="!sidebarCollapsed" class="plan-badge" :class="{ 'plan-ultimate': isAdmin }">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z"/></svg>
-          <span>{{ isAdmin ? 'ULTIMATE' : 'THE FINISHER' }}</span>
         </div>
       </div>
     </aside>
@@ -276,6 +299,7 @@ export default {
       checkingPrereqs: false,
       currentTime: '',
       currentYear: new Date().getFullYear(),
+      currentTheme: localStorage.getItem('finisher_theme') || 'dark',
       clockInterval: null
     }
   },
@@ -317,6 +341,11 @@ export default {
 
     this.updateClock()
     this.clockInterval = setInterval(this.updateClock, 1000)
+
+    // Sync theme on mount
+    const savedTheme = localStorage.getItem('finisher_theme') || 'dark'
+    this.currentTheme = savedTheme
+    document.documentElement.setAttribute('data-theme', savedTheme)
   },
   watch: {
     '$route.path'(newPath) {
@@ -356,6 +385,13 @@ export default {
       if (this.showUserMenu && this.$refs.userWrapper && !this.$refs.userWrapper.contains(e.target)) {
         this.showUserMenu = false
       }
+    },
+    toggleTheme() {
+      const nextTheme = this.currentTheme === 'dark' ? 'light' : 'dark'
+      this.currentTheme = nextTheme
+      localStorage.setItem('finisher_theme', nextTheme)
+      document.documentElement.setAttribute('data-theme', nextTheme)
+      toast.info(`Switched to ${nextTheme === 'dark' ? 'Luxury Obsidian (Dark)' : 'Executive Platinum (Light)'}`)
     },
     updateClock() {
       this.currentTime = new Date().toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit', second: '2-digit' })

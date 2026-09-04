@@ -10,9 +10,14 @@
     <div class="auth-card register-card glass-panel" v-if="!applicationSubmitted">
       <div class="auth-header">
         <div class="card-logo">F</div>
+        <div class="vip-badge-pill">
+          <span class="vip-badge-dot"></span>
+          ⭐ 7-DAY VIP EXECUTIVE ACCESS &middot; 15 Q1 ALLOCATIONS
+        </div>
         <h1 class="headline">Request Access</h1>
-        <p class="subheadline">Apply for a dedicated FINISHER enterprise workspace.</p>
+        <p class="subheadline">Apply for a dedicated FINISHER enterprise workspace with full 7-Day VIP Executive privileges.</p>
       </div>
+
 
       <form @submit.prevent="handleRequestAccess" class="reg-form">
         <div class="form-group">
@@ -258,6 +263,30 @@ export default {
 .auth-header {
   text-align: center;
   margin-bottom: 2rem;
+}
+
+.vip-badge-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(212, 175, 55, 0.15);
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  color: #F5D061;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  padding: 5px 14px;
+  border-radius: 999px;
+  margin: 12px 0;
+  text-transform: uppercase;
+}
+
+.vip-badge-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 8px #22c55e;
 }
 
 .card-logo {

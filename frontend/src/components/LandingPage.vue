@@ -22,10 +22,16 @@
       <h1 class="headline">Your Pipeline. Elevated.</h1>
       <p class="subheadline">The most exclusive CRM engine built for generational wealth.</p>
       
+      <div class="landing-vip-badge">
+        <span class="vip-pulse-dot"></span>
+        ⭐ 7-Day VIP Executive Access &middot; Limited 15-Firm Cohort
+      </div>
+
       <button class="request-btn" @click="$router.push('/register')">Request Access</button>
     </div>
   </div>
 </template>
+
 
 <script>
 export default {
@@ -217,10 +223,41 @@ export default {
 
 .subheadline {
   font-size: 1.25rem;
-  color: #6b7280;
-  margin: 0 0 3rem;
+  color: #9ca3af;
+  margin: 0 0 1.5rem;
   text-align: center;
   max-width: 600px;
+}
+
+.landing-vip-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  background: rgba(212, 175, 55, 0.12);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  color: #F5D061;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 8px 18px;
+  border-radius: 999px;
+  margin-bottom: 2rem;
+  text-transform: uppercase;
+  backdrop-filter: blur(8px);
+}
+
+.vip-pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 10px #22c55e;
+  animation: vipPulse 2s infinite ease-in-out;
+}
+
+@keyframes vipPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.4; transform: scale(0.85); }
 }
 
 .request-btn {

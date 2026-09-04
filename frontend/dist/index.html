@@ -14,47 +14,32 @@
   <meta http-equiv="Expires" content="0">
   <!-- Additional fallbacks for better cross-browser support -->
   <meta name="format-detection" content="telephone=no">
+  <script>
+    /* Instant Theme Hydration to prevent flash */
+    (function() {
+      try {
+        var savedTheme = localStorage.getItem('finisher_theme') || 'dark';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+      } catch (e) {}
+    })();
+  </script>
   <style>
-    /* CSS fallback for browsers without theme-color support */
     :root {
       --theme-color: #D4AF37;
-      
-      /* LUXURY THEME VARIABLES - GLOBAL OVERRIDE */
-      --primary: #D4AF37;
-      --primary-hover: #B49015;
-      --primary-500: #D4AF37;
-      --primary-600: #B49015;
-      --primary-700: #997A00;
-      
-      /* Obsidian Dark Mode */
-      --gray-900: #0B0C10;
-      --gray-800: #111418;
-      --gray-700: #1A1D24;
-      --gray-600: #374151;
-      --gray-500: #6b7280;
-      --gray-400: #9ca3af;
-      --gray-300: #d1d5db;
-      
-      /* UI Elements */
-      --card-bg: rgba(17, 20, 24, 0.85);
-      --border: rgba(212, 175, 55, 0.2);
-      --border-color: rgba(212, 175, 55, 0.2);
     }
 
     html, body, #app {
-      background-color: #000000 !important; /* Absolute Zero Canvas */
-      color: #ffffff !important;
+      background-color: var(--canvas-bg, #08090b);
+      color: var(--text-primary, #ffffff);
       margin: 0;
       min-height: 100vh;
       overflow-x: hidden;
     }
 
     /* =========================================
-       CONCEPT 3: THE CINEMATIC SPOTLIGHT
+       THE CINEMATIC SPOTLIGHT (Dark Mode)
        ========================================= */
-    
-    /* The Global Spotlight Overlay */
-    body::after {
+    [data-theme="dark"] body::after {
       content: '';
       position: fixed;
       top: 0; left: 0; width: 100vw; height: 100vh;
@@ -63,21 +48,20 @@
       z-index: 9998;
     }
 
-    /* Reactive, Shadowed UI Canvas */
+    /* Reactive, High-Contrast UI Canvas */
     .card, .modal-panel, .stat-card, .table-card, .auth-card {
-      background-color: rgba(10, 10, 10, 0.6) !important;
-      border: 1px solid rgba(255, 255, 255, 0.03) !important;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.8) !important;
-      color: #9ca3af !important;
-      transition: all 0.5s cubic-bezier(0.25, 1, 0.5, 1) !important;
+      background-color: var(--surface-card, rgba(17, 20, 24, 0.85));
+      border: 1px solid var(--border-gold, rgba(212, 175, 55, 0.2));
+      box-shadow: var(--shadow-card, 0 10px 30px rgba(0,0,0,0.7));
+      color: var(--text-primary, #ffffff);
+      transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1);
       backdrop-filter: blur(10px);
     }
     
-    /* Spotlight Hover State - Cards illuminate when the light hits them */
+    /* Spotlight Hover State - Cards illuminate crisp & sharp */
     .card:hover, .modal-panel:hover, .stat-card:hover, .table-card:hover, .auth-card:hover {
-      border-color: rgba(212, 175, 55, 0.3) !important;
-      box-shadow: 0 0 30px rgba(212, 175, 55, 0.1), inset 0 0 15px rgba(212, 175, 55, 0.05) !important;
-      color: #ffffff !important;
+      border-color: var(--border-gold-bright, rgba(212, 175, 55, 0.6));
+      box-shadow: var(--shadow-glow, 0 0 25px rgba(212, 175, 55, 0.15));
       transform: translateY(-2px);
     }
 
@@ -98,13 +82,14 @@
     }
 
     /* Nav & Form Controls */
-    .sidebar { background-color: #000000 !important; border-right: 1px solid rgba(255,255,255,0.02) !important; }
-    .nav-item { color: #4b5563 !important; transition: all 0.4s ease !important; }
-    .nav-item:hover, .nav-item.active { color: #D4AF37 !important; text-shadow: 0 0 10px rgba(212,175,55,0.3) !important; background: transparent !important; }
-    .data-table th, .data-table td { border-bottom-color: rgba(255,255,255,0.02) !important; color: inherit !important; transition: color 0.3s; }
-    .data-table th { background: transparent !important; color: #D4AF37 !important; text-transform: uppercase; letter-spacing: 2px; }
-    .form-input { background-color: rgba(0,0,0,0.4) !important; color: #fff !important; border-color: rgba(255,255,255,0.05) !important; }
-    .form-input:focus { border-color: #D4AF37 !important; box-shadow: 0 0 15px rgba(212,175,55,0.1) !important; }
+    .sidebar { background-color: var(--sidebar-bg, #0B0C10); border-right: 1px solid var(--sidebar-border, rgba(255,255,255,0.06)); }
+    .nav-item { color: var(--text-muted, #cbd5e1); transition: all 0.3s ease; }
+    .nav-item:hover, .nav-item.active { color: var(--text-gold, #D4AF37) !important; background: var(--sidebar-item-active, rgba(212,175,55,0.12)); }
+    .data-table th, .data-table td { border-bottom-color: var(--border-subtle, rgba(255,255,255,0.06)); color: inherit; }
+    .data-table th { background: transparent; color: var(--text-gold, #D4AF37); text-transform: uppercase; letter-spacing: 1.5px; }
+    .form-input { background-color: var(--input-bg, rgba(0,0,0,0.45)); color: var(--input-text, #fff); border-color: var(--input-border, rgba(255,255,255,0.12)); }
+    .form-input:focus { border-color: var(--text-gold, #D4AF37); box-shadow: 0 0 15px rgba(212,175,55,0.2); }
+
 
     /* =========================================
        VIP NOTIFICATION POP-UPS & KINETICS
@@ -188,8 +173,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <title>THE FINISHER LUXURY CRM</title>
-  <script type="module" crossorigin src="/assets/index-DnRdgrwu.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-CzAkH99A.css">
+  <script type="module" crossorigin src="/assets/index-DStwPFvF.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-DCNA5Tda.css">
 </head>
 <body>
   <div id="app"></div>
