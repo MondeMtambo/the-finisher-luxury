@@ -43,7 +43,7 @@
       </div>
     </div>
 
-    <div v-if="showAddModal || showEditModal" class="modal-overlay" @click="closeModal">
+    <div v-if="showAddModal || showEditModal" class="modal-overlay">
       <div class="modal-panel" @click.stop>
         <div class="modal-header">
           <h3>{{ showAddModal ? 'Create New Deal' : 'Edit Deal' }}</h3>
@@ -198,7 +198,7 @@ export default {
           await dealsAPI.update(this.editingId, payload)
         }
         await this.loadDeals()
-        this.closeModal()
+        this.closeModal(true)
       } catch (error) {
         console.error('Error saving deal:', error)
       }
@@ -232,7 +232,20 @@ export default {
         }
       }
     },
-    closeModal() {
+    hasUnsavedChanges() {
+      const f = this.dealForm || {}
+      return Boolean((f.title && f.title.trim()) || f.company || f.contact || f.value)
+    },
+    async closeModal(force = false) {
+      if (!force && this.hasUnsavedChanges()) {
+        const ok = await modal.confirm(
+          'Discard Deal?',
+          'Are you sure you want to cancel? Any unsaved deal details will be discarded.',
+          'warning',
+          { confirmText: 'Yes, Discard & Exit', cancelText: 'Continue Editing' }
+        )
+        if (!ok) return
+      }
       this.showAddModal = false
       this.showEditModal = false
       this.dealForm = {

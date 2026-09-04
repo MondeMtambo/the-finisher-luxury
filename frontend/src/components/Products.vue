@@ -326,7 +326,7 @@
       <p>Loading products...</p>
     </div>
 
-    <div v-if="showModal" class="modal-overlay" @click="closeModal">
+    <div v-if="showModal" class="modal-overlay">
       <div class="modal-panel modal-lg" @click.stop>
         <div class="modal-header">
           <h3>{{ isEditing ? 'Edit Product' : 'Add New Product' }}</h3>
@@ -406,6 +406,7 @@
 <script>
 import { productsAPI } from '../api'
 import toast from '../utils/toast'
+import modal from '../utils/modal'
 
 export default {
   name: 'Products',
@@ -547,7 +548,20 @@ export default {
       this.editId = product.id
       this.showModal = true
     },
-    closeModal() {
+    hasUnsavedChanges() {
+      const f = this.form || {}
+      return Boolean((f.name && f.name.trim()) || (f.sku && f.sku.trim()) || f.price || (f.description && f.description.trim()))
+    },
+    async closeModal(force = false) {
+      if (!force && this.hasUnsavedChanges()) {
+        const ok = await modal.confirm(
+          'Discard Product?',
+          'Are you sure you want to cancel? Any unsaved product details will be discarded.',
+          'warning',
+          { confirmText: 'Yes, Discard & Exit', cancelText: 'Continue Editing' }
+        )
+        if (!ok) return
+      }
       this.showModal = false
       this.isEditing = false
       this.editId = null
@@ -564,8 +578,8 @@ export default {
           await productsAPI.create(payload)
           toast.success('Product created')
         }
-        this.closeModal()
-        this.fetchProducts()
+        await this.fetchProducts()
+        this.closeModal(true)
       } catch (e) {
         toast.error(e.message || 'Failed to save product')
       } finally {

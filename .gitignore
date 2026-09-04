@@ -5,6 +5,8 @@
 backend/.env
 backend/.env.*
 backend/.env.local
+seed_supabase.py
+backend/seed_supabase.py
 
 # Virtual Environments
 .venv/

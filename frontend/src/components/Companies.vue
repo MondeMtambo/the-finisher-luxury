@@ -70,7 +70,7 @@
     </div>
 
     <!-- Add / Edit Business Modal -->
-    <div v-if="showAddModal || showEditModal" class="modal-overlay" @click="closeModal">
+    <div v-if="showAddModal || showEditModal" class="modal-overlay">
       <div class="modal-panel" @click.stop>
         <div class="modal-header">
           <h3>{{ showAddModal ? 'Add Business' : 'Edit Business' }}</h3>
@@ -274,8 +274,7 @@ export default {
           await companiesAPI.update(this.editingId, this.companyForm)
         }
         await this.loadCompanies()
-        await this.refreshPrerequisites()
-        this.closeModal()
+        this.closeModal(true)
       } catch (error) {
         console.error('Error saving company:', error)
       }
@@ -299,7 +298,27 @@ export default {
         }
       }
     },
-    closeModal() {
+    hasUnsavedChanges() {
+      const f = this.companyForm || {}
+      return Boolean(
+        (f.name && f.name.trim()) ||
+        (f.trading_name && f.trading_name.trim()) ||
+        (f.email && f.email.trim()) ||
+        (f.phone && f.phone.trim()) ||
+        (f.cipc_registration_number && f.cipc_registration_number.trim()) ||
+        (f.website && f.website.trim())
+      )
+    },
+    async closeModal(force = false) {
+      if (!force && this.hasUnsavedChanges()) {
+        const ok = await modal.confirm(
+          'Discard Business Profile?',
+          'Are you sure you want to cancel? Any unsaved company details will be discarded.',
+          'warning',
+          { confirmText: 'Yes, Discard & Exit', cancelText: 'Continue Editing' }
+        )
+        if (!ok) return
+      }
       this.showAddModal = false
       this.showEditModal = false
       this.resetForm()

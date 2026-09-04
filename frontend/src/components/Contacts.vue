@@ -125,7 +125,7 @@
     </div>
 
     <!-- Add / Edit Business Client Modal -->
-    <div v-if="showAddModal || showEditModal" class="modal-overlay" @click="closeModal">
+    <div v-if="showAddModal || showEditModal" class="modal-overlay">
       <div class="modal-panel luxury-modal modal-scrollable" @click.stop>
         <div class="modal-header">
           <div class="modal-title-wrap">
@@ -133,7 +133,7 @@
             <h3>{{ showAddModal ? 'Add Business Client' : 'Edit Business Client' }}</h3>
             <p class="modal-sub">Register corporate B2B clients or freelance consultants with compliance validation.</p>
           </div>
-          <button class="modal-close" @click="closeModal">&times;</button>
+          <button class="modal-close" @click="closeModal(false)">&times;</button>
         </div>
         <div class="modal-body">
           <form @submit.prevent="saveContact" novalidate>
@@ -327,7 +327,7 @@
             </div>
 
             <div class="modal-footer sticky-footer">
-              <button type="button" class="btn btn-secondary" @click="closeModal" :disabled="formSubmitting">Cancel</button>
+              <button type="button" class="btn btn-secondary" @click="closeModal(false)" :disabled="formSubmitting">Cancel</button>
               <button type="submit" class="btn btn-primary" :disabled="formSubmitting">
                 {{ formSubmitting ? 'Saving...' : (showAddModal ? 'Save Business Client' : 'Update Business Client') }}
               </button>
@@ -663,7 +663,7 @@ export default {
 
         await this.loadContacts()
         await this.loadCompanies()
-        this.closeModal()
+        this.closeModal(true)
       } catch (error) {
         console.error('Error saving contact:', error)
         this.formErrors = this.extractErrors(error)
@@ -706,7 +706,30 @@ export default {
         }
       }
     },
-    closeModal() {
+    hasUnsavedChanges() {
+      const f = this.contactForm || {}
+      return Boolean(
+        (f.first_name && f.first_name.trim()) ||
+        (f.last_name && f.last_name.trim()) ||
+        (f.email && f.email.trim()) ||
+        (f.phone && f.phone.trim()) ||
+        (f.company_name_manual && f.company_name_manual.trim()) ||
+        (f.cipc_number && f.cipc_number.trim()) ||
+        (f.tax_number && f.tax_number.trim()) ||
+        (f.notes && f.notes.trim()) ||
+        this.selectedDocFile
+      )
+    },
+    async closeModal(force = false) {
+      if (!force && this.hasUnsavedChanges()) {
+        const ok = await modal.confirm(
+          'Discard Client Registration?',
+          'Are you sure you want to cancel? Any unsaved client information will be discarded.',
+          'warning',
+          { confirmText: 'Yes, Discard & Exit', cancelText: 'Continue Editing' }
+        )
+        if (!ok) return
+      }
       this.showAddModal = false
       this.showEditModal = false
       this.resetForm()
@@ -1073,13 +1096,21 @@ export default {
 .sticky-footer {
   position: sticky;
   bottom: 0;
-  background: #111217;
-  padding-top: 1rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(17, 18, 23, 0.72);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  padding: 1rem 0;
+  border-top: 1px solid rgba(212, 175, 55, 0.22);
   display: flex;
   justify-content: flex-end;
   gap: 0.75rem;
   margin-top: 1rem;
+  z-index: 20;
+}
+
+[data-theme="light"] .sticky-footer {
+  background: rgba(255, 255, 255, 0.82);
+  border-top: 1px solid rgba(184, 134, 11, 0.25);
 }
 
 /* Upload modal styling */
