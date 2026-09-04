@@ -6,7 +6,7 @@ services:
     plan: free
     rootDir: backend
     buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
-    startCommand: python manage.py migrate --noinput && (test -f seed_supabase.py && python seed_supabase.py || true) && gunicorn finisher_api.wsgi:application
+    startCommand: python manage.py migrate --noinput && (test -f seed_supabase.py && python seed_supabase.py || true) && gunicorn finisher_api.wsgi:application --workers 2 --threads 4 --worker-class gthread --timeout 120
     autoDeploy: true
     envVars:
       - key: PYTHON_VERSION
@@ -34,4 +34,6 @@ services:
       - key: EMAIL_HOST_USER
         value: "resend"
       - key: EMAIL_HOST_PASSWORD
+        sync: false
+      - key: RESEND_API_KEY
         sync: false

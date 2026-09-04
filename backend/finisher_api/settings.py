@@ -123,7 +123,6 @@ if DATABASE_URL:
     DATABASES['default']['OPTIONS']['keepalives_interval'] = 10  # Retry keepalive every 10s
     DATABASES['default']['OPTIONS']['keepalives_count'] = 5      # Drop after 5 failed keepalives
     DATABASES['default']['OPTIONS']['connect_timeout'] = 10      # Max 10s to establish connection
-    DATABASES['default']['OPTIONS']['options'] = '-c statement_timeout=30000'  # 30s max query time
 else:
     DATABASES = {
         'default': {
@@ -237,6 +236,7 @@ EMAIL_USE_TLS = config('EMAIL_USE_TLS', default=not config('EMAIL_USE_SSL', defa
 EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 EMAIL_TIMEOUT = 15
+RESEND_API_KEY = config('RESEND_API_KEY', default=config('EMAIL_HOST_PASSWORD', default='')).strip()
 _email_host = config('EMAIL_HOST', default='smtp.gmail.com').lower()
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='onboarding@resend.dev' if 'resend' in _email_host else 'security@thefinisher.tech')
 SALES_EMAIL = config('SALES_EMAIL', default='sales@mtamboholdings.dev').strip()

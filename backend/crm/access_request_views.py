@@ -6,6 +6,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 from django.utils import timezone
 from django.core.mail import send_mail
+from .email_service import send_email_async
 from django.conf import settings
 from django.db.models import Q
 from rest_framework import status, permissions
@@ -352,17 +353,13 @@ class PublicAccessRequestView(APIView):
             f"https://www.thefinishercrm.tech\n"
         )
         from_sender = getattr(settings, 'DEFAULT_FROM_EMAIL', None) or 'onboarding@resend.dev'
-        try:
-            send_mail(
-                verify_subject,
-                verify_body,
-                from_sender,
-                [email],
-                fail_silently=False
-            )
-            logger.info(f"Successfully dispatched 5-minute verification code to {email} from {from_sender}")
-        except Exception as mail_err:
-            logger.error(f"Failed to dispatch verification code email to {email}: {mail_err}")
+        # Asynchronously dispatch 5-minute verification code via Resend HTTPS API / background daemon thread (< 1ms)
+        send_email_async(
+            verify_subject,
+            verify_body,
+            [email],
+            from_email=from_sender
+        )
 
         return Response({
             'success': True,
@@ -453,16 +450,12 @@ class PublicVerifyAccessRequestView(APIView):
             f"THE FINISHER LUXURY | Automated Enterprise Gateway\n"
         )
 
-        try:
-            send_mail(
-                exec_subject,
-                exec_body,
-                getattr(settings, 'DEFAULT_FROM_EMAIL', 'security@thefinisher.tech'),
-                [sales_email],
-                fail_silently=True
-            )
-        except Exception as err:
-            logger.warning(f"Failed to dispatch sales alert to {sales_email}: {err}")
+        send_email_async(
+            exec_subject,
+            exec_body,
+            [sales_email],
+            from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'security@thefinisher.tech')
+        )
 
         # 2. Dispatch Confirmation Receipt Email to Applicant
         ack_subject = f"Application Verified: FINISHER Luxury Corporate Access for {req_obj.company_name}"
@@ -481,16 +474,12 @@ class PublicVerifyAccessRequestView(APIView):
             f"https://www.thefinishercrm.tech\n"
         )
 
-        try:
-            send_mail(
-                ack_subject,
-                ack_body,
-                getattr(settings, 'DEFAULT_FROM_EMAIL', 'security@thefinisher.tech'),
-                [req_obj.email],
-                fail_silently=True
-            )
-        except Exception as ack_err:
-            logger.warning(f"Failed to dispatch acknowledgment to {req_obj.email}: {ack_err}")
+        send_email_async(
+            ack_subject,
+            ack_body,
+            [req_obj.email],
+            from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'security@thefinisher.tech')
+        )
 
         # 3. Create WebsiteLead & Notification for Admin Fleet Console
         try:
@@ -784,16 +773,12 @@ class AdminAccessRequestActionView(APIView):
             f"═════════════════════════════════════════════════════════════════════════\n"
         )
 
-        try:
-            send_mail(
-                email_subject,
-                email_body,
-                getattr(settings, 'DEFAULT_FROM_EMAIL', 'security@thefinisher.tech'),
-                [req_obj.email],
-                fail_silently=True
-            )
-        except Exception as mail_err:
-            logger.warning(f"Failed to dispatch activation email: {mail_err}")
+        send_email_async(
+            email_subject,
+            email_body,
+            [req_obj.email],
+            from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'security@thefinisher.tech')
+        )
 
         logger.info(f"Corporate Workspace APPROVED and PROVISIONED for {req_obj.company_name} by {request.user.username}")
 

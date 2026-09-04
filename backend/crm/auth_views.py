@@ -12,6 +12,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
+from .email_service import send_email_async
 from django.conf import settings
 from .models import PasswordResetOTP, UserProfile
 from .mfa_utils import create_mfa_code, verify_mfa_code, is_mfa_required, generate_pre_auth_token, validate_pre_auth_token
@@ -367,9 +368,9 @@ class PasswordResetRequestView(APIView):
                     otp_code=otp_code
                 )
 
-                send_mail(
+                send_email_async(
                     subject='🔐 Password Reset OTP - THE FINISHER CRM',
-                    message=f"""
+                    text_body=f"""
 Hello {user.first_name or user.username},
 
 You requested to reset your password for THE FINISHER CRM.
@@ -383,12 +384,11 @@ This code will expire in 10 minutes.
 If you didn't request this, please ignore this email and your password will remain unchanged.
 
 Best regards,
-� THE FINISHER
+👑 THE FINISHER
 MTAMBO HOLDINGS Team
                     """,
-                    from_email='thefinishercrm@gmail.com',
                     recipient_list=[email],
-                    fail_silently=False,
+                    from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'security@thefinisher.tech')
                 )
                 
                 return Response({
