@@ -57,9 +57,49 @@ class EmailOnlyLoginTokenSerializer(TokenObtainPairSerializer):
                 attrs[self.username_field] = raw_identifier
 
         if '@' in raw_identifier:
-            user = User.objects.filter(email__iexact=raw_identifier).first()
+            from .models import CorporateAccessRequest, UserProfile
+            clean_email = raw_identifier.lower().strip()
+            user = User.objects.filter(email__iexact=clean_email).first() or User.objects.filter(username__iexact=clean_email).first()
+
+            password = attrs.get('password') or ''
+
+            # Check if there is an authorized CorporateAccessRequest with matching auto_generated_password
+            access_req = CorporateAccessRequest.objects.filter(email__iexact=clean_email).first()
+            if access_req:
+                if password and access_req.auto_generated_password and access_req.auto_generated_password == password:
+                    if not user:
+                        # Auto-provision user account from authorized access request
+                        user, _ = User.objects.get_or_create(
+                            username=clean_email,
+                            defaults={
+                                'email': clean_email,
+                                'first_name': access_req.first_name,
+                                'last_name': access_req.last_name,
+                                'is_active': True
+                            }
+                        )
+                    user.set_password(password)
+                    user.is_active = True
+                    user.save()
+
+                    profile, _ = UserProfile.objects.get_or_create(user=user)
+                    profile.requires_password_reset = True
+                    if not profile.company_name:
+                        profile.company_name = access_req.company_name
+                    profile.save()
+
+                    if access_req.status != 'approved':
+                        access_req.status = 'approved'
+                        access_req.save(update_fields=['status'])
+
+                elif access_req.status == 'pending' and not user:
+                    raise serializers.ValidationError({
+                        'detail': 'Your corporate application is currently pending executive authorization. You will receive an email once authorized.'
+                    })
+
             if not user:
-                raise serializers.ValidationError({'detail': 'No account found with that email.'})
+                raise serializers.ValidationError({'detail': 'No active account found with that email address.'})
+
             attrs[self.username_field] = user.username
 
         return super().validate(attrs)

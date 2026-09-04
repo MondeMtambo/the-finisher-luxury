@@ -681,18 +681,18 @@ class AdminAccessRequestActionView(APIView):
         user = User.objects.filter(username__iexact=req_obj.email).first() or User.objects.filter(email__iexact=req_obj.email).first()
         if not user:
             user = User(
-                username=req_obj.email,
-                email=req_obj.email,
+                username=req_obj.email.lower().strip(),
+                email=req_obj.email.lower().strip(),
                 first_name=req_obj.first_name,
                 last_name=req_obj.last_name,
                 is_active=True
             )
-            user.password = req_obj.hashed_password
+            user.set_password(auto_password)
             user.save()
         else:
             user.first_name = req_obj.first_name
             user.last_name = req_obj.last_name
-            user.password = req_obj.hashed_password
+            user.set_password(auto_password)
             user.is_active = True
             user.save()
 
