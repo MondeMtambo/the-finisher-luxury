@@ -13,23 +13,23 @@
       <EmployeePerformance />
     </section>
 
-    <section v-if="!isEmployeeOnly && (isAdmin || isClientAdmin)" class="card" style="padding:1.25rem;margin-bottom:1.5rem">
-      <h3 style="font-size:.9375rem;font-weight:600;color:var(--gray-900);margin:0 0 .75rem">Employee Performance</h3>
-      <div class="form-group" style="max-width:400px">
-        <label class="form-label">Select Employee</label>
-        <select v-model="selectedEmployeeId" @change="loadSelectedEmployeePerformance" class="form-input">
-          <option value="">-- Choose an employee --</option>
-          <option v-for="emp in employees" :key="emp.id" :value="emp.id">{{ emp.user.first_name }} {{ emp.user.last_name }} - {{ emp.user.email }}</option>
-        </select>
+    <!-- Executive Pipeline & Advanced Metrics (Always Unlocked for Admins & Luxury Tier) -->
+    <section v-if="!isEmployeeOnly" class="card" style="padding:1.5rem;margin-bottom:1.5rem">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:1.25rem;flex-wrap:wrap;gap:0.5rem">
+        <div>
+          <h3 style="font-size:1.15rem;font-weight:700;color:var(--text-gold, #D4AF37);margin:0">
+            Executive Pipeline &amp; Advanced Metrics
+          </h3>
+          <p style="font-size:0.8rem;color:var(--text-muted, #94a3b8);margin:0.25rem 0 0">
+            Institutional forecasting, conversion velocity, and portfolio health
+          </p>
+        </div>
+        <span class="badge badge-blue" style="font-weight:700;letter-spacing:0.5px">
+          ⭐ EXECUTIVE ADMIN SUITE &middot; UNLOCKED
+        </span>
       </div>
-      <div v-if="selectedEmployeeId">
-        <EmployeePerformance :userId="selectedEmployeeId" :key="selectedEmployeeId" />
-      </div>
-    </section>
 
-    <section v-else class="card" style="padding:1.25rem;margin-bottom:1.5rem">
-      <h3 style="font-size:.9375rem;font-weight:600;color:var(--gray-900);margin:0 0 .75rem">Quick Overview</h3>
-      <div class="overview-row">
+      <div class="overview-row" style="display:grid;grid-template-columns:repeat(auto-fit, minmax(160px, 1fr));gap:1rem">
         <div class="ov-stat">
           <span class="ov-val">{{ contacts.length }}</span>
           <span class="ov-lbl">Total Contacts</span>
@@ -42,17 +42,36 @@
           <span class="ov-val">{{ companies.length }}</span>
           <span class="ov-lbl">Companies</span>
         </div>
-        <div v-if="!isAdmin" class="ov-stat locked">
-          <svg width="16" height="16" fill="none" stroke="var(--gray-400)" stroke-width="2"><rect x="3" y="7" width="10" height="7" rx="1.5"/><path d="M5 7V5a3 3 0 0 1 6 0v2"/></svg>
-          <span class="ov-lbl">Advanced Metrics</span>
-          <span class="ov-hint">Upgrade to unlock</span>
+        <div class="ov-stat">
+          <span class="ov-val text-gold">R{{ forecastedRevenue.toLocaleString('en-ZA', { maximumFractionDigits: 0 }) }}</span>
+          <span class="ov-lbl">Revenue Forecast (Weighted)</span>
+        </div>
+        <div class="ov-stat">
+          <span class="ov-val" :style="{ color: winRatePercentage >= 50 ? '#22c55e' : '#f59e0b' }">{{ winRatePercentage }}%</span>
+          <span class="ov-lbl">Win Rate %</span>
+        </div>
+        <div class="ov-stat">
+          <span class="ov-val text-blue">R{{ avgDealSize.toLocaleString('en-ZA', { maximumFractionDigits: 0 }) }}</span>
+          <span class="ov-lbl">Avg Deal Size</span>
         </div>
       </div>
-      <div v-if="!isAdmin" class="upgrade-tease">
-        <p><strong>Want more insights?</strong> Upgrade to unlock revenue forecasting, win rate analytics, custom dashboards and more.</p>
-        <button class="btn btn-sm btn-primary" @click="$router.push('/upgrade/luxury')">See Premium Plans</button>
+    </section>
+
+    <!-- Team Performance Review -->
+    <section v-if="!isEmployeeOnly && (isAdmin || isClientAdmin)" class="card" style="padding:1.25rem;margin-bottom:1.5rem">
+      <h3 style="font-size:.9375rem;font-weight:600;color:var(--text-primary, #fff);margin:0 0 .75rem">Employee Performance Review</h3>
+      <div class="form-group" style="max-width:400px">
+        <label class="form-label">Select Team Member</label>
+        <select v-model="selectedEmployeeId" @change="loadSelectedEmployeePerformance" class="form-input">
+          <option value="">-- Choose an employee --</option>
+          <option v-for="emp in employees" :key="emp.id" :value="emp.id">{{ emp.user.first_name }} {{ emp.user.last_name }} - {{ emp.user.email }}</option>
+        </select>
+      </div>
+      <div v-if="selectedEmployeeId">
+        <EmployeePerformance :userId="selectedEmployeeId" :key="selectedEmployeeId" />
       </div>
     </section>
+
 
     <div v-if="!isEmployeeOnly" class="reports-grid">
       <div class="report-card card">
@@ -177,8 +196,28 @@ export default {
     },
     completedTicketsCount() {
       return this.tickets.filter(t => t.status === 'completed').length
+    },
+    forecastedRevenue() {
+      const weights = { lead: 0.1, contact_made: 0.25, proposal: 0.5, negotiation: 0.75, closed_won: 1.0, closed_lost: 0.0 };
+      return this.deals.reduce((sum, d) => {
+        const w = weights[d.stage] !== undefined ? weights[d.stage] : 0.3;
+        return sum + (parseFloat(d.value || 0) * w);
+      }, 0);
+    },
+    winRatePercentage() {
+      const won = this.deals.filter(d => d.stage === 'closed_won').length;
+      const lost = this.deals.filter(d => d.stage === 'closed_lost').length;
+      const totalClosed = won + lost;
+      if (totalClosed === 0) return won > 0 ? 100 : 0;
+      return Math.round((won / totalClosed) * 100);
+    },
+    avgDealSize() {
+      if (this.deals.length === 0) return 0;
+      const total = this.deals.reduce((sum, d) => sum + parseFloat(d.value || 0), 0);
+      return Math.round(total / this.deals.length);
     }
   },
+
   async mounted() {
     if (!this.isEmployeeOnly) {
       await this.loadData()

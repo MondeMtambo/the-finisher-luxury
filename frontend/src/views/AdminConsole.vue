@@ -206,21 +206,6 @@
         </div>
       </div>
 
-      <!-- Assist Drive Playbook -->
-      <div class="section-container">
-         <h2 class="section-title">Assist Drive Playbook</h2>
-         <p class="text-muted mb-4">Showcase how THE FINISHER backs partner growth.</p>
-         <div class="playbook-grid">
-             <div class="playbook-card" v-for="item in overview.support_catalog" :key="item.name">
-                 <div class="pb-header">{{ item.name }}</div>
-                 <div class="pb-meta badge badge-gray mb-2">{{ item.industry }}</div>
-                 <p class="pb-focus">{{ item.focus }}</p>
-                 <div class="pb-next"><strong>Next Action:</strong> {{ item.next_step }}</div>
-                 <button class="btn btn-secondary mt-4 w-100" @click="notifyComingSoon">Initiate Assist (Soon)</button>
-             </div>
-         </div>
-      </div>
-
       <!-- CIPC Business Verifications & Compliance Portal -->
       <div class="section-container">
         <div class="section-header-flex">
@@ -350,6 +335,13 @@
               <option value="CRITICAL">Critical Alert</option>
             </select>
           </div>
+          <div class="filter-group">
+            <label>Company / Tenant:</label>
+            <select v-model="auditFilterCompany" @change="fetchAuditLogs" class="form-input form-input-sm">
+              <option value="">All Companies (Full Immunity)</option>
+              <option v-for="c in companiesList" :key="c" :value="c">{{ c }}</option>
+            </select>
+          </div>
           <div class="filter-group flex-1">
             <label>Search:</label>
             <input type="text" v-model="auditSearch" @input="debounceAuditSearch" placeholder="Search IP, actor, or description..." class="form-input form-input-sm" />
@@ -366,6 +358,7 @@
             <thead>
               <tr>
                 <th>Timestamp (UTC)</th>
+                <th>Company / Tenant</th>
                 <th>Severity</th>
                 <th>Event Type</th>
                 <th>Actor / User</th>
@@ -377,6 +370,9 @@
               <tr v-for="log in auditLogs" :key="log.id">
                 <td class="text-sm font-mono whitespace-nowrap">{{ formatAuditTimestamp(log.timestamp) }}</td>
                 <td>
+                  <span class="badge badge-gray" style="font-weight: 700; color: #D4AF37;">{{ log.organization_name || 'MTAMBO HOLDINGS' }}</span>
+                </td>
+                <td>
                   <span :class="`badge-audit badge-${(log.severity || 'info').toLowerCase()}`">{{ log.severity }}</span>
                 </td>
                 <td>
@@ -384,7 +380,6 @@
                 </td>
                 <td>
                   <strong>{{ log.actor }}</strong>
-                  <div v-if="log.organization_name" class="text-xs text-muted">{{ log.organization_name }}</div>
                 </td>
                 <td class="font-mono text-sm">
                   <span class="ip-pill">{{ log.ip_address || 'Internal' }}</span>
@@ -685,6 +680,7 @@ export default {
       loadingAudit: false,
       auditFilterEvent: '',
       auditFilterSeverity: '',
+      auditFilterCompany: '',
       auditSearch: '',
       auditDebounceTimer: null,
       // CIPC Tenant Verifications
@@ -716,6 +712,18 @@ export default {
     },
     token() {
       return localStorage.getItem('thefinisher_access_token');
+    },
+    companiesList() {
+      const list = new Set();
+      if (this.overview && this.overview.clients) {
+        this.overview.clients.forEach(cl => {
+          if (cl.companies) cl.companies.forEach(co => { if (co.name) list.add(co.name); });
+        });
+      }
+      if (this.auditLogs) {
+        this.auditLogs.forEach(l => { if (l.organization_name) list.add(l.organization_name); });
+      }
+      return Array.from(list).filter(Boolean).sort();
     }
   },
   async mounted() {
@@ -812,6 +820,7 @@ export default {
         let endpoint = '/audit-trail/?';
         if (this.auditFilterEvent) endpoint += `event_type=${encodeURIComponent(this.auditFilterEvent)}&`;
         if (this.auditFilterSeverity) endpoint += `severity=${encodeURIComponent(this.auditFilterSeverity)}&`;
+        if (this.auditFilterCompany) endpoint += `company_name=${encodeURIComponent(this.auditFilterCompany)}&`;
         if (this.auditSearch) endpoint += `search=${encodeURIComponent(this.auditSearch)}&`;
         const res = await this.fetchApi(endpoint);
         this.auditLogs = Array.isArray(res) ? res : (res.results || []);
@@ -1005,7 +1014,14 @@ export default {
       });
     },
 
-    // Quick Delete
+    closeQuickDelete() {
+      this.showQuickDelete = false;
+      this.quickDeleteUser = null;
+      this.quickDeleteSearch = '';
+      this.filteredDeleteUsers = [];
+      this.quickDeleteReason = '';
+      this.quickDeleteCustomReason = '';
+    },
     filterUsersForDelete() {
         const q = this.quickDeleteSearch.toLowerCase().trim();
         if(q.length < 2) { this.filteredDeleteUsers = []; return; }

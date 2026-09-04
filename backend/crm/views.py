@@ -3440,6 +3440,10 @@ class SecurityAuditTrailViewSet(viewsets.ReadOnlyModelViewSet):
         if severity:
             qs = qs.filter(severity=severity.upper())
 
+        company_name = self.request.query_params.get('company_name') or self.request.query_params.get('company')
+        if company_name:
+            qs = qs.filter(organization__name__icontains=company_name)
+
         search = self.request.query_params.get('search')
         if search:
             qs = qs.filter(

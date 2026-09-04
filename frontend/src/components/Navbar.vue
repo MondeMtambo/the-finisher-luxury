@@ -235,15 +235,29 @@
         </div>
       </nav>
 
-      <div class="sidebar-footer">
+      <div class="sidebar-footer" :class="{ 'footer-compact': footerCompact }">
+        <!-- Vertical Adjust / Collapse Handle -->
+        <button 
+          v-if="!sidebarCollapsed" 
+          class="footer-adjust-handle" 
+          @click="toggleFooterCompact" 
+          :title="footerCompact ? 'Expand Footer (Full Specs)' : 'Compact Footer (More Navigation Space)'"
+        >
+          <span class="handle-bar"></span>
+          <span class="handle-icon">{{ footerCompact ? '▲' : '▼' }}</span>
+        </button>
+
         <!-- Corporate Plan Badge (Positioned directly above copyright) -->
-        <div v-if="!sidebarCollapsed" class="plan-badge plan-ultimate">
+        <div v-if="!sidebarCollapsed && !footerCompact" class="plan-badge plan-ultimate">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
           <span>CORPORATE PLAN / ULTIMATE</span>
         </div>
+        <div v-else-if="!sidebarCollapsed && footerCompact" class="plan-badge-mini" @click="toggleFooterCompact" title="Corporate Plan / Ultimate (Click to expand)">
+          <span>⭐ ULTIMATE</span>
+        </div>
 
         <!-- Dynamic Copyright (At the very bottom) -->
-        <div v-if="!sidebarCollapsed" class="sidebar-copyright">
+        <div v-if="!sidebarCollapsed && !footerCompact" class="sidebar-copyright">
           <p>
             &copy; {{ currentYear }}
             <a href="https://mtamboholdings.dev" target="_blank" rel="noopener noreferrer" class="copyright-link" title="Visit Mtambo Holdings Group">
@@ -253,6 +267,7 @@
           </p>
         </div>
       </div>
+
     </aside>
 
     <div v-if="mobileMenuOpen" class="mobile-overlay" @click="mobileMenuOpen = false"></div>
@@ -300,6 +315,7 @@ export default {
       currentTime: '',
       currentYear: new Date().getFullYear(),
       currentTheme: localStorage.getItem('finisher_theme') || 'dark',
+      footerCompact: localStorage.getItem('finisher_footer_compact') === 'true',
       clockInterval: null
     }
   },
@@ -392,6 +408,10 @@ export default {
       localStorage.setItem('finisher_theme', nextTheme)
       document.documentElement.setAttribute('data-theme', nextTheme)
       toast.info(`Switched to ${nextTheme === 'dark' ? 'Luxury Obsidian (Dark)' : 'Executive Platinum (Light)'}`)
+    },
+    toggleFooterCompact() {
+      this.footerCompact = !this.footerCompact
+      localStorage.setItem('finisher_footer_compact', this.footerCompact ? 'true' : 'false')
     },
     updateClock() {
       this.currentTime = new Date().toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
@@ -1370,6 +1390,56 @@ export default {
   color: #000;
 }
 .plan-badge.plan-ultimate svg { color: #000; }
+
+.footer-adjust-handle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 0 2px 6px;
+  color: var(--text-gold, #D4AF37);
+  opacity: 0.6;
+  transition: opacity 0.2s;
+}
+.footer-adjust-handle:hover {
+  opacity: 1;
+}
+.handle-bar {
+  flex: 1;
+  height: 2px;
+  background: linear-gradient(to right, transparent, rgba(212, 175, 55, 0.4), transparent);
+  margin-right: 8px;
+}
+.handle-icon {
+  font-size: 9px;
+  font-weight: 700;
+  color: var(--text-gold, #D4AF37);
+}
+.sidebar-footer.footer-compact {
+  padding: 6px 12px 10px;
+}
+.plan-badge-mini {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  color: #000;
+  background: linear-gradient(135deg, #D4AF37, #B49015);
+  padding: 5px 8px;
+  border-radius: 6px;
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
+  transition: transform 0.15s ease;
+}
+.plan-badge-mini:hover {
+  transform: translateY(-1px);
+}
 
 /* Live Clock & Copyright Styles */
 .live-clock {
