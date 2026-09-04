@@ -13,8 +13,24 @@ from phonenumbers import NumberParseException
 class CompanySerializer(serializers.ModelSerializer):
     class Meta:
         model = Company
-        fields = ['id', 'name', 'email', 'phone', 'address', 'created_at', 'updated_at']
+        fields = [
+            'id', 'name', 'trading_name', 'registration_number', 'tax_number', 
+            'industry', 'cipc_verified', 'email', 'phone', 'address', 'client_type', 
+            'created_at', 'updated_at'
+        ]
         read_only_fields = ['id', 'created_at', 'updated_at']
+
+    def validate_registration_number(self, value):
+        if value:
+            import re
+            cleaned = value.strip().upper()
+            cipc_pattern = r'^(19|20)\d{2}\/\d{6}\/\d{2}$'
+            if not re.match(cipc_pattern, cleaned):
+                raise serializers.ValidationError(
+                    "CIPC Registration Number must follow standard format YYYY/NNNNNN/NN (e.g. 2024/123456/07)"
+                )
+            return cleaned
+        return value
     
     def validate_email(self, value):
         if value:

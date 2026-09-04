@@ -74,7 +74,13 @@
                 {{ company.client_type === 'individual' ? 'Individual' : 'Company' }}
               </span>
             </td>
-            <td><strong>{{ company.name }}</strong></td>
+            <td>
+              <strong>{{ company.name }}</strong>
+              <div v-if="company.trading_name" style="font-size:0.75rem;color:var(--gray-500)">T/A {{ company.trading_name }}</div>
+              <div v-if="company.registration_number" class="cipc-table-tag">
+                <span class="cipc-dot"></span> CIPC: {{ company.registration_number }}
+              </div>
+            </td>
             <td>{{ company.email || '---' }}</td>
             <td>{{ company.phone || '---' }}</td>
             <td class="cell-truncate">{{ company.address || '---' }}</td>
@@ -126,10 +132,41 @@
             </div>
             
             <div class="form-group">
-              <label class="form-label">{{ companyForm.client_type === 'individual' ? 'Full Name' : 'Company Name' }}</label>
-              <input class="form-input" v-model="companyForm.name" :placeholder="companyForm.client_type === 'individual' ? 'John Doe' : 'Company Name'" required>
+              <label class="form-label">{{ companyForm.client_type === 'individual' ? 'Full Name *' : 'Company Registered Name *' }}</label>
+              <input class="form-input" v-model="companyForm.name" :placeholder="companyForm.client_type === 'individual' ? 'John Doe' : 'e.g. Acme Holdings (Pty) Ltd'" required>
             </div>
             
+            <div v-if="companyForm.client_type === 'company'" class="form-group">
+              <label class="form-label">Trading Name (Trading As / T/A)</label>
+              <input class="form-input" v-model="companyForm.trading_name" placeholder="e.g. Acme Luxury Solutions">
+            </div>
+
+            <div v-if="companyForm.client_type === 'company'" class="form-group">
+              <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.25rem;">
+                <label class="form-label" style="margin:0">CIPC Registration Number</label>
+                <span v-if="cipcStatus.state === 'valid'" class="badge-cipc-success">✓ {{ cipcStatus.entityLabel }}</span>
+              </div>
+              <input 
+                class="form-input font-mono" 
+                v-model="companyForm.registration_number" 
+                @input="onCipcInput"
+                placeholder="YYYY/NNNNNN/NN (e.g. 2024/123456/07)"
+                maxlength="14"
+              >
+              <span class="form-hint" v-if="cipcStatus.message">{{ cipcStatus.message }}</span>
+            </div>
+
+            <div v-if="companyForm.client_type === 'company'" class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label">SARS Tax / VAT Number</label>
+                <input class="form-input font-mono" v-model="companyForm.tax_number" placeholder="10-digit Tax Ref" maxlength="10">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Industry / Sector</label>
+                <input class="form-input" v-model="companyForm.industry" placeholder="e.g. Mining / Finance">
+              </div>
+            </div>
+
             <div class="form-group">
               <label class="form-label">Email</label>
               <input class="form-input" v-model="companyForm.email" type="email" placeholder="Email">
@@ -175,6 +212,10 @@ export default {
       filterType: 'all',
       companyForm: {
         name: '',
+        trading_name: '',
+        registration_number: '',
+        tax_number: '',
+        industry: '',
         email: '',
         phone: '',
         address: '',
@@ -194,6 +235,25 @@ export default {
     },
     canAddCompany() {
       return this.contactCount > 0
+    },
+    cipcStatus() {
+      const val = (this.companyForm.registration_number || '').trim()
+      if (!val) return { state: 'empty', message: '', entityLabel: '' }
+      const cipcRegex = /^(19|20)\d{2}\/\d{6}\/\d{2}$/
+      if (cipcRegex.test(val)) {
+        const suffix = val.slice(-2)
+        const suffixMap = {
+          '07': 'Private Company (Pty Ltd)',
+          '06': 'Public Company (Ltd)',
+          '23': 'Close Corporation (CC)',
+          '08': 'Non-Profit Company (NPC)',
+          '21': 'Incorporated (Inc)',
+          '10': 'External / Foreign'
+        }
+        const label = suffixMap[suffix] || 'Registered Corporate Entity'
+        return { state: 'valid', entityLabel: label, message: `Official CIPC Match: ${label}` }
+      }
+      return { state: 'incomplete', entityLabel: '', message: 'Standard CIPC format: YYYY/NNNNNN/NN (e.g. 2024/123456/07)' }
     }
   },
   async mounted() {
@@ -272,12 +332,26 @@ export default {
       this.showAddMenu = false
       this.companyForm = {
         name: '',
+        trading_name: '',
+        registration_number: '',
+        tax_number: '',
+        industry: '',
         email: '',
         phone: '',
         address: '',
         client_type: 'company'
       }
       this.editingId = null
+    },
+    onCipcInput(e) {
+      let v = e.target.value.replace(/[^0-9/]/g, '').toUpperCase()
+      const digitsOnly = v.replace(/\//g, '')
+      if (digitsOnly.length > 4 && digitsOnly.length <= 10) {
+        v = `${digitsOnly.slice(0, 4)}/${digitsOnly.slice(4)}`
+      } else if (digitsOnly.length > 10) {
+        v = `${digitsOnly.slice(0, 4)}/${digitsOnly.slice(4, 10)}/${digitsOnly.slice(10, 12)}`
+      }
+      this.companyForm.registration_number = v.slice(0, 14)
     }
   }
 }
@@ -352,8 +426,36 @@ export default {
   border-radius: var(--radius-full); font-size: 0.75rem; 
   font-weight: 700; white-space: nowrap;
 }
-.badge-gold { background: #fef3c7; color: #92400e; }
-.badge-blue { background: #dbeafe; color: #1e3a8a; }
+.badge-gold { background: rgba(212, 175, 55, 0.15); color: #D4AF37; }
+.badge-blue { background: rgba(37, 99, 235, 0.15); color: var(--primary-500); }
+
+/* CIPC styles */
+.cipc-table-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-family: monospace;
+  font-size: 0.7rem;
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+  padding: 1px 6px;
+  border-radius: 4px;
+  margin-top: 0.25rem;
+}
+.cipc-dot { width: 5px; height: 5px; border-radius: 50%; background: #10b981; }
+.badge-cipc-success {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: #10b981;
+  background: rgba(16, 185, 129, 0.1);
+  padding: 2px 6px;
+  border-radius: 4px;
+  border: 1px solid rgba(16, 185, 129, 0.25);
+}
+.font-mono { font-family: monospace; letter-spacing: 0.5px; }
+.form-hint { font-size: 0.7rem; color: #6b7280; margin-top: 0.25rem; display: block; }
+.form-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
 
 @media (max-width: 768px) {
   .page-wrap { padding: 1rem; }
