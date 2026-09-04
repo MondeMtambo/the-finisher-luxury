@@ -3,7 +3,7 @@ from .models import (Contact, Company, Deal, UserProfile, DeletedUserLog,
                      Asset, AssetCategory, Division, OnboardingLog, OffboardingRequest,
                      Product, LineItem, EmailTemplate, EmailCampaign, CampaignRecipient,
                      Workflow, WorkflowAction, WorkflowLog, DashboardWidget, DashboardLayout,
-                     WebsiteLead)
+                     WebsiteLead, CorporateAccessRequest)
 
 
 @admin.register(UserProfile)
@@ -139,3 +139,11 @@ class WebsiteLeadAdmin(admin.ModelAdmin):
     search_fields = ['contact__first_name', 'contact__last_name', 'contact__email', 'owner__username']
     list_filter = ['source', 'response_status', 'meeting_status', 'inbound_received_at']
     readonly_fields = ['inbound_received_at', 'created_at', 'updated_at']
+
+
+@admin.register(CorporateAccessRequest)
+class CorporateAccessRequestAdmin(admin.ModelAdmin):
+    list_display = ['company_name', 'first_name', 'last_name', 'email', 'phone', 'job_title', 'is_ceo', 'cipc_number', 'status', 'created_at']
+    search_fields = ['company_name', 'first_name', 'last_name', 'email', 'phone', 'cipc_number']
+    list_filter = ['status', 'is_ceo', 'province', 'created_at']
+    readonly_fields = ['id', 'hashed_password', 'created_at', 'updated_at']

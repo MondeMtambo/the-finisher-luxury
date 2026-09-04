@@ -55,6 +55,118 @@
         </div>
       </div>
 
+      <!-- Corporate Access Requests (Executive Authorization Deck) -->
+      <div class="section-container">
+        <div class="flex-between mb-3" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <h2 class="section-title" style="margin-bottom: 0.25rem;">Corporate Access Requests &amp; Executive Approvals</h2>
+            <p class="section-subtitle" style="color: #9ca3af; font-size: 0.85rem; margin: 0;">
+              Review applicant dossiers and provision enterprise tenant workspaces with 7-Day VIP Executive privileges.
+            </p>
+          </div>
+          <div class="header-badges">
+            <span class="badge font-mono" style="font-size: 0.85rem; padding: 0.45rem 1rem; border-radius: 20px; background: rgba(212, 175, 55, 0.15); color: #d4af37; border: 1px solid rgba(212, 175, 55, 0.4);">
+              👑 {{ pendingAccessRequestsCount }} PENDING AUTHORIZATION
+            </span>
+          </div>
+        </div>
+
+        <div class="table-container">
+          <div v-if="loadingAccessRequests" class="audit-loading" style="padding: 2rem; text-align: center;">
+            <div class="spinner"></div>
+            <span>Fetching incoming corporate applications from Supabase...</span>
+          </div>
+          <table v-else-if="corporateAccessRequests.length > 0" class="luxury-table">
+            <thead>
+              <tr>
+                <th>Applicant / Executive</th>
+                <th>Company &amp; Sector</th>
+                <th>Work Email &amp; Phone</th>
+                <th>Physical Headquarters</th>
+                <th>CIPC &amp; Tax No.</th>
+                <th>Status</th>
+                <th>Submitted</th>
+                <th>Executive Decision</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="req in corporateAccessRequests" :key="req.id">
+                <td>
+                  <div style="font-weight: 700; color: #fff;">{{ req.first_name }} {{ req.last_name }}</div>
+                  <div style="font-size: 0.78rem; color: #d4af37; margin-top: 0.2rem;">
+                    {{ req.job_title }}
+                    <span v-if="req.is_ceo" style="margin-left: 0.35rem; background: rgba(212,175,55,0.2); padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.72rem;">👑 CEO</span>
+                    <span v-else style="margin-left: 0.35rem; background: rgba(255,255,255,0.1); padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.72rem;" :title="`Sponsor: ${req.executive_sponsor_name} (${req.executive_sponsor_email})`">👔 Officer</span>
+                  </div>
+                </td>
+                <td>
+                  <div style="font-weight: 700; color: #f3f4f6;">{{ req.company_name }}</div>
+                  <div style="font-size: 0.78rem; color: #9ca3af;">{{ req.trading_name ? `T/A ${req.trading_name}` : req.industry }}</div>
+                </td>
+                <td>
+                  <div style="font-family: monospace; font-size: 0.82rem; color: #e5e7eb;">{{ req.email }}</div>
+                  <div style="font-size: 0.78rem; color: #9ca3af;">{{ req.phone }}</div>
+                </td>
+                <td>
+                  <div style="font-size: 0.82rem; max-width: 200px; line-height: 1.3;" :title="req.physical_address">
+                    {{ req.physical_address }}, {{ req.city }}, {{ req.province }} {{ req.postal_code }}
+                  </div>
+                </td>
+                <td>
+                  <div style="font-family: monospace; font-size: 0.82rem; color: #d4af37;">
+                    {{ req.cipc_number || 'N/A' }}
+                  </div>
+                  <div style="font-size: 0.75rem; color: #9ca3af;" v-if="req.tax_number">VAT: {{ req.tax_number }}</div>
+                </td>
+                <td>
+                  <span v-if="req.status === 'pending'" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.78rem; font-weight: 700;">
+                    Pending Review
+                  </span>
+                  <span v-else-if="req.status === 'approved'" style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.78rem; font-weight: 700;">
+                    ✓ Provisioned
+                  </span>
+                  <span v-else style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.78rem; font-weight: 700;">
+                    Rejected
+                  </span>
+                </td>
+                <td style="font-size: 0.78rem; color: #9ca3af; white-space: nowrap;">
+                  {{ formatAuditTimestamp(req.created_at) }}
+                </td>
+                <td>
+                  <div v-if="req.status === 'pending'" style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+                    <button 
+                      class="btn btn-sm btn-gold" 
+                      style="font-size: 0.78rem; padding: 0.4rem 0.75rem; background: linear-gradient(135deg, #d4af37, #b48608); color: #000; font-weight: 700; border: none; border-radius: 6px; cursor: pointer;" 
+                      :disabled="accessRequestActionLoading === req.id"
+                      @click="processAccessRequest(req.id, 'approve', req.company_name, req.email)"
+                    >
+                      {{ accessRequestActionLoading === req.id ? 'Provisioning...' : '⚡ Approve & Provision' }}
+                    </button>
+                    <button 
+                      class="btn btn-sm btn-secondary" 
+                      style="font-size: 0.78rem; padding: 0.4rem 0.6rem; color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); background: rgba(239, 68, 68, 0.1); border-radius: 6px; cursor: pointer;" 
+                      :disabled="accessRequestActionLoading === req.id"
+                      @click="processAccessRequest(req.id, 'reject', req.company_name, req.email)"
+                    >
+                      ✕ Reject
+                    </button>
+                  </div>
+                  <div v-else-if="req.status === 'approved'" style="font-size: 0.78rem; color: #10b981; font-weight: 600;">
+                    Workspace Active ({{ req.created_organization_name || 'Provisioned' }})
+                  </div>
+                  <div v-else style="font-size: 0.78rem; color: #ef4444;" :title="req.rejection_reason">
+                    {{ req.rejection_reason || 'Rejected' }}
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div v-else class="audit-empty" style="padding: 2.5rem; text-align: center; color: #9ca3af;">
+            <p>👑 No corporate access requests currently awaiting executive review.</p>
+          </div>
+        </div>
+      </div>
+
       <!-- User Management (Fleet Command) -->
       <div class="section-container">
         <h2 class="section-title">Fleet Command & User Access</h2>
@@ -686,6 +798,11 @@ export default {
       // CIPC Tenant Verifications
       verifications: [],
       loadingVerifications: false,
+      // Corporate Access Requests (Executive Approvals)
+      corporateAccessRequests: [],
+      loadingAccessRequests: false,
+      pendingAccessRequestsCount: 0,
+      accessRequestActionLoading: null,
       // Onboard Corporate Tenant Modal
       showOnboardModal: false,
       onboardingSubmitting: false,
@@ -760,6 +877,7 @@ export default {
         this.clientEmployeeStats = ceRes.stats || this.clientEmployeeStats;
         await this.fetchAuditLogs();
         await this.fetchVerifications();
+        await this.fetchAccessRequests();
       } catch (err) {
         this.error = err.message;
         this.dispatchEvent('show-toast', { message: err.message, type: 'error' });
@@ -811,6 +929,47 @@ export default {
         await this.fetchAuditLogs();
       } catch (e) {
         alert('Failed to process verification: ' + e.message);
+      }
+    },
+    // Corporate Access Request Methods
+    async fetchAccessRequests() {
+      this.loadingAccessRequests = true;
+      try {
+        const res = await this.fetchApi('/admin/access-requests/');
+        this.corporateAccessRequests = res.requests || [];
+        this.pendingAccessRequestsCount = res.pending_count || 0;
+      } catch (e) {
+        console.warn('Failed to load corporate access requests:', e);
+      } finally {
+        this.loadingAccessRequests = false;
+      }
+    },
+    async processAccessRequest(id, action, companyName, email) {
+      if (action === 'approve') {
+        if (!confirm(`Authorize & provision dedicated corporate workspace for ${companyName} (${email})?\n\nThis will automatically:\n1. Provision Organization tenant\n2. Create Admin User account\n3. Activate 7-Day VIP Executive privileges\n4. Dispatch live credentials to ${email}`)) {
+          return;
+        }
+      } else if (action === 'reject') {
+        const reason = prompt(`Enter rejection feedback for ${companyName}:`, 'Application criteria not met');
+        if (reason === null) return;
+        return this.executeAccessRequestAction(id, action, '', reason);
+      }
+      await this.executeAccessRequestAction(id, action);
+    },
+    async executeAccessRequestAction(id, action, notes = '', rejectionReason = '') {
+      this.accessRequestActionLoading = id;
+      try {
+        const res = await this.fetchApi(`/admin/access-requests/${id}/action/`, {
+          method: 'POST',
+          body: JSON.stringify({ action, notes, rejection_reason: rejectionReason })
+        });
+        alert(res.message || `Request ${action}ed successfully.`);
+        await this.fetchAccessRequests();
+        await this.loadAllData();
+      } catch (err) {
+        alert('Operation failed: ' + err.message);
+      } finally {
+        this.accessRequestActionLoading = null;
       }
     },
     // POPIA Audit Trail Methods

@@ -64,7 +64,9 @@ api.interceptors.request.use(
       '/auth/refresh/',
       '/auth/verify-mfa/',
       '/auth/password-reset/',
-      '/auth/password-reset-confirm/'
+      '/auth/password-reset-confirm/',
+      '/public/request-access/',
+      '/public/leads/'
     ]
     const isPublicAuth = publicAuthPaths.some(p => (config.url || '').includes(p))
 
@@ -101,6 +103,16 @@ api.interceptors.response.use(
 
     // Handle 401 Unauthorized
     if (error.response?.status === 401 && !originalRequest._retry) {
+      // If user is already on a public view (register, login, forgot-password, disclaimer)
+      // or calling a public endpoint, NEVER force redirect to /login!
+      const currentLoc = (typeof window !== 'undefined') ? (window.location.hash + window.location.pathname) : ''
+      const isPublicLocation = ['register', 'login', 'forgot-password', 'disclaimer'].some(p => currentLoc.includes(p))
+      const isPublicEndpoint = (originalRequest.url || '').includes('/public/')
+
+      if (isPublicLocation || isPublicEndpoint) {
+        return Promise.reject(error)
+      }
+
       // Don't immediately logout on first 401 - might be a timing issue
       // Only try refresh if we have a refresh token
       const refreshToken = authService.getRefreshToken()
@@ -424,6 +436,13 @@ export const verificationAPI = {
   }),
   adminGetAll: () => api.get('/admin/tenant-verifications/'),
   adminReview: (id, data) => api.post(`/admin/tenant-verifications/${id}/review/`, data)
+}
+
+export const accessRequestsAPI = {
+  submitPublic: (data) => api.post('/public/request-access/', data),
+  adminGetAll: () => api.get('/admin/access-requests/'),
+  adminAction: (id, action, notes = '', rejectionReason = '') =>
+    api.post(`/admin/access-requests/${id}/action/`, { action, notes, rejection_reason: rejectionReason })
 }
 
 export default api

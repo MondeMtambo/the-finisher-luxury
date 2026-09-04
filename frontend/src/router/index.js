@@ -235,8 +235,8 @@ router.beforeEach(async (to, from, next) => {
     }
   }
 
-  // If logged in and visiting landing, login, or register — go straight to dashboard
-  if (isAuthenticated && ['/', '/login', '/register'].includes(to.path)) {
+  // If logged in and visiting landing or login — go straight to dashboard
+  if (isAuthenticated && ['/', '/login'].includes(to.path)) {
     next('/dashboard')
     return
   }

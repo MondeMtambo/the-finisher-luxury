@@ -3,6 +3,7 @@ from rest_framework.routers import DefaultRouter
 from rest_framework_simplejwt.views import TokenRefreshView
 from . import views
 from . import auth_views
+from . import access_request_views
 
 router = DefaultRouter()
 router.register(r'contacts', views.ContactViewSet, basename='contact')
@@ -42,8 +43,9 @@ urlpatterns = [
     path('api/auth/password-reset-confirm/', auth_views.PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
     path('api/auth/logout/', auth_views.LogoutView.as_view(), name='logout'),
     
-    # Public lead capture endpoint
+    # Public endpoints (zero auth required)
     path('api/public/leads/', views.public_lead_capture, name='public_lead_capture'),
+    path('api/public/request-access/', access_request_views.PublicAccessRequestView.as_view(), name='public_request_access'),
 
     path('api/', include(router.urls)),
     path('api/prerequisites/', views.prerequisite_status, name='prerequisite_status'),
@@ -54,6 +56,10 @@ urlpatterns = [
     path('api/admin/website-leads/inbox/', views.AdminWebsiteLeadInboxView.as_view(), name='admin_website_leads_inbox'),
     path('api/admin/users/', views.UserManagementView.as_view(), name='user_management'),
     path('api/admin/clients-employees/', views.ClientEmployeeManagementView.as_view(), name='client_employee_management'),
+
+    # Corporate Access Requests (Executive Admin Review & Provisioning)
+    path('api/admin/access-requests/', access_request_views.AdminAccessRequestListView.as_view(), name='admin_access_requests'),
+    path('api/admin/access-requests/<uuid:pk>/action/', access_request_views.AdminAccessRequestActionView.as_view(), name='admin_access_request_action'),
 
     # Billing & 14-Day VIP Trial Management
     path('api/billing/status/', views.OrganizationBillingStatusView.as_view(), name='billing_status'),

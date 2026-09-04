@@ -1584,3 +1584,71 @@ class SecurityAuditTrail(models.Model):
     def __str__(self):
         actor = self.user.username if self.user else (self.username_attempted or 'Anonymous')
         return f"[{self.severity}] {self.event_type} - {actor} ({self.timestamp:%Y-%m-%d %H:%M:%S})"
+
+
+class CorporateAccessRequest(models.Model):
+    """
+    Corporate Access Request for THE FINISHER LUXURY.
+    Stores applicant verification, corporate details, physical/postal dossier,
+    and desired password (hashed) for 1-click executive workspace provisioning by the CEO.
+    """
+    STATUS_CHOICES = [
+        ('pending', 'Pending Executive Review'),
+        ('approved', 'Approved & Provisioned'),
+        ('rejected', 'Rejected'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+
+    # Personal / Applicant Details
+    first_name = models.CharField(max_length=100)
+    last_name = models.CharField(max_length=100)
+    email = models.EmailField(db_index=True, help_text="Official corporate work email")
+    phone = models.CharField(max_length=30)
+    job_title = models.CharField(max_length=120, help_text="Executive designation (e.g. CEO, MD, VP)")
+    is_ceo = models.BooleanField(default=True, help_text="Whether applicant is the CEO / Principal Officer")
+    executive_sponsor_name = models.CharField(max_length=150, blank=True, help_text="Executive Sponsor if not CEO")
+    executive_sponsor_email = models.EmailField(blank=True, help_text="Executive Sponsor Email")
+    hashed_password = models.CharField(max_length=256, help_text="Securely hashed password for instant provisioning")
+
+    # Company Dossier
+    company_name = models.CharField(max_length=200)
+    trading_name = models.CharField(max_length=200, blank=True)
+    industry = models.CharField(max_length=100, blank=True, default='consulting')
+    physical_address = models.TextField(help_text="Building, Street Address")
+    city = models.CharField(max_length=100)
+    province = models.CharField(max_length=100, default='Gauteng')
+    postal_code = models.CharField(max_length=20)
+    postal_address = models.TextField(blank=True, help_text="Postal box or delivery address")
+    cipc_number = models.CharField(max_length=50, blank=True, help_text="CIPC Registration Number")
+    tax_number = models.CharField(max_length=50, blank=True, help_text="SARS Tax / VAT Number")
+
+    # Status & Audit
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending', db_index=True)
+    notes = models.TextField(blank=True)
+    rejection_reason = models.TextField(blank=True)
+
+    # Provisioning linkage
+    created_organization = models.ForeignKey(
+        'Organization', on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='corporate_access_requests'
+    )
+    created_user = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='corporate_access_requests'
+    )
+    reviewed_by = models.ForeignKey(
+        User, on_delete=models.SET_NULL, null=True, blank=True,
+        related_name='reviewed_access_requests'
+    )
+    reviewed_at = models.DateTimeField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True, db_index=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Corporate Access Request'
+        verbose_name_plural = 'Corporate Access Requests'
+
+    def __str__(self):
+        return f"{self.first_name} {self.last_name} ({self.company_name}) - {self.status}"
