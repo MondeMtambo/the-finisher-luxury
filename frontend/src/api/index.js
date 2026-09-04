@@ -66,6 +66,8 @@ api.interceptors.request.use(
       '/auth/password-reset/',
       '/auth/password-reset-confirm/',
       '/public/request-access/',
+      '/public/verify-access-request/',
+      '/public/cancel-access-request/',
       '/public/search-ceo/',
       '/public/leads/'
     ]
@@ -441,6 +443,8 @@ export const verificationAPI = {
 
 export const accessRequestsAPI = {
   submitPublic: (data) => api.post('/public/request-access/', data),
+  verifyPublic: (data) => api.post('/public/verify-access-request/', data),
+  cancelPublic: (id) => api.delete(`/public/cancel-access-request/${id}/`),
   searchCEO: (query) => api.get('/public/search-ceo/', { params: { q: query } }),
   adminGetAll: () => api.get('/admin/access-requests/'),
   adminAction: (id, action, notes = '', rejectionReason = '') =>

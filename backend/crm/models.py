@@ -1628,6 +1628,9 @@ class CorporateAccessRequest(models.Model):
 
     # Status & Audit
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending', db_index=True)
+    is_verified = models.BooleanField(default=False, db_index=True, help_text="Whether applicant verified identity via 6-digit OTP")
+    verification_code = models.CharField(max_length=6, blank=True, help_text="6-digit verification code")
+    expires_at = models.DateTimeField(null=True, blank=True, db_index=True, help_text="5-minute expiration timestamp for unverified requests")
     notes = models.TextField(blank=True)
     rejection_reason = models.TextField(blank=True)
 

@@ -760,6 +760,99 @@
       </div>
     </div>
 
+    <!-- Executive Approval & Dispatch Modal -->
+    <div v-if="showApprovalDispatchModal" class="modal-overlay">
+      <div class="modal-panel luxury-modal" style="max-width: 650px;">
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <span class="modal-badge-tag" style="color: #10b981; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.1em;">✓ WORKSPACE PROVISIONED</span>
+            <h3 style="margin: 0; color: #fff; font-size: 1.35rem;">⚡ Executive Onboarding Dispatch</h3>
+            <p class="text-muted text-sm mt-1 mb-0">The corporate workspace has been provisioned. Send or review credentials below.</p>
+          </div>
+          <button class="modal-close" @click="closeApprovalDispatchModal">×</button>
+        </div>
+
+        <div class="modal-body" style="padding: 1.5rem;" v-if="approvalDispatchData">
+          <div class="alert-box success-box mb-4" style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.4); padding: 1.25rem; border-radius: 8px;">
+            <div style="font-weight: 700; color: #86efac; font-size: 1.05rem; margin-bottom: 0.4rem;">
+              ✓ Workspace Active for {{ approvalDispatchData.company_name }}
+            </div>
+            <div style="font-size: 0.85rem; color: #d1d5db;">
+              Recipient: <strong>{{ approvalDispatchData.full_name }}</strong> ({{ approvalDispatchData.email }})
+            </div>
+          </div>
+
+          <div style="background: rgba(0,0,0,0.5); border: 1px solid rgba(212,175,55,0.3); padding: 1.1rem; border-radius: 8px; font-family: monospace; font-size: 0.85rem; line-height: 1.7; color: #e5e7eb; margin-bottom: 1.25rem;">
+            <div><strong style="color: #d4af37;">Portal URL:</strong> https://www.thefinishercrm.tech/#/login</div>
+            <div><strong style="color: #d4af37;">Login Email:</strong> {{ approvalDispatchData.email }}</div>
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-top: 0.25rem;">
+              <div>
+                <strong style="color: #d4af37;">Auto-Generated Password:</strong> 
+                <span style="color: #facc15; font-weight: 700; font-size: 1.05rem; background: rgba(250,204,21,0.15); padding: 0.15rem 0.5rem; border-radius: 4px; margin-left: 0.35rem;">
+                  {{ approvalDispatchData.password }}
+                </span>
+              </div>
+              <button type="button" class="btn btn-sm btn-secondary" @click="copyDispatchPassword" style="font-size: 0.72rem; padding: 0.2rem 0.5rem;">
+                📋 Copy Pass
+              </button>
+            </div>
+          </div>
+
+          <div class="security-reset-badge" style="background: rgba(59, 130, 246, 0.12); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 6px; padding: 0.75rem 1rem; margin-bottom: 1.25rem; font-size: 0.82rem; color: #93c5fd; display: flex; align-items: center; gap: 0.5rem;">
+            <span style="font-size: 1.1rem;">🔒</span>
+            <div>
+              <strong>Mandatory First Login Password Change Active:</strong>
+              <div style="color: #bfdbfe; font-size: 0.78rem; margin-top: 0.1rem;">
+                When the user enters this auto-generated temporary password, the system intercepts them immediately and forces them to choose a permanent personal password before accessing the system.
+              </div>
+            </div>
+          </div>
+
+          <!-- Executive Letter Preview Card -->
+          <div class="letter-preview-card" style="background: rgba(10,10,10,0.85); border: 1px solid rgba(212,175,55,0.25); border-radius: 8px; padding: 1rem; margin-bottom: 1.25rem;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem;">
+              <span style="font-size: 0.75rem; font-weight: 800; letter-spacing: 1px; color: #d4af37; text-transform: uppercase;">
+                📜 Executive Dispatch Letter Preview
+              </span>
+              <span style="font-size: 0.72rem; color: #9ca3af;">Auto-Preloaded into Outlook</span>
+            </div>
+            <pre style="white-space: pre-wrap; word-break: break-word; font-family: monospace; font-size: 0.76rem; color: #e5e7eb; background: rgba(0,0,0,0.5); padding: 0.75rem; border-radius: 6px; margin: 0; max-height: 180px; overflow-y: auto; border: 1px solid rgba(255,255,255,0.06); line-height: 1.5;">{{ approvalDispatchData.email_body }}</pre>
+          </div>
+
+          <div style="display: flex; gap: 0.75rem; flex-wrap: wrap;">
+            <button 
+              type="button" 
+              class="btn btn-gold" 
+              style="flex: 1; min-width: 200px; font-weight: 700; display: flex; align-items: center; justify-content: center; gap: 0.4rem; padding: 0.65rem 1rem;"
+              @click="openOutlookWeb"
+            >
+              🌐 Open in Outlook Web (365)
+            </button>
+            <button 
+              type="button" 
+              class="btn btn-secondary" 
+              style="font-weight: 600; display: flex; align-items: center; justify-content: center; gap: 0.4rem; padding: 0.65rem 1rem;"
+              @click="openMailClient"
+            >
+              ✉️ Desktop Outlook
+            </button>
+            <button 
+              type="button" 
+              class="btn btn-secondary" 
+              style="display: flex; align-items: center; gap: 0.4rem; padding: 0.65rem 1rem;"
+              @click="copyDispatchLetter"
+            >
+              📋 Copy Letter
+            </button>
+          </div>
+        </div>
+
+        <div class="modal-footer" style="display: flex; justify-content: flex-end; padding: 1rem 1.5rem; border-top: 1px solid rgba(255,255,255,0.08);">
+          <button class="btn btn-secondary" @click="closeApprovalDispatchModal">Done</button>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -809,6 +902,8 @@ export default {
       loadingAccessRequests: false,
       pendingAccessRequestsCount: 0,
       accessRequestActionLoading: null,
+      showApprovalDispatchModal: false,
+      approvalDispatchData: null,
       // Onboard Corporate Tenant Modal
       showOnboardModal: false,
       onboardingSubmitting: false,
@@ -969,7 +1064,20 @@ export default {
           method: 'POST',
           body: JSON.stringify({ action, notes, rejection_reason: rejectionReason })
         });
-        alert(res.message || `Request ${action}ed successfully.`);
+        if (action === 'approve') {
+          this.approvalDispatchData = {
+            company_name: res.organization?.name || 'Enterprise Workspace',
+            email: res.user?.email || '',
+            full_name: res.user?.full_name || '',
+            password: res.auto_generated_password || '',
+            email_subject: res.email_subject || '',
+            email_body: res.email_body || '',
+            mailto_link: res.mailto_link || `mailto:${res.user?.email || ''}`
+          };
+          this.showApprovalDispatchModal = true;
+        } else {
+          alert(res.message || `Request ${action}ed successfully.`);
+        }
         await this.fetchAccessRequests();
         await this.loadAllData();
       } catch (err) {
@@ -1179,6 +1287,28 @@ export default {
       });
     },
 
+    openMailClient() {
+      if (this.approvalDispatchData?.mailto_link) {
+        window.location.href = this.approvalDispatchData.mailto_link;
+      }
+    },
+    copyDispatchLetter() {
+      if (!this.approvalDispatchData?.email_body) return;
+      navigator.clipboard.writeText(this.approvalDispatchData.email_body).then(() => {
+        alert('Executive welcome dispatch copied to clipboard!');
+      });
+    },
+    copyDispatchPassword() {
+      if (!this.approvalDispatchData?.password) return;
+      navigator.clipboard.writeText(this.approvalDispatchData.password).then(() => {
+        alert('Auto-generated temporary password copied to clipboard!');
+      });
+    },
+    closeApprovalDispatchModal() {
+      this.showApprovalDispatchModal = false;
+      this.approvalDispatchData = null;
+    },
+
     closeQuickDelete() {
       this.showQuickDelete = false;
       this.quickDeleteUser = null;
@@ -1203,6 +1333,38 @@ export default {
                 this.showQuickDelete = false;
             } catch(e) { this.dispatchEvent('show-toast', { message: e.message, type: 'error' }); }
         }
+    },
+    openOutlookWeb() {
+      if (!this.approvalDispatchData) return;
+      const to = encodeURIComponent(this.approvalDispatchData.email || '');
+      const subject = encodeURIComponent(this.approvalDispatchData.email_subject || 'Corporate Access Provisioned - THE FINISHER LUXURY');
+      const body = encodeURIComponent(this.approvalDispatchData.email_body || '');
+      const outlookWebUrl = `https://outlook.office.com/mail/deeplink/compose?to=${to}&subject=${subject}&body=${body}`;
+      window.open(outlookWebUrl, '_blank');
+      this.copyDispatchLetter(true);
+    },
+    openMailClient() {
+      if (!this.approvalDispatchData) return;
+      if (this.approvalDispatchData.mailto_link) {
+        window.location.href = this.approvalDispatchData.mailto_link;
+      }
+      this.copyDispatchLetter(true);
+    },
+    closeApprovalDispatchModal() {
+      this.showApprovalDispatchModal = false;
+      this.approvalDispatchData = null;
+    },
+    copyDispatchPassword() {
+      if (!this.approvalDispatchData?.password) return;
+      navigator.clipboard.writeText(this.approvalDispatchData.password);
+      this.dispatchEvent('show-toast', { message: 'Password copied to clipboard', type: 'success' });
+    },
+    copyDispatchLetter(silent = false) {
+      if (!this.approvalDispatchData?.email_body) return;
+      navigator.clipboard.writeText(this.approvalDispatchData.email_body);
+      if (!silent) {
+        this.dispatchEvent('show-toast', { message: 'Full letter copied to clipboard', type: 'success' });
+      }
     }
   }
 }

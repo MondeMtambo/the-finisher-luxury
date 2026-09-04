@@ -143,7 +143,13 @@ class WebsiteLeadAdmin(admin.ModelAdmin):
 
 @admin.register(CorporateAccessRequest)
 class CorporateAccessRequestAdmin(admin.ModelAdmin):
-    list_display = ['company_name', 'first_name', 'last_name', 'email', 'phone', 'job_title', 'is_ceo', 'cipc_number', 'status', 'created_at']
+    list_display = ['company_name', 'first_name', 'last_name', 'email', 'phone', 'job_title', 'is_ceo', 'is_verified', 'cipc_number', 'status', 'created_at']
     search_fields = ['company_name', 'first_name', 'last_name', 'email', 'phone', 'cipc_number']
-    list_filter = ['status', 'is_ceo', 'province', 'created_at']
-    readonly_fields = ['id', 'hashed_password', 'created_at', 'updated_at']
+    list_filter = ['is_verified', 'status', 'is_ceo', 'province', 'created_at']
+    readonly_fields = ['id', 'hashed_password', 'created_at', 'updated_at']
+
+    def get_queryset(self, request):
+        from .access_request_views import purge_expired_access_requests
+        purge_expired_access_requests()
+        return super().get_queryset(request)
+

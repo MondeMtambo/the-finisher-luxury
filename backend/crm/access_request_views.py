@@ -1,6 +1,7 @@
 import logging
 import secrets
 import string
+from urllib.parse import quote
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 from django.utils import timezone
@@ -37,6 +38,26 @@ def is_admin_or_executive(user):
     return False
 
 
+def purge_expired_access_requests():
+    """
+    Ephemeral retention policy (5-Minute TTL):
+    Permanently purges unverified corporate access requests older than 5 minutes.
+    Keeps the database secure, zero-zombie, and POPIA Section 19 compliant.
+    """
+    try:
+        now = timezone.now()
+        cutoff = now - timezone.timedelta(minutes=5)
+        purged_count, _ = CorporateAccessRequest.objects.filter(
+            is_verified=False
+        ).filter(
+            Q(expires_at__lte=now) | Q(created_at__lte=cutoff)
+        ).delete()
+        if purged_count > 0:
+            logger.info(f"Purged {purged_count} expired unverified access requests from database.")
+    except Exception as e:
+        logger.warning(f"Error purging expired access requests: {e}")
+
+
 class PublicCEOSearchView(APIView):
     """
     Public Endpoint: Search registered CEOs & corporate entities in THE FINISHER network.
@@ -46,6 +67,8 @@ class PublicCEOSearchView(APIView):
     permission_classes = [permissions.AllowAny]
 
     def get(self, request):
+        purge_expired_access_requests()
+
         q = (request.query_params.get('q') or '').strip()
         if not q or len(q) < 2:
             return Response([])
@@ -122,9 +145,10 @@ class PublicCEOSearchView(APIView):
                 'tier': org.subscription_tier if org else 'trial'
             })
 
-        # 3. Search CorporateAccessRequests (Approved and pending CEO requests)
+        # 3. Search CorporateAccessRequests (Strictly verified only; unverified records are never exposed)
         ceo_requests = CorporateAccessRequest.objects.filter(
-            is_ceo=True
+            is_ceo=True,
+            is_verified=True
         ).filter(
             Q(first_name__icontains=q) |
             Q(last_name__icontains=q) |
@@ -239,11 +263,16 @@ class PublicAccessRequestView(APIView):
                 'error': 'An active corporate account with this email address already exists. Please log in or use password reset.'
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        # AUTO-GENERATE SECURE ENTERPRISE CREDENTIALS
+        # Call purge of expired unverified records (5-minute TTL)
+        purge_expired_access_requests()
+
+        # AUTO-GENERATE SECURE ENTERPRISE CREDENTIALS & 6-DIGIT VERIFICATION CODE
         auto_password = generate_secure_password()
         hashed_pwd = make_password(auto_password)
+        verification_code = ''.join(secrets.choice(string.digits) for _ in range(6))
+        expires_at = timezone.now() + timezone.timedelta(minutes=5)
 
-        # Check for existing pending request
+        # Check for existing request
         existing_req = CorporateAccessRequest.objects.filter(email__iexact=email).first()
         if existing_req:
             if existing_req.status == 'approved':
@@ -251,7 +280,7 @@ class PublicAccessRequestView(APIView):
                     'error': 'This organization access request has already been approved. Please log in.'
                 }, status=status.HTTP_400_BAD_REQUEST)
 
-            # Update existing pending request with fresh details and refreshed auto password
+            # Update existing pending request with fresh details and refreshed 5-minute TTL
             existing_req.first_name = first_name
             existing_req.last_name = last_name
             existing_req.phone = phone
@@ -271,11 +300,14 @@ class PublicAccessRequestView(APIView):
             existing_req.postal_address = postal_address or physical_address
             existing_req.cipc_number = cipc_number
             existing_req.tax_number = tax_number
+            existing_req.verification_code = verification_code
+            existing_req.expires_at = expires_at
+            existing_req.is_verified = False
             existing_req.status = 'pending'
             existing_req.save()
             req_obj = existing_req
         else:
-            # Create new request
+            # Create new unverified request (5-Minute TTL)
             req_obj = CorporateAccessRequest.objects.create(
                 first_name=first_name,
                 last_name=last_name,
@@ -297,31 +329,123 @@ class PublicAccessRequestView(APIView):
                 postal_address=postal_address or physical_address,
                 cipc_number=cipc_number,
                 tax_number=tax_number,
+                verification_code=verification_code,
+                expires_at=expires_at,
+                is_verified=False,
                 status='pending'
             )
 
-        logger.info(f"Corporate Access Request created: {company_name} ({email}) - CEO: {is_ceo}")
+        logger.info(f"Corporate Access Request created (5-Min TTL): {company_name} ({email}) - Code: {verification_code}")
+
+        # Dispatch 5-Minute Verification Code to Applicant Email
+        verify_subject = f"Verify Corporate Application: {verification_code} (Expires in 5 Minutes)"
+        verify_body = (
+            f"Dear {first_name} {last_name},\n\n"
+            f"Your 6-digit identity verification code for {company_name} is:\n\n"
+            f"       {verification_code}\n\n"
+            f"⏱️ 5-MINUTE EPHEMERAL EXPIRATION NOTICE:\n"
+            f"This verification code is valid for exactly 5 minutes.\n"
+            f"In accordance with enterprise zero-trust policy, unverified registration dossiers are automatically wiped and permanently purged from the database after 5 minutes.\n\n"
+            f"Enter this code on the registration page to confirm your application.\n\n"
+            f"Sincerely,\n"
+            f"Executive Directorate | THE FINISHER LUXURY | Mtambo Holdings\n"
+            f"https://www.thefinishercrm.tech\n"
+        )
+        try:
+            send_mail(
+                verify_subject,
+                verify_body,
+                getattr(settings, 'DEFAULT_FROM_EMAIL', 'security@thefinisher.tech'),
+                [email],
+                fail_silently=True
+            )
+        except Exception as mail_err:
+            logger.warning(f"Failed to dispatch verification code email: {mail_err}")
+
+        return Response({
+            'success': True,
+            'requires_verification': True,
+            'request_id': str(req_obj.id),
+            'email': email,
+            'company_name': company_name,
+            'verification_code': verification_code,
+            'expires_in_seconds': 300,
+            'message': 'A 6-digit verification code has been dispatched. Please verify within 5 minutes.'
+        }, status=status.HTTP_200_OK)
+
+
+class PublicVerifyAccessRequestView(APIView):
+    """
+    Public Endpoint: Confirms the applicant's 6-digit verification code within the 5-minute TTL window.
+    If 5 minutes have elapsed, the record is permanently deleted and 400 is returned.
+    If code is valid, marks is_verified=True, and notifies sales@mtamboholdings.dev and Admin Leads inbox.
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        purge_expired_access_requests()
+
+        data = request.data or {}
+        request_id = data.get('request_id')
+        submitted_code = (data.get('verification_code') or '').strip()
+
+        if not request_id:
+            return Response({'error': 'Request ID is required.'}, status=status.HTTP_400_BAD_REQUEST)
+        if not submitted_code:
+            return Response({'error': 'Verification code is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            req_obj = CorporateAccessRequest.objects.get(pk=request_id)
+        except (CorporateAccessRequest.DoesNotExist, Exception):
+            return Response({
+                'error': 'Application session has expired or been purged from the system. Please re-apply.'
+            }, status=status.HTTP_404_NOT_FOUND)
+
+        # Check if already verified
+        if req_obj.is_verified:
+            return Response({
+                'success': True,
+                'verified': True,
+                'message': 'Application is already verified and under executive review.'
+            })
+
+        # Check 5-minute expiration
+        now = timezone.now()
+        is_expired = (req_obj.expires_at and now > req_obj.expires_at) or (req_obj.created_at < now - timezone.timedelta(minutes=5))
+        if is_expired:
+            req_obj.delete()
+            return Response({
+                'error': 'Verification window expired (5 minutes exceeded). Your temporary record has been permanently purged from the database. Please submit a fresh request.'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Verify Code
+        if submitted_code != req_obj.verification_code:
+            return Response({'error': 'Invalid verification code. Please check and try again.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # Mark Verified
+        req_obj.is_verified = True
+        req_obj.save(update_fields=['is_verified'])
 
         # 1. Dispatch Email Alert to sales@mtamboholdings.dev
         sales_email = getattr(settings, 'SALES_EMAIL', 'sales@mtamboholdings.dev')
-        exec_subject = f"[NEW CORPORATE REQUEST] {company_name} - {first_name} {last_name} ({job_title})"
+        exec_subject = f"[VERIFIED CORPORATE REQUEST] {req_obj.company_name} - {req_obj.first_name} {req_obj.last_name} ({req_obj.job_title})"
         exec_body = (
-            f"EXECUTIVE CORPORATE ACCESS ALERT\n"
-            f"-----------------------------------------\n"
-            f"A new corporate workspace application has been received.\n\n"
+            f"EXECUTIVE CORPORATE ACCESS ALERT (IDENTITY VERIFIED)\n"
+            f"-----------------------------------------------------\n"
+            f"A verified corporate workspace application is ready for executive review.\n\n"
             f"APPLICANT DOSSIER:\n"
-            f"• Full Name: {first_name} {last_name}\n"
-            f"• Corporate Designation: {job_title}\n"
-            f"• Work Email: {email}\n"
-            f"• Phone Number: {phone}\n"
-            f"• Executive Role: {'Chief Executive Officer (New Tenant)' if is_ceo else f'Non-CEO Associate (Target CEO: {target_ceo_name})'}\n\n"
+            f"• Full Name: {req_obj.first_name} {req_obj.last_name}\n"
+            f"• Corporate Designation: {req_obj.job_title}\n"
+            f"• Work Email: {req_obj.email}\n"
+            f"• Phone Number: {req_obj.phone}\n"
+            f"• Executive Role: {'Chief Executive Officer (New Tenant)' if req_obj.is_ceo else f'Non-CEO Associate (Target CEO: {req_obj.target_ceo_name})'}\n\n"
             f"ORGANIZATION DETAILS:\n"
-            f"• Legal Entity Name: {company_name}\n"
-            f"• Trading Name: {trading_name or 'N/A'}\n"
-            f"• Industry Sector: {industry}\n"
-            f"• Physical Address: {physical_address}, {city}, {province} {postal_code}\n"
-            f"• CIPC Number: {cipc_number or 'N/A'}\n"
-            f"• SARS Tax/VAT: {tax_number or 'N/A'}\n\n"
+            f"• Legal Entity Name: {req_obj.company_name}\n"
+            f"• Trading Name: {req_obj.trading_name or 'N/A'}\n"
+            f"• Industry Sector: {req_obj.industry}\n"
+            f"• Physical Address: {req_obj.physical_address}, {req_obj.city}, {req_obj.province} {req_obj.postal_code}\n"
+            f"• CIPC Number: {req_obj.cipc_number or 'N/A'}\n"
+            f"• SARS Tax/VAT: {req_obj.tax_number or 'N/A'}\n\n"
             f"EXECUTIVE ACTION:\n"
             f"Authorize and provision this workspace in 1-click on the Executive Control Deck:\n"
             f"https://www.thefinishercrm.tech/#/admin/console\n\n"
@@ -340,15 +464,15 @@ class PublicAccessRequestView(APIView):
             logger.warning(f"Failed to dispatch sales alert to {sales_email}: {err}")
 
         # 2. Dispatch Confirmation Receipt Email to Applicant
-        ack_subject = f"Application Received: FINISHER Luxury Corporate Access for {company_name}"
+        ack_subject = f"Application Verified: FINISHER Luxury Corporate Access for {req_obj.company_name}"
         ack_body = (
-            f"Dear {first_name} {last_name},\n\n"
-            f"Thank you for submitting your corporate access application for {company_name}.\n\n"
-            f"Your application has been received by Mtambo Holdings and queued for review under 7-Day VIP Executive privileges.\n\n"
+            f"Dear {req_obj.first_name} {req_obj.last_name},\n\n"
+            f"Your corporate identity has been verified successfully.\n"
+            f"Your access application for {req_obj.company_name} is now queued for executive review by Mtambo Holdings under 7-Day VIP Executive privileges.\n\n"
             f"What happens next?\n"
-            f"1. Our Executive Directorate is reviewing your company dossier.\n"
-            f"2. Upon 1-click executive authorization, your enterprise workspace will be provisioned.\n"
-            f"3. Your auto-generated secure password and direct login URL will be delivered to this email address ({email}).\n\n"
+            f"1. The Executive Directorate will review your company dossier.\n"
+            f"2. Upon executive authorization, your enterprise workspace will be provisioned.\n"
+            f"3. Your auto-generated secure credentials will be delivered to {req_obj.email}.\n\n"
             f"If you have urgent requirements, contact sales@mtamboholdings.dev.\n\n"
             f"Sincerely,\n"
             f"Executive Directorate\n"
@@ -361,11 +485,11 @@ class PublicAccessRequestView(APIView):
                 ack_subject,
                 ack_body,
                 getattr(settings, 'DEFAULT_FROM_EMAIL', 'security@thefinisher.tech'),
-                [email],
+                [req_obj.email],
                 fail_silently=True
             )
         except Exception as ack_err:
-            logger.warning(f"Failed to dispatch acknowledgment to {email}: {ack_err}")
+            logger.warning(f"Failed to dispatch acknowledgment to {req_obj.email}: {ack_err}")
 
         # 3. Create WebsiteLead & Notification for Admin Fleet Console
         try:
@@ -373,30 +497,30 @@ class PublicAccessRequestView(APIView):
             if lead_owner:
                 WebsiteLead.objects.create(
                     owner=lead_owner,
-                    first_name=first_name,
-                    last_name=last_name,
-                    email=email,
-                    phone=phone,
+                    first_name=req_obj.first_name,
+                    last_name=req_obj.last_name,
+                    email=req_obj.email,
+                    phone=req_obj.phone,
                     source='corporate_access_request',
                     inbound_message=(
-                        f"Corporate Access Request for {company_name} ({job_title}). "
-                        f"Status: {'CEO' if is_ceo else f'Associate under {target_ceo_name}'}. "
-                        f"Headquarters: {physical_address}, {city}, {province} {postal_code}. CIPC: {cipc_number or 'N/A'}."
+                        f"Corporate Access Request for {req_obj.company_name} ({req_obj.job_title}). "
+                        f"Status: {'CEO' if req_obj.is_ceo else f'Associate under {req_obj.target_ceo_name}'}. "
+                        f"Headquarters: {req_obj.physical_address}, {req_obj.city}, {req_obj.province} {req_obj.postal_code}. CIPC: {req_obj.cipc_number or 'N/A'}."
                     ),
                     spam_score=100,
                     is_spam_risk=False
                 )
                 Notification.objects.create(
                     recipient=lead_owner,
-                    title='New Corporate Access Request',
-                    message=f'{first_name} {last_name} ({job_title}) submitted corporate dossier for {company_name}',
+                    title='New Verified Corporate Access Request',
+                    message=f'{req_obj.first_name} {req_obj.last_name} ({req_obj.job_title}) submitted corporate dossier for {req_obj.company_name}',
                     entity_type='corporate_access_request',
                     entity_id=req_obj.id,
                     meta={
-                        'company_name': company_name,
-                        'email': email,
-                        'phone': phone,
-                        'is_ceo': is_ceo,
+                        'company_name': req_obj.company_name,
+                        'email': req_obj.email,
+                        'phone': req_obj.phone,
+                        'is_ceo': req_obj.is_ceo,
                         'request_id': str(req_obj.id)
                     }
                 )
@@ -405,18 +529,35 @@ class PublicAccessRequestView(APIView):
 
         return Response({
             'success': True,
-            'message': 'Your corporate access application has been received and is undergoing executive review by Mtambo Holdings.',
+            'verified': True,
+            'message': 'Your corporate access application has been verified and submitted for executive review.',
             'request_id': str(req_obj.id),
-            'company_name': company_name,
-            'email': email,
+            'company_name': req_obj.company_name,
+            'email': req_obj.email,
             'sales_contact': sales_email
-        }, status=status.HTTP_201_CREATED)
+        }, status=status.HTTP_200_OK)
+
+
+class PublicCancelAccessRequestView(APIView):
+    """
+    Public Endpoint: Cancels/deletes an unverified corporate access request (e.g. when 5-minute timer expires).
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def delete(self, request, pk):
+        deleted_count, _ = CorporateAccessRequest.objects.filter(pk=pk, is_verified=False).delete()
+        return Response({
+            'success': True,
+            'purged': bool(deleted_count),
+            'message': 'Temporary unverified record permanently purged from database.'
+        })
 
 
 class AdminAccessRequestListView(APIView):
     """
-    Executive Console Endpoint: View all incoming corporate access requests.
+    Executive Console Endpoint: View all incoming verified corporate access requests.
     Only authorized Administrators & Executives can access.
+    Automatically purges expired unverified requests before loading.
     """
     permission_classes = [permissions.IsAuthenticated]
 
@@ -424,7 +565,10 @@ class AdminAccessRequestListView(APIView):
         if not is_admin_or_executive(request.user):
             return Response({'error': 'Unauthorized. Executive administrative privileges required.'}, status=status.HTTP_403_FORBIDDEN)
 
-        requests = CorporateAccessRequest.objects.all().order_by('-created_at')
+        # Clean up any stale unverified requests
+        purge_expired_access_requests()
+
+        requests = CorporateAccessRequest.objects.filter(is_verified=True).order_by('-created_at')
         results = []
         for r in requests:
             results.append({
@@ -573,6 +717,7 @@ class AdminAccessRequestActionView(APIView):
         profile.job_title = req_obj.job_title
         profile.address = full_address
         profile.terms_accepted_at = timezone.now()
+        profile.requires_password_reset = True
         profile.save()
 
         # 4. TenantVerification Record
@@ -604,20 +749,38 @@ class AdminAccessRequestActionView(APIView):
         login_url = "https://www.thefinishercrm.tech/#/login"
         email_subject = f"Authorized: Your FINISHER Workspace for {req_obj.company_name} is Live"
         email_body = (
+            f"═════════════════════════════════════════════════════════════════════════\n"
+            f"          THE FINISHER LUXURY | EXECUTIVE DIRECTORATE\n"
+            f"                  MTAMBO HOLDINGS PRIVATE FLEET\n"
+            f"═════════════════════════════════════════════════════════════════════════\n\n"
             f"Dear {req_obj.first_name} {req_obj.last_name},\n\n"
-            f"You have been successfully registered on THE FINISHER LUXURY.\n"
-            f"Your corporate access application for {req_obj.company_name} has been reviewed and authorized by Mtambo Holdings.\n\n"
-            f"Your dedicated enterprise workspace is now active with 7-Day VIP Executive privileges.\n\n"
-            f"Access Credentials:\n"
-            f"• Workspace Portal: {login_url}\n"
-            f"• Login Username: {req_obj.email}\n"
-            f"• Auto-Generated Password: {auto_password}\n\n"
-            f"You can now log in to the portal using these credentials. Once logged in, you can update your password under Security Settings.\n\n"
-            f"Welcome to The Finisher Luxury.\n\n"
-            f"Sincerely,\n"
-            f"Executive Directorate\n"
-            f"THE FINISHER LUXURY | Mtambo Holdings\n"
-            f"sales@mtamboholdings.dev\n"
+            f"We are pleased to inform you that your Corporate Access Dossier for\n"
+            f"{req_obj.company_name} has been reviewed and officially authorized by\n"
+            f"Mtambo Holdings under 7-Day VIP Executive Privileges.\n\n"
+            f"Your dedicated enterprise workspace has been provisioned and is now live\n"
+            f"on our secure private cloud infrastructure.\n\n"
+            f"─────────────────────────────────────────────────────────────────────────\n"
+            f"🔑 YOUR AUTHORIZED ENTERPRISE CREDENTIALS\n"
+            f"─────────────────────────────────────────────────────────────────────────\n"
+            f"• Workspace Portal   : {login_url}\n"
+            f"• Authorized Email   : {req_obj.email}\n"
+            f"• Temporary Passcode : {auto_password}\n"
+            f"• Provisioned Tier   : 7-Day VIP Executive Fleet\n"
+            f"─────────────────────────────────────────────────────────────────────────\n\n"
+            f"🔒 MANDATORY FIRST-LOGIN SECURITY PROTOCOL:\n"
+            f"In accordance with zero-trust data governance and POPIA Section 19\n"
+            f"safeguards, your temporary passcode will expire upon first use.\n"
+            f"You will be prompted immediately to set your own permanent,\n"
+            f"confidential password before entering the platform.\n\n"
+            f"If you require executive onboarding assistance or custom enterprise\n"
+            f"integrations, our directorate is on standby at: sales@mtamboholdings.dev\n\n"
+            f"Welcome to the pinnacle of luxury enterprise automation.\n\n"
+            f"With highest regards,\n\n"
+            f"THE EXECUTIVE DIRECTORATE\n"
+            f"THE FINISHER LUXURY | MTAMBO HOLDINGS\n"
+            f"Portal: https://www.thefinishercrm.tech\n"
+            f"Inquiries: sales@mtamboholdings.dev\n"
+            f"═════════════════════════════════════════════════════════════════════════\n"
         )
 
         try:
@@ -633,10 +796,12 @@ class AdminAccessRequestActionView(APIView):
 
         logger.info(f"Corporate Workspace APPROVED and PROVISIONED for {req_obj.company_name} by {request.user.username}")
 
+        mailto_link = f"mailto:{req_obj.email}?subject={quote(email_subject)}&body={quote(email_body)}"
+
         return Response({
             'success': True,
             'status': 'approved',
-            'message': f"Workspace for {req_obj.company_name} successfully provisioned. Activation credentials sent to {req_obj.email}.",
+            'message': f"Workspace for {req_obj.company_name} successfully provisioned.",
             'organization': {
                 'id': str(org.id),
                 'name': org.name,
@@ -650,5 +815,8 @@ class AdminAccessRequestActionView(APIView):
                 'full_name': f"{user.first_name} {user.last_name}",
                 'role': profile.role
             },
-            'auto_generated_password': auto_password
+            'auto_generated_password': auto_password,
+            'email_subject': email_subject,
+            'email_body': email_body,
+            'mailto_link': mailto_link
         }, status=status.HTTP_200_OK)

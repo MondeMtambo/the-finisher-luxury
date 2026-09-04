@@ -23,20 +23,20 @@
     </nav>
 
     <!-- Step Progress Indicator -->
-    <div class="wizard-progress-bar" v-if="currentStep < 3">
-      <div class="progress-step" :class="{ active: currentStep === 1, completed: currentStep > 1 }" @click="currentStep > 1 && (currentStep = 1)">
+    <div class="wizard-progress-bar" v-if="currentStep < 4">
+      <div class="progress-step" :class="{ active: currentStep === 1, completed: currentStep > 1 }" @click="currentStep > 1 && currentStep < 3 && (currentStep = 1)">
         <div class="step-bubble">1</div>
-        <span class="step-label">Applicant &amp; Executive Auth</span>
+        <span class="step-label">Applicant Auth</span>
       </div>
       <div class="progress-line" :class="{ active: currentStep > 1 }"></div>
-      <div class="progress-step" :class="{ active: currentStep === 2, completed: currentStep > 2 }">
+      <div class="progress-step" :class="{ active: currentStep === 2, completed: currentStep > 2 }" @click="currentStep > 2 && currentStep < 3 && (currentStep = 2)">
         <div class="step-bubble">2</div>
         <span class="step-label">Corporate Dossier</span>
       </div>
-      <div class="progress-line" :class="{ active: currentStep === 3 }"></div>
-      <div class="progress-step" :class="{ active: currentStep === 3 }">
+      <div class="progress-line" :class="{ active: currentStep > 2 }"></div>
+      <div class="progress-step" :class="{ active: currentStep === 3, completed: currentStep > 3 }">
         <div class="step-bubble">3</div>
-        <span class="step-label">Executive Review</span>
+        <span class="step-label">5-Min Verification</span>
       </div>
     </div>
 
@@ -428,8 +428,84 @@
       </form>
     </div>
 
-    <!-- STEP 3: Executive Review Confirmation Screen -->
-    <div class="auth-card register-card glass-panel success-panel" v-if="currentStep === 3">
+    <!-- STEP 3: 5-Minute Ephemeral Identity Verification -->
+    <div class="auth-card register-card glass-panel" v-if="currentStep === 3">
+      <div class="auth-header">
+        <div class="vip-badge-pill">
+          <span class="vip-badge-dot"></span>
+          ⏱️ 5-MINUTE EPHEMERAL VERIFICATION &middot; ZERO-TRUST SECURITY
+        </div>
+        <h1 class="headline">Confirm Corporate Identity</h1>
+        <p class="subheadline">Step 3: Verify your corporate email to submit your dossier for executive review.</p>
+      </div>
+
+      <!-- Ephemeral Countdown Timer Card -->
+      <div class="ephemeral-timer-card" style="background: rgba(212, 175, 55, 0.08); border: 1px solid rgba(212, 175, 55, 0.35); border-radius: 12px; padding: 1.25rem; margin-bottom: 1.5rem; text-align: center;">
+        <div style="font-size: 0.75rem; font-weight: 800; letter-spacing: 1.5px; color: #d4af37; margin-bottom: 0.25rem;">
+          SESSION SECURITY COUNTDOWN (5-MINUTE PURGE)
+        </div>
+        <div class="font-mono" style="font-size: 2.4rem; font-weight: 800; color: #fff; letter-spacing: 2px; margin: 0.25rem 0;">
+          {{ formattedTimeLeft }}
+        </div>
+        <div style="font-size: 0.78rem; color: #9ca3af; line-height: 1.4; max-width: 460px; margin: 0 auto;">
+          In accordance with enterprise zero-trust protocol and POPIA Section 19, unverified application records are automatically wiped and permanently purged from the database after 5 minutes.
+        </div>
+      </div>
+
+      <div v-if="verificationExpired" class="alert-box danger-box mb-4" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); padding: 1.25rem; border-radius: 8px; text-align: center;">
+        <h4 style="color: #fca5a5; margin: 0 0 0.5rem 0; font-size: 1.1rem;">⏱️ 5-Minute Verification Window Expired</h4>
+        <p style="color: #e5e7eb; font-size: 0.85rem; margin-bottom: 1rem;">
+          Your temporary application record has been permanently purged from the database for security compliance.
+        </p>
+        <button type="button" class="btn btn-gold btn-sm" @click="restartRegistration">
+          🔄 Restart Application
+        </button>
+      </div>
+
+      <form v-else @submit.prevent="verifyAndSubmit" class="reg-form">
+        <div class="form-group" style="text-align: center;">
+          <label class="form-label" style="display: block; margin-bottom: 0.5rem;">Enter 6-Digit Verification Code *</label>
+          <input 
+            v-model="verificationInput" 
+            type="text" 
+            class="form-input font-mono" 
+            style="font-size: 1.5rem; letter-spacing: 8px; text-align: center; max-width: 260px; margin: 0 auto;"
+            placeholder="••••••" 
+            maxlength="6"
+            required 
+            autofocus
+          />
+          <span class="form-hint" style="color: #9ca3af; margin-top: 0.5rem; display: block;">
+            Code dispatched to: <strong>{{ form.email }}</strong>
+          </span>
+          <div v-if="verificationDevCode" style="font-size: 0.72rem; color: #d4af37; background: rgba(212,175,55,0.12); padding: 0.25rem 0.6rem; border-radius: 4px; margin-top: 0.5rem; font-family: monospace; display: inline-block; border: 1px solid rgba(212,175,55,0.25);">
+            ⚡ Passcode: <strong>{{ verificationDevCode }}</strong>
+          </div>
+        </div>
+
+        <div v-if="verificationError" class="form-error">{{ verificationError }}</div>
+
+        <div class="step-nav" style="margin-top: 1.5rem;">
+          <button 
+            type="submit" 
+            class="btn btn-primary btn-gold-action"
+            :disabled="verifying || verificationInput.trim().length !== 6"
+          >
+            {{ verifying ? 'Verifying Identity...' : '🔒 Verify & Submit Application →' }}
+          </button>
+        </div>
+
+        <div class="auth-footer" style="margin-top: 1rem; text-align: center;">
+          Didn't receive code? 
+          <button type="button" class="gold-link" style="background: none; border: none; cursor: pointer; text-decoration: underline;" @click="handleFinalSubmit" :disabled="loading">
+            Resend Code
+          </button>
+        </div>
+      </form>
+    </div>
+
+    <!-- STEP 4: Executive Review Confirmation Screen -->
+    <div class="auth-card register-card glass-panel success-panel" v-if="currentStep === 4">
       <div class="success-icon-wrap">
         <div class="gold-seal-crest">
           <span class="seal-f">F</span>
@@ -474,7 +550,7 @@
       </div>
 
       <p class="success-note">
-        Your corporate access dossier has been transmitted to Mtambo Holdings executive sales desk (<strong>sales@mtamboholdings.dev</strong>).
+        Your corporate access dossier has been verified and transmitted to Mtambo Holdings executive sales desk (<strong>sales@mtamboholdings.dev</strong>).
       </p>
       <p class="text-muted text-sm mt-3">
         Upon 1-click authorization by the Executive Directorate, your <strong>auto-generated secure password</strong> and direct workspace portal URL will be dispatched to <strong>{{ form.email }}</strong>.
@@ -513,6 +589,16 @@ export default {
       ceoSearchTimer: null,
       selectedCEO: null,
 
+      // 5-Minute TTL Ephemeral Verification State
+      activeRequestId: null,
+      verificationInput: '',
+      verificationDevCode: '',
+      verificationError: '',
+      verifying: false,
+      timerSecondsLeft: 300,
+      verificationTimer: null,
+      verificationExpired: false,
+
       form: {
         first_name: '',
         last_name: '',
@@ -534,6 +620,16 @@ export default {
         tax_number: ''
       }
     }
+  },
+  computed: {
+    formattedTimeLeft() {
+      const mins = Math.floor(this.timerSecondsLeft / 60)
+      const secs = this.timerSecondsLeft % 60
+      return `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`
+    }
+  },
+  beforeUnmount() {
+    if (this.verificationTimer) clearInterval(this.verificationTimer)
   },
   mounted() {
     document.documentElement.setAttribute('data-theme', this.currentTheme)
@@ -662,10 +758,16 @@ export default {
           tax_number: this.form.tax_number
         }
 
-        await accessRequestsAPI.submitPublic(payload)
+        const res = await accessRequestsAPI.submitPublic(payload)
 
+        this.activeRequestId = res.data?.request_id
+        this.verificationDevCode = res.data?.verification_code || ''
+        this.verificationInput = ''
+        this.verificationError = ''
+        this.verificationExpired = false
         this.currentStep = 3
-        toast.success('Corporate Access Application Submitted', 'Executive review initiated.')
+        this.start5MinuteTimer()
+        toast.info('Verification Code Dispatched', 'You have 5 minutes to verify your application.')
         window.scrollTo({ top: 0, behavior: 'smooth' })
 
       } catch (err) {
@@ -675,6 +777,68 @@ export default {
         toast.error('Submission Failed', msg)
       } finally {
         this.loading = false
+      }
+    },
+    start5MinuteTimer() {
+      if (this.verificationTimer) clearInterval(this.verificationTimer)
+      this.timerSecondsLeft = 300
+      this.verificationExpired = false
+      this.verificationTimer = setInterval(() => {
+        this.timerSecondsLeft--
+        if (this.timerSecondsLeft <= 0) {
+          clearInterval(this.verificationTimer)
+          this.verificationExpired = true
+          this.handleTimerExpired()
+        }
+      }, 1000)
+    },
+    async handleTimerExpired() {
+      if (this.activeRequestId) {
+        try {
+          await accessRequestsAPI.cancelPublic(this.activeRequestId)
+        } catch (e) {
+          console.warn('Auto-purge cancel error:', e)
+        }
+      }
+    },
+    restartRegistration() {
+      this.currentStep = 1
+      this.verificationExpired = false
+      this.activeRequestId = null
+      this.verificationInput = ''
+      this.verificationError = ''
+      if (this.verificationTimer) clearInterval(this.verificationTimer)
+      window.scrollTo({ top: 0, behavior: 'smooth' })
+    },
+    async verifyAndSubmit() {
+      if (!this.verificationInput || this.verificationInput.trim().length !== 6) {
+        this.verificationError = 'Please enter your 6-digit verification code.'
+        return
+      }
+
+      this.verifying = true
+      this.verificationError = ''
+
+      try {
+        await accessRequestsAPI.verifyPublic({
+          request_id: this.activeRequestId,
+          verification_code: this.verificationInput.trim()
+        })
+
+        if (this.verificationTimer) clearInterval(this.verificationTimer)
+        this.currentStep = 4
+        toast.success('Identity Verified', 'Application submitted for executive review.')
+        window.scrollTo({ top: 0, behavior: 'smooth' })
+
+      } catch (err) {
+        console.error('Verification error:', err)
+        const msg = err.response?.data?.error || err.response?.data?.message || err.message || 'Verification failed.'
+        this.verificationError = msg
+        if (msg.toLowerCase().includes('expired')) {
+          this.verificationExpired = true
+        }
+      } finally {
+        this.verifying = false
       }
     }
   }

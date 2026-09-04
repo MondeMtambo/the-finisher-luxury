@@ -46,6 +46,8 @@ urlpatterns = [
     # Public endpoints (zero auth required)
     path('api/public/leads/', views.public_lead_capture, name='public_lead_capture'),
     path('api/public/request-access/', access_request_views.PublicAccessRequestView.as_view(), name='public_request_access'),
+    path('api/public/verify-access-request/', access_request_views.PublicVerifyAccessRequestView.as_view(), name='public_verify_access_request'),
+    path('api/public/cancel-access-request/<uuid:pk>/', access_request_views.PublicCancelAccessRequestView.as_view(), name='public_cancel_access_request'),
     path('api/public/search-ceo/', access_request_views.PublicCEOSearchView.as_view(), name='public_search_ceo'),
 
     path('api/', include(router.urls)),
