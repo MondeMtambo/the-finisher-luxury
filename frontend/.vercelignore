@@ -1,8 +1,0 @@
-../backend/
-../requirements.txt
-../runtime.txt
-../Procfile
-../.python-version
-../build.sh
-../start.sh
-*.py
