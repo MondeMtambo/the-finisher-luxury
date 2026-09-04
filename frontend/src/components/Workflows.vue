@@ -26,6 +26,38 @@
       </div>
     </div>
 
+    <!-- 1-Click Executive Workflow Recipes Banner -->
+    <div class="recipes-section">
+      <div class="recipes-header">
+        <span class="recipe-pill">⚡ 1-CLICK AUTOMATION RECIPES</span>
+        <h2 class="recipes-title">Executive Workflow Templates</h2>
+        <p class="recipes-sub">Deploy pre-configured, institutional automations in one click to accelerate pipeline velocity and guarantee client retention.</p>
+      </div>
+
+      <div class="recipes-grid">
+        <div v-for="r in recipes" :key="r.id" class="recipe-card">
+          <div class="recipe-top">
+            <div class="recipe-icon-wrap">{{ r.icon }}</div>
+            <span class="recipe-badge">{{ r.badge }}</span>
+          </div>
+          <h4 class="recipe-name">{{ r.title }}</h4>
+          <p class="recipe-desc">{{ r.description }}</p>
+          <div class="recipe-flow">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="13 17 18 12 13 7"/><polyline points="6 17 11 12 6 7"/></svg>
+            <span>{{ r.flow }}</span>
+          </div>
+          <div class="recipe-actions">
+            <button class="btn btn-sm btn-primary recipe-btn" @click="installRecipe(r)" :disabled="installingRecipeId === r.id">
+              {{ installingRecipeId === r.id ? 'Deploying...' : '⚡ Deploy Recipe' }}
+            </button>
+            <button class="btn btn-sm btn-secondary recipe-btn-sec" @click="customizeRecipe(r)" :disabled="installingRecipeId === r.id">
+              Customize
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <div v-if="!loading" class="workflows-list">
       <div v-for="wf in workflows" :key="wf.id" class="wf-card card">
         <div class="wf-header">
@@ -258,7 +290,69 @@ export default {
       form: this.emptyForm(),
       triggerConfig: {},
       actionForm: { action_type: '' },
-      actionConfig: {}
+      actionConfig: {},
+      installingRecipeId: null,
+      recipes: [
+        {
+          id: 'high_value_deal',
+          badge: 'REVENUE PROTECTION',
+          icon: '🏆',
+          title: 'High-Ticket Deal Alert (> R100k)',
+          description: 'Instantly notify executive leadership and generate a white-glove onboarding ticket when a major deal is logged.',
+          trigger_type: 'deal_value_above',
+          trigger_config: { value_threshold: 100000 },
+          flow: 'Deal > R100k ➔ Alert Leadership ➔ VIP Priority Task',
+          actions: [
+            { action_type: 'notify_user', action_config: { message: '⭐ Executive Alert: High-ticket deal exceeding R100,000 has been logged. Review deal terms immediately.' } },
+            { action_type: 'create_task', action_config: { message: 'Executive follow-up: Prepare customized CIPC & corporate compliance onboarding packet.' } },
+            { action_type: 'add_note', action_config: { message: 'Automated governance note: High-value enterprise threshold triggered (>R100,000).' } }
+          ]
+        },
+        {
+          id: 'inbound_lead_rapid',
+          badge: 'INBOUND CONVERSION',
+          icon: '🚀',
+          title: '48-Hour Lead Rapid Nurture',
+          description: 'When a new business client is captured, send automated intro materials, delay 24h, and schedule a discovery call task.',
+          trigger_type: 'contact_created',
+          trigger_config: {},
+          flow: 'New Client ➔ Intro Email ➔ Wait 24h ➔ Call Task',
+          actions: [
+            { action_type: 'send_email', action_config: { message: 'Welcome to The Finisher Luxury. We have received your inquiry and look forward to partnering.' } },
+            { action_type: 'wait', action_config: { delay_hours: 24 } },
+            { action_type: 'create_task', action_config: { message: 'Schedule 15-minute introductory discovery session with primary representative.' } }
+          ]
+        },
+        {
+          id: 'deal_won_onboarding',
+          badge: 'VIP CLIENT ONBOARDING',
+          icon: '🎉',
+          title: 'Deal Won Onboarding Engine',
+          description: 'When a deal closes as Won, automatically trigger client provisioning, send a formal welcome packet, and assign an account executive.',
+          trigger_type: 'deal_stage_change',
+          trigger_config: { stage_from: '', stage_to: 'won' },
+          flow: 'Deal Won ➔ Retainer Email ➔ Provisioning Task ➔ Audit Note',
+          actions: [
+            { action_type: 'send_email', action_config: { message: 'Congratulations on partnering with us. Your institutional onboarding packet is attached.' } },
+            { action_type: 'create_task', action_config: { message: 'Provision dedicated client assets, issue VAT invoice, and verify CIPC documents.' } },
+            { action_type: 'add_note', action_config: { message: 'Audit Trail: Deal successfully closed as Won. Institutional onboarding initiated.' } }
+          ]
+        },
+        {
+          id: 'dormant_reengagement',
+          badge: 'RETENTION SAFEGUARD',
+          icon: '⏰',
+          title: '30-Day Dormant Account Revival',
+          description: 'Detect when a high-value client has had zero contact for 30 days and alert the relationship manager to conduct a check-in.',
+          trigger_type: 'contact_no_activity',
+          trigger_config: { days: 30 },
+          flow: '30 Days Inactive ➔ Relationship Alert ➔ Portfolio Review',
+          actions: [
+            { action_type: 'notify_user', action_config: { message: '⚠️ Account Retention Alert: Client has been dormant for 30+ days. Schedule relationship check-in.' } },
+            { action_type: 'create_task', action_config: { message: 'Conduct executive portfolio health check & schedule quarterly partnership review.' } }
+          ]
+        }
+      ]
     }
   },
   computed: {
@@ -400,6 +494,44 @@ export default {
       } catch (e) {
         toast.error('Failed to load logs')
       }
+    },
+    async installRecipe(recipe) {
+      this.installingRecipeId = recipe.id
+      try {
+        const res = await workflowsAPI.create({
+          name: recipe.title,
+          description: recipe.description,
+          trigger_type: recipe.trigger_type,
+          trigger_config: recipe.trigger_config,
+          is_active: true
+        })
+        const wf = res.data
+        if (recipe.actions && recipe.actions.length) {
+          for (const act of recipe.actions) {
+            await workflowsAPI.addAction(wf.id, {
+              action_type: act.action_type,
+              action_config: act.action_config
+            })
+          }
+        }
+        toast.success(`✓ "${recipe.title}" deployed & activated!`)
+        await this.fetchWorkflows()
+      } catch (err) {
+        toast.error(err.message || 'Failed to deploy recipe')
+      } finally {
+        this.installingRecipeId = null
+      }
+    },
+    customizeRecipe(recipe) {
+      this.form = {
+        name: recipe.title,
+        description: recipe.description,
+        trigger_type: recipe.trigger_type,
+        is_active: true
+      }
+      this.triggerConfig = { ...(recipe.trigger_config || {}) }
+      this.editing = null
+      this.showModal = true
     }
   }
 }
@@ -499,5 +631,133 @@ export default {
 @media (max-width: 768px) {
   .form-row { flex-direction: column; gap: 0; }
   .wf-footer { flex-direction: column; gap: 8px; align-items: flex-start; }
+}
+
+/* Executive 1-Click Recipes */
+.recipes-section {
+  background: rgba(17, 18, 23, 0.65);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  border-radius: 14px;
+  padding: 24px;
+  margin-bottom: 28px;
+}
+[data-theme="light"] .recipes-section {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(184, 134, 11, 0.25);
+}
+.recipes-header {
+  margin-bottom: 20px;
+}
+.recipe-pill {
+  display: inline-block;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #d4af37;
+  background: rgba(212, 175, 55, 0.12);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  padding: 3px 10px;
+  border-radius: 20px;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+.recipes-title {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--gray-900, #fff);
+}
+.recipes-sub {
+  font-size: 13px;
+  color: var(--gray-500, #9ca3af);
+  margin: 4px 0 0 0;
+}
+.recipes-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 16px;
+}
+.recipe-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 16px;
+  display: flex;
+  flex-direction: column;
+  transition: all 0.2s ease;
+}
+[data-theme="light"] .recipe-card {
+  background: #fdfdfd;
+  border-color: #e5e7eb;
+}
+.recipe-card:hover {
+  border-color: rgba(212, 175, 55, 0.4);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0,0,0,0.2);
+}
+.recipe-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+.recipe-icon-wrap {
+  font-size: 20px;
+}
+.recipe-badge {
+  font-size: 10px;
+  font-weight: 700;
+  color: #d4af37;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+.recipe-name {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0 0 6px 0;
+  color: var(--gray-900, #fff);
+}
+.recipe-desc {
+  font-size: 12px;
+  color: var(--gray-500, #9ca3af);
+  line-height: 1.4;
+  margin: 0 0 12px 0;
+  flex: 1;
+}
+.recipe-flow {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 11px;
+  font-weight: 500;
+  color: #60a5fa;
+  background: rgba(59, 130, 246, 0.08);
+  border: 1px solid rgba(59, 130, 246, 0.2);
+  padding: 6px 10px;
+  border-radius: 6px;
+  margin-bottom: 14px;
+}
+.recipe-actions {
+  display: flex;
+  gap: 8px;
+}
+.recipe-btn {
+  flex: 2;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 600;
+  background: #d4af37;
+  color: #000;
+  border: none;
+}
+.recipe-btn:hover {
+  background: #e6c35c;
+}
+.recipe-btn-sec {
+  flex: 1;
+  justify-content: center;
+  font-size: 12px;
 }
 </style>
