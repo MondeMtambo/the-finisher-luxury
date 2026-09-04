@@ -92,7 +92,7 @@
       <p class="meta">Meeting notes: {{ activeLead.meeting_notes || 'None' }}</p>
     </div>
 
-    <div v-if="showReplyModal" class="modal-overlay" @click="closeReplyModal">
+    <div v-if="showReplyModal" class="modal-overlay">
       <div class="modal-panel" @click.stop>
         <div class="modal-header">
           <h3>Reply to {{ activeLead?.contact_name }}</h3>
@@ -119,7 +119,7 @@
       </div>
     </div>
 
-    <div v-if="showCallModal" class="modal-overlay" @click="closeCallModal">
+    <div v-if="showCallModal" class="modal-overlay">
       <div class="modal-panel" @click.stop>
         <div class="modal-header">
           <h3>Log Call - {{ activeLead?.contact_name }}</h3>
@@ -138,7 +138,7 @@
       </div>
     </div>
 
-    <div v-if="showMeetingModal" class="modal-overlay" @click="closeMeetingModal">
+    <div v-if="showMeetingModal" class="modal-overlay">
       <div class="modal-panel" @click.stop>
         <div class="modal-header">
           <h3>Meeting Update - {{ activeLead?.contact_name }}</h3>

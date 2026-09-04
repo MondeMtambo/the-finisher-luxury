@@ -112,7 +112,7 @@
       <button v-if="canAddAssets" @click="openCreateModal" class="btn btn-primary">Add First Asset</button>
     </div>
 
-    <div v-if="showModal" class="modal-overlay" @click="closeModal">
+    <div v-if="showModal" class="modal-overlay">
       <div class="modal-panel modal-lg" @click.stop>
         <div class="modal-header">
           <h3>{{ isEditMode ? 'Edit Asset' : 'Add New Asset' }}</h3>
@@ -250,7 +250,7 @@
       </div>
     </div>
 
-    <div v-if="showViewModal && selectedAsset" class="modal-overlay" @click="closeViewModal">
+    <div v-if="showViewModal && selectedAsset" class="modal-overlay">
       <div class="modal-panel modal-lg" @click.stop>
         <div class="modal-header">
           <h3>{{ selectedAsset.name }}</h3>

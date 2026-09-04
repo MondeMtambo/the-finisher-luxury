@@ -85,7 +85,7 @@
         </table>
       </div>
 
-      <div v-if="showWarningDetailsModal" class="modal-overlay" @click="closeWarningDetails">
+      <div v-if="showWarningDetailsModal" class="modal-overlay">
         <div class="modal-panel" @click.stop ref="warningModal" tabindex="-1">
           <div class="modal-header"><h3>Warning Details: {{ selectedUser?.full_name }}</h3><button class="modal-close" @click="closeWarningDetails">&times;</button></div>
           <div class="modal-body">
@@ -120,7 +120,7 @@
         </div>
       </div>
 
-      <div v-if="showQuickDelete" class="modal-overlay" @click="closeQuickDelete">
+      <div v-if="showQuickDelete" class="modal-overlay">
         <div class="modal-panel" @click.stop ref="quickDeleteModal" tabindex="-1">
           <div class="modal-header"><h3>Quick Delete User</h3><button class="modal-close" @click="closeQuickDelete">&times;</button></div>
           <div class="modal-body">
@@ -166,7 +166,7 @@
         </div>
       </div>
 
-      <div v-if="showBanModal" class="modal-overlay" @click="closeBanModal">
+      <div v-if="showBanModal" class="modal-overlay">
         <div class="modal-panel" @click.stop ref="banModal" tabindex="-1">
           <div class="modal-header"><h3>Ban User: {{ selectedUser?.full_name }}</h3><button class="modal-close" @click="closeBanModal">&times;</button></div>
           <div class="modal-body">
@@ -199,7 +199,7 @@
         </div>
       </div>
 
-      <div v-if="showPaymentModal" class="modal-overlay" @click="closePaymentModal">
+      <div v-if="showPaymentModal" class="modal-overlay">
         <div class="modal-panel" @click.stop ref="paymentModal" tabindex="-1">
           <div class="modal-header"><h3>Update Payment: {{ selectedUser?.full_name }}</h3><button class="modal-close" @click="closePaymentModal">&times;</button></div>
           <div class="modal-body">

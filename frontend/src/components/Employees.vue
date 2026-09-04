@@ -400,7 +400,7 @@
       </div>
     </div>
 
-    <div v-if="showEditModal" class="modal-overlay" @click="showEditModal = false">
+    <div v-if="showEditModal" class="modal-overlay">
       <div class="modal-panel modal-lg" @click.stop>
         <div class="modal-header">
           <h3>Edit Employee</h3>
@@ -453,7 +453,7 @@
       </div>
     </div>
 
-    <div v-if="showDeleteConfirm" class="modal-overlay" @click="showDeleteConfirm = false">
+    <div v-if="showDeleteConfirm" class="modal-overlay">
       <div class="modal-panel modal-sm" @click.stop>
         <div class="modal-header"><h3>Confirm Delete</h3></div>
         <div class="modal-body" style="text-align:center">
@@ -467,7 +467,7 @@
       </div>
     </div>
 
-    <div v-if="showOffboardModal" class="modal-overlay" @click="showOffboardModal = false">
+    <div v-if="showOffboardModal" class="modal-overlay">
       <div class="modal-panel modal-sm" @click.stop>
         <div class="modal-header">
           <h3>Request Offboarding</h3>

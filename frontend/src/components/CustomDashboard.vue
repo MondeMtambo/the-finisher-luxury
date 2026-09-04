@@ -163,7 +163,7 @@
 
     <div v-else class="loading-state"><div class="spinner"></div><p>Loading dashboard...</p></div>
 
-    <div v-if="showAddWidget" class="modal-overlay" @click="showAddWidget = false">
+    <div v-if="showAddWidget" class="modal-overlay">
       <div class="modal-panel" @click.stop>
         <div class="modal-header">
           <h3>Add Widget</h3>

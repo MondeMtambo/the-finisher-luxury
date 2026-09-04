@@ -92,7 +92,7 @@
     </div>
 
     <!-- CSV Upload Modal -->
-    <div v-if="showUploadModal" class="modal-overlay" @click="closeUploadModal">
+    <div v-if="showUploadModal" class="modal-overlay">
       <div class="modal-panel luxury-modal" @click.stop>
         <div class="modal-header">
           <div class="modal-title-wrap">

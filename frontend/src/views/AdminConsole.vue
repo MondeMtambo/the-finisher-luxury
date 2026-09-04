@@ -399,7 +399,7 @@
 
     <!-- MODALS -->
     <!-- Quick Delete Modal -->
-    <div v-if="showQuickDelete" class="modal-overlay" @click.self="closeQuickDelete">
+    <div v-if="showQuickDelete" class="modal-overlay">
         <div class="modal-panel luxury-modal">
             <div class="modal-header">
                 <h3>Critical Action: Quick Delete</h3>
@@ -448,7 +448,7 @@
     </div>
 
     <!-- Ban Modal -->
-    <div v-if="showBanModal" class="modal-overlay" @click.self="closeBanModal">
+    <div v-if="showBanModal" class="modal-overlay">
         <div class="modal-panel luxury-modal">
             <div class="modal-header">
                 <h3>Ban User: {{ selectedUser?.full_name }}</h3>
@@ -478,7 +478,7 @@
     </div>
 
     <!-- Payment Modal -->
-    <div v-if="showPaymentModal" class="modal-overlay" @click.self="closePaymentModal">
+    <div v-if="showPaymentModal" class="modal-overlay">
         <div class="modal-panel luxury-modal">
             <div class="modal-header">
                 <h3>Update Payment: {{ selectedUser?.full_name }}</h3>
@@ -503,7 +503,7 @@
     </div>
 
     <!-- Warning Modal -->
-    <div v-if="showWarningDetailsModal" class="modal-overlay" @click.self="closeWarningDetails">
+    <div v-if="showWarningDetailsModal" class="modal-overlay">
         <div class="modal-panel luxury-modal">
             <div class="modal-header">
                 <h3>Security Alert: {{ selectedUser?.full_name }}</h3>
@@ -534,7 +534,7 @@
     </div>
 
     <!-- Onboard Corporate Tenant Modal -->
-    <div v-if="showOnboardModal" class="modal-overlay" @click.self="closeOnboardModal">
+    <div v-if="showOnboardModal" class="modal-overlay">
       <div class="modal-panel luxury-modal" style="max-width: 650px;">
         <div class="modal-header">
           <div class="modal-title-wrap">

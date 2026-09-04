@@ -92,7 +92,7 @@
       <strong>Team Capacity Reached</strong> &mdash; You've reached the maximum of {{ maxUsers }} users. Contact support for upgrade options.
     </div>
 
-    <div v-if="showModal" class="modal-overlay" @click="closeModal">
+    <div v-if="showModal" class="modal-overlay">
       <div class="modal-panel modal-lg" @click.stop>
         <div class="modal-header">
           <h3>{{ isEditMode ? 'Edit Employee' : 'Add New Employee' }}</h3>
@@ -146,7 +146,7 @@
       </div>
     </div>
 
-    <div v-if="showDeleteConfirm" class="modal-overlay" @click="showDeleteConfirm = false">
+    <div v-if="showDeleteConfirm" class="modal-overlay">
       <div class="modal-panel modal-sm" @click.stop>
         <div class="modal-header"><h3>Confirm Delete</h3></div>
         <div class="modal-body" style="text-align:center">

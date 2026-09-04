@@ -91,7 +91,7 @@
 
     <div v-else class="loading-state"><div class="spinner"></div><p>Loading workflows...</p></div>
 
-    <div v-if="showModal" class="modal-overlay" @click="showModal = false">
+    <div v-if="showModal" class="modal-overlay">
       <div class="modal-panel" @click.stop>
         <div class="modal-header">
           <h3>{{ editing ? 'Edit Workflow' : 'New Workflow' }}</h3>
@@ -168,7 +168,7 @@
       </div>
     </div>
 
-    <div v-if="showActionModal" class="modal-overlay" @click="showActionModal = false">
+    <div v-if="showActionModal" class="modal-overlay">
       <div class="modal-panel" @click.stop>
         <div class="modal-header">
           <h3>Add Action to "{{ actionTargetWf?.name }}"</h3>
@@ -215,7 +215,7 @@
       </div>
     </div>
 
-    <div v-if="showLogsModal" class="modal-overlay" @click="showLogsModal = false">
+    <div v-if="showLogsModal" class="modal-overlay">
       <div class="modal-panel modal-lg" @click.stop>
         <div class="modal-header">
           <h3>Logs: {{ logsWf?.name }}</h3>

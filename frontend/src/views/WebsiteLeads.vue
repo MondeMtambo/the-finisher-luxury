@@ -71,7 +71,7 @@
     </div>
 
     <!-- Lead Details Modal -->
-    <div v-if="showDetailsModal" class="modal-overlay" @click.self="closeDetailsModal">
+    <div v-if="showDetailsModal" class="modal-overlay">
       <div class="modal-panel modal-lg">
         <div class="modal-header">
           <h3>{{ activeLead?.contact_name }}</h3>
@@ -118,7 +118,7 @@
     </div>
 
     <!-- Reply Modal -->
-    <div v-if="showReplyModal" class="modal-overlay" @click.self="closeReplyModal">
+    <div v-if="showReplyModal" class="modal-overlay">
       <div class="modal-panel">
         <div class="modal-header">
           <h3>Reply to {{ activeLead?.contact_name }}</h3>

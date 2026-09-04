@@ -136,7 +136,7 @@
     </div>
 
 
-    <div v-if="showContactModal" class="modal-overlay" @click="closeContactModal">
+    <div v-if="showContactModal" class="modal-overlay">
       <div class="modal-panel" @click.stop tabindex="0" ref="contactModal" @keydown="onModalKeydown">
         <div class="modal-header">
           <h3>Add New Contact</h3>
@@ -219,7 +219,7 @@
       </div>
     </div>
 
-    <div v-if="showCompanyModal" class="modal-overlay" @click="closeCompanyModal">
+    <div v-if="showCompanyModal" class="modal-overlay">
       <div class="modal-panel" @click.stop tabindex="0" ref="companyModal" @keydown="onModalKeydown">
         <div class="modal-header">
           <h3>Add New Company</h3>
@@ -252,7 +252,7 @@
       </div>
     </div>
 
-    <div v-if="showDealModal" class="modal-overlay" @click="closeDealModal">
+    <div v-if="showDealModal" class="modal-overlay">
       <div class="modal-panel" @click.stop tabindex="0" ref="dealModal" @keydown="onModalKeydown">
         <div class="modal-header">
           <h3>Create New Deal</h3>
@@ -302,7 +302,7 @@
       </div>
     </div>
 
-    <div v-if="showExampleModal" class="modal-overlay" @click="closeExample">
+    <div v-if="showExampleModal" class="modal-overlay">
       <div class="modal-panel modal-lg" @click.stop tabindex="0" ref="exampleModal" @keydown="onModalKeydown">
         <div class="modal-header">
           <h3>Overview &mdash; DIBATA 011</h3>

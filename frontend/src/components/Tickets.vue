@@ -76,7 +76,7 @@
       </div>
     </div>
 
-    <div v-if="showCreateModal" class="modal-overlay" @click="closeCreateModal">
+    <div v-if="showCreateModal" class="modal-overlay">
       <div class="modal-panel" @click.stop>
         <div class="modal-header">
           <h3>Create New Ticket</h3>
@@ -147,7 +147,7 @@
       </div>
     </div>
 
-    <div v-if="showEditModal" class="modal-overlay" @click="closeEditModal">
+    <div v-if="showEditModal" class="modal-overlay">
       <div class="modal-panel" @click.stop>
         <div class="modal-header">
           <h3>Edit Ticket</h3>

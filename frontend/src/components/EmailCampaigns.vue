@@ -112,7 +112,7 @@
       </div>
     </div>
 
-    <div v-if="showCampaignModal" class="modal-overlay" @click="showCampaignModal = false">
+    <div v-if="showCampaignModal" class="modal-overlay">
       <div class="modal-panel modal-lg" @click.stop>
         <div class="modal-header">
           <h3>{{ editingCampaign ? 'Edit Campaign' : 'New Campaign' }}</h3>
@@ -169,7 +169,7 @@
       </div>
     </div>
 
-    <div v-if="showTemplateModal" class="modal-overlay" @click="showTemplateModal = false">
+    <div v-if="showTemplateModal" class="modal-overlay">
       <div class="modal-panel modal-lg" @click.stop>
         <div class="modal-header">
           <h3>{{ editingTemplate ? 'Edit Template' : 'New Template' }}</h3>
