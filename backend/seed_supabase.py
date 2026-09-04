@@ -24,11 +24,22 @@ def main():
 
             if hasattr(admin_user, 'profile'):
                 p = admin_user.profile
-                if p.organization is not None or p.company_name:
+                updated = False
+                if p.organization is not None:
                     p.organization = None
+                    updated = True
+                if p.company_name != '':
                     p.company_name = ''
-                    p.save(update_fields=['organization', 'company_name'])
-                    print("[seed_supabase] adminluxury organization and company_name set to NULL.")
+                    updated = True
+                if p.role != 'admin':
+                    p.role = 'admin'
+                    updated = True
+                if p.tier != 'luxury':
+                    p.tier = 'luxury'
+                    updated = True
+                if updated:
+                    p.save(update_fields=['organization', 'company_name', 'role', 'tier'])
+                    print("[seed_supabase] adminluxury verified as sovereign root admin (organization=NULL, company=NULL).")
 
         print("[seed_supabase] System initialized successfully.")
         return 0

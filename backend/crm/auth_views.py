@@ -605,7 +605,17 @@ class ForceChangePasswordView(APIView):
         except User.DoesNotExist:
             return Response({'error': 'User not found'}, status=status.HTTP_404_NOT_FOUND)
 
-        if not user.check_password(old_password):
+        is_valid_old = user.check_password(old_password)
+        if not is_valid_old:
+            from django.db.models import Q
+            from .models import CorporateAccessRequest
+            car = CorporateAccessRequest.objects.filter(
+                Q(email__iexact=user.email) | Q(created_user=user)
+            ).order_by('-created_at').first()
+            if car and car.auto_generated_password and car.auto_generated_password.strip() == (old_password or '').strip():
+                is_valid_old = True
+
+        if not is_valid_old:
             return Response({'error': 'Old password incorrect'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
@@ -632,16 +642,32 @@ class ForceChangePasswordView(APIView):
                 except Exception:
                     pass
 
-            # Send MFA code to re-verify identity
-            code, success, msg = create_mfa_code(user)
-            email_status = 'sent' if success else 'failed'
+            # Instantaneous Executive Session: issue fresh JWT tokens
+            refresh = RefreshToken.for_user(user)
+            access = str(refresh.access_token)
+
+            profile = getattr(user, 'profile', None)
+            user_data = {
+                'id': user.id,
+                'username': user.username,
+                'email': user.email,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
+                'role': getattr(profile, 'role', 'admin') if profile else 'admin',
+                'tier': getattr(profile, 'tier', 'luxury') if profile else 'luxury',
+                'organization': profile.organization.name if (profile and profile.organization) else None,
+                'organization_id': str(profile.organization.id) if (profile and profile.organization) else None,
+                'company_name': getattr(profile, 'company_name', '') if profile else '',
+                'is_superuser': user.is_superuser,
+            }
 
             return Response({
-                'requires_mfa': True,
-                'user_id': user.id,
-                'email': user.email,
-                'message': 'Verification code sent' if success else 'Failed to send verification code',
-                'email_send_status': email_status,
+                'success': True,
+                'requires_mfa': False,
+                'access': access,
+                'refresh': str(refresh),
+                'user': user_data,
+                'message': 'Password updated successfully. Welcome to your Executive Workspace.'
             }, status=status.HTTP_200_OK)
 
         except Exception as e:

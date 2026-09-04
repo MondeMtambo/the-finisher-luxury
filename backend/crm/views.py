@@ -907,13 +907,12 @@ class WebsiteLeadViewSet(viewsets.ReadOnlyModelViewSet):
             return Response({'error': 'Subject and message are required.'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            send_mail(
-                subject,
-                message,
-                settings.DEFAULT_FROM_EMAIL,
-                [lead.contact.email],
-                [target_email],
-                fail_silently=False,
+            from .email_service import send_email_async
+            send_email_async(
+                subject=subject,
+                text_body=message,
+                recipient_list=[target_email],
+                from_email=settings.DEFAULT_FROM_EMAIL,
             )
         except Exception as exc:
             return Response(
@@ -1847,9 +1846,10 @@ class EmployeeViewSet(viewsets.ModelViewSet):
                 )
 
                 try:
-                    send_mail(
+                    from .email_service import send_email_async
+                    send_email_async(
                         subject='Welcome to THE FINISHER CRM - Your Account Details',
-                        message=f'''Hello {new_user.first_name},
+                        text_body=f'''Hello {new_user.first_name},
 
 You have been invited to THE FINISHER LUXURY CRM by {user.get_full_name() or user.username}.
 
@@ -1857,18 +1857,17 @@ Your login details are as follows:
 Username / Email: {email_identity}
 Temporary Password: {raw_password}
 
-You will be required to change your password and verify your identity via OTP upon your first login.
+You will be required to change your password upon your first login.
 
 Best regards,
 THE FINISHER Team''',
-                        from_email='thefinishercrm@gmail.com',
                         recipient_list=[email_identity],
-                        fail_silently=False,
+                        from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'security@thefinisher.tech'),
                     )
                 except Exception as e:
                     import logging
                     logger = logging.getLogger(__name__)
-                    logger.error(f"Failed to send onboarding email to {email_identity}: {e}")
+                    logger.error(f"Failed to queue onboarding email to {email_identity}: {e}")
 
                 response_serializer = EmployeeSerializer(new_profile)
                 return Response(response_serializer.data, status=201)
@@ -2811,7 +2810,7 @@ class ProductViewSet(viewsets.ModelViewSet):
         from .models import Company
         try:
             if user.is_superuser:
-                company_name = 'MTAMBO HOLDINGS'
+                company_name = getattr(getattr(user, 'profile', None), 'company_name', '') or 'THE FINISHER LUXURY'
             else:
                 company = getattr(user, 'profile', None)
                 company_name = company.company_name if company else ''
@@ -3544,7 +3543,7 @@ class TenantVerificationView(APIView):
                 'has_submitted': False,
                 'status': 'verified' if is_platform_owner else 'unverified',
                 'is_verified': is_platform_owner,
-                'organization_name': 'Mtambo Holdings' if is_platform_owner else 'Your Business',
+                'organization_name': 'The Finisher Luxury Protocol' if is_platform_owner else 'Your Business',
                 'verification': None
             })
 

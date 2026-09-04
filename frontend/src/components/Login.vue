@@ -496,6 +496,24 @@ export default {
           password2: this.forceNewPassword2
         })
 
+        if (resp.data.access && resp.data.refresh) {
+          authService.setTokens(resp.data.access, resp.data.refresh)
+          if (resp.data.user) {
+            authService.setUser(resp.data.user)
+          } else {
+            try {
+              const profile = await authAPI.getProfile()
+              authService.setUser(profile.data)
+            } catch (e) {
+              console.warn('Profile fetch warning:', e)
+            }
+          }
+          this.showForceChangeModal = false
+          toast.success('Access Granted', 'Welcome to your Executive Workspace')
+          this.$router.push('/dashboard')
+          return
+        }
+
         if (resp.data.requires_mfa) {
           this.showForceChangeModal = false
           this.mfaUserId = resp.data.user_id

@@ -79,7 +79,7 @@ def create_mfa_code(user):
     profile.mfa_code_attempts = 0
     profile.save(update_fields=['mfa_code', 'mfa_code_hash', 'mfa_salt', 'mfa_code_created_at', 'mfa_code_attempts'])
 
-    # Send branded email from thefinisher.tech
+    # Send branded email via asynchronous HTTPS engine (immune to SMTP port blocks)
     from_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'security@thefinisher.tech')
     subject = '🔐 The Finisher Luxury — Login Verification Code'
     message = f"""Dear {user.first_name or user.username},
@@ -95,24 +95,24 @@ If you did not attempt to sign in to your workspace, please alert your administr
 
 Warm regards,
 The Security Operations Team
-THE FINISHER LUXURY | Mtambo Holdings Group
-https://thefinisher.tech
+THE FINISHER LUXURY | Global Executive Directorate
+https://www.thefinishercrm.tech
 """
 
-    email_sent = False
+    email_sent = True
     error_msg = ""
     try:
-        send_mail(
+        from .email_service import send_email_async
+        send_email_async(
             subject=subject,
-            message=message,
-            from_email=from_email,
+            text_body=message,
             recipient_list=[user.email],
-            fail_silently=False,
+            from_email=from_email,
         )
-        email_sent = True
     except Exception as e:
-        logger.error("Failed to dispatch MFA email to %s: %s", user.email, e)
+        logger.error("Failed to queue MFA email to %s: %s", user.email, e)
         error_msg = str(e)
+        email_sent = False
 
     return code, email_sent, error_msg or "Email dispatched successfully"
 
