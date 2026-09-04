@@ -30,7 +30,7 @@ def send_lead_welcome_message(contact_name: str, phone: str, calendar_link: str 
 
 Thank you for reaching out to Mtambo Holdings. We're excited to connect with you!
 
-Your inquiry has been received and we'll be in touch shortly. In the meantime, feel free to explore what we do at mtamboholdings.com
+Your inquiry has been received and we'll be in touch shortly. In the meantime, feel free to explore what we do at https://mtamboholdings.dev
 
 We look forward to working with you!
 

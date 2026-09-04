@@ -7,6 +7,12 @@ backend/.env.*
 backend/.env.local
 seed_supabase.py
 backend/seed_supabase.py
+paystack.py
+backend/crm/paystack.py
+password_validators.py
+backend/crm/password_validators.py
+tests_security.py
+backend/crm/tests_security.py
 
 # Virtual Environments
 .venv/

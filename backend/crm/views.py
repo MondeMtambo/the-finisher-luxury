@@ -3631,7 +3631,7 @@ class TenantVerificationView(APIView):
 class AdminTenantVerificationListView(APIView):
     """
     Compliance Console: Lists all tenant verification requests.
-    Only accessible by SuperUser / Platform Owner (Monde).
+    Only accessible by SuperUser / Platform Executive.
     """
     permission_classes = [IsAuthenticated]
 
