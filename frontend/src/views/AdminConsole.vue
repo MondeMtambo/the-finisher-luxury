@@ -61,7 +61,10 @@
         <div class="kpi-grid six-cols">
           <div class="kpi-card mini"><div class="kpi-val-mini">{{ userSummary.total_users }}</div><div class="kpi-lbl-mini">Total Users</div></div>
           <div class="kpi-card mini"><div class="kpi-val-mini text-green">{{ userSummary.active_users }}</div><div class="kpi-lbl-mini">Active</div></div>
-          <div class="kpi-card mini"><div class="kpi-val-mini text-blue">{{ userSummary.trial_users }}</div><div class="kpi-lbl-mini">Trial</div></div>
+          <div class="kpi-card mini">
+            <div class="kpi-val-mini text-blue">{{ userSummary.trial_users }} <span style="font-size: 0.9rem; color: #a0aec0;">/ 15</span></div>
+            <div class="kpi-lbl-mini">7-Day Trial (15 Max)</div>
+          </div>
           <div class="kpi-card mini"><div class="kpi-val-mini text-amber">{{ userSummary.paid_users }}</div><div class="kpi-lbl-mini">Paid</div></div>
           <div class="kpi-card mini"><div class="kpi-val-mini text-yellow">{{ userSummary.overdue_users }}</div><div class="kpi-lbl-mini">Overdue</div></div>
           <div class="kpi-card mini"><div class="kpi-val-mini text-red">{{ userSummary.banned_users }}</div><div class="kpi-lbl-mini">Banned</div></div>
@@ -491,7 +494,7 @@
                     <label class="form-label">Payment Status</label>
                     <select class="form-input" v-model="newPaymentStatus">
                         <option value="pending">Pending Payment</option>
-                        <option value="trial">Trial Period (14 days)</option>
+                        <option value="trial">Trial Period (7 days)</option>
                         <option value="paid">Paid</option>
                         <option value="overdue">Overdue</option>
                     </select>
@@ -608,7 +611,7 @@
               <div class="form-group">
                 <label class="form-label">Subscription Tier / License</label>
                 <select class="form-input" v-model="onboardForm.subscription_tier">
-                  <option value="trial">14-Day VIP Trial</option>
+                  <option value="trial">7-Day VIP Trial (15 Max Cohort)</option>
                   <option value="luxury">The Finisher Luxury Private OS</option>
                   <option value="enterprise">Enterprise Custom Retainer</option>
                 </select>

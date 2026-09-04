@@ -1,5 +1,6 @@
 from rest_framework import viewsets, status
 from rest_framework.decorators import api_view, action, permission_classes
+from rest_framework import permissions
 from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.views import APIView
@@ -3499,7 +3500,8 @@ class TenantVerificationView(APIView):
     Client Business Verification Endpoint.
     Allows corporate tenants to view verification status and submit CIPC compliance documents.
     """
-    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         user = request.user
@@ -3627,7 +3629,7 @@ class AdminTenantVerificationListView(APIView):
     Compliance Console: Lists all tenant verification requests.
     Only accessible by SuperUser / Platform Owner (Monde).
     """
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     def get(self, request):
         user = request.user
@@ -3643,7 +3645,7 @@ class AdminTenantVerificationReviewView(APIView):
     """
     Compliance Review: Approve or Reject a business verification.
     """
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [IsAuthenticated]
 
     def post(self, request, pk):
         user = request.user

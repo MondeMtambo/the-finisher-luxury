@@ -22,7 +22,7 @@ class Organization(models.Model):
     name = models.CharField(max_length=200, unique=True, help_text="Official organization / business entity name")
     slug = models.SlugField(max_length=220, unique=True, blank=True)
     subscription_tier = models.CharField(max_length=50, choices=[
-        ('trial', '14-Day VIP Trial'),
+        ('trial', '7-Day VIP Trial'),
         ('luxury', 'The Finisher Luxury Private OS'),
         ('enterprise', 'Enterprise Custom Retainer'),
     ], default='trial')
@@ -49,7 +49,7 @@ class Organization(models.Model):
                 counter += 1
             self.slug = slug
         if not self.trial_end_date:
-            self.trial_end_date = self.trial_start_date + timedelta(days=14)
+            self.trial_end_date = self.trial_start_date + timedelta(days=7)
         super().save(*args, **kwargs)
 
     @property
@@ -301,7 +301,7 @@ class UserProfile(models.Model):
         ('overdue', 'Overdue'),
         ('trial', 'Trial Period'),
     ], default='pending')
-    trial_ends_at = models.DateTimeField(blank=True, null=True, help_text="14-day trial period end date")
+    trial_ends_at = models.DateTimeField(blank=True, null=True, help_text="7-day trial period end date")
 
     can_add_employees = models.BooleanField(default=False, help_text="Delegated permission: employee can add new employees (requires admin OTP)")
 

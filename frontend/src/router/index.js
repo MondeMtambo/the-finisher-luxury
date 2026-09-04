@@ -168,9 +168,7 @@ const routes = [
   },
   {
     path: '/custom-dashboard',
-    name: 'CustomDashboard',
-    component: CustomDashboard,
-    meta: { requiresAuth: true }
+    redirect: '/dashboard'
   },
   {
     path: '/website-leads',

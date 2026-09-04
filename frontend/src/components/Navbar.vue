@@ -186,10 +186,6 @@
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
             <span v-if="!sidebarCollapsed">Workflows</span>
           </router-link>
-          <router-link to="/custom-dashboard" class="nav-item" active-class="active">
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="9"/><rect x="14" y="3" width="7" height="5"/><rect x="14" y="12" width="7" height="9"/><rect x="3" y="16" width="7" height="5"/></svg>
-            <span v-if="!sidebarCollapsed">My Dashboard</span>
-          </router-link>
         </div>
 
         <div class="nav-section">
@@ -201,6 +197,7 @@
           <router-link v-if="isOwnerAdminUser" to="/website-leads" class="nav-item" active-class="active">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
             <span v-if="!sidebarCollapsed">Website Leads</span>
+          </router-link>
           <router-link to="/verification" class="nav-item" active-class="active">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
             <span v-if="!sidebarCollapsed">Business Verification</span>

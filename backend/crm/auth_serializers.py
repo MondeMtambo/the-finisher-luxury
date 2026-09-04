@@ -107,14 +107,22 @@ class RegisterSerializer(serializers.ModelSerializer):
             profile.registration_ip = registration_ip
             profile.last_login_ip = registration_ip
 
-            # Provision Tenant Organization with 14-Day VIP Trial
+            # Enforce 15-Business VIP Trial Cohort Cap to protect compute resources
             from .models import Organization, OrganizationSubscription
+            TRIAL_COHORT_LIMIT = 15
+            active_trials_count = Organization.objects.filter(subscription_tier='trial', is_active=True).count()
+            if active_trials_count >= TRIAL_COHORT_LIMIT:
+                raise serializers.ValidationError({
+                    'error': 'The VIP 7-Day Free Trial cohort is currently at maximum capacity (15/15 businesses enrolled). Please contact executive support or join the waitlist for Batch #2.'
+                })
+
+            # Provision Tenant Organization with 7-Day VIP Trial
             org, _ = Organization.objects.get_or_create(
                 name=company_name,
                 defaults={
                     'subscription_tier': 'trial',
                     'trial_start_date': timezone.now(),
-                    'trial_end_date': timezone.now() + timedelta(days=14),
+                    'trial_end_date': timezone.now() + timedelta(days=7),
                     'is_active': True,
                 }
             )
@@ -124,12 +132,12 @@ class RegisterSerializer(serializers.ModelSerializer):
                 defaults={
                     'status': 'trial',
                     'current_period_start': timezone.now(),
-                    'current_period_end': timezone.now() + timedelta(days=14),
+                    'current_period_end': timezone.now() + timedelta(days=7),
                 }
             )
 
             profile.payment_status = 'trial'
-            profile.trial_ends_at = timezone.now() + timedelta(days=14)
+            profile.trial_ends_at = timezone.now() + timedelta(days=7)
 
             profile.job_title = job_title
             profile.industry = industry
