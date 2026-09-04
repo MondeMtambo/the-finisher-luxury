@@ -522,6 +522,26 @@ class Contact(models.Model):
         help_text="Captured company name when no linked company exists"
     )
     company = models.ForeignKey(Company, on_delete=models.SET_NULL, null=True, blank=True)
+    cipc_number = models.CharField(
+        max_length=30,
+        blank=True,
+        help_text="CIPC Registration Number (e.g. 2024/123456/07)"
+    )
+    tax_number = models.CharField(
+        max_length=30,
+        blank=True,
+        help_text="SARS Tax / VAT Number"
+    )
+    document = models.FileField(
+        upload_to='contact_docs/',
+        null=True,
+        blank=True,
+        help_text="Client CIPC / registration / compliance document"
+    )
+    notes = models.TextField(
+        blank=True,
+        help_text="Additional client relationship notes"
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     last_contact_date = models.DateTimeField(null=True, blank=True, help_text="Last time contact was engaged")

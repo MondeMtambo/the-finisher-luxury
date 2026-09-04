@@ -53,6 +53,7 @@ class ContactSerializer(serializers.ModelSerializer):
     health_score = serializers.ReadOnlyField()
     health_status = serializers.ReadOnlyField()
     next_step_suggestion = serializers.ReadOnlyField()
+    document_url = serializers.SerializerMethodField()
 
     PERSONAL_EMAIL_DOMAINS = {
         'gmail.com', 'yahoo.com', 'outlook.com', 'hotmail.com', 'icloud.com',
@@ -73,6 +74,11 @@ class ContactSerializer(serializers.ModelSerializer):
             'company_name_manual',
             'company',
             'company_name',
+            'cipc_number',
+            'tax_number',
+            'document',
+            'document_url',
+            'notes',
             'last_contact_date',
             'health_score',
             'health_status',
@@ -83,12 +89,30 @@ class ContactSerializer(serializers.ModelSerializer):
         read_only_fields = [
             'id',
             'company_name',
+            'document_url',
             'health_score',
             'health_status',
             'next_step_suggestion',
             'created_at',
             'updated_at'
         ]
+
+    def get_document_url(self, obj):
+        if obj.document:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.document.url)
+            return obj.document.url
+        return None
+
+    def validate_cipc_number(self, value):
+        if not value:
+            return value
+        cleaned = value.strip()
+        import re
+        if not re.match(r'^\d{4}/\d{6}/\d{2}$', cleaned):
+            raise serializers.ValidationError("CIPC format must be YYYY/NNNNNN/NN (e.g. 2024/123456/07).")
+        return cleaned
 
     def validate_email(self, value):
         validate_email(value)

@@ -209,8 +209,8 @@ export const authAPI = {
 
 export const contactsAPI = {
   getAll: () => api.get('/contacts/'),
-  create: (data) => api.post('/contacts/', data),
-  update: (id, data) => api.put(`/contacts/${id}/`, data),
+  create: (data, config = {}) => api.post('/contacts/', data, config),
+  update: (id, data, config = {}) => api.put(`/contacts/${id}/`, data, config),
   delete: (id) => api.delete(`/contacts/${id}/`),
   importCSV: (file) => {
     const formData = new FormData()

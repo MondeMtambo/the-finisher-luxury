@@ -11,7 +11,10 @@
           <button class="btn btn-secondary" @click="loadAllData" :disabled="loading">
             🔄 Refresh Sync
           </button>
-          <button class="btn btn-danger" @click="showQuickDeleteModal = true">
+          <button class="btn btn-gold" @click="openOnboardModal">
+            🏢 Onboard New Company
+          </button>
+          <button class="btn btn-danger" @click="showQuickDelete = true">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 6h18M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
             Quick Delete User
           </button>
@@ -123,7 +126,16 @@
 
       <!-- Client & Employee Roster -->
       <div class="section-container">
-        <h2 class="section-title">Tenant & Employee Roster</h2>
+        <div class="section-header-flex">
+          <div>
+            <div class="badge-popia" style="background: rgba(212, 175, 55, 0.15); color: #d4af37; border-color: rgba(212, 175, 55, 0.35);">ENTERPRISE TENANT DIRECTORY</div>
+            <h2 class="section-title mb-0">Tenant Workspaces &amp; Corporate Roster</h2>
+            <p class="text-muted text-sm mt-1">Manage corporate tenant organizations, onboard requesting businesses, and assign root administrators.</p>
+          </div>
+          <button class="btn btn-gold btn-sm" @click="openOnboardModal">
+            🏢 + Onboard New Company
+          </button>
+        </div>
         <div class="tenant-roster" v-for="company in clientsEmployeesData" :key="company.company_name">
            <div class="tenant-header">
                <h3>{{ company.company_name }}</h3>
@@ -523,6 +535,115 @@
         </div>
     </div>
 
+    <!-- Onboard Corporate Tenant Modal -->
+    <div v-if="showOnboardModal" class="modal-overlay" @click.self="closeOnboardModal">
+      <div class="modal-panel luxury-modal" style="max-width: 650px;">
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <span class="modal-badge-tag" style="color: #d4af37; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.1em;">CORPORATE TENANT PROVISIONING</span>
+            <h3 style="margin: 0; color: #fff; font-size: 1.35rem;">🏢 Onboard New Company</h3>
+            <p class="text-muted text-sm mt-1 mb-0">Provision an isolated workspace for a business that requested access.</p>
+          </div>
+          <button class="modal-close" @click="closeOnboardModal">×</button>
+        </div>
+        <div class="modal-body" style="padding: 1.5rem;">
+          <div v-if="onboardSuccessCredentials" class="alert-box success-box mb-4" style="background: rgba(34, 197, 94, 0.15); border: 1px solid rgba(34, 197, 94, 0.4); padding: 1.25rem; border-radius: 8px;">
+            <h4 style="margin: 0 0 0.5rem 0; color: #86efac; font-size: 1.1rem;">✓ Workspace Provisioned Successfully!</h4>
+            <p class="text-sm" style="color: #d1d5db; margin-bottom: 0.75rem;">Share these credentials with the client administrator to log in:</p>
+            <div style="background: rgba(0,0,0,0.4); padding: 0.85rem; border-radius: 6px; font-family: monospace; font-size: 0.85rem; line-height: 1.6; color: #e5e7eb;">
+              <div><strong>Company:</strong> {{ onboardSuccessCredentials.company_name }}</div>
+              <div><strong>Login URL:</strong> https://www.thefinishercrm.tech</div>
+              <div><strong>Login Email:</strong> {{ onboardSuccessCredentials.email }}</div>
+              <div><strong>Initial Password:</strong> <span style="color: #facc15; font-weight: 700;">{{ onboardSuccessCredentials.password }}</span></div>
+              <div><strong>Subscription Tier:</strong> {{ onboardSuccessCredentials.subscription_tier }}</div>
+            </div>
+            <button class="btn btn-sm btn-secondary mt-3" @click="copyCredentials">📋 Copy Credentials to Clipboard</button>
+          </div>
+
+          <form v-else @submit.prevent="submitOnboardCompany">
+            <div v-if="onboardError" class="alert alert-danger mb-3" style="background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); color: #fca5a5; padding: 0.75rem; border-radius: 6px;">{{ onboardError }}</div>
+
+            <div class="form-row-2col">
+              <div class="form-group">
+                <label class="form-label">Company Legal Name *</label>
+                <input class="form-input" v-model="onboardForm.company_name" placeholder="e.g. Apex Logistics (Pty) Ltd" required />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Trading Name (T/A)</label>
+                <input class="form-input" v-model="onboardForm.trading_name" placeholder="e.g. Apex Freight" />
+              </div>
+            </div>
+
+            <div class="form-row-2col">
+              <div class="form-group">
+                <label class="form-label">CIPC Registration Number</label>
+                <input class="form-input font-mono" v-model="onboardForm.cipc_number" placeholder="2024/123456/07" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">SARS Tax / VAT Reference</label>
+                <input class="form-input font-mono" v-model="onboardForm.tax_number" placeholder="4123456789" />
+              </div>
+            </div>
+
+            <div class="section-divider my-3" style="border-top: 1px solid rgba(255,255,255,0.08); padding-top: 0.75rem; margin: 1rem 0;">
+              <span style="color: #d4af37; font-weight: 700; font-size: 0.85rem;">PRIMARY ROOT ADMINISTRATOR (CEO / DIRECTOR)</span>
+            </div>
+
+            <div class="form-row-2col">
+              <div class="form-group">
+                <label class="form-label">Director / Admin Full Name *</label>
+                <input class="form-input" v-model="onboardForm.admin_name" placeholder="e.g. David Smith" required />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Corporate Email (Login Username) *</label>
+                <input class="form-input" type="email" v-model="onboardForm.admin_email" placeholder="e.g. david@apexlogistics.co.za" required />
+              </div>
+            </div>
+
+            <div class="form-row-2col">
+              <div class="form-group">
+                <label class="form-label">Direct Contact Landline/Mobile</label>
+                <input class="form-input" v-model="onboardForm.admin_phone" placeholder="+27 82 123 4567" />
+              </div>
+              <div class="form-group">
+                <label class="form-label">Subscription Tier / License</label>
+                <select class="form-input" v-model="onboardForm.subscription_tier">
+                  <option value="trial">14-Day VIP Trial</option>
+                  <option value="luxury">The Finisher Luxury Private OS</option>
+                  <option value="enterprise">Enterprise Custom Retainer</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label class="form-label">Initial Password</label>
+              <div style="display: flex; gap: 0.5rem;">
+                <input class="form-input font-mono" v-model="onboardForm.password" placeholder="Leave blank to auto-generate" />
+                <button type="button" class="btn btn-secondary btn-sm" @click="generateOnboardPassword">🎲 Generate</button>
+              </div>
+            </div>
+
+            <div class="form-group mt-2">
+              <label class="form-check-row" style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
+                <input type="checkbox" v-model="onboardForm.is_verified" style="accent-color: #d4af37;" />
+                <span style="font-size: 0.85rem; color: #e5e7eb;">Pre-verify CIPC Entity on BizPortal (Activate &amp; Unlock Workspace Immediately)</span>
+              </label>
+            </div>
+
+            <div class="modal-footer mt-4" style="display: flex; justify-content: flex-end; gap: 0.75rem; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1rem;">
+              <button type="button" class="btn btn-secondary" @click="closeOnboardModal" :disabled="onboardingSubmitting">Cancel</button>
+              <button type="submit" class="btn btn-gold" :disabled="onboardingSubmitting">
+                {{ onboardingSubmitting ? 'Provisioning...' : '🚀 Provision Corporate Workspace' }}
+              </button>
+            </div>
+          </form>
+        </div>
+        <div v-if="onboardSuccessCredentials" class="modal-footer" style="display: flex; justify-content: flex-end; padding: 1rem 1.5rem; border-top: 1px solid rgba(255,255,255,0.08);">
+          <button class="btn btn-primary" @click="closeOnboardModal">Done</button>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -565,7 +686,24 @@ export default {
       auditDebounceTimer: null,
       // CIPC Tenant Verifications
       verifications: [],
-      loadingVerifications: false
+      loadingVerifications: false,
+      // Onboard Corporate Tenant Modal
+      showOnboardModal: false,
+      onboardingSubmitting: false,
+      onboardError: '',
+      onboardSuccessCredentials: null,
+      onboardForm: {
+        company_name: '',
+        trading_name: '',
+        cipc_number: '',
+        tax_number: '',
+        admin_name: '',
+        admin_email: '',
+        admin_phone: '',
+        subscription_tier: 'trial',
+        password: '',
+        is_verified: false
+      }
     }
   },
   computed: {
@@ -804,6 +942,65 @@ export default {
 
     showWarningDetails(user) { this.selectedUser = user; this.showWarningDetailsModal = true; },
     closeWarningDetails() { this.showWarningDetailsModal = false; },
+
+    // Corporate Tenant Onboarding
+    openOnboardModal() {
+      this.onboardForm = {
+        company_name: '',
+        trading_name: '',
+        cipc_number: '',
+        tax_number: '',
+        admin_name: '',
+        admin_email: '',
+        admin_phone: '',
+        subscription_tier: 'trial',
+        password: '',
+        is_verified: false
+      };
+      this.generateOnboardPassword();
+      this.onboardError = '';
+      this.onboardSuccessCredentials = null;
+      this.showOnboardModal = true;
+    },
+    closeOnboardModal() {
+      this.showOnboardModal = false;
+      this.onboardError = '';
+      this.onboardSuccessCredentials = null;
+    },
+    generateOnboardPassword() {
+      const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZabcdefghijkmnpqrstuvwxyz23456789!@#$';
+      let pwd = '';
+      for (let i = 0; i < 12; i++) {
+        pwd += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      this.onboardForm.password = pwd;
+    },
+    async submitOnboardCompany() {
+      this.onboardError = '';
+      this.onboardingSubmitting = true;
+      try {
+        const res = await this.fetchApi('/admin/clients-employees/', {
+          method: 'POST',
+          body: JSON.stringify({
+            action: 'onboard_company',
+            ...this.onboardForm
+          })
+        });
+        this.onboardSuccessCredentials = res.credentials;
+        await this.loadAllData();
+      } catch (err) {
+        this.onboardError = err.message || 'Failed to onboard company.';
+      } finally {
+        this.onboardingSubmitting = false;
+      }
+    },
+    copyCredentials() {
+      if (!this.onboardSuccessCredentials) return;
+      const text = `The Finisher CRM Corporate Workspace Credentials\nCompany: ${this.onboardSuccessCredentials.company_name}\nLogin URL: https://www.thefinishercrm.tech\nEmail: ${this.onboardSuccessCredentials.email}\nPassword: ${this.onboardSuccessCredentials.password}\nTier: ${this.onboardSuccessCredentials.subscription_tier}`;
+      navigator.clipboard.writeText(text).then(() => {
+        alert('Corporate credentials copied to clipboard!');
+      });
+    },
 
     // Quick Delete
     filterUsersForDelete() {

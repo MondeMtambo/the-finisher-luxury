@@ -4,7 +4,7 @@ from rest_framework.response import Response
 from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.views import APIView
 from rest_framework.exceptions import PermissionDenied, ValidationError
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from django.db import IntegrityError, transaction
 from django.db.models import Q, Count, Sum
 from django.contrib.auth.models import User
@@ -430,6 +430,14 @@ def ensure_company_for_contact(contact):
         company.email = contact.email
         updated_fields.append('email')
 
+    if getattr(contact, 'cipc_number', None) and not company.registration_number:
+        company.registration_number = contact.cipc_number
+        updated_fields.append('registration_number')
+
+    if getattr(contact, 'tax_number', None) and not company.tax_number:
+        company.tax_number = contact.tax_number
+        updated_fields.append('tax_number')
+
     if updated_fields:
         company.save(update_fields=updated_fields)
 
@@ -443,6 +451,7 @@ class ContactViewSet(viewsets.ModelViewSet):
     Contact viewset with strict Organization multi-tenant isolation.
     """
     serializer_class = ContactSerializer
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
     permission_classes = [IsAuthenticated]
 
     def get_queryset(self):
@@ -2275,6 +2284,126 @@ class ClientEmployeeManagementView(APIView):
             raise PermissionDenied('System admin access required.')
         
         action = request.data.get('action')
+
+        if action == 'onboard_company':
+            company_name = (request.data.get('company_name') or '').strip()
+            trading_name = (request.data.get('trading_name') or '').strip()
+            cipc_number = (request.data.get('cipc_number') or '').strip()
+            tax_number = (request.data.get('tax_number') or '').strip()
+            admin_name = (request.data.get('admin_name') or '').strip()
+            admin_email = (request.data.get('admin_email') or '').strip().lower()
+            admin_phone = (request.data.get('admin_phone') or '').strip()
+            subscription_tier = request.data.get('subscription_tier', 'trial')
+            password = (request.data.get('password') or '').strip()
+            is_verified = bool(request.data.get('is_verified', False))
+
+            if not company_name:
+                return Response({'error': 'Company Legal Name is mandatory.'}, status=400)
+            if not admin_email or '@' not in admin_email:
+                return Response({'error': 'Valid Admin Corporate Email is required.'}, status=400)
+            if not admin_name:
+                return Response({'error': 'Primary Admin / Director Name is required.'}, status=400)
+
+            if User.objects.filter(username__iexact=admin_email).exists() or User.objects.filter(email__iexact=admin_email).exists():
+                return Response({'error': f'A user with email/username {admin_email} already exists.'}, status=400)
+
+            import random, string
+            if not password:
+                chars = string.ascii_letters + string.digits + '!@#$'
+                password = ''.join(random.choices(chars, k=12))
+
+            name_parts = admin_name.split(None, 1)
+            first_name = name_parts[0]
+            last_name = name_parts[1] if len(name_parts) > 1 else ''
+
+            try:
+                with transaction.atomic():
+                    org, created_org = Organization.objects.get_or_create(
+                        name=company_name,
+                        defaults={
+                            'subscription_tier': subscription_tier,
+                            'is_active': True,
+                            'is_cipc_verified': is_verified,
+                        }
+                    )
+                    if not created_org:
+                        org.subscription_tier = subscription_tier
+                        org.is_active = True
+                        if is_verified:
+                            org.is_cipc_verified = True
+                        org.save()
+
+                    new_user = User.objects.create_user(
+                        username=admin_email,
+                        email=admin_email,
+                        first_name=first_name,
+                        last_name=last_name,
+                        password=password
+                    )
+
+                    profile = new_user.profile
+                    profile.company_name = company_name
+                    profile.organization = org
+                    profile.role = 'admin'
+                    profile.phone = admin_phone
+                    profile.payment_status = 'paid' if subscription_tier != 'trial' else 'trial'
+                    profile.save()
+
+                    from .models import OrganizationSubscription
+                    OrganizationSubscription.objects.update_or_create(
+                        organization=org,
+                        defaults={
+                            'status': 'active' if subscription_tier != 'trial' else 'trial',
+                            'current_period_start': timezone.now()
+                        }
+                    )
+
+                    if cipc_number:
+                        TenantVerification.objects.update_or_create(
+                            organization=org,
+                            defaults={
+                                'company_name': company_name,
+                                'trading_name': trading_name,
+                                'cipc_number': cipc_number,
+                                'tax_number': tax_number,
+                                'director_name': admin_name,
+                                'submitted_by': request.user,
+                                'reviewed_by': request.user if is_verified else None,
+                                'reviewed_at': timezone.now() if is_verified else None,
+                                'status': 'verified' if is_verified else 'pending'
+                            }
+                        )
+
+                    record_audit_event(
+                        'TENANT_ONBOARDED',
+                        f"Platform Owner {request.user.username} onboarded corporate tenant '{company_name}' ({subscription_tier}) with Admin {admin_email}",
+                        user=request.user,
+                        request=request,
+                        organization=org,
+                        severity='SECURITY',
+                        metadata={
+                            'company_name': company_name,
+                            'admin_email': admin_email,
+                            'tier': subscription_tier,
+                            'cipc_number': cipc_number
+                        }
+                    )
+
+                    return Response({
+                        'success': True,
+                        'message': f"Corporate tenant '{company_name}' provisioned successfully!",
+                        'credentials': {
+                            'username': admin_email,
+                            'email': admin_email,
+                            'password': password,
+                            'company_name': company_name,
+                            'organization_id': str(org.id),
+                            'subscription_tier': subscription_tier
+                        }
+                    }, status=201)
+            except Exception as e:
+                return Response({'error': f'Failed to onboard corporate tenant: {str(e)}'}, status=500)
+
         user_id = request.data.get('user_id')
         
         if not action or not user_id:
