@@ -2,8 +2,6 @@
   <div 
     class="auth-page split-login-page" 
     :data-theme="currentTheme"
-    @mousemove="handleGlobalMouseMove"
-    @mouseleave="resetTilt"
   >
     <!-- Dynamic Ambient Particles -->
     <div class="particles">
@@ -43,31 +41,31 @@
     <!-- Split Screen 50/50 Container -->
     <div class="split-viewport">
       
-      <!-- LEFT HALF: Compact Interactive Glass Login Card -->
+      <!-- LEFT HALF: Login Column (Stable login + Medium hover card on top) -->
       <div class="split-half login-half">
         
-        <!-- Top Compact Branding Card (Libancane phezulu) -->
-        <div class="brand-mini-card">
-          <div class="mini-crest">F</div>
-          <div class="mini-content">
-            <div class="mini-title">THE FINISHER LUXURY</div>
-            <div class="mini-subtitle">
+        <!-- Medium Top Luxury Card (Only hovers smoothly when mouse passes over it) -->
+        <div class="top-luxury-card" title="The Finisher Luxury Enterprise">
+          <div class="top-card-left">
+            <div class="top-card-crest">F</div>
+          </div>
+          <div class="top-card-center">
+            <div class="top-card-title">THE FINISHER LUXURY</div>
+            <div class="top-card-subtitle">Executive Enterprise Gateway</div>
+          </div>
+          <div class="top-card-right">
+            <span class="vip-status-pill">
               <span class="pulse-gold-dot"></span>
-              BANK-GRADE ENTERPRISE GATEWAY
-            </div>
+              VIP ACTIVE
+            </span>
           </div>
         </div>
 
-        <!-- Interactive Frosted Glass Login Card with 3D Mouse Parallax -->
+        <!-- Stable Luxury Glass Login Card (No Shaking / Tilting) -->
         <div 
-          ref="loginCard"
-          class="auth-card interactive-glass-card" 
-          :style="cardTransformStyle"
+          class="auth-card stable-login-card" 
           v-if="!showMFAModal && !showForceChangeModal"
         >
-          <!-- Dynamic Spotlight Glow Mesh -->
-          <div class="spotlight-overlay" :style="spotlightStyle"></div>
-
           <div class="card-inner-header">
             <h1 class="card-title">Member Authentication</h1>
             <p class="card-desc">Enter your authorized enterprise credentials to access your isolated workspace.</p>
@@ -131,7 +129,7 @@
         </div>
 
         <!-- Force Password Change Modal Card -->
-        <div class="auth-card interactive-glass-card" v-if="showForceChangeModal">
+        <div class="auth-card stable-login-card" v-if="showForceChangeModal">
           <div class="card-inner-header">
             <div class="modal-badge">🔒 SECURITY REQUIRED</div>
             <h1 class="card-title">Update Temporary Password</h1>
@@ -162,7 +160,7 @@
         </div>
 
         <!-- MFA Verification Modal Card -->
-        <div class="auth-card interactive-glass-card" v-if="showMFAModal">
+        <div class="auth-card stable-login-card" v-if="showMFAModal">
           <div class="card-inner-header">
             <div class="modal-badge">🛡️ POPIA SECTION 19</div>
             <h1 class="card-title">Multi-Factor Verification</h1>
@@ -321,12 +319,6 @@ export default {
       mfaEmail: '',
       mfaAttempts: 0,
 
-      // 3D Parallax Tilt Coordinates
-      tiltX: 0,
-      tiltY: 0,
-      mouseX: 0,
-      mouseY: 0,
-
       // Animated Carousel
       activeSlideIndex: 0,
       carouselTimer: null,
@@ -385,17 +377,6 @@ export default {
   computed: {
     currentSlide() {
       return this.slides[this.activeSlideIndex]
-    },
-    cardTransformStyle() {
-      return {
-        transform: `perspective(1000px) rotateX(${this.tiltX}deg) rotateY(${this.tiltY}deg) translateZ(8px)`,
-        transition: (this.tiltX === 0 && this.tiltY === 0) ? 'transform 0.4s ease-out' : 'transform 0.08s ease-out'
-      }
-    },
-    spotlightStyle() {
-      return {
-        background: `radial-gradient(circle 350px at ${this.mouseX}px ${this.mouseY}px, rgba(212, 175, 55, 0.18), transparent 80%)`
-      }
     }
   },
   mounted() {
@@ -413,29 +394,6 @@ export default {
       this.currentTheme = this.currentTheme === 'dark' ? 'light' : 'dark'
       localStorage.setItem('finisher_theme', this.currentTheme)
       document.documentElement.setAttribute('data-theme', this.currentTheme)
-    },
-    handleGlobalMouseMove(e) {
-      const cardEl = this.$refs.loginCard
-      if (!cardEl) return
-      const rect = cardEl.getBoundingClientRect()
-      const centerX = rect.left + rect.width / 2
-      const centerY = rect.top + rect.height / 2
-
-      // Calculate relative offsets for 3D tilt
-      const deltaX = e.clientX - centerX
-      const deltaY = e.clientY - centerY
-
-      // Subtle tilt max +/- 9 degrees
-      this.tiltY = Math.max(-9, Math.min(9, (deltaX / (rect.width / 2)) * 8))
-      this.tiltX = Math.max(-9, Math.min(9, -(deltaY / (rect.height / 2)) * 8))
-
-      // Card-relative spotlight
-      this.mouseX = e.clientX - rect.left
-      this.mouseY = e.clientY - rect.top
-    },
-    resetTilt() {
-      this.tiltX = 0
-      this.tiltY = 0
     },
     startCarousel() {
       this.stopCarousel()
@@ -821,47 +779,100 @@ export default {
   align-items: center;
   justify-content: center;
   padding: 2.5rem 2rem;
-  perspective: 1200px;
 }
 
-/* Mini Top Card (Libancane phezulu) */
-.brand-mini-card {
+/* MEDIUM TOP LUXURY CARD: Nice medium card on top of login with hover effect ONLY when mouse passes over it */
+.top-luxury-card {
+  width: 100%;
+  max-width: 440px;
   display: flex;
   align-items: center;
-  gap: 0.85rem;
-  padding: 0.6rem 1.25rem;
-  border-radius: 30px;
-  background: rgba(212, 175, 55, 0.12);
-  border: 1px solid rgba(212, 175, 55, 0.35);
-  margin-bottom: 1.5rem;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+  justify-content: space-between;
+  padding: 0.9rem 1.35rem;
+  border-radius: 12px;
+  margin-bottom: 1.25rem;
+  cursor: pointer;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-sizing: border-box;
 }
-.mini-crest {
-  width: 28px;
-  height: 28px;
-  background: #d4af37;
+
+.split-login-page[data-theme="dark"] .top-luxury-card {
+  background: rgba(17, 23, 35, 0.85);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.35);
+}
+
+.split-login-page[data-theme="light"] .top-luxury-card {
+  background: rgba(255, 255, 255, 0.92);
+  backdrop-filter: blur(16px);
+  border: 1px solid rgba(212, 175, 55, 0.45);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.08);
+}
+
+/* Hover effect ONLY triggers when mouse passes over THIS card */
+.top-luxury-card:hover {
+  transform: translateY(-3px);
+  border-color: #d4af37;
+  box-shadow: 0 12px 28px -4px rgba(212, 175, 55, 0.3);
+}
+
+.top-card-left {
+  display: flex;
+  align-items: center;
+}
+.top-card-crest {
+  width: 34px;
+  height: 34px;
+  background: linear-gradient(135deg, #d4af37, #b48608);
   color: #000;
   font-weight: 900;
-  font-size: 0.95rem;
-  border-radius: 6px;
+  font-size: 1.15rem;
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
+  transition: transform 0.3s ease;
 }
-.mini-title {
-  font-size: 0.82rem;
+.top-luxury-card:hover .top-card-crest {
+  transform: scale(1.08);
+}
+
+.top-card-center {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  margin: 0 1rem;
+  flex: 1;
+}
+.top-card-title {
+  font-size: 0.88rem;
   font-weight: 800;
   letter-spacing: 0.08em;
   color: #d4af37;
 }
-.mini-subtitle {
-  font-size: 0.68rem;
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  opacity: 0.8;
+.top-card-subtitle {
+  font-size: 0.72rem;
+  font-weight: 600;
+  opacity: 0.75;
+}
+
+.top-card-right {
   display: flex;
   align-items: center;
+}
+.vip-status-pill {
+  display: inline-flex;
+  align-items: center;
   gap: 0.35rem;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #d4af37;
+  padding: 0.3rem 0.65rem;
+  border-radius: 12px;
+  background: rgba(212, 175, 55, 0.12);
+  border: 1px solid rgba(212, 175, 55, 0.3);
 }
 .pulse-gold-dot {
   width: 6px;
@@ -876,45 +887,32 @@ export default {
   50% { transform: scale(1.4); opacity: 0.5; }
 }
 
-/* Interactive Frosted Glass Login Card */
-.interactive-glass-card {
-  position: relative;
+/* STABLE LUXURY GLASS LOGIN CARD: Completely rock-solid, zero shaking */
+.stable-login-card {
   width: 100%;
   max-width: 440px;
   padding: 2.5rem;
   border-radius: 16px;
-  transform-style: preserve-3d;
-  will-change: transform;
-  overflow: hidden;
-  box-shadow: 0 25px 60px -15px rgba(0, 0, 0, 0.7);
+  position: relative;
+  transform: none !important; /* Zero tilt / zero shaking */
+  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.6);
+  box-sizing: border-box;
 }
 
-.split-login-page[data-theme="dark"] .interactive-glass-card {
-  background: rgba(17, 23, 35, 0.78);
+.split-login-page[data-theme="dark"] .stable-login-card {
+  background: rgba(17, 23, 35, 0.85);
   backdrop-filter: blur(24px);
   border: 1px solid rgba(212, 175, 55, 0.35);
 }
 
-.split-login-page[data-theme="light"] .interactive-glass-card {
-  background: rgba(255, 255, 255, 0.88);
+.split-login-page[data-theme="light"] .stable-login-card {
+  background: rgba(255, 255, 255, 0.92);
   backdrop-filter: blur(24px);
   border: 1px solid rgba(212, 175, 55, 0.45);
-  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.12);
-}
-
-.spotlight-overlay {
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  pointer-events: none;
-  z-index: 1;
+  box-shadow: 0 15px 45px -10px rgba(0, 0, 0, 0.1);
 }
 
 .card-inner-header {
-  position: relative;
-  z-index: 2;
   margin-bottom: 1.75rem;
 }
 .card-title {
@@ -935,8 +933,6 @@ export default {
 
 /* Form Styling */
 .auth-form, .mfa-container {
-  position: relative;
-  z-index: 2;
   display: flex;
   flex-direction: column;
   gap: 1.2rem;
