@@ -1,7 +1,7 @@
 // THE FINISHER LUXURY CRM — Progressive Web App Service Worker
-// High-performance caching strategy for native mobile experience
+// High-performance caching strategy with Network-First navigation for instant zero-stale updates
 
-const CACHE_NAME = 'finisher-luxury-v1';
+const CACHE_NAME = 'finisher-luxury-v2';
 const STATIC_ASSETS = [
   '/',
   '/index.html',
@@ -9,22 +9,24 @@ const STATIC_ASSETS = [
   '/manifest.json'
 ];
 
-// Install Event - Pre-cache essential app shell
+// Install Event - Pre-cache essential app shell and force immediate activation
 self.addEventListener('install', (event) => {
+  self.skipWaiting();
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => {
       return cache.addAll(STATIC_ASSETS);
-    }).then(() => self.skipWaiting())
+    })
   );
 });
 
-// Activate Event - Clean up previous cache versions
+// Activate Event - Clean up all previous cache versions immediately and claim clients
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys().then((keys) => {
       return Promise.all(
         keys.map((key) => {
           if (key !== CACHE_NAME) {
+            console.log('[SW] Purging stale cache:', key);
             return caches.delete(key);
           }
         })
@@ -42,7 +44,23 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // 2. Static Assets & App Shell: Stale-While-Revalidate
+  // 2. HTML / Navigation: NETWORK-FIRST so users always receive latest code
+  if (event.request.mode === 'navigate' || (event.request.headers.get('accept') && event.request.headers.get('accept').includes('text/html'))) {
+    event.respondWith(
+      fetch(event.request)
+        .then((networkResponse) => {
+          if (networkResponse && networkResponse.status === 200) {
+            const copy = networkResponse.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          }
+          return networkResponse;
+        })
+        .catch(() => caches.match('/index.html'))
+    );
+    return;
+  }
+
+  // 3. Static Assets: Cache-first with network revalidation
   event.respondWith(
     caches.match(event.request).then((cachedResponse) => {
       const fetchPromise = fetch(event.request).then((networkResponse) => {
@@ -53,12 +71,7 @@ self.addEventListener('fetch', (event) => {
           });
         }
         return networkResponse;
-      }).catch(() => {
-        // Offline fallback for navigation
-        if (event.request.mode === 'navigate') {
-          return caches.match('/index.html');
-        }
-      });
+      }).catch(() => cachedResponse);
 
       return cachedResponse || fetchPromise;
     })

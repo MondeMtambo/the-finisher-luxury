@@ -462,7 +462,20 @@ export default {
       this.selectedAsset = asset
       this.showViewModal = true
     },
-    closeModal() {
+    hasUnsavedChanges() {
+      const f = this.form || {}
+      return Boolean((f.asset_tag && f.asset_tag.trim()) || (f.name && f.name.trim()) || f.purchase_cost || (f.notes && f.notes.trim()))
+    },
+    async closeModal(force = false) {
+      if (!force && this.hasUnsavedChanges()) {
+        const ok = await modal.confirm(
+          'Discard Asset?',
+          'Are you sure you want to cancel? Any unsaved asset details will be discarded.',
+          'warning',
+          { confirmText: 'Yes, Discard & Exit', cancelText: 'Continue Editing' }
+        )
+        if (!ok) return
+      }
       this.showModal = false
       this.form = this.getEmptyForm()
     },
@@ -487,7 +500,7 @@ export default {
           await assetsAPI.create(payload)
           toast.success('Asset created successfully')
         }
-        this.closeModal()
+        this.closeModal(true)
         this.loadData()
       } catch (error) {
         console.error('Error saving asset:', error)

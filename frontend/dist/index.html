@@ -15,11 +15,28 @@
   <!-- Additional fallbacks for better cross-browser support -->
   <meta name="format-detection" content="telephone=no">
   <script>
-    /* Instant Theme Hydration to prevent flash */
+    /* Instant Theme Hydration & PWA Cache Invalidation */
     (function() {
       try {
         var savedTheme = localStorage.getItem('finisher_theme') || 'dark';
         document.documentElement.setAttribute('data-theme', savedTheme);
+      } catch (e) {}
+      
+      try {
+        // Purge legacy Service Worker cache to guarantee zero-stale modal assets
+        if ('serviceWorker' in navigator && localStorage.getItem('finisher_sw_version') !== 'v2') {
+          if ('caches' in window) {
+            caches.keys().then(function(names) {
+              names.forEach(function(name) {
+                if (name !== 'finisher-luxury-v2') caches.delete(name);
+              });
+            });
+          }
+          navigator.serviceWorker.getRegistrations().then(function(regs) {
+            regs.forEach(function(reg) { reg.update(); });
+          });
+          localStorage.setItem('finisher_sw_version', 'v2');
+        }
       } catch (e) {}
     })();
   </script>
@@ -173,8 +190,8 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
   <title>THE FINISHER LUXURY CRM</title>
-  <script type="module" crossorigin src="/assets/index-17QP7glI.js"></script>
-  <link rel="stylesheet" crossorigin href="/assets/index-BNl3tkyu.css">
+  <script type="module" crossorigin src="/assets/index-mGFNzsKd.js"></script>
+  <link rel="stylesheet" crossorigin href="/assets/index-gOQ2qhiv.css">
 </head>
 <body>
   <div id="app"></div>

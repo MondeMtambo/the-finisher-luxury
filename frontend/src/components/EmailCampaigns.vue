@@ -116,7 +116,7 @@
       <div class="modal-panel modal-lg" @click.stop>
         <div class="modal-header">
           <h3>{{ editingCampaign ? 'Edit Campaign' : 'New Campaign' }}</h3>
-          <button class="modal-close" @click="showCampaignModal = false">&times;</button>
+          <button class="modal-close" @click="closeCampaignModal">&times;</button>
         </div>
         <div class="modal-body">
           <form @submit.prevent="saveCampaign">
@@ -161,7 +161,7 @@
               </div>
             </div>
             <div class="form-actions">
-              <button type="button" class="btn btn-secondary" @click="showCampaignModal = false">Cancel</button>
+              <button type="button" class="btn btn-secondary" @click="closeCampaignModal">Cancel</button>
               <button type="submit" class="btn btn-primary" :disabled="saving">{{ saving ? 'Saving...' : 'Save Campaign' }}</button>
             </div>
           </form>
@@ -173,7 +173,7 @@
       <div class="modal-panel modal-lg" @click.stop>
         <div class="modal-header">
           <h3>{{ editingTemplate ? 'Edit Template' : 'New Template' }}</h3>
-          <button class="modal-close" @click="showTemplateModal = false">&times;</button>
+          <button class="modal-close" @click="closeTemplateModal">&times;</button>
         </div>
         <div class="modal-body">
           <form @submit.prevent="saveTemplate">
@@ -203,7 +203,7 @@
               <textarea class="form-input code-area" v-model="templateForm.body_html" rows="12" required></textarea>
             </div>
             <div class="form-actions">
-              <button type="button" class="btn btn-secondary" @click="showTemplateModal = false">Cancel</button>
+              <button type="button" class="btn btn-secondary" @click="closeTemplateModal">Cancel</button>
               <button type="submit" class="btn btn-primary" :disabled="saving">{{ saving ? 'Saving...' : 'Save Template' }}</button>
             </div>
           </form>
@@ -216,6 +216,7 @@
 <script>
 import { emailCampaignsAPI, emailTemplatesAPI, contactsAPI } from '../api'
 import toast from '../utils/toast'
+import modal from '../utils/modal'
 
 export default {
   name: 'EmailCampaigns',
@@ -328,13 +329,49 @@ export default {
           await emailCampaignsAPI.create(payload)
           toast.success('Campaign created')
         }
-        this.showCampaignModal = false
+        this.closeCampaignModal(true)
         this.fetchAll()
       } catch (e) {
         toast.error(e.message || 'Failed to save campaign')
       } finally {
         this.saving = false
       }
+    },
+    hasUnsavedCampaignChanges() {
+      const f = this.campaignForm || {}
+      return Boolean((f.name && f.name.trim()) || (f.subject && f.subject.trim()) || (f.body_html && f.body_html.trim()))
+    },
+    async closeCampaignModal(force = false) {
+      if (!force && this.hasUnsavedCampaignChanges()) {
+        const ok = await modal.confirm(
+          'Discard Campaign?',
+          'Are you sure you want to cancel? Any unsaved email campaign details will be discarded.',
+          'warning',
+          { confirmText: 'Yes, Discard & Exit', cancelText: 'Continue Editing' }
+        )
+        if (!ok) return
+      }
+      this.showCampaignModal = false
+      this.editingCampaign = null
+      this.campaignForm = this.emptyCampaignForm()
+    },
+    hasUnsavedTemplateChanges() {
+      const f = this.templateForm || {}
+      return Boolean((f.name && f.name.trim()) || (f.subject && f.subject.trim()) || (f.body_html && f.body_html.trim()))
+    },
+    async closeTemplateModal(force = false) {
+      if (!force && this.hasUnsavedTemplateChanges()) {
+        const ok = await modal.confirm(
+          'Discard Template?',
+          'Are you sure you want to cancel? Any unsaved email template details will be discarded.',
+          'warning',
+          { confirmText: 'Yes, Discard & Exit', cancelText: 'Continue Editing' }
+        )
+        if (!ok) return
+      }
+      this.showTemplateModal = false
+      this.editingTemplate = null
+      this.templateForm = this.emptyTemplateForm()
     },
     async sendCampaign(campaign) {
       if (!confirm(`Send "${campaign.name}" to ${campaign.total_recipients || 'all'} recipients?`)) return
@@ -377,7 +414,7 @@ export default {
           await emailTemplatesAPI.create(this.templateForm)
           toast.success('Template created')
         }
-        this.showTemplateModal = false
+        this.closeTemplateModal(true)
         this.fetchAll()
       } catch (e) {
         toast.error(e.message || 'Failed to save template')

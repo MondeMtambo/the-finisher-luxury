@@ -127,7 +127,7 @@
       <div class="modal-panel" @click.stop>
         <div class="modal-header">
           <h3>{{ editing ? 'Edit Workflow' : 'New Workflow' }}</h3>
-          <button class="modal-close" @click="showModal = false">&times;</button>
+          <button class="modal-close" @click="closeModal">&times;</button>
         </div>
         <div class="modal-body">
           <form @submit.prevent="saveWorkflow">
@@ -192,7 +192,7 @@
             </div>
 
             <div class="form-actions">
-              <button type="button" class="btn btn-secondary" @click="showModal = false">Cancel</button>
+              <button type="button" class="btn btn-secondary" @click="closeModal">Cancel</button>
               <button type="submit" class="btn btn-primary" :disabled="saving">{{ saving ? 'Saving...' : 'Save Workflow' }}</button>
             </div>
           </form>
@@ -204,7 +204,7 @@
       <div class="modal-panel" @click.stop>
         <div class="modal-header">
           <h3>Add Action to "{{ actionTargetWf?.name }}"</h3>
-          <button class="modal-close" @click="showActionModal = false">&times;</button>
+          <button class="modal-close" @click="closeActionModal">&times;</button>
         </div>
         <div class="modal-body">
           <form @submit.prevent="saveAction">
@@ -239,7 +239,7 @@
               <textarea class="form-input" v-model="actionConfig.message" rows="3" placeholder="Notification or note content..."></textarea>
             </div>
             <div class="form-actions">
-              <button type="button" class="btn btn-secondary" @click="showActionModal = false">Cancel</button>
+              <button type="button" class="btn btn-secondary" @click="closeActionModal">Cancel</button>
               <button type="submit" class="btn btn-primary" :disabled="saving">Add Action</button>
             </div>
           </form>
@@ -251,7 +251,7 @@
       <div class="modal-panel modal-lg" @click.stop>
         <div class="modal-header">
           <h3>Logs: {{ logsWf?.name }}</h3>
-          <button class="modal-close" @click="showLogsModal = false">&times;</button>
+          <button class="modal-close" @click="closeLogsModal">&times;</button>
         </div>
         <div class="modal-body">
           <div v-if="logs.length === 0" class="empty-state"><p>No logs yet — workflow hasn't been triggered.</p></div>
@@ -272,6 +272,7 @@
 <script>
 import { workflowsAPI } from '../api'
 import toast from '../utils/toast'
+import modal from '../utils/modal'
 
 export default {
   name: 'Workflows',
@@ -414,6 +415,36 @@ export default {
       this.editing = wf
       this.showModal = true
     },
+    hasUnsavedChanges() {
+      const f = this.form || {}
+      return Boolean((f.name && f.name.trim()) || (f.description && f.description.trim()) || f.trigger_type)
+    },
+    async closeModal(force = false) {
+      if (!force && this.hasUnsavedChanges()) {
+        const ok = await modal.confirm(
+          'Discard Workflow?',
+          'Are you sure you want to cancel? Any unsaved workflow details will be discarded.',
+          'warning',
+          { confirmText: 'Yes, Discard & Exit', cancelText: 'Continue Editing' }
+        )
+        if (!ok) return
+      }
+      this.showModal = false
+      this.editing = null
+      this.form = this.emptyForm()
+      this.triggerConfig = {}
+    },
+    closeActionModal() {
+      this.showActionModal = false
+      this.actionTargetWf = null
+      this.actionForm = { action_type: '' }
+      this.actionConfig = {}
+    },
+    closeLogsModal() {
+      this.showLogsModal = false
+      this.logsWf = null
+      this.logs = []
+    },
     async saveWorkflow() {
       this.saving = true
       try {
@@ -425,7 +456,7 @@ export default {
           await workflowsAPI.create(payload)
           toast.success('Workflow created')
         }
-        this.showModal = false
+        this.closeModal(true)
         this.fetchWorkflows()
       } catch (e) {
         toast.error(e.message || 'Failed to save workflow')

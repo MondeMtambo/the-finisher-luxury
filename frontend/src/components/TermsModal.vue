@@ -1,6 +1,6 @@
 <template>
   <transition name="modal">
-    <div v-if="show" class="modal-overlay" @click.self="$emit('close')">
+    <div v-if="show" class="modal-overlay">
       <div class="terms-modal" ref="modalShell" tabindex="-1">
         <div class="tm-header">
           <h2>Terms &amp; Conditions</h2>
