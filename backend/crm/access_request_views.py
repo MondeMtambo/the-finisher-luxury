@@ -1,34 +1,184 @@
 import logging
+import secrets
+import string
 from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 from django.utils import timezone
 from django.core.mail import send_mail
 from django.conf import settings
+from django.db.models import Q
 from rest_framework import status, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-from .models import CorporateAccessRequest, Organization, UserProfile, TenantVerification
+from .utils import is_owner_admin_user
+from .models import CorporateAccessRequest, Organization, UserProfile, TenantVerification, WebsiteLead, Notification, Company
 
 logger = logging.getLogger(__name__)
 
 
+def generate_secure_password():
+    """Generates an auto-generated enterprise credential in format Fin-XXXX-XXXX"""
+    part1 = ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(4))
+    part2 = ''.join(secrets.choice(string.ascii_uppercase + string.digits) for _ in range(4))
+    return f"Fin-{part1}-{part2}"
+
+
 def is_admin_or_executive(user):
+    """
+    Strict isolation: Only the platform owner superuser or adminluxury can access
+    the global fleet management / Corporate Access Requests console.
+    Client CEOs / tenant admins are isolated from the global platform console.
+    """
     if not user or not user.is_authenticated:
         return False
-    if user.is_superuser or user.is_staff:
-        return True
-    profile = getattr(user, 'profile', None)
-    if profile and profile.role in ['admin', 'executive']:
+    if user.is_superuser or is_owner_admin_user(user):
         return True
     return False
+
+
+class PublicCEOSearchView(APIView):
+    """
+    Public Endpoint: Search registered CEOs & corporate entities in THE FINISHER network.
+    Non-CEOs must search and select an established CEO/Company to associate their onboarding request.
+    Platform owner account (adminluxury) is strictly excluded to maintain absolute secrecy.
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def get(self, request):
+        q = (request.query_params.get('q') or '').strip()
+        if not q or len(q) < 2:
+            return Response([])
+
+        results = []
+        seen_company_names = set()
+
+        # 1. Search existing Organizations
+        orgs = Organization.objects.filter(
+            Q(name__icontains=q) | Q(slug__icontains=q)
+        ).select_related()[:10]
+
+        for org in orgs:
+            admin_profile = UserProfile.objects.filter(
+                organization=org, role='admin'
+            ).exclude(
+                user__username__iexact='adminluxury'
+            ).exclude(
+                user__is_superuser=True
+            ).select_related('user').first()
+
+            ceo_name = "Executive Directorate"
+            ceo_email = ""
+            job_title = "Chief Executive Officer (CEO)"
+
+            if admin_profile and admin_profile.user:
+                ceo_name = f"{admin_profile.user.first_name} {admin_profile.user.last_name}".strip() or admin_profile.user.username
+                ceo_email = admin_profile.user.email
+                job_title = admin_profile.job_title or "Chief Executive Officer (CEO)"
+
+            seen_company_names.add(org.name.lower().strip())
+            results.append({
+                'organization_id': str(org.id),
+                'company_name': org.name,
+                'ceo_name': ceo_name,
+                'ceo_email': ceo_email,
+                'job_title': job_title,
+                'is_verified': org.is_cipc_verified,
+                'tier': org.subscription_tier
+            })
+
+        # 2. Search Admin / Executive UserProfiles (Strictly exclude adminluxury / superusers)
+        admin_profiles = UserProfile.objects.filter(
+            role='admin'
+        ).exclude(
+            user__username__iexact='adminluxury'
+        ).exclude(
+            user__is_superuser=True
+        ).filter(
+            Q(user__first_name__icontains=q) |
+            Q(user__last_name__icontains=q) |
+            Q(company_name__icontains=q) |
+            Q(job_title__icontains=q)
+        ).select_related('user', 'organization')[:10]
+
+        for p in admin_profiles:
+            org = p.organization
+            company_name = (org.name if org else p.company_name) or "Corporate Entity"
+            comp_key = company_name.lower().strip()
+            if comp_key in seen_company_names:
+                continue
+
+            ceo_name = f"{p.user.first_name} {p.user.last_name}".strip() if p.user else "Corporate Officer"
+            org_id = str(org.id) if org else f"profile-{p.id}"
+            seen_company_names.add(comp_key)
+
+            results.append({
+                'organization_id': org_id,
+                'company_name': company_name,
+                'ceo_name': ceo_name,
+                'ceo_email': p.user.email if p.user else "",
+                'job_title': p.job_title or "Chief Executive Officer (CEO)",
+                'is_verified': org.is_cipc_verified if org else False,
+                'tier': org.subscription_tier if org else 'trial'
+            })
+
+        # 3. Search CorporateAccessRequests (Approved and pending CEO requests)
+        ceo_requests = CorporateAccessRequest.objects.filter(
+            is_ceo=True
+        ).filter(
+            Q(first_name__icontains=q) |
+            Q(last_name__icontains=q) |
+            Q(company_name__icontains=q)
+        )[:10]
+
+        for req in ceo_requests:
+            comp_key = req.company_name.lower().strip()
+            if comp_key in seen_company_names:
+                continue
+
+            req_name = f"{req.first_name} {req.last_name}".strip()
+            seen_company_names.add(comp_key)
+            results.append({
+                'organization_id': str(req.created_organization_id) if req.created_organization_id else f"req-{req.id}",
+                'company_name': req.company_name,
+                'ceo_name': req_name,
+                'ceo_email': req.email,
+                'job_title': req.job_title or "Chief Executive Officer (CEO)",
+                'is_verified': bool(req.cipc_number),
+                'tier': '7-Day VIP Executive'
+            })
+
+        # 4. Search Company CRM records
+        companies = Company.objects.filter(
+            name__icontains=q
+        ).select_related('user')[:10]
+
+        for c in companies:
+            comp_key = c.name.lower().strip()
+            if comp_key in seen_company_names:
+                continue
+
+            c_user = c.user
+            ceo_name = f"{c_user.first_name} {c_user.last_name}".strip() if c_user else "Executive Officer"
+            seen_company_names.add(comp_key)
+            results.append({
+                'organization_id': f"comp-{c.id}",
+                'company_name': c.name,
+                'ceo_name': ceo_name,
+                'ceo_email': c_user.email if c_user else "",
+                'job_title': "Chief Executive Officer (CEO)",
+                'is_verified': bool(c.registration_number),
+                'tier': '7-Day VIP Executive'
+            })
+
+        return Response(results)
 
 
 class PublicAccessRequestView(APIView):
     """
     Public Endpoint: Allows enterprise leaders to submit a Corporate Access Application.
-    Zero JWT authentication required (AllowAny).
-    Eliminates authentication bounce loops and preserves applicant data.
+    Zero manual password setup required: Password is auto-generated by the system and emailed upon approval.
+    Alerts are dispatched to sales@mtamboholdings.dev and logged in Admin Leads & Notifications.
     """
     permission_classes = [permissions.AllowAny]
 
@@ -42,9 +192,9 @@ class PublicAccessRequestView(APIView):
         phone = (data.get('phone') or '').strip()
         job_title = (data.get('job_title') or '').strip()
         is_ceo = bool(data.get('is_ceo', True))
-        sponsor_name = (data.get('executive_sponsor_name') or '').strip()
-        sponsor_email = (data.get('executive_sponsor_email') or '').strip()
-        password = data.get('password') or ''
+
+        target_ceo_name = (data.get('target_ceo_name') or '').strip()
+        target_organization_id = (data.get('target_organization_id') or '').strip()
 
         company_name = (data.get('company_name') or '').strip()
         trading_name = (data.get('trading_name') or '').strip()
@@ -64,13 +214,24 @@ class PublicAccessRequestView(APIView):
         if not phone:
             return Response({'error': 'Direct phone number is required.'}, status=status.HTTP_400_BAD_REQUEST)
         if not job_title:
-            return Response({'error': 'Executive role / designation is required.'}, status=status.HTTP_400_BAD_REQUEST)
-        if not company_name:
-            return Response({'error': 'Company / Business entity name is required.'}, status=status.HTTP_400_BAD_REQUEST)
+            return Response({'error': 'Corporate designation is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        # CEO Search Engine Validation for non-CEOs
+        if not is_ceo:
+            if not target_ceo_name and not target_organization_id:
+                return Response({
+                    'error': 'Non-CEOs must search and select a registered CEO / verified Company to associate their request.'
+                }, status=status.HTTP_400_BAD_REQUEST)
+            if not company_name:
+                return Response({
+                    'error': 'Corporate organization must be selected from the CEO registry.'
+                }, status=status.HTTP_400_BAD_REQUEST)
+        else:
+            if not company_name:
+                return Response({'error': 'Company / Business entity name is required.'}, status=status.HTTP_400_BAD_REQUEST)
+
         if not physical_address or not city or not postal_code:
             return Response({'error': 'Complete physical address (Street, City, Postal Code) is required.'}, status=status.HTTP_400_BAD_REQUEST)
-        if not password or len(password) < 8:
-            return Response({'error': 'Workspace password must be at least 8 characters.'}, status=status.HTTP_400_BAD_REQUEST)
 
         # Check if user already exists in system
         if User.objects.filter(email__iexact=email).exists() or User.objects.filter(username__iexact=email).exists():
@@ -78,7 +239,9 @@ class PublicAccessRequestView(APIView):
                 'error': 'An active corporate account with this email address already exists. Please log in or use password reset.'
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        hashed_pwd = make_password(password)
+        # AUTO-GENERATE SECURE ENTERPRISE CREDENTIALS
+        auto_password = generate_secure_password()
+        hashed_pwd = make_password(auto_password)
 
         # Check for existing pending request
         existing_req = CorporateAccessRequest.objects.filter(email__iexact=email).first()
@@ -88,14 +251,15 @@ class PublicAccessRequestView(APIView):
                     'error': 'This organization access request has already been approved. Please log in.'
                 }, status=status.HTTP_400_BAD_REQUEST)
 
-            # Update existing pending request with fresh details
+            # Update existing pending request with fresh details and refreshed auto password
             existing_req.first_name = first_name
             existing_req.last_name = last_name
             existing_req.phone = phone
             existing_req.job_title = job_title
             existing_req.is_ceo = is_ceo
-            existing_req.executive_sponsor_name = sponsor_name
-            existing_req.executive_sponsor_email = sponsor_email
+            existing_req.target_ceo_name = target_ceo_name
+            existing_req.target_organization_id = target_organization_id
+            existing_req.auto_generated_password = auto_password
             existing_req.hashed_password = hashed_pwd
             existing_req.company_name = company_name
             existing_req.trading_name = trading_name
@@ -109,47 +273,143 @@ class PublicAccessRequestView(APIView):
             existing_req.tax_number = tax_number
             existing_req.status = 'pending'
             existing_req.save()
+            req_obj = existing_req
+        else:
+            # Create new request
+            req_obj = CorporateAccessRequest.objects.create(
+                first_name=first_name,
+                last_name=last_name,
+                email=email,
+                phone=phone,
+                job_title=job_title,
+                is_ceo=is_ceo,
+                target_ceo_name=target_ceo_name,
+                target_organization_id=target_organization_id,
+                auto_generated_password=auto_password,
+                hashed_password=hashed_pwd,
+                company_name=company_name,
+                trading_name=trading_name,
+                industry=industry,
+                physical_address=physical_address,
+                city=city,
+                province=province,
+                postal_code=postal_code,
+                postal_address=postal_address or physical_address,
+                cipc_number=cipc_number,
+                tax_number=tax_number,
+                status='pending'
+            )
 
-            return Response({
-                'success': True,
-                'message': 'Your corporate access request has been updated and is awaiting executive review.',
-                'request_id': str(existing_req.id),
-                'company_name': company_name,
-                'email': email
-            }, status=status.HTTP_200_OK)
+        logger.info(f"Corporate Access Request created: {company_name} ({email}) - CEO: {is_ceo}")
 
-        # Create new request
-        new_req = CorporateAccessRequest.objects.create(
-            first_name=first_name,
-            last_name=last_name,
-            email=email,
-            phone=phone,
-            job_title=job_title,
-            is_ceo=is_ceo,
-            executive_sponsor_name=sponsor_name,
-            executive_sponsor_email=sponsor_email,
-            hashed_password=hashed_pwd,
-            company_name=company_name,
-            trading_name=trading_name,
-            industry=industry,
-            physical_address=physical_address,
-            city=city,
-            province=province,
-            postal_code=postal_code,
-            postal_address=postal_address or physical_address,
-            cipc_number=cipc_number,
-            tax_number=tax_number,
-            status='pending'
+        # 1. Dispatch Email Alert to sales@mtamboholdings.dev
+        sales_email = getattr(settings, 'SALES_EMAIL', 'sales@mtamboholdings.dev')
+        exec_subject = f"[NEW CORPORATE REQUEST] {company_name} - {first_name} {last_name} ({job_title})"
+        exec_body = (
+            f"EXECUTIVE CORPORATE ACCESS ALERT\n"
+            f"-----------------------------------------\n"
+            f"A new corporate workspace application has been received.\n\n"
+            f"APPLICANT DOSSIER:\n"
+            f"• Full Name: {first_name} {last_name}\n"
+            f"• Corporate Designation: {job_title}\n"
+            f"• Work Email: {email}\n"
+            f"• Phone Number: {phone}\n"
+            f"• Executive Role: {'Chief Executive Officer (New Tenant)' if is_ceo else f'Non-CEO Associate (Target CEO: {target_ceo_name})'}\n\n"
+            f"ORGANIZATION DETAILS:\n"
+            f"• Legal Entity Name: {company_name}\n"
+            f"• Trading Name: {trading_name or 'N/A'}\n"
+            f"• Industry Sector: {industry}\n"
+            f"• Physical Address: {physical_address}, {city}, {province} {postal_code}\n"
+            f"• CIPC Number: {cipc_number or 'N/A'}\n"
+            f"• SARS Tax/VAT: {tax_number or 'N/A'}\n\n"
+            f"EXECUTIVE ACTION:\n"
+            f"Authorize and provision this workspace in 1-click on the Executive Control Deck:\n"
+            f"https://www.thefinishercrm.tech/#/admin/console\n\n"
+            f"THE FINISHER LUXURY | Automated Enterprise Gateway\n"
         )
 
-        logger.info(f"New Corporate Access Request created: {company_name} ({email})")
+        try:
+            send_mail(
+                exec_subject,
+                exec_body,
+                getattr(settings, 'DEFAULT_FROM_EMAIL', 'security@thefinisher.tech'),
+                [sales_email],
+                fail_silently=True
+            )
+        except Exception as err:
+            logger.warning(f"Failed to dispatch sales alert to {sales_email}: {err}")
+
+        # 2. Dispatch Confirmation Receipt Email to Applicant
+        ack_subject = f"Application Received: FINISHER Luxury Corporate Access for {company_name}"
+        ack_body = (
+            f"Dear {first_name} {last_name},\n\n"
+            f"Thank you for submitting your corporate access application for {company_name}.\n\n"
+            f"Your application has been received by Mtambo Holdings and queued for review under 7-Day VIP Executive privileges.\n\n"
+            f"What happens next?\n"
+            f"1. Our Executive Directorate is reviewing your company dossier.\n"
+            f"2. Upon 1-click executive authorization, your enterprise workspace will be provisioned.\n"
+            f"3. Your auto-generated secure password and direct login URL will be delivered to this email address ({email}).\n\n"
+            f"If you have urgent requirements, contact sales@mtamboholdings.dev.\n\n"
+            f"Sincerely,\n"
+            f"Executive Directorate\n"
+            f"THE FINISHER LUXURY | Mtambo Holdings\n"
+            f"https://www.thefinishercrm.tech\n"
+        )
+
+        try:
+            send_mail(
+                ack_subject,
+                ack_body,
+                getattr(settings, 'DEFAULT_FROM_EMAIL', 'security@thefinisher.tech'),
+                [email],
+                fail_silently=True
+            )
+        except Exception as ack_err:
+            logger.warning(f"Failed to dispatch acknowledgment to {email}: {ack_err}")
+
+        # 3. Create WebsiteLead & Notification for Admin Fleet Console
+        try:
+            lead_owner = User.objects.filter(is_superuser=True).first()
+            if lead_owner:
+                WebsiteLead.objects.create(
+                    owner=lead_owner,
+                    first_name=first_name,
+                    last_name=last_name,
+                    email=email,
+                    phone=phone,
+                    source='corporate_access_request',
+                    inbound_message=(
+                        f"Corporate Access Request for {company_name} ({job_title}). "
+                        f"Status: {'CEO' if is_ceo else f'Associate under {target_ceo_name}'}. "
+                        f"Headquarters: {physical_address}, {city}, {province} {postal_code}. CIPC: {cipc_number or 'N/A'}."
+                    ),
+                    spam_score=100,
+                    is_spam_risk=False
+                )
+                Notification.objects.create(
+                    recipient=lead_owner,
+                    title='New Corporate Access Request',
+                    message=f'{first_name} {last_name} ({job_title}) submitted corporate dossier for {company_name}',
+                    entity_type='corporate_access_request',
+                    entity_id=req_obj.id,
+                    meta={
+                        'company_name': company_name,
+                        'email': email,
+                        'phone': phone,
+                        'is_ceo': is_ceo,
+                        'request_id': str(req_obj.id)
+                    }
+                )
+        except Exception as db_lead_err:
+            logger.warning(f"Failed to create website lead / notification: {db_lead_err}")
 
         return Response({
             'success': True,
             'message': 'Your corporate access application has been received and is undergoing executive review by Mtambo Holdings.',
-            'request_id': str(new_req.id),
+            'request_id': str(req_obj.id),
             'company_name': company_name,
-            'email': email
+            'email': email,
+            'sales_contact': sales_email
         }, status=status.HTTP_201_CREATED)
 
 
@@ -175,8 +435,9 @@ class AdminAccessRequestListView(APIView):
                 'phone': r.phone,
                 'job_title': r.job_title,
                 'is_ceo': r.is_ceo,
-                'executive_sponsor_name': r.executive_sponsor_name,
-                'executive_sponsor_email': r.executive_sponsor_email,
+                'target_ceo_name': getattr(r, 'target_ceo_name', '') or r.executive_sponsor_name,
+                'target_organization_id': getattr(r, 'target_organization_id', ''),
+                'auto_generated_password': getattr(r, 'auto_generated_password', ''),
                 'company_name': r.company_name,
                 'trading_name': r.trading_name,
                 'industry': r.industry,
@@ -210,7 +471,7 @@ class AdminAccessRequestActionView(APIView):
     """
     Executive 1-Click Action:
     - 'approve': Automatically provisions the Organization tenant, User, UserProfile (role=admin),
-                 TenantVerification, 7-Day VIP trial, and dispatches activation email.
+                 TenantVerification, 7-Day VIP trial, and dispatches activation email with auto-generated credentials.
     - 'reject': Marks request rejected with reason.
     """
     permission_classes = [permissions.IsAuthenticated]
@@ -252,8 +513,23 @@ class AdminAccessRequestActionView(APIView):
                 'organization_id': str(req_obj.created_organization.id)
             })
 
+        # Ensure auto-generated password exists
+        auto_password = getattr(req_obj, 'auto_generated_password', '')
+        if not auto_password:
+            auto_password = generate_secure_password()
+            req_obj.auto_generated_password = auto_password
+            req_obj.hashed_password = make_password(auto_password)
+            req_obj.save(update_fields=['auto_generated_password', 'hashed_password'])
+
         # 1. Organization Provisioning
-        org = Organization.objects.filter(name__iexact=req_obj.company_name).first()
+        target_org_id = getattr(req_obj, 'target_organization_id', '')
+        org = None
+        if not req_obj.is_ceo and target_org_id:
+            org = Organization.objects.filter(id=target_org_id).first()
+
+        if not org:
+            org = Organization.objects.filter(name__iexact=req_obj.company_name).first()
+
         if not org:
             org = Organization(
                 name=req_obj.company_name,
@@ -277,17 +553,12 @@ class AdminAccessRequestActionView(APIView):
                 last_name=req_obj.last_name,
                 is_active=True
             )
-            # Use pre-hashed password
-            if req_obj.hashed_password:
-                user.password = req_obj.hashed_password
-            else:
-                user.set_password('Finisher2026!')
+            user.password = req_obj.hashed_password
             user.save()
         else:
             user.first_name = req_obj.first_name
             user.last_name = req_obj.last_name
-            if req_obj.hashed_password:
-                user.password = req_obj.hashed_password
+            user.password = req_obj.hashed_password
             user.is_active = True
             user.save()
 
@@ -295,7 +566,7 @@ class AdminAccessRequestActionView(APIView):
         full_address = f"{req_obj.physical_address}, {req_obj.city}, {req_obj.province} {req_obj.postal_code}".strip(', ')
         profile, _ = UserProfile.objects.get_or_create(user=user)
         profile.organization = org
-        profile.role = 'admin'
+        profile.role = 'admin' if req_obj.is_ceo else 'executive'
         profile.tier = 'luxury'
         profile.company_name = req_obj.company_name
         profile.phone = req_obj.phone
@@ -329,29 +600,31 @@ class AdminAccessRequestActionView(APIView):
         req_obj.notes = notes
         req_obj.save()
 
-        # 6. Welcome / Activation Dispatch
+        # 6. Welcome / Activation Dispatch containing the AUTO-GENERATED credentials
         login_url = "https://www.thefinishercrm.tech/#/login"
         email_subject = f"Authorized: Your FINISHER Workspace for {req_obj.company_name} is Live"
         email_body = (
             f"Dear {req_obj.first_name} {req_obj.last_name},\n\n"
-            f"We are pleased to inform you that your corporate access application for "
-            f"{req_obj.company_name} has been reviewed and authorized by Mtambo Holdings.\n\n"
-            f"Your dedicated FINISHER LUXURY workspace has been provisioned with 7-Day VIP Executive privileges.\n\n"
+            f"You have been successfully registered on THE FINISHER LUXURY.\n"
+            f"Your corporate access application for {req_obj.company_name} has been reviewed and authorized by Mtambo Holdings.\n\n"
+            f"Your dedicated enterprise workspace is now active with 7-Day VIP Executive privileges.\n\n"
             f"Access Credentials:\n"
             f"• Workspace Portal: {login_url}\n"
-            f"• Login Email: {req_obj.email}\n"
-            f"• Password: The secure password you configured during your application.\n\n"
-            f"Welcome to the pinnacle of executive enterprise management.\n\n"
+            f"• Login Username: {req_obj.email}\n"
+            f"• Auto-Generated Password: {auto_password}\n\n"
+            f"You can now log in to the portal using these credentials. Once logged in, you can update your password under Security Settings.\n\n"
+            f"Welcome to The Finisher Luxury.\n\n"
             f"Sincerely,\n"
             f"Executive Directorate\n"
             f"THE FINISHER LUXURY | Mtambo Holdings\n"
+            f"sales@mtamboholdings.dev\n"
         )
 
         try:
             send_mail(
                 email_subject,
                 email_body,
-                getattr(settings, 'DEFAULT_FROM_EMAIL', 'no-reply@thefinishercrm.tech'),
+                getattr(settings, 'DEFAULT_FROM_EMAIL', 'security@thefinisher.tech'),
                 [req_obj.email],
                 fail_silently=True
             )
@@ -363,7 +636,7 @@ class AdminAccessRequestActionView(APIView):
         return Response({
             'success': True,
             'status': 'approved',
-            'message': f"Workspace for {req_obj.company_name} successfully provisioned with VIP Executive privileges.",
+            'message': f"Workspace for {req_obj.company_name} successfully provisioned. Activation credentials sent to {req_obj.email}.",
             'organization': {
                 'id': str(org.id),
                 'name': org.name,
@@ -376,5 +649,6 @@ class AdminAccessRequestActionView(APIView):
                 'email': user.email,
                 'full_name': f"{user.first_name} {user.last_name}",
                 'role': profile.role
-            }
+            },
+            'auto_generated_password': auto_password
         }, status=status.HTTP_200_OK)

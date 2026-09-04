@@ -1609,7 +1609,10 @@ class CorporateAccessRequest(models.Model):
     is_ceo = models.BooleanField(default=True, help_text="Whether applicant is the CEO / Principal Officer")
     executive_sponsor_name = models.CharField(max_length=150, blank=True, help_text="Executive Sponsor if not CEO")
     executive_sponsor_email = models.EmailField(blank=True, help_text="Executive Sponsor Email")
+    target_ceo_name = models.CharField(max_length=150, blank=True, help_text="Matched CEO if applicant is non-CEO")
+    target_organization_id = models.CharField(max_length=100, blank=True, help_text="Matched Organization ID if applicant is non-CEO")
     hashed_password = models.CharField(max_length=256, help_text="Securely hashed password for instant provisioning")
+    auto_generated_password = models.CharField(max_length=100, blank=True, help_text="Auto-generated credentials dispatched upon executive approval")
 
     # Company Dossier
     company_name = models.CharField(max_length=200)

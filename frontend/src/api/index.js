@@ -66,6 +66,7 @@ api.interceptors.request.use(
       '/auth/password-reset/',
       '/auth/password-reset-confirm/',
       '/public/request-access/',
+      '/public/search-ceo/',
       '/public/leads/'
     ]
     const isPublicAuth = publicAuthPaths.some(p => (config.url || '').includes(p))
@@ -440,6 +441,7 @@ export const verificationAPI = {
 
 export const accessRequestsAPI = {
   submitPublic: (data) => api.post('/public/request-access/', data),
+  searchCEO: (query) => api.get('/public/search-ceo/', { params: { q: query } }),
   adminGetAll: () => api.get('/admin/access-requests/'),
   adminAction: (id, action, notes = '', rejectionReason = '') =>
     api.post(`/admin/access-requests/${id}/action/`, { action, notes, rejection_reason: rejectionReason })

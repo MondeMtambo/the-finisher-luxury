@@ -96,7 +96,10 @@
                   <div style="font-size: 0.78rem; color: #d4af37; margin-top: 0.2rem;">
                     {{ req.job_title }}
                     <span v-if="req.is_ceo" style="margin-left: 0.35rem; background: rgba(212,175,55,0.2); padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.72rem;">👑 CEO</span>
-                    <span v-else style="margin-left: 0.35rem; background: rgba(255,255,255,0.1); padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.72rem;" :title="`Sponsor: ${req.executive_sponsor_name} (${req.executive_sponsor_email})`">👔 Officer</span>
+                    <span v-else style="margin-left: 0.35rem; background: rgba(255,255,255,0.1); padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.72rem;" :title="`Sponsor / Linked CEO: ${req.target_ceo_name || req.executive_sponsor_name || 'N/A'}`">👔 Non-CEO Member</span>
+                  </div>
+                  <div v-if="!req.is_ceo && req.target_ceo_name" style="font-size: 0.72rem; color: #60a5fa; margin-top: 0.25rem; background: rgba(96,165,250,0.12); padding: 0.15rem 0.45rem; border-radius: 4px; display: inline-block;">
+                    🔗 Linked CEO: <strong>{{ req.target_ceo_name }}</strong>
                   </div>
                 </td>
                 <td>
@@ -106,6 +109,9 @@
                 <td>
                   <div style="font-family: monospace; font-size: 0.82rem; color: #e5e7eb;">{{ req.email }}</div>
                   <div style="font-size: 0.78rem; color: #9ca3af;">{{ req.phone }}</div>
+                  <div v-if="req.auto_generated_password" style="font-size: 0.72rem; color: #d4af37; background: rgba(212,175,55,0.12); padding: 0.15rem 0.45rem; border-radius: 4px; margin-top: 0.3rem; font-family: monospace; display: inline-block; border: 1px solid rgba(212,175,55,0.25);" title="Auto-Generated Secure Password">
+                    🔑 Auto-Pass: {{ req.auto_generated_password }}
+                  </div>
                 </td>
                 <td>
                   <div style="font-size: 0.82rem; max-width: 200px; line-height: 1.3;" :title="req.physical_address">

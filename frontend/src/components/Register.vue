@@ -26,7 +26,7 @@
     <div class="wizard-progress-bar" v-if="currentStep < 3">
       <div class="progress-step" :class="{ active: currentStep === 1, completed: currentStep > 1 }" @click="currentStep > 1 && (currentStep = 1)">
         <div class="step-bubble">1</div>
-        <span class="step-label">Applicant &amp; Security</span>
+        <span class="step-label">Applicant &amp; Executive Auth</span>
       </div>
       <div class="progress-line" :class="{ active: currentStep > 1 }"></div>
       <div class="progress-step" :class="{ active: currentStep === 2, completed: currentStep > 2 }">
@@ -36,11 +36,11 @@
       <div class="progress-line" :class="{ active: currentStep === 3 }"></div>
       <div class="progress-step" :class="{ active: currentStep === 3 }">
         <div class="step-bubble">3</div>
-        <span class="step-label">Executive Authorization</span>
+        <span class="step-label">Executive Review</span>
       </div>
     </div>
 
-    <!-- STEP 1: Applicant & Security Credentials -->
+    <!-- STEP 1: Applicant & Executive Authentication -->
     <div class="auth-card register-card glass-panel" v-if="currentStep === 1">
       <div class="auth-header">
         <div class="vip-badge-pill">
@@ -48,7 +48,7 @@
           ⭐ 7-DAY VIP EXECUTIVE ACCESS &middot; CORPORATE ONBOARDING
         </div>
         <h1 class="headline">Request Executive Access</h1>
-        <p class="subheadline">Step 1: Verify your authorized corporate credentials and configure your private workspace credentials.</p>
+        <p class="subheadline">Step 1: Verify your authorized executive credentials to initiate corporate workspace provisioning.</p>
       </div>
 
       <form @submit.prevent="proceedToStep2" class="reg-form">
@@ -78,7 +78,7 @@
 
         <div class="form-grid-2">
           <div class="form-group">
-            <label class="form-label">Role / Designation *</label>
+            <label class="form-label">Corporate Designation / Role *</label>
             <select v-model="form.job_title" class="form-input form-select" required>
               <option value="" disabled>Select your corporate designation</option>
               <option value="Chief Executive Officer (CEO)">Chief Executive Officer (CEO)</option>
@@ -88,6 +88,7 @@
               <option value="Chief Financial Officer (CFO)">Chief Financial Officer (CFO)</option>
               <option value="Vice President / Partner">Vice President / Partner</option>
               <option value="Head of Operations / Revenue">Head of Operations / Revenue</option>
+              <option value="Associate / Senior Officer">Associate / Senior Officer</option>
               <option value="Other Corporate Officer">Other Corporate Officer</option>
             </select>
           </div>
@@ -122,93 +123,108 @@
         <!-- CEO Toggle -->
         <div class="toggle-card">
           <label class="toggle-row">
-            <input type="checkbox" v-model="form.is_ceo" class="toggle-checkbox" />
+            <input type="checkbox" v-model="form.is_ceo" class="toggle-checkbox" @change="onCEOToggleChange" />
             <div class="toggle-info">
               <span class="toggle-title">I am the Chief Executive Officer (CEO) / Principal Officer</span>
-              <span class="toggle-desc">Check if you hold principal signing authority for this legal entity.</span>
+              <span class="toggle-desc">Check if you are establishing a new corporate organization with principal signing authority.</span>
             </div>
           </label>
 
-          <!-- Conditional Executive Sponsor Section -->
-          <div v-if="!form.is_ceo" class="sponsor-section">
-            <p class="sponsor-notice">
-              ℹ️ Since you are applying on behalf of executive leadership, please provide your CEO or Executive Sponsor's details:
-            </p>
-            <div class="form-grid-2">
-              <div class="form-group">
-                <label class="form-label">Executive Sponsor Full Name *</label>
-                <input 
-                  v-model="form.executive_sponsor_name" 
-                  type="text" 
-                  class="form-input" 
-                  placeholder="e.g. Jane Doe (CEO)" 
-                  :required="!form.is_ceo"
-                />
+          <!-- CEO SEARCH ENGINE (When applicant is NOT the CEO) -->
+          <div v-if="!form.is_ceo" class="ceo-search-engine-wrap">
+            <div class="ceo-search-header">
+              <span class="search-engine-title">🔍 Search Registered CEO / Enterprise Organization</span>
+              <p class="search-engine-desc">
+                Only verified Chief Executive Officers can establish new workspaces. As a corporate officer, please search for your registered CEO or company name to associate your access request.
+              </p>
+            </div>
+
+            <!-- Active Selection Card -->
+            <div v-if="selectedCEO" class="selected-ceo-card">
+              <div class="selected-ceo-info">
+                <div class="selected-badge">✓ VERIFIED ENTERPRISE CONNECTED</div>
+                <div class="selected-org-name">{{ selectedCEO.company_name }}</div>
+                <div class="selected-ceo-name">
+                  Principal Executive: <strong>{{ selectedCEO.ceo_name }}</strong> ({{ selectedCEO.job_title }})
+                </div>
               </div>
-              <div class="form-group">
-                <label class="form-label">Executive Sponsor Work Email *</label>
+              <button type="button" class="btn-change-ceo" @click="clearSelectedCEO">
+                Change Selection
+              </button>
+            </div>
+
+            <!-- Live Search Bar -->
+            <div v-else class="search-bar-wrap">
+              <div class="search-input-box">
+                <span class="search-lens-icon">🔎</span>
                 <input 
-                  v-model="form.executive_sponsor_email" 
-                  type="email" 
-                  class="form-input" 
-                  placeholder="ceo@company.co.za" 
-                  :required="!form.is_ceo"
+                  type="text" 
+                  class="form-input search-input" 
+                  v-model="ceoSearchQuery" 
+                  @input="handleCEOSearchInput" 
+                  placeholder="Type CEO Name (e.g. Adrian Gore, Monde Mtambo) or Company Name..."
                 />
+                <span v-if="searchingCEO" class="search-spinner"></span>
+              </div>
+
+              <!-- Live Search Results Dropdown / Cards -->
+              <div v-if="ceoSearchResults.length > 0" class="search-results-list">
+                <div 
+                  v-for="(res, idx) in ceoSearchResults" 
+                  :key="idx" 
+                  class="search-result-item"
+                  @click="selectCEO(res)"
+                >
+                  <div class="result-crest">F</div>
+                  <div class="result-details">
+                    <div class="result-company">
+                      {{ res.company_name }}
+                      <span v-if="res.is_verified" class="verified-pill">✓ CIPC Verified</span>
+                    </div>
+                    <div class="result-ceo">
+                      Executive: <strong>{{ res.ceo_name }}</strong> &middot; <span class="text-gold">{{ res.job_title }}</span>
+                    </div>
+                  </div>
+                  <button type="button" class="btn-connect-pill">
+                    Connect &rarr;
+                  </button>
+                </div>
+              </div>
+
+              <!-- No Results Warning -->
+              <div v-else-if="ceoSearchQuery.trim().length >= 2 && !searchingCEO" class="no-results-alert">
+                <div class="alert-icon">⚠️</div>
+                <div class="alert-content">
+                  <strong>No registered CEO or Company found matching "{{ ceoSearchQuery }}".</strong>
+                  <p>
+                    You cannot apply on behalf of an unverified organization. If you are establishing this enterprise as the authorized CEO, please check <strong>"I am the Chief Executive Officer"</strong> above to register your workspace.
+                  </p>
+                </div>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Password Setup -->
-        <div class="password-setup-card">
-          <div class="password-header">
-            <span class="password-title">Configure Private Workspace Password</span>
-            <span class="password-subtitle">This password will activate immediately upon executive approval.</span>
-          </div>
-
-          <div class="form-grid-2">
-            <div class="form-group">
-              <label class="form-label">Workspace Password *</label>
-              <div class="password-input-wrap">
-                <input 
-                  v-model="form.password" 
-                  :type="showPassword ? 'text' : 'password'" 
-                  class="form-input password-input" 
-                  placeholder="Minimum 8 characters" 
-                  minlength="8"
-                  required 
-                />
-                <button type="button" class="eye-btn" @click="showPassword = !showPassword">
-                  {{ showPassword ? '👁️' : '🔒' }}
-                </button>
-              </div>
-            </div>
-
-            <div class="form-group">
-              <label class="form-label">Confirm Workspace Password *</label>
-              <div class="password-input-wrap">
-                <input 
-                  v-model="form.confirmPassword" 
-                  :type="showPassword ? 'text' : 'password'" 
-                  class="form-input password-input" 
-                  placeholder="Re-enter password" 
-                  minlength="8"
-                  required 
-                />
-              </div>
-            </div>
-          </div>
-
-          <div v-if="form.password && form.confirmPassword && form.password !== form.confirmPassword" class="password-mismatch">
-            ⚠️ Passwords do not match.
+        <!-- Automated Enterprise Credentials Notification Badge (NO MANUAL PASSWORD INPUT) -->
+        <div class="credentials-info-card">
+          <div class="credentials-info-icon">🔑</div>
+          <div class="credentials-info-text">
+            <span class="credentials-info-title">Automated Secure Enterprise Credentials</span>
+            <span class="credentials-info-desc">
+              To guarantee zero-trust compliance, a high-entropy workspace password will be auto-generated by the system and dispatched directly to your corporate email (<strong>{{ form.email || 'your email' }}</strong>) upon executive authorization.
+            </span>
           </div>
         </div>
 
         <div v-if="step1Error" class="form-error">{{ step1Error }}</div>
 
         <div class="step-nav">
-          <button type="submit" class="btn btn-primary btn-gold-action">
-            Proceed to Step 2: Company Dossier &rarr;
+          <button 
+            type="submit" 
+            class="btn btn-primary btn-gold-action"
+            :disabled="!form.is_ceo && !selectedCEO"
+          >
+            {{ (!form.is_ceo && !selectedCEO) ? 'Select Verified CEO Above to Proceed' : 'Proceed to Step 2: Company Dossier →' }}
           </button>
         </div>
 
@@ -227,7 +243,11 @@
           STEP 2 OF 2 &middot; CORPORATE DOSSIER
         </div>
         <h1 class="headline">Corporate Entity Dossier</h1>
-        <p class="subheadline">Provide legal entity details for multi-tenant POPIA Section 19 isolation and compliance verification.</p>
+        <p class="subheadline">
+          {{ form.is_ceo 
+              ? 'Provide legal entity details for multi-tenant POPIA Section 19 isolation and compliance verification.' 
+              : `Associating workspace access with ${form.company_name} under CEO ${form.target_ceo_name}.` }}
+        </p>
       </div>
 
       <form @submit.prevent="handleFinalSubmit" class="reg-form">
@@ -238,9 +258,13 @@
               v-model="form.company_name" 
               type="text" 
               class="form-input" 
-              placeholder="e.g. Apex Strategic Holdings (Pty) Ltd" 
+              :placeholder="form.is_ceo ? 'e.g. Apex Strategic Holdings (Pty) Ltd' : 'Corporate Entity'" 
+              :readonly="!form.is_ceo"
               required 
             />
+            <span v-if="!form.is_ceo" class="form-hint text-gold">
+              ✓ Locked to registered entity associated with CEO {{ form.target_ceo_name }}.
+            </span>
           </div>
 
           <div class="form-group">
@@ -380,8 +404,8 @@
           <label class="check-row">
             <input type="checkbox" v-model="acceptedCompliance" required />
             <span>
-              I confirm I am an authorized corporate representative applying on behalf of this business entity. 
-              I agree to the processing of enterprise data in compliance with the 
+              I confirm I am an authorized corporate officer applying on behalf of this business entity. 
+              I agree to the processing of enterprise information in compliance with the 
               <router-link to="/disclaimer" target="_blank" class="gold-link">POPIA Section 19 Data Safeguard Policy</router-link>.
             </span>
           </label>
@@ -427,6 +451,10 @@
           <span class="dossier-key">Principal Officer:</span>
           <span class="dossier-val">{{ form.first_name }} {{ form.last_name }} ({{ form.job_title }})</span>
         </div>
+        <div class="dossier-row" v-if="!form.is_ceo && form.target_ceo_name">
+          <span class="dossier-key">Target Verified CEO:</span>
+          <span class="dossier-val">{{ form.target_ceo_name }}</span>
+        </div>
         <div class="dossier-row">
           <span class="dossier-key">Official Work Email:</span>
           <span class="dossier-val">{{ form.email }}</span>
@@ -435,21 +463,21 @@
           <span class="dossier-key">Physical Headquarters:</span>
           <span class="dossier-val">{{ form.physical_address }}, {{ form.city }}, {{ form.province }} {{ form.postal_code }}</span>
         </div>
-        <div class="dossier-row" v-if="form.cipc_number">
-          <span class="dossier-key">CIPC Reference:</span>
-          <span class="dossier-val">{{ form.cipc_number }}</span>
-        </div>
         <div class="dossier-row">
           <span class="dossier-key">Allocation Tier:</span>
           <span class="dossier-val highlight-gold">7-Day VIP Executive Private OS</span>
         </div>
+        <div class="dossier-row">
+          <span class="dossier-key">Executive Dispatch:</span>
+          <span class="dossier-val">sales@mtamboholdings.dev</span>
+        </div>
       </div>
 
       <p class="success-note">
-        Your dedicated workspace dossier has been queued for authorization by the Executive Directorate at <strong>Mtambo Holdings (Pty) Ltd</strong>.
+        Your corporate access dossier has been transmitted to Mtambo Holdings executive sales desk (<strong>sales@mtamboholdings.dev</strong>).
       </p>
       <p class="text-muted text-sm mt-3">
-        Upon executive 1-click authorization, your credentials will become active and an official dispatch will be delivered to <strong>{{ form.email }}</strong>.
+        Upon 1-click authorization by the Executive Directorate, your <strong>auto-generated secure password</strong> and direct workspace portal URL will be dispatched to <strong>{{ form.email }}</strong>.
       </p>
 
       <div class="mt-4 success-actions">
@@ -477,7 +505,14 @@ export default {
       acceptedCompliance: true,
       sameAsPhysical: true,
       isGenericEmail: false,
-      showPassword: false,
+
+      // CEO Search Engine State
+      ceoSearchQuery: '',
+      searchingCEO: false,
+      ceoSearchResults: [],
+      ceoSearchTimer: null,
+      selectedCEO: null,
+
       form: {
         first_name: '',
         last_name: '',
@@ -485,10 +520,8 @@ export default {
         email: '',
         phone: '',
         is_ceo: true,
-        executive_sponsor_name: '',
-        executive_sponsor_email: '',
-        password: '',
-        confirmPassword: '',
+        target_ceo_name: '',
+        target_organization_id: '',
         company_name: '',
         trading_name: '',
         industry: 'consulting',
@@ -517,6 +550,54 @@ export default {
       const domain = email.split('@')[1]
       this.isGenericEmail = !!(domain && genericDomains.includes(domain))
     },
+    onCEOToggleChange() {
+      if (this.form.is_ceo) {
+        this.selectedCEO = null
+        this.form.target_ceo_name = ''
+        this.form.target_organization_id = ''
+        this.step1Error = ''
+      }
+    },
+    handleCEOSearchInput() {
+      if (this.ceoSearchTimer) clearTimeout(this.ceoSearchTimer)
+      const q = this.ceoSearchQuery.trim()
+      if (q.length < 2) {
+        this.ceoSearchResults = []
+        this.searchingCEO = false
+        return
+      }
+
+      this.searchingCEO = true
+      this.ceoSearchTimer = setTimeout(async () => {
+        try {
+          const res = await accessRequestsAPI.searchCEO(q)
+          this.ceoSearchResults = Array.isArray(res.data) ? res.data : []
+        } catch (err) {
+          console.warn('CEO search error:', err)
+          this.ceoSearchResults = []
+        } finally {
+          this.searchingCEO = false
+        }
+      }, 350)
+    },
+    selectCEO(ceoRecord) {
+      this.selectedCEO = ceoRecord
+      this.form.company_name = ceoRecord.company_name
+      this.form.target_ceo_name = ceoRecord.ceo_name
+      this.form.target_organization_id = ceoRecord.organization_id
+      this.ceoSearchResults = []
+      this.ceoSearchQuery = ''
+      this.step1Error = ''
+      toast.success('Enterprise Selected', `Linked to ${ceoRecord.company_name} (CEO: ${ceoRecord.ceo_name})`)
+    },
+    clearSelectedCEO() {
+      this.selectedCEO = null
+      this.form.company_name = ''
+      this.form.target_ceo_name = ''
+      this.form.target_organization_id = ''
+      this.ceoSearchQuery = ''
+      this.ceoSearchResults = []
+    },
     syncPostalAddress() {
       if (this.sameAsPhysical) {
         this.form.postal_address = `${this.form.physical_address}, ${this.form.city}, ${this.form.province} ${this.form.postal_code}`
@@ -532,16 +613,8 @@ export default {
         this.step1Error = 'Please enter your work email and direct phone number.'
         return
       }
-      if (!this.form.is_ceo && (!this.form.executive_sponsor_name || !this.form.executive_sponsor_email)) {
-        this.step1Error = 'Please specify your Executive Sponsor / CEO name and email.'
-        return
-      }
-      if (!this.form.password || this.form.password.length < 8) {
-        this.step1Error = 'Workspace password must be at least 8 characters long.'
-        return
-      }
-      if (this.form.password !== this.form.confirmPassword) {
-        this.step1Error = 'Passwords do not match.'
+      if (!this.form.is_ceo && !this.selectedCEO) {
+        this.step1Error = 'Non-CEOs must search and connect with a verified registered CEO / Company in the system.'
         return
       }
 
@@ -550,7 +623,7 @@ export default {
     },
     async handleFinalSubmit() {
       if (!this.form.company_name) {
-        this.error = 'Please enter your legal company name.'
+        this.error = 'Please provide the company name.'
         return
       }
       if (!this.form.physical_address || !this.form.city || !this.form.postal_code) {
@@ -573,9 +646,8 @@ export default {
           email: this.form.email,
           phone: this.form.phone,
           is_ceo: this.form.is_ceo,
-          executive_sponsor_name: this.form.executive_sponsor_name,
-          executive_sponsor_email: this.form.executive_sponsor_email,
-          password: this.form.password,
+          target_ceo_name: this.form.target_ceo_name,
+          target_organization_id: this.form.target_organization_id,
           company_name: this.form.company_name,
           trading_name: this.form.trading_name,
           industry: this.form.industry,
@@ -590,7 +662,7 @@ export default {
           tax_number: this.form.tax_number
         }
 
-        const res = await accessRequestsAPI.submitPublic(payload)
+        await accessRequestsAPI.submitPublic(payload)
 
         this.currentStep = 3
         toast.success('Corporate Access Application Submitted', 'Executive review initiated.')
@@ -658,7 +730,6 @@ export default {
 .particle:nth-child(3) { left: 45%; top: 15%; animation-delay: 3s; }
 .particle:nth-child(4) { left: 65%; top: 80%; animation-delay: 0.5s; }
 .particle:nth-child(5) { left: 85%; top: 30%; animation-delay: 2s; }
-.particle:nth-child(6) { left: 92%; top: 75%; animation-delay: 3.5s; }
 
 @keyframes floatParticle {
   0% { transform: translateY(0) scale(1); opacity: 0.2; }
@@ -993,19 +1064,219 @@ export default {
   font-size: 0.78rem;
   opacity: 0.75;
 }
-.sponsor-section {
-  margin-top: 1rem;
-  padding-top: 1rem;
-  border-top: 1px dashed rgba(212, 175, 55, 0.2);
+
+/* CEO SEARCH ENGINE STYLES */
+.ceo-search-engine-wrap {
+  margin-top: 1.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px dashed rgba(212, 175, 55, 0.25);
 }
-.sponsor-notice {
-  font-size: 0.82rem;
+.ceo-search-header {
   margin-bottom: 0.75rem;
-  color: #f59e0b;
+}
+.search-engine-title {
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: #d4af37;
+}
+.search-engine-desc {
+  font-size: 0.8rem;
+  opacity: 0.8;
+  margin: 0.25rem 0 0.75rem;
+  line-height: 1.45;
 }
 
-/* Password Card */
-.password-setup-card, .address-card {
+.search-bar-wrap {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+.search-input-box {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+.search-lens-icon {
+  position: absolute;
+  left: 0.85rem;
+  font-size: 0.95rem;
+  opacity: 0.7;
+}
+.search-input {
+  padding-left: 2.6rem !important;
+  padding-right: 2.5rem !important;
+}
+.search-spinner {
+  position: absolute;
+  right: 0.85rem;
+  width: 16px;
+  height: 16px;
+  border: 2px solid rgba(212, 175, 55, 0.2);
+  border-top-color: #d4af37;
+  border-radius: 50%;
+  animation: spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+
+.search-results-list {
+  background: rgba(17, 23, 35, 0.95);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  border-radius: 8px;
+  max-height: 250px;
+  overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.4);
+  display: flex;
+  flex-direction: column;
+}
+.auth-page[data-theme="light"] .search-results-list {
+  background: #ffffff;
+  border-color: rgba(212, 175, 55, 0.4);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+}
+
+.search-result-item {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.15);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.search-result-item:last-child {
+  border-bottom: none;
+}
+.search-result-item:hover {
+  background: rgba(212, 175, 55, 0.12);
+}
+.result-crest {
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  background: #d4af37;
+  color: #000;
+  font-weight: 800;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.result-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+}
+.result-company {
+  font-weight: 700;
+  font-size: 0.88rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.verified-pill {
+  font-size: 0.68rem;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  background: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+  font-weight: 700;
+}
+.result-ceo {
+  font-size: 0.78rem;
+  opacity: 0.8;
+}
+.btn-connect-pill {
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  background: linear-gradient(135deg, #d4af37, #b48608);
+  color: #000;
+  font-weight: 700;
+  font-size: 0.75rem;
+  border: none;
+  cursor: pointer;
+}
+
+.selected-ceo-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.9rem 1.1rem;
+  border-radius: 8px;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.4);
+}
+.selected-badge {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #10b981;
+  margin-bottom: 0.2rem;
+}
+.selected-org-name {
+  font-weight: 800;
+  font-size: 0.95rem;
+}
+.selected-ceo-name {
+  font-size: 0.8rem;
+  opacity: 0.85;
+}
+.btn-change-ceo {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  color: #d4af37;
+  padding: 0.35rem 0.75rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.no-results-alert {
+  display: flex;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border-radius: 8px;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #f59e0b;
+  font-size: 0.8rem;
+  line-height: 1.45;
+}
+.alert-icon { font-size: 1.25rem; }
+.alert-content p { margin: 0.25rem 0 0; opacity: 0.9; }
+
+/* AUTOMATED CREDENTIALS BADGE */
+.credentials-info-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.85rem;
+  padding: 1rem 1.25rem;
+  border-radius: 10px;
+  background: rgba(212, 175, 55, 0.08);
+  border: 1px solid rgba(212, 175, 55, 0.28);
+}
+.credentials-info-icon {
+  font-size: 1.4rem;
+}
+.credentials-info-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+.credentials-info-title {
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: #d4af37;
+}
+.credentials-info-desc {
+  font-size: 0.8rem;
+  opacity: 0.8;
+  line-height: 1.45;
+}
+
+/* Address Card */
+.address-card {
   padding: 1.25rem;
   border-radius: 10px;
   background: rgba(0, 0, 0, 0.15);
@@ -1014,49 +1285,22 @@ export default {
   flex-direction: column;
   gap: 1rem;
 }
-.auth-page[data-theme="light"] .password-setup-card,
 .auth-page[data-theme="light"] .address-card {
   background: rgba(241, 245, 249, 0.8);
   border-color: rgba(212, 175, 55, 0.3);
 }
 
-.password-header, .address-header {
+.address-header {
   display: flex;
   flex-direction: column;
   gap: 0.2rem;
 }
-.password-title, .address-title {
+.address-title {
   font-weight: 700;
   font-size: 0.9rem;
   color: #d4af37;
 }
-.password-subtitle {
-  font-size: 0.78rem;
-  opacity: 0.7;
-}
-.password-input-wrap {
-  position: relative;
-  display: flex;
-  align-items: center;
-}
-.password-input {
-  padding-right: 2.75rem;
-}
-.eye-btn {
-  position: absolute;
-  right: 0.75rem;
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 1rem;
-}
-.password-mismatch {
-  color: #ef4444;
-  font-size: 0.82rem;
-  font-weight: 600;
-}
 
-/* Address Helpers */
 .flex-between {
   display: flex;
   justify-content: space-between;

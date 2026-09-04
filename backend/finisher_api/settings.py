@@ -216,6 +216,7 @@ EMAIL_HOST_USER = config('EMAIL_HOST_USER', default='')
 EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 EMAIL_TIMEOUT = 15
 DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='security@thefinisher.tech')
+SALES_EMAIL = config('SALES_EMAIL', default='sales@mtamboholdings.dev').strip()
 
 # Public website lead ownership settings
 PUBLIC_LEAD_OWNER_EMAIL = config('PUBLIC_LEAD_OWNER_EMAIL', default='').strip()
