@@ -9,7 +9,9 @@ class Command(BaseCommand):
 
     def handle(self, *args, **options):
         username = os.getenv('DEFAULT_ADMIN_USERNAME', 'adminluxury').strip()
-        email = os.getenv('DEFAULT_ADMIN_EMAIL', 'admin@thefinisher.co.za').strip()
+        email = os.getenv('DEFAULT_ADMIN_EMAIL', 'adminluxury@thefinishercrm.tech').strip()
+        if 'mtambo' in email.lower():
+            email = 'adminluxury@thefinishercrm.tech'
         password = os.getenv('DEFAULT_ADMIN_PASSWORD', '').strip()
 
         if not password:
@@ -57,17 +59,19 @@ class Command(BaseCommand):
             else:
                 self.stdout.write(self.style.SUCCESS(f'✅ Admin user "{username}" already configured.'))
 
-        # Ensure UserProfile is properly configured
+        # Ensure UserProfile is properly configured with NULL organization and company
         if hasattr(user, 'profile'):
             profile = user.profile
             profile.role = 'admin'
             profile.tier = 'luxury'
-            profile.company_name = 'THE FINISHER LUXURY'
+            profile.organization = None
+            profile.company_name = ''
             profile.phone = '+27123456789'
             profile.payment_status = 'paid'
-            profile.save()
-            self.stdout.write(self.style.SUCCESS(f'✅ Profile configured: role=admin, tier=luxury'))
+            profile.save(update_fields=['role', 'tier', 'organization', 'company_name', 'phone', 'payment_status'])
+            self.stdout.write(self.style.SUCCESS(f'✅ Profile configured: role=admin, tier=luxury, organization=NULL, company=NULL'))
         
         self.stdout.write(self.style.SUCCESS('\nAdmin user ensured successfully.'))
         self.stdout.write(self.style.SUCCESS(f'   Username: {username}'))
         self.stdout.write(self.style.SUCCESS(f'   Email: {email}'))
+
