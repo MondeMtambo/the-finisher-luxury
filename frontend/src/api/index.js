@@ -11,13 +11,36 @@ const api = axios.create({
   }
 })
 
-// ─── Server Wake-Up Banner (Disabled) ───
-function showWakeUpBanner() {}
-function hideWakeUpBanner() {}
+// ─── Server Wake-Up Banner ───
+// Shows a non-blocking notification when the backend is waking from cold start
+let _wakeUpBanner = null
+function showWakeUpBanner() {
+  if (_wakeUpBanner) return
+  _wakeUpBanner = document.createElement('div')
+  _wakeUpBanner.id = 'render-wakeup-banner'
+  _wakeUpBanner.innerHTML = '⏳ Server is warming up — please wait a moment...'
+  Object.assign(_wakeUpBanner.style, {
+    position: 'fixed', top: '0', left: '0', right: '0', zIndex: '99999',
+    padding: '10px 20px', textAlign: 'center', fontWeight: '700',
+    fontSize: '0.85rem', letterSpacing: '0.5px',
+    background: 'linear-gradient(90deg, #d4af37 0%, #f5d76e 50%, #d4af37 100%)',
+    color: '#1a1a2e', boxShadow: '0 2px 12px rgba(212,175,55,0.4)',
+    animation: 'slideDown 0.3s ease-out'
+  })
+  document.body.appendChild(_wakeUpBanner)
+}
+function hideWakeUpBanner() {
+  if (_wakeUpBanner) {
+    _wakeUpBanner.remove()
+    _wakeUpBanner = null
+  }
+}
 
-// ─── Retry Logic for Cold Starts ───
-const MAX_RETRIES = 2
-const RETRY_DELAY_MS = 3000
+// ─── Intelligent Retry Logic for Render Cold Starts ───
+// Supabase DB never sleeps — but Render free tier backend can cold start.
+// 3 retries with exponential backoff (5s, 10s, 15s) = 30s total patience.
+const MAX_RETRIES = 3
+const RETRY_DELAY_MS = 5000
 
 function isRetryable(error) {
   // Retry on network errors, timeouts, and 502/503/504 (Render waking up)
@@ -42,7 +65,7 @@ const retryInterceptor = async (error) => {
   config._retryCount += 1
   showWakeUpBanner()
 
-  // Wait before retrying
+  // Exponential backoff: 5s, 10s, 15s
   await new Promise(r => setTimeout(r, RETRY_DELAY_MS * config._retryCount))
 
   return api(config)

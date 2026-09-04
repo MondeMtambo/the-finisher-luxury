@@ -4,9 +4,14 @@ import router from './router'
 import './assets/animations.css'
 import './assets/theme.css'
 import animationsPreference from './utils/animations'
+import { warmUpBackend } from './utils/apiBase'
 
 // Apply saved animation preference on startup
 animationsPreference.init()
+
+// ─── BACKEND WARM-UP ───
+// Immediately wake the Render backend on app load (prevents cold-start errors)
+warmUpBackend()
 
 // Progressive Web App (PWA) Service Worker Registration & Realtime Cache Invalidation
 if ('serviceWorker' in navigator && window.location.protocol.startsWith('http')) {

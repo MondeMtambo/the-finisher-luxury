@@ -27,14 +27,18 @@ SECRET_KEY = config('SECRET_KEY', default='dev-only-change-me')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config('DEBUG', default=False, cast=bool)
 
-ALLOWED_HOSTS = [
-    'localhost',
-    '127.0.0.1',
+# Production-only allowed hosts — localhost is ONLY permitted in DEBUG mode
+_PRODUCTION_HOSTS = [
     'the-finisher-luxury-api.onrender.com',
     '.onrender.com',
     'thefinishercrm.tech',
     'www.thefinishercrm.tech',
 ]
+_DEBUG_HOSTS = [
+    'localhost',
+    '127.0.0.1',
+]
+ALLOWED_HOSTS = _PRODUCTION_HOSTS + (_DEBUG_HOSTS if DEBUG else [])
 
 
 # Application definition
@@ -106,6 +110,20 @@ if DATABASE_URL:
             ssl_require=is_cloud_db,
         )
     }
+    # ══════════════════════════════════════════════════════════════════════════
+    # SUPABASE CONNECTION STABILITY — "2000% QUEEN-LEVEL" DATABASE HARDENING
+    # ══════════════════════════════════════════════════════════════════════════
+    # Persistent connections: reuse TCP sockets across requests (conn_max_age=600 above)
+    # Health checks: verify connection is alive before using it (Django 4.1+)
+    DATABASES['default']['CONN_HEALTH_CHECKS'] = True
+    # Set TCP keepalive to detect and recover from dropped Supabase connections
+    DATABASES['default'].setdefault('OPTIONS', {})
+    DATABASES['default']['OPTIONS']['keepalives'] = 1
+    DATABASES['default']['OPTIONS']['keepalives_idle'] = 30      # Send keepalive after 30s idle
+    DATABASES['default']['OPTIONS']['keepalives_interval'] = 10  # Retry keepalive every 10s
+    DATABASES['default']['OPTIONS']['keepalives_count'] = 5      # Drop after 5 failed keepalives
+    DATABASES['default']['OPTIONS']['connect_timeout'] = 10      # Max 10s to establish connection
+    DATABASES['default']['OPTIONS']['options'] = '-c statement_timeout=30000'  # 30s max query time
 else:
     DATABASES = {
         'default': {
@@ -148,18 +166,22 @@ MEDIA_ROOT = BASE_DIR / 'media'
 # Frontend URL (for password reset links)
 FRONTEND_URL = config('FRONTEND_URL', default='https://thefinisher.tech')
 
-# CORS Settings - Domain whitelisting & permissive preflights
-CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOWED_ORIGINS = [
+# CORS Settings — Production whitelist. Localhost ONLY in DEBUG mode.
+# In production: CORS_ALLOW_ALL_ORIGINS is DISABLED for zero-trust security.
+CORS_ALLOW_ALL_ORIGINS = DEBUG  # True only in local dev
+_PRODUCTION_CORS_ORIGINS = [
     'https://thefinisher.tech',
     'https://www.thefinisher.tech',
     'https://thefinishercrm.tech',
     'https://www.thefinishercrm.tech',
+]
+_DEBUG_CORS_ORIGINS = [
     'http://localhost:3000',
     'http://localhost:5173',
     'http://127.0.0.1:3000',
     'http://127.0.0.1:5173',
 ]
+CORS_ALLOWED_ORIGINS = _PRODUCTION_CORS_ORIGINS + (_DEBUG_CORS_ORIGINS if DEBUG else [])
 CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOW_HEADERS = [
     'accept',

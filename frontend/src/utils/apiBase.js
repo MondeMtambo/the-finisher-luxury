@@ -1,64 +1,50 @@
-// Utility for determining the API base URL consistently across the app
+// ═══════════════════════════════════════════════════════════════════════
+// THE FINISHER LUXURY — API Base URL Resolution
+// Production: Render Backend ONLY. Localhost is BLOCKED in production.
+// ═══════════════════════════════════════════════════════════════════════
 
-// Hardcoded production backend — Render Web Service backend
+// Hardcoded production backend — Render Web Service
 const PRODUCTION_BACKEND = 'https://the-finisher-luxury-api.onrender.com/api'
 
-const ensureProtocol = (url) => {
-  if (!url) return url
-  // If URL doesn't start with http:// or https://, prepend https://
-  if (!/^https?:\/\//i.test(url)) {
-    url = `https://${url}`
-  }
-  return url
-}
-
-const withApiPath = (base) => {
-  if (!base) return base
-  base = ensureProtocol(base)
-  const trimmed = base.replace(/\/$/, '')
-  return trimmed.endsWith('/api') ? trimmed : `${trimmed}/api`
-}
-
 const resolveBase = () => {
-  let base
-
   const isBrowser = typeof window !== 'undefined'
   const host = isBrowser ? window.location.hostname : ''
   const isLocalHost = host === 'localhost' || host === '127.0.0.1'
 
-  if (isLocalHost) {
-    base = 'http://localhost:8000/api'
-  } else {
-    // In production, use VITE_API_URL if injected, otherwise default to Render backend
-    const envApi = typeof import.meta !== 'undefined' && import.meta.env && import.meta.env.VITE_API_URL
-    base = envApi ? withApiPath(envApi) : PRODUCTION_BACKEND
+  // ─── PRODUCTION LOCKDOWN ───
+  // If the app is running from a production domain, ALWAYS use the production backend.
+  // Localhost override is IMPOSSIBLE from production — zero-trust security.
+  if (!isLocalHost) {
+    return PRODUCTION_BACKEND
   }
 
-  if (isBrowser) {
-    try {
-      const params = new URLSearchParams(window.location.search)
-      const qp = params.get('api')
-      if (qp) {
-        localStorage.setItem('API_BASE_OVERRIDE', qp)
-      }
-      const stored = localStorage.getItem('API_BASE_OVERRIDE')
-      if (stored) {
-        if (stored === 'local') {
-          base = 'http://localhost:8000/api'
-        } else if (stored.includes('fly.dev') || stored.endsWith('the-finisher-luxury.onrender.com') || stored.endsWith('the-finisher-luxury.onrender.com/api')) {
-          localStorage.removeItem('API_BASE_OVERRIDE')
-          base = PRODUCTION_BACKEND
-        } else if (/^https?:\/\//i.test(stored)) {
-          base = withApiPath(stored)
-        }
-      }
-    } catch (_) {
-      // ignore storage errors
-    }
-  }
+  // ─── LOCAL DEVELOPMENT ONLY ───
+  // Only reachable when running on localhost during development
+  return 'http://localhost:8000/api'
+}
 
-  console.log('[apiBase] Resolved API URL:', base)
-  return base
+// ─── BACKEND WARM-UP ───
+// Silently ping the health endpoint on app load to wake Render from cold start.
+// This ensures the backend is ready BEFORE the user submits any form.
+export function warmUpBackend() {
+  try {
+    const base = PRODUCTION_BACKEND.replace(/\/api$/, '')
+    fetch(`${base}/health/`, {
+      method: 'GET',
+      mode: 'cors',
+      cache: 'no-store',
+      signal: AbortSignal.timeout(15000) // 15 second max
+    }).then(res => {
+      if (res.ok) {
+        console.log('[WarmUp] Backend is awake and ready ✓')
+      }
+    }).catch(() => {
+      // Silent fail — this is just a warm-up, not critical
+      console.log('[WarmUp] Backend warming up...')
+    })
+  } catch (_) {
+    // Ignore errors in environments where fetch/AbortSignal isn't available
+  }
 }
 
 export const API_BASE_URL = resolveBase()
