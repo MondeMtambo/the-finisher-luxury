@@ -351,16 +351,18 @@ class PublicAccessRequestView(APIView):
             f"Executive Directorate | THE FINISHER LUXURY | Mtambo Holdings\n"
             f"https://www.thefinishercrm.tech\n"
         )
+        from_sender = getattr(settings, 'DEFAULT_FROM_EMAIL', None) or 'onboarding@resend.dev'
         try:
             send_mail(
                 verify_subject,
                 verify_body,
-                getattr(settings, 'DEFAULT_FROM_EMAIL', 'security@thefinisher.tech'),
+                from_sender,
                 [email],
-                fail_silently=True
+                fail_silently=False
             )
+            logger.info(f"Successfully dispatched 5-minute verification code to {email} from {from_sender}")
         except Exception as mail_err:
-            logger.warning(f"Failed to dispatch verification code email: {mail_err}")
+            logger.error(f"Failed to dispatch verification code email to {email}: {mail_err}")
 
         return Response({
             'success': True,
@@ -368,9 +370,8 @@ class PublicAccessRequestView(APIView):
             'request_id': str(req_obj.id),
             'email': email,
             'company_name': company_name,
-            'verification_code': verification_code,
             'expires_in_seconds': 300,
-            'message': 'A 6-digit verification code has been dispatched. Please verify within 5 minutes.'
+            'message': f'A 6-digit verification code has been dispatched to {email}. Please verify within 5 minutes.'
         }, status=status.HTTP_200_OK)
 
 

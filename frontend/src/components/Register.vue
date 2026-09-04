@@ -476,11 +476,8 @@
             autofocus
           />
           <span class="form-hint" style="color: #9ca3af; margin-top: 0.5rem; display: block;">
-            Code dispatched to: <strong>{{ form.email }}</strong>
+            Code dispatched to: <strong>{{ form.email }}</strong> (Check your email inbox)
           </span>
-          <div v-if="verificationDevCode" style="font-size: 0.72rem; color: #d4af37; background: rgba(212,175,55,0.12); padding: 0.25rem 0.6rem; border-radius: 4px; margin-top: 0.5rem; font-family: monospace; display: inline-block; border: 1px solid rgba(212,175,55,0.25);">
-            ⚡ Passcode: <strong>{{ verificationDevCode }}</strong>
-          </div>
         </div>
 
         <div v-if="verificationError" class="form-error">{{ verificationError }}</div>
@@ -592,7 +589,6 @@ export default {
       // 5-Minute TTL Ephemeral Verification State
       activeRequestId: null,
       verificationInput: '',
-      verificationDevCode: '',
       verificationError: '',
       verifying: false,
       timerSecondsLeft: 300,
@@ -761,7 +757,6 @@ export default {
         const res = await accessRequestsAPI.submitPublic(payload)
 
         this.activeRequestId = res.data?.request_id
-        this.verificationDevCode = res.data?.verification_code || ''
         this.verificationInput = ''
         this.verificationError = ''
         this.verificationExpired = false
