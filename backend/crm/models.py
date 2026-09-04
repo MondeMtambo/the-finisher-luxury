@@ -29,6 +29,7 @@ class Organization(models.Model):
     trial_start_date = models.DateTimeField(default=timezone.now)
     trial_end_date = models.DateTimeField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
+    is_cipc_verified = models.BooleanField(default=False, help_text="CIPC business entity verified")
     max_users = models.PositiveIntegerField(default=10)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -63,6 +64,14 @@ class Organization(models.Model):
             return 0
         diff = self.trial_end_date - timezone.now()
         return max(0, diff.days)
+
+    @property
+    def is_verified(self):
+        if self.is_cipc_verified:
+            return True
+        if hasattr(self, 'verification'):
+            return self.verification.status == 'verified'
+        return False
 
     def __str__(self):
         return f"{self.name} ({self.subscription_tier})"
@@ -130,6 +139,51 @@ class PaymentTransaction(models.Model):
 
     def __str__(self):
         return f"{self.transaction_reference} - {self.amount_cents/100} {self.currency} ({self.status})"
+
+
+class TenantVerification(models.Model):
+    """
+    South African CIPC Business Verification & Compliance Portal.
+    Stores CIPC company documents, proof of address, director ID, and approval state.
+    Provides institutional compliance governance for POPIA Section 19 client protection.
+    """
+    STATUS_CHOICES = [
+        ('pending', 'Pending Verification'),
+        ('verified', 'Verified & Approved'),
+        ('rejected', 'Rejected / Re-submission Required'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.OneToOneField(Organization, on_delete=models.CASCADE, related_name='verification')
+    submitted_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='submitted_verifications')
+    
+    company_name = models.CharField(max_length=200, help_text="Official CIPC registered legal entity name")
+    trading_name = models.CharField(max_length=200, blank=True, help_text="Trading As (T/A)")
+    cipc_number = models.CharField(max_length=30, help_text="Official CIPC Registration Number (e.g. 2024/123456/07)")
+    tax_number = models.CharField(max_length=30, blank=True, help_text="SARS Tax / VAT Reference Number")
+    director_name = models.CharField(max_length=150, blank=True, help_text="Director / Authorized Officer")
+
+    # Uploaded Compliance Documents
+    cipc_certificate = models.FileField(upload_to='verification_docs/', blank=True, null=True, help_text="CIPC CoR 14.3 / CK Certificate")
+    proof_of_address = models.FileField(upload_to='verification_docs/', blank=True, null=True, help_text="Proof of Business Physical Address")
+    director_id_doc = models.FileField(upload_to='verification_docs/', blank=True, null=True, help_text="Director ID or Passport")
+
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending')
+    internal_notes = models.TextField(blank=True, help_text="Internal compliance check notes (CIPC BizPortal confirmation)")
+    rejection_reason = models.TextField(blank=True, help_text="Feedback provided to client if verification rejected")
+
+    reviewed_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='reviewed_verifications')
+    reviewed_at = models.DateTimeField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = 'Tenant Verification'
+        verbose_name_plural = 'Tenant Verifications'
+
+    def __str__(self):
+        return f"{self.company_name} ({self.cipc_number}) - {self.status}"
 
 
 class UserProfile(models.Model):

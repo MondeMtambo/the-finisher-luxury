@@ -2,56 +2,26 @@
   <div class="page-wrap">
     <div class="page-header">
       <div>
-        <h1>Clients</h1>
-        <p class="page-subtitle">Manage company and individual clients</p>
+        <h1>Businesses</h1>
+        <p class="page-subtitle">Corporate business directory, institutional clients, and CIPC compliance</p>
       </div>
       <div class="header-actions">
-        <div class="btn-group">
-          <button 
-            class="btn btn-secondary" 
-            :class="{ active: filterType === 'all' }" 
-            @click="filterType = 'all'"
-          >
-            All Clients
-          </button>
-          <button 
-            class="btn btn-secondary" 
-            :class="{ active: filterType === 'company' }" 
-            @click="filterType = 'company'"
-          >
-            Companies
-          </button>
-          <button 
-            class="btn btn-secondary" 
-            :class="{ active: filterType === 'individual' }" 
-            @click="filterType = 'individual'"
-          >
-            Individuals
-          </button>
-        </div>
-        <div class="add-menu">
-          <button class="btn btn-primary" @click="toggleAddMenu" :disabled="!canAddCompany">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Add Client
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-          </button>
-          <div v-if="showAddMenu" class="dropdown-menu">
-            <button class="dropdown-item" @click="openAddClient('company')">Add Company</button>
-            <button class="dropdown-item" @click="openAddClient('individual')">Add Individual Client</button>
-          </div>
-        </div>
+        <button class="btn btn-primary" @click="openAddBusiness" :disabled="!canAddCompany">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Business
+        </button>
       </div>
     </div>
 
     <div v-if="!canAddCompany" class="info-bar info-bar--amber">
       <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg>
-      <span>Capture at least one contact before creating a company profile. Add a contact first, then return here.</span>
+      <span>Capture at least one contact before creating a business profile. Add a contact first, then return here.</span>
     </div>
 
     <div class="toolbar">
       <div class="search-box">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
-        <input class="form-input" v-model="searchTerm" placeholder="Search companies...">
+        <input class="form-input" v-model="searchTerm" placeholder="Search businesses by name, CIPC number, email...">
       </div>
     </div>
 
@@ -59,8 +29,8 @@
       <table class="data-table" v-if="filteredCompanies.length">
         <thead>
           <tr>
-            <th>Type</th>
-            <th>Name</th>
+            <th>Business Entity &amp; CIPC</th>
+            <th>Industry</th>
             <th>Email</th>
             <th>Phone</th>
             <th>Address</th>
@@ -70,17 +40,17 @@
         <tbody>
           <tr v-for="company in filteredCompanies" :key="company.id">
             <td>
-              <span class="badge" :class="company.client_type === 'individual' ? 'badge-gold' : 'badge-blue'">
-                {{ company.client_type === 'individual' ? 'Individual' : 'Company' }}
-              </span>
-            </td>
-            <td>
-              <strong>{{ company.name }}</strong>
-              <div v-if="company.trading_name" style="font-size:0.75rem;color:var(--gray-500)">T/A {{ company.trading_name }}</div>
-              <div v-if="company.registration_number" class="cipc-table-tag">
-                <span class="cipc-dot"></span> CIPC: {{ company.registration_number }}
+              <div class="business-name-cell">
+                <strong>{{ company.name }}</strong>
+                <div v-if="company.trading_name" class="trading-name-tag">
+                  T/A {{ company.trading_name }}
+                </div>
+                <div v-if="company.registration_number" class="cipc-table-tag">
+                  <span class="cipc-dot"></span> CIPC: {{ company.registration_number }}
+                </div>
               </div>
             </td>
+            <td>{{ company.industry || '---' }}</td>
             <td>{{ company.email || '---' }}</td>
             <td>{{ company.phone || '---' }}</td>
             <td class="cell-truncate">{{ company.address || '---' }}</td>
@@ -95,53 +65,31 @@
       </table>
       <div v-else class="empty-state">
         <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--gray-300)" stroke-width="1.5"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V4a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v3"/></svg>
-        <p>No clients found.</p>
+        <p>No business profiles found.</p>
       </div>
     </div>
 
+    <!-- Add / Edit Business Modal -->
     <div v-if="showAddModal || showEditModal" class="modal-overlay" @click="closeModal">
       <div class="modal-panel" @click.stop>
         <div class="modal-header">
-          <h3>{{ showAddModal ? (companyForm.client_type === 'individual' ? 'Add Individual Client' : 'Add Company') : 'Edit Client' }}</h3>
+          <h3>{{ showAddModal ? 'Add Business' : 'Edit Business' }}</h3>
           <button class="modal-close" @click="closeModal">&times;</button>
         </div>
         <div class="modal-body">
           <form @submit.prevent="saveCompany">
-            <div v-if="showAddModal" class="form-group">
-              <label class="form-label">Client Type</label>
-              <div class="type-selector">
-                <button 
-                  type="button" 
-                  class="type-btn" 
-                  :class="{ active: companyForm.client_type === 'company' }" 
-                  @click="companyForm.client_type = 'company'"
-                >
-                  <span class="type-icon">🏢</span>
-                  <span class="type-name">Company</span>
-                </button>
-                <button 
-                  type="button" 
-                  class="type-btn" 
-                  :class="{ active: companyForm.client_type === 'individual' }" 
-                  @click="companyForm.client_type = 'individual'"
-                >
-                  <span class="type-icon">👤</span>
-                  <span class="type-name">Individual</span>
-                </button>
-              </div>
+            <div class="form-group">
+              <label class="form-label">Company Registered Legal Name *</label>
+              <input class="form-input" v-model="companyForm.name" placeholder="e.g. Acme Holdings (Pty) Ltd" required>
             </div>
             
             <div class="form-group">
-              <label class="form-label">{{ companyForm.client_type === 'individual' ? 'Full Name *' : 'Company Registered Name *' }}</label>
-              <input class="form-input" v-model="companyForm.name" :placeholder="companyForm.client_type === 'individual' ? 'John Doe' : 'e.g. Acme Holdings (Pty) Ltd'" required>
-            </div>
-            
-            <div v-if="companyForm.client_type === 'company'" class="form-group">
               <label class="form-label">Trading Name (Trading As / T/A)</label>
               <input class="form-input" v-model="companyForm.trading_name" placeholder="e.g. Acme Luxury Solutions">
+              <span class="form-hint">Trading name if different from official registered entity name</span>
             </div>
 
-            <div v-if="companyForm.client_type === 'company'" class="form-group">
+            <div class="form-group">
               <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:0.25rem;">
                 <label class="form-label" style="margin:0">CIPC Registration Number</label>
                 <span v-if="cipcStatus.state === 'valid'" class="badge-cipc-success">✓ {{ cipcStatus.entityLabel }}</span>
@@ -156,35 +104,37 @@
               <span class="form-hint" v-if="cipcStatus.message">{{ cipcStatus.message }}</span>
             </div>
 
-            <div v-if="companyForm.client_type === 'company'" class="form-grid-2">
+            <div class="form-grid-2">
               <div class="form-group">
                 <label class="form-label">SARS Tax / VAT Number</label>
                 <input class="form-input font-mono" v-model="companyForm.tax_number" placeholder="10-digit Tax Ref" maxlength="10">
               </div>
               <div class="form-group">
                 <label class="form-label">Industry / Sector</label>
-                <input class="form-input" v-model="companyForm.industry" placeholder="e.g. Mining / Finance">
+                <input class="form-input" v-model="companyForm.industry" placeholder="e.g. Mining / Finance / Luxury Retail">
               </div>
             </div>
 
-            <div class="form-group">
-              <label class="form-label">Email</label>
-              <input class="form-input" v-model="companyForm.email" type="email" placeholder="Email">
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label">Official Email</label>
+                <input class="form-input" v-model="companyForm.email" type="email" placeholder="corporate@company.co.za">
+              </div>
+              
+              <div class="form-group">
+                <label class="form-label">Official Phone</label>
+                <input class="form-input" v-model="companyForm.phone" placeholder="+27 (0) 11 ...">
+              </div>
             </div>
             
             <div class="form-group">
-              <label class="form-label">Phone</label>
-              <input class="form-input" v-model="companyForm.phone" placeholder="Phone">
-            </div>
-            
-            <div v-if="companyForm.client_type === 'company'" class="form-group">
-              <label class="form-label">Address</label>
-              <textarea class="form-input" v-model="companyForm.address" placeholder="Business Address" rows="3"></textarea>
+              <label class="form-label">Registered Physical Address</label>
+              <textarea class="form-input" v-model="companyForm.address" placeholder="Physical head office address..." rows="3"></textarea>
             </div>
             
             <div class="modal-footer">
               <button type="button" class="btn btn-secondary" @click="closeModal">Cancel</button>
-              <button type="submit" class="btn btn-primary">Save</button>
+              <button type="submit" class="btn btn-primary">{{ showAddModal ? 'Create Business' : 'Save Changes' }}</button>
             </div>
           </form>
         </div>
@@ -192,7 +142,6 @@
     </div>
   </div>
 </template>
-
 
 <script>
 import { companiesAPI, systemAPI } from '../api'
@@ -208,8 +157,6 @@ export default {
       searchTerm: '',
       showAddModal: false,
       showEditModal: false,
-      showAddMenu: false,
-      filterType: 'all',
       companyForm: {
         name: '',
         trading_name: '',
@@ -226,11 +173,13 @@ export default {
   },
   computed: {
     filteredCompanies() {
-      return this.companies.filter(company => {
-        const matchesSearch = company.name.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-          (company.email && company.email.toLowerCase().includes(this.searchTerm.toLowerCase()))
-        const matchesType = this.filterType === 'all' || company.client_type === this.filterType
-        return matchesSearch && matchesType
+      const q = (this.searchTerm || '').toLowerCase()
+      return this.companies.filter(c => {
+        return (c.name && c.name.toLowerCase().includes(q)) ||
+          (c.trading_name && c.trading_name.toLowerCase().includes(q)) ||
+          (c.registration_number && c.registration_number.toLowerCase().includes(q)) ||
+          (c.email && c.email.toLowerCase().includes(q)) ||
+          (c.industry && c.industry.toLowerCase().includes(q))
       })
     },
     canAddCompany() {
@@ -282,54 +231,17 @@ export default {
         console.error('Error loading companies:', error)
       }
     },
-    toggleAddMenu() {
-      this.showAddMenu = !this.showAddMenu
-    },
-    async openAddClient(clientType) {
+    async openAddBusiness() {
       await this.refreshPrerequisites()
       if (!this.canAddCompany) {
-        await modal.warning('Contact Required', 'Capture at least one contact before creating a client profile. Add a contact first, then come back here.')
+        await modal.warning('Contact Required', 'Capture at least one contact before creating a business client profile. Add a contact first, then return here.')
         this.$router.push('/contacts')
         return
       }
-      this.companyForm.client_type = clientType
+      this.resetForm()
       this.showAddModal = true
-      this.showAddMenu = false
     },
-    async saveCompany() {
-      try {
-        if (this.showAddModal) {
-          await companiesAPI.create(this.companyForm)
-        } else {
-          await companiesAPI.update(this.editingId, this.companyForm)
-        }
-        await this.loadCompanies()
-        await this.refreshPrerequisites()
-        this.closeModal()
-      } catch (error) {
-        console.error('Error saving company:', error)
-      }
-    },
-    editCompany(company) {
-      this.companyForm = { ...company }
-      this.editingId = company.id
-      this.showEditModal = true
-    },
-    async deleteCompany(id) {
-      const ok = await modal.danger('Delete Company', 'Are you sure you want to delete this company? This action cannot be undone.')
-      if (ok) {
-        try {
-          await companiesAPI.delete(id)
-          await this.loadCompanies()
-        } catch (error) {
-          console.error('Error deleting company:', error)
-        }
-      }
-    },
-    closeModal() {
-      this.showAddModal = false
-      this.showEditModal = false
-      this.showAddMenu = false
+    resetForm() {
       this.companyForm = {
         name: '',
         trading_name: '',
@@ -352,84 +264,102 @@ export default {
         v = `${digitsOnly.slice(0, 4)}/${digitsOnly.slice(4, 10)}/${digitsOnly.slice(10, 12)}`
       }
       this.companyForm.registration_number = v.slice(0, 14)
+    },
+    async saveCompany() {
+      try {
+        this.companyForm.client_type = 'company'
+        if (this.showAddModal) {
+          await companiesAPI.create(this.companyForm)
+        } else {
+          await companiesAPI.update(this.editingId, this.companyForm)
+        }
+        await this.loadCompanies()
+        await this.refreshPrerequisites()
+        this.closeModal()
+      } catch (error) {
+        console.error('Error saving company:', error)
+      }
+    },
+    editCompany(company) {
+      this.companyForm = { 
+        ...company,
+        client_type: 'company'
+      }
+      this.editingId = company.id
+      this.showEditModal = true
+    },
+    async deleteCompany(id) {
+      const ok = await modal.danger('Delete Business', 'Are you sure you want to delete this business profile? This action cannot be undone.')
+      if (ok) {
+        try {
+          await companiesAPI.delete(id)
+          await this.loadCompanies()
+        } catch (error) {
+          console.error('Error deleting company:', error)
+        }
+      }
+    },
+    closeModal() {
+      this.showAddModal = false
+      this.showEditModal = false
+      this.resetForm()
     }
   }
 }
 </script>
 
 <style scoped>
-.page-wrap { padding: 1.5rem 2rem; }
-.page-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 1.5rem; gap: 1rem; }
-.page-header h1 { font-size: 1.75rem; font-weight: 700; color: var(--gray-900); margin: 0; }
-.page-subtitle { color: var(--gray-500); font-size: 0.9rem; margin: 0.25rem 0 0; }
-.page-header .btn { display: inline-flex; align-items: center; gap: 0.5rem; }
-.info-bar { display: flex; align-items: center; gap: 0.75rem; padding: 0.75rem 1rem; border-radius: var(--radius-md); font-size: 0.875rem; font-weight: 500; margin-bottom: 1rem; }
-.info-bar svg { flex-shrink: 0; }
-.info-bar span { flex: 1; }
-.info-bar--amber { background: #fffbeb; color: #92400e; border: 1px solid #fde68a; }
-.toolbar { margin-bottom: 1rem; }
-.search-box { position: relative; max-width: 360px; }
-.search-box svg { position: absolute; left: 0.75rem; top: 50%; transform: translateY(-50%); color: var(--gray-400); pointer-events: none; }
-.search-box .form-input { padding-left: 2.25rem; }
-.table-card { padding: 0; overflow-x: auto; overflow-y: hidden; -webkit-overflow-scrolling: touch; }
-.col-actions { width: 160px; }
-.cell-truncate { max-width: 220px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.row-actions { display: flex; gap: 0.5rem; }
+.page-wrap { padding: 2rem; max-width: 1400px; margin: 0 auto; }
+.page-header { 
+  display: flex; justify-content: space-between; align-items: flex-start; 
+  margin-bottom: 2rem; gap: 1rem;
+}
+.page-header h1 { 
+  font-size: 1.875rem; font-weight: 700; color: var(--gray-900); 
+  margin-bottom: 0.25rem; 
+}
+.page-subtitle { color: var(--gray-500); font-size: 0.875rem; }
 
-/* Header actions layout */
-.header-actions { display: flex; gap: 1rem; align-items: center; }
-.btn-group { display: flex; gap: 0.5rem; }
-.btn-group .btn { padding: 0.5rem 1rem; font-size: 0.875rem; }
-.btn-group .btn.active { background: var(--primary); color: white; }
+.info-bar { 
+  display: flex; align-items: center; gap: 0.75rem; 
+  padding: 0.875rem 1.25rem; border-radius: var(--radius-md); 
+  margin-bottom: 1.5rem; font-size: 0.875rem; 
+}
+.info-bar--amber { 
+  background: #fffbeb; border: 1px solid #fde68a; color: #92400e; 
+}
 
-/* Add menu dropdown */
-.add-menu { position: relative; }
-.dropdown-menu { 
-  position: absolute; top: 100%; right: 0; 
-  background: var(--gray-50); border: 1px solid var(--gray-200); 
-  border-radius: var(--radius-md); min-width: 200px; 
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1); 
-  z-index: 100; margin-top: 0.5rem;
+.toolbar { margin-bottom: 1.5rem; }
+.search-box { position: relative; max-width: 450px; }
+.search-box svg { 
+  position: absolute; left: 1rem; top: 50%; 
+  transform: translateY(-50%); color: var(--gray-400); 
 }
-.dropdown-item { 
-  display: block; width: 100%; padding: 0.75rem 1rem; 
-  background: none; border: none; text-align: left; 
-  font-size: 0.875rem; cursor: pointer; 
-  transition: background 0.2s;
-}
-.dropdown-item:hover { background: var(--gray-100); }
-.dropdown-item:first-child { border-radius: var(--radius-md) var(--radius-md) 0 0; }
-.dropdown-item:last-child { border-radius: 0 0 var(--radius-md) var(--radius-md); }
+.search-box .form-input { padding-left: 2.75rem; }
 
-/* Type selector for modal */
-.type-selector { 
-  display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; 
-  margin-bottom: 1rem;
+.table-card { overflow: hidden; }
+.data-table { width: 100%; border-collapse: collapse; }
+.data-table th { 
+  background: var(--gray-50); padding: 0.875rem 1rem; 
+  text-align: left; font-size: 0.75rem; font-weight: 600; 
+  color: var(--gray-600); text-transform: uppercase; 
+  letter-spacing: 0.05em; border-bottom: 1px solid var(--gray-200); 
 }
-.type-btn { 
-  display: flex; flex-direction: column; align-items: center; gap: 0.75rem; 
-  padding: 1rem; border: 2px solid var(--gray-300); border-radius: var(--radius-md); 
-  background: var(--gray-50); cursor: pointer; 
-  transition: all 0.2s;
-  font-family: inherit;
+.data-table td { 
+  padding: 1rem; border-bottom: 1px solid var(--gray-100); 
+  font-size: 0.875rem; color: var(--gray-800); 
 }
-.type-btn:hover { border-color: var(--primary); background: #eff6ff; }
-.type-btn.active { 
-  border-color: var(--primary); background: var(--primary); color: white; 
-}
-.type-icon { font-size: 2rem; }
-.type-name { font-size: 0.875rem; font-weight: 600; }
+.data-table tbody tr:hover { background: var(--gray-50); }
 
-/* Client type badges */
-.badge { 
-  display: inline-block; padding: 0.25rem 0.75rem; 
-  border-radius: var(--radius-full); font-size: 0.75rem; 
-  font-weight: 700; white-space: nowrap;
+.business-name-cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
 }
-.badge-gold { background: rgba(212, 175, 55, 0.15); color: #D4AF37; }
-.badge-blue { background: rgba(37, 99, 235, 0.15); color: var(--primary-500); }
-
-/* CIPC styles */
+.trading-name-tag {
+  font-size: 0.75rem;
+  color: var(--gray-500);
+}
 .cipc-table-tag {
   display: inline-flex;
   align-items: center;
@@ -441,9 +371,69 @@ export default {
   border: 1px solid rgba(16, 185, 129, 0.2);
   padding: 1px 6px;
   border-radius: 4px;
-  margin-top: 0.25rem;
+  width: fit-content;
 }
 .cipc-dot { width: 5px; height: 5px; border-radius: 50%; background: #10b981; }
+
+.cell-truncate { 
+  max-width: 240px; white-space: nowrap; 
+  overflow: hidden; text-overflow: ellipsis; 
+}
+.col-actions { width: 140px; text-align: right; }
+.row-actions { display: flex; gap: 0.5rem; justify-content: flex-end; }
+
+.empty-state { 
+  text-align: center; padding: 4rem 2rem; color: var(--gray-400); 
+}
+.empty-state svg { margin-bottom: 1rem; }
+
+/* Modal */
+.modal-overlay { 
+  position: fixed; inset: 0; background: rgba(0,0,0,0.5); 
+  display: flex; align-items: center; justify-content: center; 
+  z-index: 1000; padding: 1rem; backdrop-filter: blur(4px); 
+}
+.modal-panel { 
+  background: var(--surface); border-radius: var(--radius-lg); 
+  width: 100%; max-width: 580px; max-height: 90vh; 
+  overflow-y: auto; box-shadow: 0 20px 25px -5px rgba(0,0,0,0.2); 
+}
+.modal-header { 
+  display: flex; justify-content: space-between; align-items: center; 
+  padding: 1.25rem 1.5rem; border-bottom: 1px solid var(--gray-200); 
+}
+.modal-header h3 { 
+  font-size: 1.125rem; font-weight: 600; color: var(--gray-900); 
+}
+.modal-close { 
+  background: none; border: none; font-size: 1.5rem; 
+  color: var(--gray-400); cursor: pointer; line-height: 1; 
+}
+.modal-close:hover { color: var(--gray-600); }
+.modal-body { padding: 1.5rem; }
+.modal-footer { 
+  display: flex; justify-content: flex-end; gap: 0.75rem; 
+  margin-top: 1.5rem; padding-top: 1.25rem; 
+  border-top: 1px solid var(--gray-200); 
+}
+
+.form-group { margin-bottom: 1.25rem; }
+.form-label { 
+  display: block; font-size: 0.875rem; font-weight: 500; 
+  color: var(--gray-700); margin-bottom: 0.375rem; 
+}
+.form-input { 
+  width: 100%; padding: 0.625rem 0.875rem; 
+  border: 1px solid var(--gray-300); border-radius: var(--radius-md); 
+  font-size: 0.875rem; background: var(--surface); color: var(--gray-900); 
+}
+.form-input:focus { 
+  outline: none; border-color: var(--primary); 
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1); 
+}
+.form-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
+
+.header-actions { display: flex; gap: 1rem; align-items: center; }
 .badge-cipc-success {
   font-size: 0.7rem;
   font-weight: 700;
@@ -455,13 +445,12 @@ export default {
 }
 .font-mono { font-family: monospace; letter-spacing: 0.5px; }
 .form-hint { font-size: 0.7rem; color: #6b7280; margin-top: 0.25rem; display: block; }
-.form-grid-2 { display: grid; grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
 
 @media (max-width: 768px) {
   .page-wrap { padding: 1rem; }
   .page-header { flex-direction: column; }
-  .header-actions { flex-direction: column; width: 100%; }
-  .btn-group { width: 100%; flex-wrap: wrap; }
+  .header-actions { width: 100%; }
   .table-card { overflow-x: auto; }
+  .form-grid-2 { grid-template-columns: 1fr; }
 }
 </style>

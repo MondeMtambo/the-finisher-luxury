@@ -417,4 +417,13 @@ export const dashboardLayoutsAPI = {
   delete: (id) => api.delete(`/dashboard-layouts/${id}/`)
 }
 
+export const verificationAPI = {
+  getStatus: () => api.get('/tenant/verification/'),
+  submit: (formData) => api.post('/tenant/verification/', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
+  adminGetAll: () => api.get('/admin/tenant-verifications/'),
+  adminReview: (id, data) => api.post(`/admin/tenant-verifications/${id}/review/`, data)
+}
+
 export default api

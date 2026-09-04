@@ -3,7 +3,7 @@ from .models import (Contact, Company, Deal, ActivityLog, Ticket, Notification, 
                      Asset, AssetCategory, Division, OnboardingLog, OffboardingRequest,
                      Product, LineItem, EmailTemplate, EmailCampaign, CampaignRecipient,
                      Workflow, WorkflowAction, WorkflowLog, DashboardWidget, DashboardLayout,
-                     WebsiteLead, SecurityAuditTrail)
+                     WebsiteLead, SecurityAuditTrail, TenantVerification)
 from django.contrib.auth.models import User
 from django.core.validators import validate_email
 import phonenumbers
@@ -819,3 +819,43 @@ class SecurityAuditTrailSerializer(serializers.ModelSerializer):
             full = f"{obj.user.first_name} {obj.user.last_name}".strip()
             return full or obj.user.username
         return obj.username_attempted or 'Anonymous / System'
+
+
+class TenantVerificationSerializer(serializers.ModelSerializer):
+    organization_name = serializers.CharField(source='organization.name', read_only=True)
+    submitted_by_username = serializers.CharField(source='submitted_by.username', read_only=True)
+    reviewed_by_username = serializers.CharField(source='reviewed_by.username', read_only=True)
+    cipc_certificate_url = serializers.SerializerMethodField()
+    proof_of_address_url = serializers.SerializerMethodField()
+    director_id_doc_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = TenantVerification
+        fields = [
+            'id', 'organization', 'organization_name', 'submitted_by',
+            'submitted_by_username', 'company_name', 'trading_name',
+            'cipc_number', 'tax_number', 'director_name',
+            'cipc_certificate', 'cipc_certificate_url',
+            'proof_of_address', 'proof_of_address_url',
+            'director_id_doc', 'director_id_doc_url',
+            'status', 'internal_notes', 'rejection_reason',
+            'reviewed_by', 'reviewed_by_username', 'reviewed_at',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'organization', 'submitted_by', 'status', 'internal_notes', 'rejection_reason', 'reviewed_by', 'reviewed_at', 'created_at', 'updated_at']
+
+    def get_cipc_certificate_url(self, obj):
+        return obj.cipc_certificate.url if obj.cipc_certificate else None
+
+    def get_proof_of_address_url(self, obj):
+        return obj.proof_of_address.url if obj.proof_of_address else None
+
+    def get_director_id_doc_url(self, obj):
+        return obj.director_id_doc.url if obj.director_id_doc else None
+
+
+class TenantVerificationReviewSerializer(serializers.Serializer):
+    action = serializers.ChoiceField(choices=['approve', 'reject'])
+    internal_notes = serializers.CharField(required=False, allow_blank=True)
+    rejection_reason = serializers.CharField(required=False, allow_blank=True)
+

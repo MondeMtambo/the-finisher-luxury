@@ -10,17 +10,10 @@
           <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
           Upload CSV
         </button>
-        <div class="add-menu">
-          <button class="btn btn-primary" @click="toggleAddMenu">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Add Client
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"></polyline></svg>
-          </button>
-          <div v-if="showAddMenu" class="dropdown-menu">
-            <button class="dropdown-item" @click="openAddClient('individual')">Add Individual Client</button>
-            <button class="dropdown-item" @click="openAddClient('business')">Add Business Client</button>
-          </div>
-        </div>
+        <button class="btn btn-primary" @click="openAddContact">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Contact
+        </button>
       </div>
     </div>
 
@@ -35,7 +28,6 @@
       <table class="data-table" v-if="filteredContacts.length">
         <thead>
           <tr>
-            <th>Type</th>
             <th>Name</th>
             <th>Email</th>
             <th>Company</th>
@@ -46,11 +38,6 @@
         </thead>
         <tbody>
           <tr v-for="contact in filteredContacts" :key="contact.id">
-            <td>
-              <span class="badge" :class="contact.client_type === 'individual' ? 'badge-individual' : 'badge-business'">
-                {{ contact.client_type === 'individual' ? 'Individual' : 'Business' }}
-              </span>
-            </td>
             <td>
               <strong>{{ contact.first_name }} {{ contact.last_name }}</strong>
               <span v-if="contact.is_self_employed" class="badge badge-green" style="margin-left:0.5rem;">Self-employed</span>
@@ -110,36 +97,12 @@
     <div v-if="showAddModal || showEditModal" class="modal-overlay" @click="closeModal">
       <div class="modal-panel" @click.stop>
         <div class="modal-header">
-          <h3>{{ showAddModal ? (contactForm.client_type === 'individual' ? 'Add Individual Client' : 'Add Business Client') : 'Edit Client' }}</h3>
+          <h3>{{ showAddModal ? 'Add Contact' : 'Edit Contact' }}</h3>
           <button class="modal-close" @click="closeModal">&times;</button>
         </div>
         <div class="modal-body">
           <form @submit.prevent="saveContact" novalidate>
             <div v-if="formErrors.general" class="alert alert-danger">{{ formErrors.general }}</div>
-
-            <div v-if="showAddModal" class="form-group">
-              <label class="form-label">Client Type</label>
-              <div class="type-selector">
-                <button 
-                  type="button" 
-                  class="type-btn" 
-                  :class="{ active: contactForm.client_type === 'individual' }" 
-                  @click="contactForm.client_type = 'individual'"
-                >
-                  <span class="type-icon">👤</span>
-                  <span class="type-name">Individual</span>
-                </button>
-                <button 
-                  type="button" 
-                  class="type-btn" 
-                  :class="{ active: contactForm.client_type === 'business' }" 
-                  @click="contactForm.client_type = 'business'"
-                >
-                  <span class="type-icon">🏢</span>
-                  <span class="type-name">Business</span>
-                </button>
-              </div>
-            </div>
 
             <div class="form-row-2col">
               <div class="form-group">
@@ -418,10 +381,10 @@ export default {
     toggleAddMenu() {
       this.showAddMenu = !this.showAddMenu
     },
-    openAddClient(clientType) {
-      this.contactForm.client_type = clientType
+    openAddContact() {
+      this.resetForm()
+      this.contactForm.client_type = 'business'
       this.showAddModal = true
-      this.showAddMenu = false
       this.resetCompanySelection()
     },
     onCompanySearchInput() {

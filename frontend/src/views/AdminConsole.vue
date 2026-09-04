@@ -206,6 +206,92 @@
          </div>
       </div>
 
+      <!-- CIPC Business Verifications & Compliance Portal -->
+      <div class="section-container">
+        <div class="section-header-flex">
+          <div>
+            <div class="badge-popia" style="background: rgba(212, 175, 55, 0.15); color: #d4af37; border-color: rgba(212, 175, 55, 0.35);">CIPC SOUTH AFRICA COMPLIANCE</div>
+            <h2 class="section-title">Tenant Business Verifications &amp; Document Review</h2>
+            <p class="text-muted">Review uploaded official CIPC CoR14.3 certificates, proof of address, and director IDs. Verify on BizPortal and approve workspace access.</p>
+          </div>
+          <button class="btn btn-secondary btn-sm" @click="fetchVerifications" :disabled="loadingVerifications">
+            🔄 {{ loadingVerifications ? 'Refreshing...' : 'Refresh Verifications' }}
+          </button>
+        </div>
+
+        <div class="table-container">
+          <table class="luxury-table" v-if="verifications.length">
+            <thead>
+              <tr>
+                <th>Organization &amp; Trading Name</th>
+                <th>CIPC Reg Number</th>
+                <th>SARS Tax Ref</th>
+                <th>Director</th>
+                <th>Uploaded Documents</th>
+                <th>Status</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="v in verifications" :key="v.id">
+                <td>
+                  <div class="user-main">{{ v.company_name }}</div>
+                  <div v-if="v.trading_name" class="user-sub">T/A {{ v.trading_name }}</div>
+                  <div class="text-muted text-sm">Org: {{ v.organization_name }}</div>
+                </td>
+                <td>
+                  <code class="font-mono text-gold">{{ v.cipc_number }}</code>
+                </td>
+                <td>{{ v.tax_number || '—' }}</td>
+                <td>{{ v.director_name || '—' }}</td>
+                <td>
+                  <div class="doc-links">
+                    <a v-if="v.cipc_certificate_url" :href="apiBase.replace('/api', '') + v.cipc_certificate_url" target="_blank" class="doc-link-btn" title="View CIPC Certificate">
+                      📄 CIPC Cert
+                    </a>
+                    <a v-if="v.proof_of_address_url" :href="apiBase.replace('/api', '') + v.proof_of_address_url" target="_blank" class="doc-link-btn" title="View Proof of Address">
+                      🏢 Address
+                    </a>
+                    <a v-if="v.director_id_doc_url" :href="apiBase.replace('/api', '') + v.director_id_doc_url" target="_blank" class="doc-link-btn" title="View Director ID">
+                      🪪 Director ID
+                    </a>
+                    <span v-if="!v.cipc_certificate_url && !v.proof_of_address_url && !v.director_id_doc_url" class="text-muted text-sm">No files</span>
+                  </div>
+                </td>
+                <td>
+                  <span v-if="v.status === 'verified'" class="badge badge-success">✓ Verified</span>
+                  <span v-else-if="v.status === 'pending'" class="badge badge-warning">⏳ Pending</span>
+                  <span v-else class="badge badge-danger">✕ Rejected</span>
+                </td>
+                <td>
+                  <div class="action-flex">
+                    <button 
+                      v-if="v.status !== 'verified'" 
+                      @click="reviewVerification(v.id, 'approve')" 
+                      class="btn btn-sm btn-primary"
+                      title="Approve and unlock workspace"
+                    >
+                      ✓ Approve
+                    </button>
+                    <button 
+                      v-if="v.status !== 'rejected'" 
+                      @click="reviewVerification(v.id, 'reject')" 
+                      class="btn btn-sm btn-danger"
+                      title="Reject with notes"
+                    >
+                      ✕ Reject
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <div v-else class="audit-empty">
+            <p>No tenant business verifications submitted yet.</p>
+          </div>
+        </div>
+      </div>
+
       <!-- POPIA Section 19 Enterprise Security Audit Trail -->
       <div class="section-container audit-deck-container">
         <div class="section-header-flex">
@@ -476,7 +562,10 @@ export default {
       auditFilterEvent: '',
       auditFilterSeverity: '',
       auditSearch: '',
-      auditDebounceTimer: null
+      auditDebounceTimer: null,
+      // CIPC Tenant Verifications
+      verifications: [],
+      loadingVerifications: false
     }
   },
   computed: {
@@ -521,6 +610,7 @@ export default {
         this.clientsEmployeesData = ceRes.companies || [];
         this.clientEmployeeStats = ceRes.stats || this.clientEmployeeStats;
         await this.fetchAuditLogs();
+        await this.fetchVerifications();
       } catch (err) {
         this.error = err.message;
         this.dispatchEvent('show-toast', { message: err.message, type: 'error' });
@@ -536,6 +626,43 @@ export default {
         const res = await this.fetchApi('/admin/clients-employees/', { method: 'POST', body: JSON.stringify({ action, ...payload }) });
         await this.loadAllData();
         return res;
+    },
+    // CIPC Business Verification Methods
+    async fetchVerifications() {
+      this.loadingVerifications = true;
+      try {
+        const res = await this.fetchApi('/admin/tenant-verifications/');
+        this.verifications = Array.isArray(res) ? res : [];
+      } catch (e) {
+        console.warn('Failed to load verifications:', e);
+      } finally {
+        this.loadingVerifications = false;
+      }
+    },
+    async reviewVerification(id, action) {
+      let reason = '';
+      if (action === 'reject') {
+        reason = prompt('Enter rejection reason / instructions for client:', 'Documentation could not be verified against the official CIPC register.');
+        if (reason === null) return;
+      }
+      const notes = prompt('Internal compliance check notes (optional):', action === 'approve' ? 'Verified on CIPC BizPortal' : 'Failed CIPC validation');
+      if (notes === null && action === 'approve') return;
+
+      try {
+        await this.fetchApi(`/admin/tenant-verifications/${id}/review/`, {
+          method: 'POST',
+          body: JSON.stringify({
+            action,
+            internal_notes: notes || '',
+            rejection_reason: reason || ''
+          })
+        });
+        alert(action === 'approve' ? '✓ Tenant verified and workspace unlocked successfully!' : '✕ Tenant verification rejected.');
+        await this.fetchVerifications();
+        await this.fetchAuditLogs();
+      } catch (e) {
+        alert('Failed to process verification: ' + e.message);
+      }
     },
     // POPIA Audit Trail Methods
     async fetchAuditLogs() {
@@ -923,5 +1050,28 @@ export default {
   text-align: center;
   color: #9ca3af;
   font-size: 0.875rem;
+}
+.doc-links {
+  display: flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+.doc-link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #60a5fa;
+  padding: 2px 7px;
+  border-radius: 4px;
+  font-size: 0.75rem;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+.doc-link-btn:hover {
+  background: rgba(59, 130, 246, 0.2);
+  border-color: #60a5fa;
+  color: #ffffff;
 }
 </style>

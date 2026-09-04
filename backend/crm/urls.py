@@ -59,4 +59,9 @@ urlpatterns = [
     path('api/billing/status/', views.OrganizationBillingStatusView.as_view(), name='billing_status'),
     path('api/billing/checkout/', views.CreateCheckoutSessionView.as_view(), name='billing_checkout'),
     path('api/billing/webhook/', views.BillingWebhookView.as_view(), name='billing_webhook'),
+
+    # CIPC Business Verification & Compliance
+    path('api/tenant/verification/', views.TenantVerificationView.as_view(), name='tenant_verification'),
+    path('api/admin/tenant-verifications/', views.AdminTenantVerificationListView.as_view(), name='admin_tenant_verifications'),
+    path('api/admin/tenant-verifications/<uuid:pk>/review/', views.AdminTenantVerificationReviewView.as_view(), name='admin_tenant_verification_review'),
 ]

@@ -31,6 +31,7 @@ import PrivacyPolicy from '../components/docs/PrivacyPolicy.vue'
 import TermsOfService from '../components/docs/TermsOfService.vue'
 import PopiaCompliance from '../components/docs/PopiaCompliance.vue'
 import ApiDocs from '../components/docs/ApiDocs.vue'
+import BusinessVerification from '../views/BusinessVerification.vue'
 
 const routes = [
   {
@@ -204,6 +205,12 @@ const routes = [
     path: '/upgrade/:plan',
     name: 'Upgrade',
     component: UpgradePage,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/verification',
+    name: 'BusinessVerification',
+    component: BusinessVerification,
     meta: { requiresAuth: true }
   },
   {

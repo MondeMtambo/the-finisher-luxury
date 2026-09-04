@@ -14,13 +14,15 @@ from django.utils import timezone
 from datetime import timedelta, datetime
 import csv
 import io
-from .models import Contact, Company, Deal, ActivityLog, UserProfile, DeletedUserLog, Ticket, Notification, Asset, AssetCategory, Division, OnboardingLog, OffboardingRequest, Product, LineItem, EmailTemplate, EmailCampaign, CampaignRecipient, Workflow, WorkflowAction, WorkflowLog, DashboardWidget, DashboardLayout, WebsiteLead, SecurityAuditTrail
+from .models import Contact, Company, Deal, ActivityLog, UserProfile, DeletedUserLog, Ticket, Notification, Asset, AssetCategory, Division, OnboardingLog, OffboardingRequest, Product, LineItem, EmailTemplate, EmailCampaign, CampaignRecipient, Workflow, WorkflowAction, WorkflowLog, DashboardWidget, DashboardLayout, WebsiteLead, SecurityAuditTrail, TenantVerification, Organization
 from .utils import OWNER_ADMIN_USERNAME, is_owner_admin_user, normalize_company_name
 from .audit_utils import record_audit_event
 from .whatsapp import send_lead_welcome_message
 from .serializers import (
     ContactSerializer, 
     CompanySerializer, 
+    TenantVerificationSerializer,
+    TenantVerificationReviewSerializer, 
     DealSerializer,
     ActivityLogSerializer,
     TicketSerializer,
@@ -3361,3 +3363,230 @@ class SecurityAuditTrailViewSet(viewsets.ReadOnlyModelViewSet):
         )
 
         return response
+
+
+class TenantVerificationView(APIView):
+    """
+    Client Business Verification Endpoint.
+    Allows corporate tenants to view verification status and submit CIPC compliance documents.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        profile = getattr(user, 'profile', None)
+        org = getattr(profile, 'organization', None) if profile else None
+        
+        # If user has no organization, fallback to creating or using their own
+        if not org and profile:
+            org_name = profile.company_name or f"{user.username.title()} Enterprise"
+            org, _ = Organization.objects.get_or_create(
+                name=org_name,
+                defaults={'subscription_tier': 'luxury', 'is_active': True}
+            )
+            profile.organization = org
+            profile.save(update_fields=['organization'])
+
+        is_platform_owner = user.is_superuser or is_owner_admin_user(user)
+
+        if not org:
+            return Response({
+                'has_submitted': False,
+                'status': 'verified' if is_platform_owner else 'unverified',
+                'is_verified': is_platform_owner,
+                'organization_name': 'Mtambo Holdings' if is_platform_owner else 'Your Business',
+                'verification': None
+            })
+
+        verification = getattr(org, 'verification', None)
+        if not verification:
+            return Response({
+                'has_submitted': False,
+                'status': 'verified' if (org.is_cipc_verified or is_platform_owner) else 'unverified',
+                'is_verified': org.is_cipc_verified or is_platform_owner,
+                'organization_name': org.name,
+                'verification': None
+            })
+
+        return Response({
+            'has_submitted': True,
+            'status': verification.status,
+            'is_verified': verification.status == 'verified' or org.is_cipc_verified or is_platform_owner,
+            'organization_name': org.name,
+            'verification': TenantVerificationSerializer(verification, context={'request': request}).data
+        })
+
+    def post(self, request):
+        user = request.user
+        profile = getattr(user, 'profile', None)
+        org = getattr(profile, 'organization', None) if profile else None
+
+        if not org and profile:
+            org_name = (request.data.get('company_name') or profile.company_name or f"{user.username.title()} Enterprise").strip()
+            org, _ = Organization.objects.get_or_create(
+                name=org_name,
+                defaults={'subscription_tier': 'luxury', 'is_active': True}
+            )
+            profile.organization = org
+            profile.save(update_fields=['organization'])
+
+        company_name = (request.data.get('company_name') or (org.name if org else '')).strip()
+        trading_name = request.data.get('trading_name', '').strip()
+        cipc_number = request.data.get('cipc_number', '').strip()
+        tax_number = request.data.get('tax_number', '').strip()
+        director_name = request.data.get('director_name', '').strip()
+
+        if not company_name or not cipc_number:
+            return Response({'error': 'Registered Company Name and CIPC Registration Number are mandatory.'}, status=status.HTTP_400_BAD_REQUEST)
+
+        verification, created = TenantVerification.objects.get_or_create(
+            organization=org,
+            defaults={
+                'submitted_by': user,
+                'company_name': company_name,
+                'trading_name': trading_name,
+                'cipc_number': cipc_number,
+                'tax_number': tax_number,
+                'director_name': director_name,
+                'status': 'pending'
+            }
+        )
+
+        if not created:
+            verification.submitted_by = user
+            verification.company_name = company_name
+            verification.trading_name = trading_name
+            verification.cipc_number = cipc_number
+            verification.tax_number = tax_number
+            verification.director_name = director_name
+            verification.status = 'pending'
+            verification.rejection_reason = ''
+
+        # Handle file uploads
+        if 'cipc_certificate' in request.FILES:
+            verification.cipc_certificate = request.FILES['cipc_certificate']
+        if 'proof_of_address' in request.FILES:
+            verification.proof_of_address = request.FILES['proof_of_address']
+        if 'director_id_doc' in request.FILES:
+            verification.director_id_doc = request.FILES['director_id_doc']
+
+        verification.save()
+
+        # Update organization name if updated
+        if org and company_name and org.name != company_name:
+            org.name = company_name
+            org.save(update_fields=['name'])
+
+        record_audit_event(
+            'DATA_MODIFICATION',
+            f"CIPC Business verification submitted for {company_name} (CIPC: {cipc_number}) by {user.username}",
+            user=user,
+            request=request,
+            organization=org,
+            severity='INFO',
+            metadata={'cipc_number': cipc_number, 'status': 'pending'}
+        )
+
+        return Response({
+            'message': 'Verification documents uploaded and queued for compliance review.',
+            'verification': TenantVerificationSerializer(verification, context={'request': request}).data
+        }, status=status.HTTP_200_OK)
+
+
+class AdminTenantVerificationListView(APIView):
+    """
+    Compliance Console: Lists all tenant verification requests.
+    Only accessible by SuperUser / Platform Owner (Monde).
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request):
+        user = request.user
+        if not (user.is_superuser or is_owner_admin_user(user)):
+            raise PermissionDenied("Only System Owner can view tenant verification records.")
+
+        verifications = TenantVerification.objects.select_related('organization', 'submitted_by', 'reviewed_by').all()
+        serializer = TenantVerificationSerializer(verifications, many=True, context={'request': request})
+        return Response(serializer.data)
+
+
+class AdminTenantVerificationReviewView(APIView):
+    """
+    Compliance Review: Approve or Reject a business verification.
+    """
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, pk):
+        user = request.user
+        if not (user.is_superuser or is_owner_admin_user(user)):
+            raise PermissionDenied("Only System Owner can review tenant verifications.")
+
+        try:
+            verification = TenantVerification.objects.select_related('organization').get(pk=pk)
+        except TenantVerification.DoesNotExist:
+            return Response({'error': 'Verification record not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = TenantVerificationReviewSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        action = serializer.validated_data['action']
+        internal_notes = serializer.validated_data.get('internal_notes', '')
+        rejection_reason = serializer.validated_data.get('rejection_reason', '')
+
+        if action == 'approve':
+            verification.status = 'verified'
+            verification.internal_notes = internal_notes
+            verification.reviewed_by = user
+            verification.reviewed_at = timezone.now()
+            verification.save()
+
+            # Unlock organization
+            org = verification.organization
+            org.is_cipc_verified = True
+            org.is_active = True
+            org.save(update_fields=['is_cipc_verified', 'is_active'])
+
+            record_audit_event(
+                'COMPLIANCE_APPROVED',
+                f"Business entity {verification.company_name} (CIPC: {verification.cipc_number}) APPROVED by {user.username}. Workspace unlocked.",
+                user=user,
+                request=request,
+                organization=org,
+                severity='SECURITY',
+                metadata={'cipc_number': verification.cipc_number, 'approved_by': user.username}
+            )
+
+            return Response({
+                'message': f"Entity {verification.company_name} verified and approved. Workspace unlocked.",
+                'verification': TenantVerificationSerializer(verification, context={'request': request}).data
+            })
+
+        else: # reject
+            verification.status = 'rejected'
+            verification.internal_notes = internal_notes
+            verification.rejection_reason = rejection_reason or 'Documentation failed verification checks against CIPC registry.'
+            verification.reviewed_by = user
+            verification.reviewed_at = timezone.now()
+            verification.save()
+
+            # Organization remains locked
+            org = verification.organization
+            org.is_cipc_verified = False
+            org.save(update_fields=['is_cipc_verified'])
+
+            record_audit_event(
+                'COMPLIANCE_REJECTED',
+                f"Business entity {verification.company_name} (CIPC: {verification.cipc_number}) REJECTED by {user.username}. Reason: {verification.rejection_reason}",
+                user=user,
+                request=request,
+                organization=org,
+                severity='WARNING',
+                metadata={'cipc_number': verification.cipc_number, 'rejected_by': user.username}
+            )
+
+            return Response({
+                'message': f"Entity {verification.company_name} rejected. Tenant notified.",
+                'verification': TenantVerificationSerializer(verification, context={'request': request}).data
+            })
+
