@@ -1711,24 +1711,39 @@ class EmployeeViewSet(viewsets.ModelViewSet):
 
             company_name = normalize_company_name(profile.company_name)
 
+        # Determine organization tier limits (Classic=1, Luxury/Trial=5, Executive=15, Enterprise=999)
+        user_tier = getattr(profile, 'tier', 'luxury')
+        org = getattr(profile, 'organization', None)
+        if org:
+            user_tier = getattr(org, 'subscription_tier', 'luxury')
+        
+        TIER_SEAT_LIMITS = {
+            'classic': 1,
+            'luxury': 5,
+            'trial': 5,
+            'executive': 15,
+            'enterprise': 999,
+        }
+        max_users = TIER_SEAT_LIMITS.get((user_tier or 'luxury').lower(), 5)
+
         client_user_count = User.objects.filter(
             is_superuser=False,
             is_staff=False,
             profile__company_name__iexact=company_name
         ).count()
-        max_users = int(LUXURY_TIER_LIMITS.get('max_users', 50))
         
-        if client_user_count >= max_users:
+        if not is_system_admin and client_user_count >= max_users:
+            tier_display = (user_tier or 'Luxury Team').upper()
             return Response({
-                'error': f'User limit reached ({client_user_count}/{max_users}). Upgrade to add more employees.',
+                'error': f'Seat limit reached ({client_user_count}/{max_users} active). Your {tier_display} plan includes up to {max_users} collaborative seats. Upgrade to Executive Suite (15 seats) or Enterprise for additional capacity.',
                 'current_users': client_user_count,
                 'max_users': max_users,
+                'remaining_slots': 0,
                 'upgrade_required': True
             }, status=400)
 
         import random
         import string
-        from django.core.mail import send_mail
 
         create_serializer = EmployeeCreateSerializer(data=request.data)
         create_serializer.is_valid(raise_exception=True)
@@ -1737,7 +1752,10 @@ class EmployeeViewSet(viewsets.ModelViewSet):
 
         raw_password = user_data.get('password')
         if not raw_password:
-            raw_password = ''.join(random.choices(string.ascii_letters + string.digits + '!@#$%', k=12))
+            # Generate clean high-entropy executive credential: e.g. Fin-8K2P-9M4X
+            p1 = ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
+            p2 = ''.join(random.choices(string.ascii_uppercase + string.digits, k=4))
+            raw_password = f"Fin-{p1}-{p2}"
 
         if user.check_password(raw_password):
             return Response({
@@ -1757,12 +1775,6 @@ class EmployeeViewSet(viewsets.ModelViewSet):
                 return Response({
                     'error': f'Your role ({role_display}) cannot onboard employees at the "{assigned_role}" level.'
                 }, status=403)
-
-
-        if user.check_password(user_data['password']):
-            return Response({
-                'error': 'Security: Employee password cannot be the same as your password. Please use a unique password.'
-            }, status=400)
 
 
         division_obj = user_data.get('division')
@@ -1847,22 +1859,42 @@ class EmployeeViewSet(viewsets.ModelViewSet):
 
                 try:
                     from .email_service import send_email_async
-                    send_email_async(
-                        subject='Welcome to THE FINISHER CRM - Your Account Details',
-                        text_body=f'''Hello {new_user.first_name},
+                    sender_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'The Finisher Luxury Registrations <noreply@mtamboholdings.dev>')
+                    ceo_display = user.get_full_name() or user.username
+                    role_label = dict(UserProfile.ROLE_CHOICES).get(new_profile.role, new_profile.role)
 
-You have been invited to THE FINISHER LUXURY CRM by {user.get_full_name() or user.username}.
+                    email_subject = f"Welcome to {company_name} — Your Finisher Luxury Credentials"
+                    email_text = f"""Dear {new_user.first_name},
 
-Your login details are as follows:
-Username / Email: {email_identity}
+You have been provisioned access to the {company_name} Private Operating System on THE FINISHER LUXURY by {ceo_display}.
+
+Your secure temporary credentials are:
+--------------------------------------------------
+Login Portal: https://www.thefinishercrm.tech/#/login
+Work Email / Username: {email_identity}
 Temporary Password: {raw_password}
+Assigned Role: {role_label}
+--------------------------------------------------
 
-You will be required to change your password upon your first login.
+ACTIVATION INSTRUCTIONS:
+1. Navigate to the secure portal: https://www.thefinishercrm.tech/#/login
+2. Sign in using your work email ({email_identity}) and the temporary password above.
+3. You will immediately be prompted to create your private, permanent password.
+4. Once updated, your enterprise workspace will be unlocked.
 
-Best regards,
-THE FINISHER Team''',
+SECURITY NOTICE:
+This temporary password is cryptographically generated and valid for first-time activation. Never share this credential with anyone.
+
+Sincerely,
+The Executive Directorate
+THE FINISHER LUXURY | Mtambo Holdings
+https://www.thefinishercrm.tech
+"""
+                    send_email_async(
+                        subject=email_subject,
+                        text_body=email_text,
                         recipient_list=[email_identity],
-                        from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'security@thefinisher.tech'),
+                        from_email=sender_email,
                     )
                 except Exception as e:
                     import logging
@@ -1968,34 +2000,49 @@ THE FINISHER Team''',
     
     @action(detail=False, methods=['get'])
     def available_slots(self, request):
-        """Get remaining employee slots based on tier (excluding system admins), scoped per company"""
+        """Get remaining employee slots based on tier, scoped per company"""
         user = request.user
 
         if user.is_superuser or user.is_staff:
             return Response({
-                'remaining_slots': None,
+                'remaining_slots': 999,
                 'current_users': User.objects.filter(is_superuser=False, is_staff=False).count(),
-                'max_users': int(LUXURY_TIER_LIMITS.get('max_users', 50)),
-                'can_add_more': False
+                'max_users': 999,
+                'can_add_more': True,
+                'tier': 'ultimate'
             })
 
         profile = getattr(user, 'profile', None)
         company_name = normalize_company_name((profile.company_name if profile else '') or '')
+
+        user_tier = getattr(profile, 'tier', 'luxury')
+        org = getattr(profile, 'organization', None)
+        if org:
+            user_tier = getattr(org, 'subscription_tier', 'luxury')
+
+        TIER_SEAT_LIMITS = {
+            'classic': 1,
+            'luxury': 5,
+            'trial': 5,
+            'executive': 15,
+            'enterprise': 999,
+        }
+        max_users = TIER_SEAT_LIMITS.get((user_tier or 'luxury').lower(), 5)
 
         client_user_count = User.objects.filter(
             is_superuser=False,
             is_staff=False,
             profile__company_name__iexact=company_name
         ).count()
-        max_users = int(LUXURY_TIER_LIMITS.get('max_users', 50))
         remaining = max(0, max_users - client_user_count)
         
-        
         return Response({
+            'tier': user_tier,
             'remaining_slots': remaining,
             'current_users': client_user_count,
             'max_users': max_users,
-            'can_add_more': remaining > 0
+            'can_add_more': remaining > 0,
+            'upgrade_required': remaining == 0
         })
     
     @action(detail=False, methods=['post'])

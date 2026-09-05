@@ -143,6 +143,21 @@
             <svg width="16" height="16" fill="none" stroke="var(--blue-500)" stroke-width="2"><circle cx="8" cy="8" r="7"/><path d="M8 5v3M8 10h.01"/></svg>
             <span>You can onboard: <strong>{{ allowedRoles.map(r => getRoleLabel(r)).join(', ') }}</strong></span>
           </div>
+
+          <!-- Luxury Tier Seat Allocation Banner -->
+          <div v-if="!isSystemAdmin" class="tier-seat-banner" :class="{ 'seat-limit-reached': remainingSlots === 0 }">
+            <div class="seat-info">
+              <span class="seat-badge" :class="{ 'badge-limit': remainingSlots === 0 }">
+                {{ remainingSlots === 0 ? 'SEAT ALLOCATION FILLED' : '7-DAY VIP TRIAL ALLOCATION' }}
+              </span>
+              <span class="seat-text">
+                Your Luxury Team Plan includes <strong>{{ maxUsers || 5 }} Collaborative Seats</strong> (<strong>{{ remainingSlots }}</strong> seats remaining).
+              </span>
+            </div>
+            <router-link v-if="remainingSlots === 0 || remainingSlots <= 1" to="/upgrade/executive" class="btn btn-sm btn-upgrade-seat">
+              Upgrade to Executive (15 Seats) &rarr;
+            </router-link>
+          </div>
         </div>
 
         <form @submit.prevent="saveEmployee" class="onboard-form">
@@ -259,6 +274,16 @@
             <div class="form-group">
               <label class="form-label">Notes</label>
               <textarea v-model="form.notes" rows="2" class="form-input" placeholder="Additional information"></textarea>
+            </div>
+          </div>
+
+          <div v-if="remainingSlots === 0 && !isSystemAdmin" class="alert alert-warning" style="margin-bottom:1.25rem;padding:0.875rem 1rem;border-radius:8px;background:#fffbeb;border:1px solid #fef3c7;color:#92400e;display:flex;align-items:center;gap:10px;">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+            <div>
+              <strong>Seat Allocation Limit Reached:</strong> All {{ maxUsers || 5 }} collaborative seats for your Luxury Team tier are currently occupied. 
+              <router-link to="/upgrade/executive" style="color:#d97706;font-weight:700;text-decoration:underline;margin-left:4px;">
+                Upgrade to Executive Suite (15 Seats) &rarr;
+              </router-link>
             </div>
           </div>
 
@@ -1010,5 +1035,65 @@ export default {
   .filter-bar { flex-direction: column; }
   .filter-select { width: 100%; }
   .search-input { max-width: 100%; }
+}
+
+/* Tier Seat Allocation Banner */
+.tier-seat-banner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  background: linear-gradient(90deg, rgba(217, 119, 6, 0.08) 0%, rgba(15, 23, 42, 0.04) 100%);
+  border: 1px solid rgba(217, 119, 6, 0.3);
+  padding: 0.875rem 1.25rem;
+  border-radius: 8px;
+  margin-top: 1rem;
+}
+
+.tier-seat-banner.seat-limit-reached {
+  background: #fffbeb;
+  border-color: #fcd34d;
+}
+
+.seat-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.seat-badge {
+  font-size: 0.6875rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  padding: 3px 8px;
+  border-radius: 4px;
+  background: #d97706;
+  color: #ffffff;
+}
+
+.seat-badge.badge-limit {
+  background: #dc2626;
+}
+
+.seat-text {
+  font-size: 0.875rem;
+  color: #78350f;
+}
+
+.btn-upgrade-seat {
+  background: #d97706;
+  color: #ffffff;
+  font-weight: 700;
+  font-size: 0.75rem;
+  padding: 6px 12px;
+  border-radius: 6px;
+  text-decoration: none;
+  white-space: nowrap;
+  transition: background 0.15s ease;
+}
+
+.btn-upgrade-seat:hover {
+  background: #b45309;
 }
 </style>
