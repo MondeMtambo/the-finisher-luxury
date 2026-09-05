@@ -5,6 +5,10 @@ import './assets/animations.css'
 import './assets/theme.css'
 import animationsPreference from './utils/animations'
 import { warmUpBackend } from './utils/apiBase'
+import { initChunkErrorSelfHealing } from './utils/cacheManager'
+
+// Initialize autonomous chunk error recovery (immune to post-deployment stale crashes)
+initChunkErrorSelfHealing()
 
 // Apply saved animation preference on startup
 animationsPreference.init()

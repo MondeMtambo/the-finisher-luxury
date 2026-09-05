@@ -1,7 +1,7 @@
 // THE FINISHER LUXURY CRM — Progressive Web App Service Worker
 // High-performance caching strategy with Network-First navigation for instant zero-stale updates
 
-const CACHE_NAME = 'finisher-luxury-v2';
+const CACHE_NAME = 'finisher-luxury-v3';
 const STATIC_ASSETS = [
   '/',
   '/index.html',

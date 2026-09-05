@@ -87,6 +87,72 @@
         </div>
       </div>
 
+      <!-- Enterprise Storage & PWA Cache Control Card -->
+      <div class="card settings-card">
+        <div class="sc-header">
+          <div class="sc-icon gold">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+              <path d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+            </svg>
+          </div>
+          <div>
+            <h3 class="sc-title">System Integrity & Cache Control</h3>
+            <p class="sc-desc">Purge stale browser bundles, reset service worker cache & force deep re-sync</p>
+          </div>
+        </div>
+        <div class="sc-body">
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-name">PWA Acceleration Protocol</span>
+              <span class="setting-hint">Active client-side cache & instant sub-millisecond route transitions.</span>
+            </div>
+            <span class="badge badge-sw" :class="storageInfo.swActive ? 'sw-active' : 'sw-idle'">
+              <span class="pulse-dot-mini" v-if="storageInfo.swActive"></span>
+              {{ storageInfo.swActive ? 'Active & Accelerated' : 'Standard Web Mode' }}
+            </span>
+          </div>
+
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-name">Cached Storage Footprint</span>
+              <span class="setting-hint">Local static bundle files, offline assets, and application state.</span>
+            </div>
+            <span class="setting-val font-mono text-gold">{{ storageInfo.formatted || 'Calculating...' }}</span>
+          </div>
+
+          <div class="setting-row action-setting-row">
+            <div class="setting-info">
+              <span class="setting-name">Instant App Re-Sync</span>
+              <span class="setting-hint">Purges stale ServiceWorker caches and fetches latest production build. <strong>Preserves your active login session</strong>.</span>
+            </div>
+            <button 
+              type="button" 
+              class="btn btn-gold btn-sm" 
+              :disabled="clearingCache" 
+              @click="handleClearCache(true)"
+            >
+              <span v-if="clearingCache" class="btn-spinner-mini"></span>
+              {{ clearingCache ? 'Purging Cache...' : '⚡ Clear Cache & Re-Sync' }}
+            </button>
+          </div>
+
+          <div class="setting-row action-setting-row nuclear-row">
+            <div class="setting-info">
+              <span class="setting-name text-danger">Nuclear Factory Reset</span>
+              <span class="setting-hint">Wipes all cached bundles, service workers, and local credentials. Requires logging in again.</span>
+            </div>
+            <button 
+              type="button" 
+              class="btn btn-outline-danger btn-sm" 
+              :disabled="clearingCache" 
+              @click="handleClearCache(false)"
+            >
+              🗑️ Full Reset
+            </button>
+          </div>
+        </div>
+      </div>
+
       <div class="card settings-card">
         <div class="sc-header">
           <div class="sc-icon gray">
@@ -112,6 +178,7 @@ import authService from '../services/auth'
 import toast from '../utils/toast'
 import { avatars } from '../utils/avatars.js'
 import { authAPI } from '../api'
+import { getStorageEstimate, clearAppCache } from '../utils/cacheManager'
 
 export default {
   name: 'Settings',
@@ -125,7 +192,12 @@ export default {
       role: '',
       tier: '',
       availableAvatars: avatars,
-      selectedAvatar: null
+      selectedAvatar: null,
+      storageInfo: {
+        formatted: 'Calculating...',
+        swActive: true
+      },
+      clearingCache: false
     }
   },
   computed: {
@@ -146,6 +218,7 @@ export default {
   mounted() {
     this.animationsEnabled = animationsPreference.isEnabled()
     this.loadProfile()
+    this.loadStorageInfo()
   },
   methods: {
     onAnimationsToggle() {
@@ -187,6 +260,32 @@ export default {
         toast.success('Avatar Updated', 'Your executive identity has been set.')
         setTimeout(() => window.location.reload(), 800)
       }
+    },
+    async loadStorageInfo() {
+      try {
+        this.storageInfo = await getStorageEstimate()
+      } catch (e) {
+        console.warn('Storage estimate failed:', e)
+      }
+    },
+    async handleClearCache(preserveAuth) {
+      if (!preserveAuth) {
+        const ok = confirm('Nuclear Reset: This will purge all offline caches, remove service workers, and log you out. Continue?')
+        if (!ok) return
+      }
+
+      this.clearingCache = true
+      toast.info('Purging Cache', preserveAuth ? 'Flushing cache and re-syncing latest build...' : 'Performing nuclear wipe...')
+
+      setTimeout(async () => {
+        try {
+          await clearAppCache({ preserveAuth })
+        } catch (err) {
+          console.error('Cache purge failed:', err)
+          this.clearingCache = false
+          toast.error('Failed to clear cache')
+        }
+      }, 350)
     }
   }
 }
@@ -283,7 +382,92 @@ input:checked + .toggle-track::before { transform: translateX(20px); }
   display: block;
 }
 
+/* Cache Control & PWA Styles */
+.sc-icon.gold { background: rgba(212, 175, 55, 0.15); color: #D4AF37; }
+.badge-sw {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 3px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+.badge-sw.sw-active {
+  background: rgba(34, 197, 94, 0.12);
+  color: #4ade80;
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+.badge-sw.sw-idle {
+  background: rgba(255, 255, 255, 0.06);
+  color: #9ca3af;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+.pulse-dot-mini {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #22c55e;
+  box-shadow: 0 0 8px #22c55e;
+  animation: pvPulse 1.5s infinite;
+}
+.text-gold { color: #D4AF37 !important; }
+.text-danger { color: #ef4444 !important; }
+.font-mono { font-family: monospace; }
+.action-setting-row {
+  flex-wrap: wrap;
+  align-items: center;
+}
+.nuclear-row {
+  background: rgba(239, 68, 68, 0.03);
+}
+.btn-gold {
+  background: linear-gradient(135deg, #D4AF37, #B48608);
+  color: #000;
+  font-weight: 700;
+  border: none;
+  border-radius: 6px;
+  padding: 0.45rem 0.9rem;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  transition: all 0.2s ease;
+}
+.btn-gold:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.3);
+}
+.btn-outline-danger {
+  background: rgba(239, 68, 68, 0.1);
+  color: #f87171;
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  border-radius: 6px;
+  padding: 0.45rem 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.btn-outline-danger:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.6);
+}
+.btn-spinner-mini {
+  width: 12px;
+  height: 12px;
+  border: 2px solid rgba(0, 0, 0, 0.3);
+  border-top-color: #000;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+  display: inline-block;
+}
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 @media (max-width: 640px) {
   .setting-row { padding: .625rem 1rem; }
+  .action-setting-row { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
 }
 </style>
