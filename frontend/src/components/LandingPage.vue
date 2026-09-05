@@ -30,7 +30,7 @@
         Secure Your Space Now &mdash; Private Enterprise Allocation Active
       </div>
 
-      <button class="request-btn" @click="$router.push('/register')">Request Access &rarr;</button>
+      <button class="request-btn" @click="$router.push('/register')">Take Our 7-Day Trial &rarr;</button>
     </div>
   </div>
 </template>

@@ -3330,9 +3330,9 @@ class OrganizationBillingStatusView(APIView):
             'trial_end_date': org.trial_end_date.isoformat() if org.trial_end_date else None,
             'can_access': is_active or user.is_superuser,
             'plan': {
-                'name': sub.plan.name if sub and sub.plan else 'The Finisher Luxury Private OS',
+                'name': sub.plan.name if sub and sub.plan else 'Luxury Team (5 Users)',
                 'currency': sub.plan.currency if sub and sub.plan else 'ZAR',
-                'price': (sub.plan.price_cents / 100) if sub and sub.plan else 12500.0,
+                'price': (sub.plan.price_cents / 100) if sub and sub.plan else 999.0,
             }
         })
 
@@ -3353,18 +3353,20 @@ class CreateCheckoutSessionView(APIView):
         if not org:
             return Response({'error': 'Organization profile required for billing.'}, status=400)
 
-        gateway = request.data.get('gateway', 'payfast')
+        gateway = request.data.get('gateway', 'manual_eft')
         tier = request.data.get('tier', 'luxury')
-        billing_period = request.data.get('billing_period', 'annual')
+        billing_period = request.data.get('billing_period', 'monthly')
 
         import uuid
         tx_ref = f"TFL-{org.slug[:6].upper()}-{uuid.uuid4().hex[:8].upper()}"
 
         pricing = {
-            'luxury': {'monthly': 1250000, 'annual': 12000000},
-            'enterprise': {'monthly': 2500000, 'annual': 25000000}
+            'classic': {'monthly': 34900, 'annual': 349000},       # R349/mo (R3,490/yr)
+            'luxury': {'monthly': 99900, 'annual': 999000},         # R999/mo (R9,990/yr)
+            'executive': {'monthly': 150000, 'annual': 1500000},    # R1,500/mo (R15,000/yr)
+            'enterprise': {'monthly': 0, 'annual': 0}              # Bespoke Custom
         }
-        amount_cents = pricing.get(tier, {}).get(billing_period, 1250000)
+        amount_cents = pricing.get(tier, {}).get(billing_period, 99900)
 
         tx = PaymentTransaction.objects.create(
             organization=org,

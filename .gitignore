@@ -56,3 +56,9 @@ $RECYCLE.BIN/
 *.swp
 *.swo
 
+# Local Maintenance Scripts (Never commit to Git)
+purge_test_users.py
+backend/purge_test_users.py
+reset_supabase_users.py
+scripts/reset_supabase_users.py
+

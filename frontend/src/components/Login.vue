@@ -33,7 +33,7 @@
           <span v-else>🌙 Luxury Obsidian</span>
         </button>
         <router-link to="/register" class="request-access-pill">
-          Request VIP Access &rarr;
+          ⭐ Take Our 7-Day Trial &rarr;
         </router-link>
       </div>
     </header>
@@ -122,8 +122,8 @@
             </button>
 
             <div class="auth-card-footer">
-              <span class="footer-prompt">Need dedicated enterprise deployment?</span>
-              <router-link to="/register" class="register-action-link">Apply for Corporate Access &rarr;</router-link>
+              <span class="footer-prompt">New organization?</span>
+              <router-link to="/register" class="register-action-link">Take Our 7-Day Free Trial &rarr;</router-link>
             </div>
           </form>
         </div>

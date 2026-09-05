@@ -18,15 +18,14 @@
         <span>ULTIMATE: Unlimited Access &middot; All Features &middot; Full Admin Control &middot; System Owner</span>
       </div>
 
-      <div v-if="!isAdminUser && isLuxuryTier" class="info-bar info-bar--blue">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.399l-.244.012.024-.39 1.958-.36h.17l-.818 3.918zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/></svg>
-        <span>LUXURY EDITION: 10-User Access &middot; API Access &middot; Integrations &middot; Priority Support</span>
-      </div>
-
-      <div v-if="!isAdminUser && isFreeTier" class="info-bar info-bar--amber">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg>
-        <span>You are on the FREE tier. Upgrade to LUXURY (R249/month) to unlock all features.</span>
-        <button class="btn btn-sm btn-primary" @click="$router.push('/upgrade/luxury')">Upgrade</button>
+      <div v-if="!isAdminUser" class="info-bar info-bar--vip">
+        <span class="vip-pulse-dot"></span>
+        <span class="vip-text">
+          <strong>7-DAY VIP ALLOCATION ACTIVE:</strong> You are on the <strong>{{ tierDisplayName }}</strong> &middot; {{ trialDaysRemaining }} Days Remaining in Trial.
+        </span>
+        <button class="btn btn-sm btn-primary" @click="$router.push('/upgrade/' + (userTier === 'classic' ? 'classic' : 'luxury'))">
+          Commercial Plans & EFT
+        </button>
       </div>
     </div>
 
@@ -497,23 +496,33 @@ export default {
       }
       return icons[this.userTier] || '🏆'
     },
+    trialDaysRemaining() {
+      const user = JSON.parse(localStorage.getItem('user') || '{}')
+      if (user.days_remaining !== undefined && user.days_remaining !== null) return user.days_remaining
+      if (user.days_remaining_in_trial !== undefined && user.days_remaining_in_trial !== null) return user.days_remaining_in_trial
+      return 7
+    },
     tierDisplayName() {
       const names = {
-        free: 'CLASSIC',
-        sport: 'SPORT',
-        luxury: 'LUXURY',
-        premium: 'PREMIUM'
+        classic: 'CLASSIC SOLO',
+        luxury: 'LUXURY TEAM',
+        executive: 'EXECUTIVE SUITE',
+        enterprise: 'ENTERPRISE',
+        free: 'CLASSIC SOLO',
+        sport: 'LUXURY TEAM'
       }
-      return names[this.userTier] || 'LUXURY'
+      return names[this.userTier] || 'LUXURY TEAM'
     },
     tierSubtitle() {
       const subtitles = {
-        free: 'Free Forever',
-        sport: 'R99/month',
-        luxury: 'R249/month',
-        premium: 'R499/month'
+        classic: 'R349/month (1 User)',
+        luxury: 'R999/month (Up to 5 Users)',
+        executive: 'R1,500/month (Up to 15 Users)',
+        enterprise: 'Bespoke / Custom',
+        free: 'R349/month (1 User)',
+        sport: 'R999/month'
       }
-      return subtitles[this.userTier] || 'R99/month'
+      return subtitles[this.userTier] || 'R999/month'
     },
     tierFeatureAccess() {
       const features = {
@@ -1375,6 +1384,31 @@ export default {
   background: rgba(212, 175, 55, 0.05);
   color: #D4AF37;
   border: 1px solid rgba(212, 175, 55, 0.2);
+}
+.info-bar--vip {
+  background: linear-gradient(90deg, rgba(217, 119, 6, 0.08) 0%, rgba(15, 23, 42, 0.04) 100%);
+  border: 1px solid rgba(217, 119, 6, 0.35);
+  color: #92400e;
+}
+.vip-pulse-dot {
+  width: 10px;
+  height: 10px;
+  background-color: #d97706;
+  border-radius: 50%;
+  display: inline-block;
+  flex-shrink: 0;
+  box-shadow: 0 0 0 0 rgba(217, 119, 6, 0.7);
+  animation: vipPulse 2s infinite;
+}
+@keyframes vipPulse {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(217, 119, 6, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(217, 119, 6, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(217, 119, 6, 0); }
+}
+.vip-text {
+  flex: 1;
+  font-size: 0.875rem;
+  color: #78350f;
 }
 
 .top-stats-grid { 
