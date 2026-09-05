@@ -22,7 +22,9 @@ services:
       - key: FRONTEND_URL
         value: "https://www.thefinishercrm.tech"
       - key: DEFAULT_FROM_EMAIL
-        value: "security@thefinisher.tech"
+        value: "The Finisher Luxury Registrations <noreply@mtamboholdings.dev>"
+      - key: SALES_EMAIL
+        value: "noreply@mtamboholdings.dev"
       - key: EMAIL_BACKEND
         value: "django.core.mail.backends.smtp.EmailBackend"
       - key: EMAIL_HOST

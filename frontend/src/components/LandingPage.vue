@@ -24,10 +24,13 @@
       
       <div class="landing-vip-badge">
         <span class="vip-pulse-dot"></span>
-        ⭐ 7-Day VIP Executive Access &middot; Limited 15-Firm Cohort
+        ⭐ 7-Day VIP Executive Access &middot; Strictly Capped at 15 Workspaces
+      </div>
+      <div class="scarcity-sub-badge">
+        Secure Your Space Now &mdash; Private Enterprise Allocation Active
       </div>
 
-      <button class="request-btn" @click="$router.push('/register')">Request Access</button>
+      <button class="request-btn" @click="$router.push('/register')">Request Access &rarr;</button>
     </div>
   </div>
 </template>
@@ -241,9 +244,22 @@ export default {
   letter-spacing: 1px;
   padding: 8px 18px;
   border-radius: 999px;
-  margin-bottom: 2rem;
+  margin-bottom: 0.75rem;
   text-transform: uppercase;
   backdrop-filter: blur(8px);
+}
+
+.scarcity-sub-badge {
+  font-size: 0.8rem;
+  color: #fcd34d;
+  letter-spacing: 1px;
+  margin-bottom: 2rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  background: rgba(245, 158, 11, 0.1);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  padding: 4px 14px;
+  border-radius: 999px;
 }
 
 .vip-pulse-dot {

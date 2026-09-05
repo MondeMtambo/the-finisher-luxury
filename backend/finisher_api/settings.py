@@ -238,8 +238,8 @@ EMAIL_HOST_PASSWORD = config('EMAIL_HOST_PASSWORD', default='')
 EMAIL_TIMEOUT = 15
 RESEND_API_KEY = config('RESEND_API_KEY', default=config('EMAIL_HOST_PASSWORD', default='')).strip()
 _email_host = config('EMAIL_HOST', default='smtp.gmail.com').lower()
-DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='onboarding@resend.dev' if 'resend' in _email_host else 'security@thefinisher.tech')
-SALES_EMAIL = config('SALES_EMAIL', default='sales@mtamboholdings.dev').strip()
+DEFAULT_FROM_EMAIL = config('DEFAULT_FROM_EMAIL', default='The Finisher Luxury Registrations <noreply@mtamboholdings.dev>')
+SALES_EMAIL = config('SALES_EMAIL', default='noreply@mtamboholdings.dev').strip()
 
 # Public website lead ownership settings
 PUBLIC_LEAD_OWNER_EMAIL = config('PUBLIC_LEAD_OWNER_EMAIL', default='').strip()

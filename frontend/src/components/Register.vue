@@ -47,6 +47,10 @@
           <span class="vip-badge-dot"></span>
           ⭐ 7-DAY VIP EXECUTIVE ACCESS &middot; CORPORATE ONBOARDING
         </div>
+        <div class="scarcity-pill-banner">
+          <span class="scarcity-fire">🔥</span>
+          <span>Strictly Limited: <strong>Only 15 Private Fleet Allocations Active</strong> &mdash; Secure Your Space Now</span>
+        </div>
         <h1 class="headline">Request Executive Access</h1>
         <p class="subheadline">Step 1: Verify your authorized executive credentials to initiate corporate workspace provisioning.</p>
       </div>
@@ -542,12 +546,12 @@
         </div>
         <div class="dossier-row">
           <span class="dossier-key">Executive Dispatch:</span>
-          <span class="dossier-val">sales@mtamboholdings.dev</span>
+          <span class="dossier-val">noreply@mtamboholdings.dev</span>
         </div>
       </div>
 
       <p class="success-note">
-        Your corporate access dossier has been verified and transmitted to Mtambo Holdings executive sales desk (<strong>sales@mtamboholdings.dev</strong>).
+        Your corporate access dossier has been verified and transmitted to the executive registrations desk (<strong>noreply@mtamboholdings.dev</strong>).
       </p>
       <p class="text-muted text-sm mt-3">
         Upon 1-click authorization by the Executive Directorate, your <strong>auto-generated secure password</strong> and direct workspace portal URL will be dispatched to <strong>{{ form.email }}</strong>.
@@ -1653,5 +1657,26 @@ export default {
 .success-actions {
   max-width: 320px;
   margin: 1.5rem auto 0;
+}
+
+.scarcity-pill-banner {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.35);
+  color: #fcd34d;
+  padding: 0.4rem 0.9rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  margin-top: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+.scarcity-pill-banner strong {
+  color: #fbbf24;
+}
+.scarcity-fire {
+  font-size: 0.95rem;
+  animation: pvPulse 1.5s infinite;
 }
 </style>

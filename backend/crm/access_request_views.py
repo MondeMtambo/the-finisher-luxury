@@ -352,7 +352,7 @@ class PublicAccessRequestView(APIView):
             f"Executive Directorate | THE FINISHER LUXURY | Mtambo Holdings\n"
             f"https://www.thefinishercrm.tech\n"
         )
-        from_sender = getattr(settings, 'DEFAULT_FROM_EMAIL', None) or 'onboarding@resend.dev'
+        from_sender = getattr(settings, 'DEFAULT_FROM_EMAIL', None) or 'The Finisher Luxury Registrations <noreply@mtamboholdings.dev>'
         # Asynchronously dispatch 5-minute verification code via Resend HTTPS API / background daemon thread (< 1ms)
         send_email_async(
             verify_subject,
@@ -424,8 +424,8 @@ class PublicVerifyAccessRequestView(APIView):
         req_obj.is_verified = True
         req_obj.save(update_fields=['is_verified'])
 
-        # 1. Dispatch Email Alert to sales@mtamboholdings.dev
-        sales_email = getattr(settings, 'SALES_EMAIL', 'sales@mtamboholdings.dev')
+        # 1. Dispatch Email Alert to noreply@mtamboholdings.dev shared mailbox
+        sales_email = getattr(settings, 'SALES_EMAIL', 'noreply@mtamboholdings.dev')
         exec_subject = f"[VERIFIED CORPORATE REQUEST] {req_obj.company_name} - {req_obj.first_name} {req_obj.last_name} ({req_obj.job_title})"
         exec_body = (
             f"EXECUTIVE CORPORATE ACCESS ALERT (IDENTITY VERIFIED)\n"
@@ -454,7 +454,7 @@ class PublicVerifyAccessRequestView(APIView):
             exec_subject,
             exec_body,
             [sales_email],
-            from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'security@thefinisher.tech')
+            from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'The Finisher Luxury Registrations <noreply@mtamboholdings.dev>')
         )
 
         # 2. Dispatch Confirmation Receipt Email to Applicant
@@ -467,7 +467,7 @@ class PublicVerifyAccessRequestView(APIView):
             f"1. The Executive Directorate will review your company dossier.\n"
             f"2. Upon executive authorization, your enterprise workspace will be provisioned.\n"
             f"3. Your auto-generated secure credentials will be delivered to {req_obj.email}.\n\n"
-            f"If you have urgent requirements, contact sales@mtamboholdings.dev.\n\n"
+            f"If you have urgent requirements, contact noreply@mtamboholdings.dev.\n\n"
             f"Sincerely,\n"
             f"Executive Directorate\n"
             f"THE FINISHER LUXURY | Mtambo Holdings\n"
@@ -478,7 +478,7 @@ class PublicVerifyAccessRequestView(APIView):
             ack_subject,
             ack_body,
             [req_obj.email],
-            from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'security@thefinisher.tech')
+            from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'The Finisher Luxury Registrations <noreply@mtamboholdings.dev>')
         )
 
         # 3. Create WebsiteLead & Notification for Admin Fleet Console
@@ -763,13 +763,13 @@ class AdminAccessRequestActionView(APIView):
             f"You will be prompted immediately to set your own permanent,\n"
             f"confidential password before entering the platform.\n\n"
             f"If you require executive onboarding assistance or custom enterprise\n"
-            f"integrations, our directorate is on standby at: sales@mtamboholdings.dev\n\n"
+            f"integrations, our directorate is on standby at: noreply@mtamboholdings.dev\n\n"
             f"Welcome to the pinnacle of luxury enterprise automation.\n\n"
             f"With highest regards,\n\n"
             f"THE EXECUTIVE DIRECTORATE\n"
             f"THE FINISHER LUXURY | MTAMBO HOLDINGS\n"
             f"Portal: https://www.thefinishercrm.tech\n"
-            f"Inquiries: sales@mtamboholdings.dev\n"
+            f"Inquiries: noreply@mtamboholdings.dev\n"
             f"═════════════════════════════════════════════════════════════════════════\n"
         )
 
@@ -777,7 +777,7 @@ class AdminAccessRequestActionView(APIView):
             email_subject,
             email_body,
             [req_obj.email],
-            from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'security@thefinisher.tech')
+            from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'The Finisher Luxury Registrations <noreply@mtamboholdings.dev>')
         )
 
         logger.info(f"Corporate Workspace APPROVED and PROVISIONED for {req_obj.company_name} by {request.user.username}")

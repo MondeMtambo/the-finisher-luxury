@@ -56,6 +56,10 @@ def _send_via_resend_api(api_key: str, from_email: str, recipient_list: list, su
     except urllib.error.HTTPError as http_err:
         err_body = http_err.read().decode('utf-8') if hasattr(http_err, 'read') else str(http_err)
         logger.error(f"[EmailEngine] Resend HTTPS API HTTPError {http_err.code}: {err_body}")
+        # Automated Failover: If custom domain is pending DNS verification on Resend (403), auto-retry via envelope sender
+        if http_err.code == 403 and 'onboarding@resend.dev' not in from_email:
+            logger.info("[EmailEngine] Custom domain pending Resend DNS verification. Auto-retrying via verified envelope sender...")
+            return _send_via_resend_api(api_key, "The Finisher Luxury Registrations <onboarding@resend.dev>", recipient_list, subject, text_body, html_body)
         return False
     except Exception as e:
         logger.error(f"[EmailEngine] Resend HTTPS API failed: {e}")
@@ -67,12 +71,12 @@ def _send_email_worker(subject: str, text_body: str, recipient_list: list, from_
     if not recipient_list:
         return
 
-    sender = from_email or getattr(settings, 'DEFAULT_FROM_EMAIL', 'onboarding@resend.dev')
+    sender = from_email or getattr(settings, 'DEFAULT_FROM_EMAIL', 'The Finisher Luxury Registrations <noreply@mtamboholdings.dev>')
     resend_key = getattr(settings, 'RESEND_API_KEY', '').strip()
 
     # If sender doesn't have an @ or domain matching verified resend domains, fallback safely
     if not sender or '@' not in sender:
-        sender = 'onboarding@resend.dev'
+        sender = 'The Finisher Luxury Registrations <noreply@mtamboholdings.dev>'
 
     # Strategy 1: Resend HTTPS REST API (Port 443 — immune to SMTP port blocks)
     if resend_key:
