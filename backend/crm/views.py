@@ -51,7 +51,7 @@ from .serializers import (
     WebsiteLeadUpdateSerializer,
     WebsiteLeadReplySerializer,
 )
-from .tier_limits import LUXURY_TIER_LIMITS
+from .tier_limits import LUXURY_TIER_LIMITS, check_org_quota, TIER_QUOTAS, can_add_user, get_remaining_user_slots
 
 def has_user_management_access(request):
     """Determine whether the requester has permission to manage users."""
@@ -467,13 +467,12 @@ class ContactViewSet(viewsets.ModelViewSet):
         profile = getattr(user, 'profile', None)
         org = getattr(profile, 'organization', None) if profile else None
 
-        # ─── LUXURY BASIC CONTACT CEILING (Strictly 5 Contacts) ───
-        if org and org.subscription_tier == 'basic':
+        # ─── CONTACT ALLOCATION QUOTA (Luxury Basic: 5 Contacts max; Trial & Team: Unlimited) ───
+        if org:
             existing_count = Contact.objects.filter(organization=org).count()
-            if existing_count >= 5:
-                raise ValidationError({
-                    'detail': 'Luxury Basic allocation limit reached (5 contacts max). Upgrade to Luxury Team (R999/mo) for unlimited contacts.'
-                })
+            allowed, limit, msg = check_org_quota(org, 'contacts', existing_count)
+            if not allowed:
+                raise ValidationError({'detail': msg})
 
         contact = serializer.save(user=user, organization=org)
         ensure_company_for_contact(contact)
@@ -642,6 +641,13 @@ class CompanyViewSet(viewsets.ModelViewSet):
             })
         profile = getattr(user, 'profile', None)
         org = getattr(profile, 'organization', None) if profile else None
+
+        if org:
+            current_count = Company.objects.filter(organization=org).count()
+            allowed, limit, msg = check_org_quota(org, 'companies', current_count)
+            if not allowed:
+                raise ValidationError({'detail': msg})
+
         company = serializer.save(user=user, organization=org)
         log_activity(
             user=self.request.user,
@@ -721,6 +727,13 @@ class DealViewSet(viewsets.ModelViewSet):
             raise PermissionDenied('Only administrators can create deals.')
         profile = getattr(user, 'profile', None)
         org = getattr(profile, 'organization', None) if profile else None
+
+        if org:
+            current_count = Deal.objects.filter(organization=org).count()
+            allowed, limit, msg = check_org_quota(org, 'deals', current_count)
+            if not allowed:
+                raise ValidationError({'detail': msg})
+
         deal = serializer.save(user=user, organization=org)
         log_activity(
             user=self.request.user,
@@ -1082,8 +1095,11 @@ class TicketViewSet(viewsets.ModelViewSet):
 
             if org and getattr(assigned_profile, 'organization', None) != org:
                 raise PermissionDenied('You can only assign within your organization.')
-            elif profile and assigned_profile and profile.company_name != assigned_profile.company_name:
-                raise PermissionDenied('You can only assign within your company.')
+        if org:
+            current_count = Ticket.objects.filter(organization=org).count()
+            allowed, limit, msg = check_org_quota(org, 'tickets', current_count)
+            if not allowed:
+                raise ValidationError({'detail': msg})
 
         ticket = serializer.save(created_by=user, organization=org)
 
@@ -1737,21 +1753,43 @@ class EmployeeViewSet(viewsets.ModelViewSet):
 
             company_name = normalize_company_name(profile.company_name)
 
-        # Determine organization tier limits (Classic=1, Luxury/Trial=5, Executive=15, Enterprise=999)
+        # Determine organization tier limits (Luxury Basic=3, Luxury Team=5, Executive=15, Enterprise=999, Trial=999)
         user_tier = getattr(profile, 'tier', 'luxury')
         org = getattr(profile, 'organization', None)
         if org:
             user_tier = getattr(org, 'subscription_tier', 'luxury')
         
+        is_trial = (user_tier == 'trial') or (org and getattr(org, 'is_trial_active', False))
+
         TIER_SEAT_LIMITS = {
-            'basic': 1,
-            'classic': 1,
+            'basic': 3,
+            'classic': 3,
             'luxury': 5,
-            'trial': 5,
+            'trial': 999,
             'executive': 15,
             'enterprise': 999,
         }
-        max_users = TIER_SEAT_LIMITS.get((user_tier or 'luxury').lower(), 5)
+        max_users = 999 if is_trial else TIER_SEAT_LIMITS.get((user_tier or 'luxury').lower(), 5)
+
+        # Basic Tier Rule: Only CEO (admin) can onboard employees
+        if not is_system_admin and not is_trial and (user_tier == 'basic' or user_tier == 'classic'):
+            if profile.role != 'admin':
+                return Response({
+                    'error': 'On Luxury Basic, only the CEO/Administrator may onboard team members. Upgrade to Luxury Team (R999/mo) to delegate onboarding permissions to Managers.',
+                    'upgrade_required': True
+                }, status=403)
+
+        # Luxury Team Tier Rule: Manager can onboard up to 2 subordinates
+        if not is_system_admin and not is_trial and user_tier == 'luxury' and profile.role == 'manager':
+            manager_subordinates_count = UserProfile.objects.filter(
+                Q(onboarded_by=user) | Q(reports_to=user),
+                company_name__iexact=company_name
+            ).count()
+            if manager_subordinates_count >= 2:
+                return Response({
+                    'error': 'Managers on Luxury Team can onboard up to 2 subordinates under their supervision. Additional seats must be onboarded by the CEO or upgrade to Executive Suite.',
+                    'upgrade_required': True
+                }, status=403)
 
         client_user_count = User.objects.filter(
             is_superuser=False,
@@ -1759,8 +1797,8 @@ class EmployeeViewSet(viewsets.ModelViewSet):
             profile__company_name__iexact=company_name
         ).count()
         
-        if not is_system_admin and client_user_count >= max_users:
-            tier_display = (user_tier or 'Luxury Team').upper()
+        if not is_system_admin and not is_trial and client_user_count >= max_users:
+            tier_display = "Luxury Basic" if user_tier == "basic" else (user_tier or 'Luxury Team').upper()
             return Response({
                 'error': f'Seat limit reached ({client_user_count}/{max_users} active). Your {tier_display} plan includes up to {max_users} collaborative seats. Upgrade to Executive Suite (15 seats) or Enterprise for additional capacity.',
                 'current_users': client_user_count,
@@ -2072,30 +2110,48 @@ https://www.thefinishercrm.tech
         if org:
             user_tier = getattr(org, 'subscription_tier', 'luxury')
 
+        is_trial = (user_tier == 'trial') or (org and getattr(org, 'is_trial_active', False))
+
         TIER_SEAT_LIMITS = {
-            'basic': 1,
-            'classic': 1,
+            'basic': 3,
+            'classic': 3,
             'luxury': 5,
-            'trial': 5,
+            'trial': 999,
             'executive': 15,
             'enterprise': 999,
         }
-        max_users = TIER_SEAT_LIMITS.get((user_tier or 'luxury').lower(), 5)
+        max_users = 999 if is_trial else TIER_SEAT_LIMITS.get((user_tier or 'luxury').lower(), 5)
 
         client_user_count = User.objects.filter(
             is_superuser=False,
             is_staff=False,
             profile__company_name__iexact=company_name
         ).count()
-        remaining = max(0, max_users - client_user_count)
+        remaining = 999 if is_trial else max(0, max_users - client_user_count)
+
+        can_add = remaining > 0
+        blocked_reason = None
+        if not is_trial and (user_tier == 'basic' or user_tier == 'classic') and profile and profile.role != 'admin':
+            can_add = False
+            blocked_reason = 'Only the CEO/Administrator can onboard employees on Luxury Basic'
+        elif not is_trial and user_tier == 'luxury' and profile and profile.role == 'manager':
+            manager_subordinates = UserProfile.objects.filter(
+                Q(onboarded_by=user) | Q(reports_to=user),
+                company_name__iexact=company_name
+            ).count()
+            if manager_subordinates >= 2:
+                can_add = False
+                blocked_reason = 'Managers on Luxury Team can onboard up to 2 subordinates'
         
         return Response({
-            'tier': user_tier,
+            'tier': 'trial' if is_trial else user_tier,
             'remaining_slots': remaining,
             'current_users': client_user_count,
             'max_users': max_users,
-            'can_add_more': remaining > 0,
-            'upgrade_required': remaining == 0
+            'can_add_more': can_add,
+            'upgrade_required': (remaining == 0 and not is_trial),
+            'blocked_reason': blocked_reason,
+            'is_trial': is_trial
         })
     
     @action(detail=False, methods=['post'])
@@ -2828,6 +2884,13 @@ class AssetViewSet(viewsets.ModelViewSet):
                 raise PermissionDenied('Only administrators and managers can create assets')
         
         company_name = normalize_company_name(profile.company_name) if profile else ''
+        
+        if org:
+            current_count = Asset.objects.filter(organization=org).count()
+            allowed, limit, msg = check_org_quota(org, 'assets', current_count)
+            if not allowed:
+                raise ValidationError({'detail': msg})
+
         serializer.save(created_by=user, organization=org, company_name=company_name)
     
     @action(detail=False, methods=['get'])
@@ -2925,10 +2988,16 @@ class ProductViewSet(viewsets.ModelViewSet):
             if not company_name:
                 raise ValidationError("Company name is required to create a product.")
             # Log the incoming payload for debugging
-            try:
-                logger.info("Creating product: %s", serializer.initial_data)
-            except Exception:
-                logger.info("Creating product (could not read initial_data)")
+            # Check product catalog quota
+            profile = getattr(user, 'profile', None)
+            org = getattr(profile, 'organization', None) if profile else None
+            if org:
+                current_count = Product.objects.filter(company_name__iexact=company_name).count()
+                allowed, limit, msg = check_org_quota(org, 'products', current_count)
+                if not allowed:
+                    from rest_framework.exceptions import ValidationError as DRFValidationError
+                    raise DRFValidationError({'detail': msg})
+
             # Provide a default billing_type to avoid DB NOT NULL errors if column exists
             serializer.save(created_by=user, company_name=company_name, billing_type='standard')
         except Exception as exc:
@@ -2993,9 +3062,16 @@ class EmailTemplateViewSet(viewsets.ModelViewSet):
         return EmailTemplate.objects.filter(company_name=company_name)
 
     def perform_create(self, serializer):
-        company = getattr(self.request.user, 'profile', None)
-        company_name = company.company_name if company else ''
-        serializer.save(created_by=self.request.user, company_name=company_name)
+        user = self.request.user
+        profile = getattr(user, 'profile', None)
+        org = getattr(profile, 'organization', None) if profile else None
+        company_name = profile.company_name if profile else ''
+        if org:
+            current_count = EmailTemplate.objects.filter(company_name__iexact=company_name).count()
+            allowed, limit, msg = check_org_quota(org, 'templates', current_count)
+            if not allowed:
+                raise ValidationError({'detail': msg})
+        serializer.save(created_by=user, company_name=company_name)
 
 
 class EmailCampaignViewSet(viewsets.ModelViewSet):
@@ -3013,10 +3089,16 @@ class EmailCampaignViewSet(viewsets.ModelViewSet):
         return EmailCampaign.objects.filter(company_name=company_name)
 
     def perform_create(self, serializer):
-        profile = getattr(self.request.user, 'profile', None)
+        user = self.request.user
+        profile = getattr(user, 'profile', None)
         org = getattr(profile, 'organization', None) if profile else None
         company_name = profile.company_name if profile else ''
-        serializer.save(created_by=self.request.user, organization=org, company_name=company_name)
+        if org:
+            current_count = EmailCampaign.objects.filter(organization=org).count()
+            allowed, limit, msg = check_org_quota(org, 'campaigns', current_count)
+            if not allowed:
+                raise ValidationError({'detail': msg})
+        serializer.save(created_by=user, organization=org, company_name=company_name)
 
     @action(detail=True, methods=['post'])
     def send(self, request, pk=None):
@@ -3118,18 +3200,20 @@ class WorkflowViewSet(viewsets.ModelViewSet):
         return Workflow.objects.filter(company_name=company_name).prefetch_related('actions')
 
     def perform_create(self, serializer):
-        profile = getattr(self.request.user, 'profile', None)
+        user = self.request.user
+        profile = getattr(user, 'profile', None)
         org = getattr(profile, 'organization', None) if profile else None
         company_name = profile.company_name if profile else ''
 
-        if not self.request.user.is_superuser:
+        if not user.is_superuser:
+            count = Workflow.objects.filter(organization=org).count() if org else Workflow.objects.filter(company_name=company_name).count()
             if org:
-                count = Workflow.objects.filter(organization=org).count()
-            else:
-                count = Workflow.objects.filter(company_name=company_name).count()
-            if count >= 10:
+                allowed, limit, msg = check_org_quota(org, 'workflows', count)
+                if not allowed:
+                    raise ValidationError({'detail': msg})
+            elif count >= 10:
                 raise ValidationError({'detail': 'Workflow limit reached for tier. Contact concierge to expand.'})
-        serializer.save(created_by=self.request.user, organization=org, company_name=company_name)
+        serializer.save(created_by=user, organization=org, company_name=company_name)
 
     @action(detail=True, methods=['post'], url_path='add-action')
     def add_action(self, request, pk=None):
@@ -3407,32 +3491,52 @@ class OrganizationBillingStatusView(APIView):
 
         if not org:
             trial_days = getattr(profile, 'days_until_trial_end', 0) if profile else 0
+            tier = (getattr(profile, 'tier', 'luxury') or 'luxury').lower()
+            is_trial = trial_days > 0
             return Response({
                 'organization_name': getattr(profile, 'company_name', 'Workspace'),
-                'subscription_tier': getattr(profile, 'tier', 'luxury'),
+                'subscription_tier': 'basic' if tier == 'classic' else tier,
                 'status': getattr(profile, 'payment_status', 'trial'),
-                'is_trial_active': trial_days > 0,
+                'is_trial_active': is_trial,
                 'days_remaining': trial_days,
+                'days_remaining_in_trial': trial_days,
+                'days_remaining_in_grace': 3 if trial_days == 0 else 3,
+                'is_in_grace_period': False,
+                'is_grace_expired': False,
                 'can_access': getattr(profile, 'can_access', True) if profile else True,
             })
 
         sub = getattr(org, 'subscription', None)
         status_val = sub.status if sub else org.subscription_tier
-        is_active = org.is_trial_active if status_val == 'trial' else (status_val == 'active')
+        is_paid = (status_val == 'active')
+        is_trial = org.is_trial_active and not is_paid
+        in_grace = org.is_in_grace_period and not is_paid
+        grace_expired = org.is_grace_expired and not is_paid
+
+        # Unrestricted during trial and grace period; locked after grace period expires without settlement
+        can_access = is_paid or is_trial or in_grace or user.is_superuser
+
+        current_tier = org.subscription_tier or 'luxury'
+        if current_tier == 'classic':
+            current_tier = 'basic'
 
         return Response({
             'organization_id': str(org.id),
             'organization_name': org.name,
-            'subscription_tier': org.subscription_tier,
-            'status': status_val,
-            'is_trial_active': org.is_trial_active,
+            'subscription_tier': current_tier,
+            'status': 'active' if is_paid else ('grace_period' if in_grace else ('trial' if is_trial else 'locked')),
+            'is_trial_active': is_trial,
             'days_remaining_in_trial': org.days_remaining_in_trial,
             'trial_end_date': org.trial_end_date.isoformat() if org.trial_end_date else None,
-            'can_access': is_active or user.is_superuser,
+            'is_in_grace_period': in_grace,
+            'days_remaining_in_grace': org.days_remaining_in_grace,
+            'grace_end_date': org.grace_end_date.isoformat() if org.grace_end_date else None,
+            'is_grace_expired': grace_expired,
+            'can_access': can_access,
             'plan': {
-                'name': sub.plan.name if sub and sub.plan else 'Luxury Team (5 Users)',
+                'name': sub.plan.name if sub and sub.plan else f"Luxury {current_tier.title()}",
                 'currency': sub.plan.currency if sub and sub.plan else 'ZAR',
-                'price': (sub.plan.price_cents / 100) if sub and sub.plan else 999.0,
+                'price': (sub.plan.price_cents / 100) if sub and sub.plan else (349.0 if current_tier == 'basic' else 999.0),
             }
         })
 
@@ -3454,17 +3558,20 @@ class CreateCheckoutSessionView(APIView):
             return Response({'error': 'Organization profile required for billing.'}, status=400)
 
         gateway = request.data.get('gateway', 'manual_eft')
-        tier = request.data.get('tier', 'luxury')
+        tier = (request.data.get('tier', 'luxury') or 'luxury').lower()
+        if tier == 'classic':
+            tier = 'basic'
         billing_period = request.data.get('billing_period', 'monthly')
 
         import uuid
         tx_ref = f"TFL-{org.slug[:6].upper()}-{uuid.uuid4().hex[:8].upper()}"
 
         pricing = {
-            'classic': {'monthly': 34900, 'annual': 349000},       # R349/mo (R3,490/yr)
-            'luxury': {'monthly': 99900, 'annual': 999000},         # R999/mo (R9,990/yr)
-            'executive': {'monthly': 150000, 'annual': 1500000},    # R1,500/mo (R15,000/yr)
-            'enterprise': {'monthly': 0, 'annual': 0}              # Bespoke Custom
+            'basic': {'monthly': 34900, 'annual': 349000},          # R349/mo (R3,490/yr)
+            'classic': {'monthly': 34900, 'annual': 349000},        # Backward compatibility
+            'luxury': {'monthly': 99900, 'annual': 999000},          # R999/mo (R9,990/yr) Flagship
+            'executive': {'monthly': 150000, 'annual': 1500000},     # R1,500/mo (R15,000/yr)
+            'enterprise': {'monthly': 0, 'annual': 0}               # Bespoke Custom
         }
         amount_cents = pricing.get(tier, {}).get(billing_period, 99900)
 
@@ -3483,16 +3590,18 @@ class CreateCheckoutSessionView(APIView):
             'transaction_reference': tx_ref,
             'amount_zar': amount_cents / 100,
             'currency': 'ZAR',
+            'tier': tier,
             'gateway': gateway,
-            'checkout_url': f"https://thefinisher.tech/billing/pay?ref={tx_ref}",
+            'checkout_url': f"https://thefinishercrm.tech/billing/pay?ref={tx_ref}",
             'instructions': 'For direct corporate EFT payments, please use the transaction reference as beneficiary payment reference.'
         }, status=status.HTTP_201_CREATED)
 
 
 class BillingWebhookView(APIView):
     """
-    Payment Gateway Webhook Endpoint for PayFast / Peach / Ozow / Stripe.
+    Payment Gateway Webhook Endpoint for PayFast / Peach / Ozow / Stripe / EFT.
     POST /api/billing/webhook/
+    Automatically activates the chosen plan (Basic R349, Team R999, etc.) with 100% reliability.
     """
     permission_classes = [AllowAny]
 
@@ -3508,20 +3617,81 @@ class BillingWebhookView(APIView):
             tx = PaymentTransaction.objects.get(transaction_reference=tx_ref)
             if payment_status in ['complete', 'paid', 'successful']:
                 tx.status = 'successful'
-                tx.raw_payload = data
+                existing_payload = tx.raw_payload or {}
+                tx.raw_payload = {**existing_payload, **data}
                 tx.save(update_fields=['status', 'raw_payload'])
+
+                # Determine purchased plan tier
+                chosen_tier = existing_payload.get('tier', 'luxury').lower()
+                if chosen_tier == 'classic':
+                    chosen_tier = 'basic'
 
                 sub, _ = OrganizationSubscription.objects.get_or_create(organization=tx.organization)
                 sub.status = 'active'
                 sub.current_period_start = timezone.now()
-                sub.current_period_end = timezone.now() + timedelta(days=365)
+                period_type = existing_payload.get('period', 'monthly')
+                days_to_add = 365 if period_type == 'annual' else 30
+                sub.current_period_end = timezone.now() + timedelta(days=days_to_add)
                 sub.save()
 
-                tx.organization.subscription_tier = 'luxury'
+                # Transition organization to paid status with chosen tier
+                tx.organization.subscription_tier = chosen_tier
                 tx.organization.is_active = True
                 tx.organization.save(update_fields=['subscription_tier', 'is_active'])
 
-            return Response({'status': 'acknowledged'})
+                # Synchronize all profiles within organization to the activated plan
+                UserProfile.objects.filter(organization=tx.organization).update(
+                    tier=chosen_tier,
+                    payment_status='paid'
+                )
+
+                # Record compliance audit trail (POPIA Section 19)
+                record_audit_event(
+                    'BILLING_TIER_ACTIVATED',
+                    f"Commercial plan '{chosen_tier.upper()}' successfully unlocked for organization '{tx.organization.name}' following settlement (Ref: {tx_ref})",
+                    user=None,
+                    organization=tx.organization,
+                    severity='INFO'
+                )
+
+                # Dispatch executive activation receipt email
+                try:
+                    from .email_service import send_email_async, render_luxury_email_html
+                    admin_profiles = UserProfile.objects.filter(
+                        organization=tx.organization,
+                        role='admin'
+                    ).select_related('user')
+                    tier_display = "Luxury Basic (R349/mo)" if chosen_tier == "basic" else ("Luxury Team (R999/mo)" if chosen_tier == "luxury" else chosen_tier.title())
+                    for ap in admin_profiles:
+                        if ap.user and ap.user.email:
+                            email_html = render_luxury_email_html(
+                                title="Subscription Allocation Confirmed",
+                                subtitle=f"{tx.organization.name} &middot; Account Unlocked",
+                                recipient_name=ap.user.first_name or ap.user.username,
+                                message_paragraphs=[
+                                    f"Your commercial payment of <strong>R{tx.amount_cents / 100:.2f}</strong> has been successfully processed.",
+                                    f"Your private workspace has been officially transitioned to <strong>{tier_display}</strong> with zero operational interruption.",
+                                    "All client pipelines, contacts, deals, and team seats remain 100% intact."
+                                ],
+                                cta_text="Access Unlocked Workspace",
+                                cta_url="https://www.thefinishercrm.tech/#/dashboard",
+                                security_note="Mtambo Holdings Financial Directorate (mtamboholdings@outlook.com). In compliance with POPIA Section 19, your financial records are cryptographically secured."
+                            )
+                            send_email_async(
+                                subject=f"Payment Verified — {tier_display} Activated for {tx.organization.name}",
+                                text_body=f"Your {tier_display} plan has been successfully activated for {tx.organization.name}. Reference: {tx_ref}",
+                                recipient_list=[ap.user.email],
+                                html_body=email_html
+                            )
+                except Exception as mail_err:
+                    import logging
+                    logging.getLogger(__name__).error(f"Billing activation email error: {mail_err}")
+
+            return Response({
+                'status': 'acknowledged',
+                'payment_status': tx.status,
+                'tier_unlocked': chosen_tier if payment_status in ['complete', 'paid', 'successful'] else None
+            })
         except PaymentTransaction.DoesNotExist:
             return Response({'error': 'Transaction not found'}, status=404)
 

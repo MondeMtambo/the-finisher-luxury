@@ -485,7 +485,7 @@ class PublicVerifyAccessRequestView(APIView):
             f"1. The Executive Directorate will review your company dossier.\n"
             f"2. Upon executive authorization, your enterprise workspace will be provisioned.\n"
             f"3. Your auto-generated secure credentials will be delivered to {req_obj.email}.\n\n"
-            f"If you have urgent requirements, contact noreply@mtamboholdings.dev.\n\n"
+            f"If you have urgent requirements, contact mtamboholdings@outlook.com.\n\n"
             f"Sincerely,\n"
             f"Executive Directorate\n"
             f"THE FINISHER LUXURY | Mtambo Holdings\n"
@@ -505,7 +505,7 @@ class PublicVerifyAccessRequestView(APIView):
                 "Upon executive authorization, your dedicated private cloud workspace is provisioned.",
                 f"Your auto-generated, high-entropy master credentials will be securely delivered to {req_obj.email}."
             ],
-            security_note="Direct executive inquiries or custom enterprise configuration requests: noreply@mtamboholdings.dev"
+            security_note="Direct executive inquiries or custom enterprise configuration requests: mtamboholdings@outlook.com"
         )
 
         send_email_async(
@@ -815,13 +815,13 @@ class AdminAccessRequestActionView(APIView):
             f"You will be prompted immediately to set your own permanent,\n"
             f"confidential password before entering the platform.\n\n"
             f"If you require executive onboarding assistance or custom enterprise\n"
-            f"integrations, our directorate is on standby at: noreply@mtamboholdings.dev\n\n"
+            f"integrations, our directorate is on standby at: mtamboholdings@outlook.com\n\n"
             f"Welcome to the pinnacle of luxury enterprise automation.\n\n"
             f"With highest regards,\n\n"
             f"THE EXECUTIVE DIRECTORATE\n"
             f"THE FINISHER LUXURY | MTAMBO HOLDINGS\n"
             f"Portal: https://www.thefinishercrm.tech\n"
-            f"Inquiries: noreply@mtamboholdings.dev\n"
+            f"Inquiries: mtamboholdings@outlook.com\n"
             f"═════════════════════════════════════════════════════════════════════════\n"
         )
 

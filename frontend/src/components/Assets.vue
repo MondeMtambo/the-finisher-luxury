@@ -2,7 +2,7 @@
   <div class="assets-page">
     <div class="page-header">
       <div>
-        <h1>Asset Management (ADMP)</h1>
+        <h1>Asset Management</h1>
         <p class="page-subtitle">Track and manage company assets, equipment, and property</p>
       </div>
       <div class="header-actions">

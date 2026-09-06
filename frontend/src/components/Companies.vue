@@ -140,15 +140,29 @@
         </div>
       </div>
     </div>
+
+    <!-- 7-Day Trial Loss-Aversion Warning Modal -->
+    <TrialUrgencyModal
+      :show="showTrialUrgencyModal"
+      :days-remaining="trialDaysRemaining"
+      :is-in-grace="isInGrace"
+      :grace-days-remaining="graceDaysRemaining"
+      @close="showTrialUrgencyModal = false"
+      @acknowledge="onTrialAcknowledge"
+    />
   </div>
 </template>
 
 <script>
-import { companiesAPI, systemAPI } from '../api'
+import { companiesAPI, systemAPI, billingAPI } from '../api'
 import modal from '../utils/modal'
+import TrialUrgencyModal from './TrialUrgencyModal.vue'
 
 export default {
   name: 'Companies',
+  components: {
+    TrialUrgencyModal
+  },
   data() {
     return {
       companies: [],
@@ -157,6 +171,11 @@ export default {
       searchTerm: '',
       showAddModal: false,
       showEditModal: false,
+      showTrialUrgencyModal: false,
+      trialDaysRemaining: 7,
+      isInGrace: false,
+      graceDaysRemaining: 3,
+      isTrialOrGrace: false,
       companyForm: {
         name: '',
         trading_name: '',
@@ -208,8 +227,27 @@ export default {
   async mounted() {
     await this.refreshPrerequisites()
     await this.loadCompanies()
+    await this.loadTrialStatus()
   },
   methods: {
+    async loadTrialStatus() {
+      try {
+        const res = await billingAPI.getStatus()
+        const data = res.data || {}
+        this.trialDaysRemaining = data.days_remaining_in_trial ?? 7
+        this.isInGrace = Boolean(data.is_in_grace_period)
+        this.graceDaysRemaining = data.days_remaining_in_grace ?? 3
+        this.isTrialOrGrace = Boolean(data.is_trial_active || data.is_in_grace_period)
+      } catch (err) {
+        console.warn('Could not load billing status:', err)
+      }
+    },
+    onTrialAcknowledge() {
+      sessionStorage.setItem('tfl_trial_notified', 'true')
+      this.showTrialUrgencyModal = false
+      this.resetForm()
+      this.showAddModal = true
+    },
     async refreshPrerequisites() {
       if (this.loadingPrereq) return
       this.loadingPrereq = true
@@ -238,6 +276,13 @@ export default {
         this.$router.push('/contacts')
         return
       }
+
+      const alreadyNotified = sessionStorage.getItem('tfl_trial_notified')
+      if (this.isTrialOrGrace && !alreadyNotified) {
+        this.showTrialUrgencyModal = true
+        return
+      }
+
       this.resetForm()
       this.showAddModal = true
     },

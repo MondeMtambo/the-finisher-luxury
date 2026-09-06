@@ -11,22 +11,24 @@
       <!-- Tier 1: Luxury Basic -->
       <div class="plan-card card" :class="{ selected: selectedTier === 'basic' || selectedTier === 'classic' }">
         <div class="plan-top">
-          <div class="plan-tier-label">SOLO FOUNDER &bull; 1 SEAT</div>
+          <div class="plan-tier-label">ESSENTIAL STARTER &bull; 3 SEATS</div>
           <h2 class="plan-title">Luxury Basic</h2>
-          <p class="plan-desc">For independent brokers, elite consultants &amp; single operators.</p>
+          <p class="plan-desc">For independent brokers, lean consultancies &amp; solo founders.</p>
           <div class="plan-price">
             <span class="currency">R</span>349<span class="period">/month</span>
           </div>
-          <div class="seat-pill">1 User &bull; Up to 5 Contacts</div>
+          <div class="seat-pill">3 Seats (CEO + Manager + Rep) &bull; 5 Contacts</div>
         </div>
 
         <ul class="feature-bullets">
-          <li><strong>Up to 5 VIP Client Contacts</strong> (Strict Solo Cap)</li>
-          <li>Full deal pipeline &amp; stage management</li>
-          <li>Asset tracking (up to 5 items)</li>
-          <li>Task manager &amp; automatic reminders</li>
-          <li>CIPC entity verification badge</li>
-          <li>Standard email concierge</li>
+          <li><strong>Strictly 1 Company Profile</strong></li>
+          <li><strong>Strictly 5 VIP Client Contacts</strong></li>
+          <li><strong>1 Active Pipeline Deal</strong></li>
+          <li>Up to 5 Products in Catalog</li>
+          <li>2 Campaigns &amp; 2 Workflows</li>
+          <li>1 Physical / Digital Tracked Asset</li>
+          <li>CEO-Only Hiring (Managers cannot onboard)</li>
+          <li>View-Only Reports (Raw Export Locked)</li>
         </ul>
 
         <div class="plan-action">
@@ -42,7 +44,7 @@
 
       <!-- Tier 2: Luxury Team (Featured) -->
       <div class="plan-card card featured" :class="{ selected: selectedTier === 'luxury' }">
-        <div class="featured-badge">RECOMMENDED &bull; 5 SEATS</div>
+        <div class="featured-badge">RECOMMENDED FLAGSHIP &bull; 5 SEATS</div>
         <div class="plan-top">
           <div class="plan-tier-label">GROWING FIRM</div>
           <h2 class="plan-title">Luxury Team</h2>
@@ -50,18 +52,18 @@
           <div class="plan-price">
             <span class="currency">R</span>999<span class="period">/month</span>
           </div>
-          <div class="seat-pill featured-pill">Up to 5 Users &bull; Unlimited Contacts</div>
+          <div class="seat-pill featured-pill">Up to 5 Users &bull; Unlimited Everything</div>
         </div>
 
         <ul class="feature-bullets">
           <li><strong>Everything in Luxury Basic, plus:</strong></li>
-          <li><strong>Unlimited client contacts &amp; company accounts</strong></li>
-          <li><strong>Up to 5 collaborative seats</strong></li>
-          <li>Shared team pipelines &amp; deal assignment</li>
-          <li>Support ticket helpdesk system</li>
-          <li>Full luxury fleet vehicle tracking</li>
-          <li>Hardware &amp; asset serial register</li>
-          <li>Client Admin Team Console</li>
+          <li><strong>Unlimited client contacts &amp; company profiles</strong></li>
+          <li><strong>Unlimited active pipeline deals</strong></li>
+          <li><strong>Up to 5 collaborative team seats</strong></li>
+          <li>Manager Onboarding Delegation (up to 2 subordinates)</li>
+          <li>Unlimited Email Campaigns &amp; Automated Workflows</li>
+          <li>Full Asset Management Tracking</li>
+          <li>Full Excel &amp; CSV Audit Data Export</li>
         </ul>
 
         <div class="plan-action">

@@ -25,7 +25,7 @@
           </p>
         </div>
         <span class="badge badge-blue" style="font-weight:700;letter-spacing:0.5px">
-          ⭐ EXECUTIVE ADMIN SUITE &middot; UNLOCKED
+          EXECUTIVE ADMIN SUITE &middot; UNLOCKED
         </span>
       </div>
 
@@ -143,8 +143,9 @@
 </template>
 
 <script>
-import { contactsAPI, companiesAPI, dealsAPI, activitiesAPI, ticketsAPI, employeesAPI } from '../api'
+import { contactsAPI, companiesAPI, dealsAPI, activitiesAPI, ticketsAPI, employeesAPI, billingAPI } from '../api'
 import EmployeePerformance from './EmployeePerformance.vue'
+import modal from '../utils/modal'
 
 export default {
   name: 'Reports',
@@ -158,7 +159,9 @@ export default {
       tickets: [],
       downloading: false,
       employees: [],
-      selectedEmployeeId: ''
+      selectedEmployeeId: '',
+      userTier: 'luxury',
+      isTrialOrGrace: false
     }
   },
   computed: {
@@ -215,22 +218,48 @@ export default {
       if (this.deals.length === 0) return 0;
       const total = this.deals.reduce((sum, d) => sum + parseFloat(d.value || 0), 0);
       return Math.round(total / this.deals.length);
+    },
+    isBasicTier() {
+      return (this.userTier === 'basic' || this.userTier === 'classic') && !this.isTrialOrGrace
+    },
+    isExportLocked() {
+      return this.isBasicTier && !this.isAdmin
     }
   },
 
   async mounted() {
+    await this.loadBillingStatus()
     if (!this.isEmployeeOnly) {
       await this.loadData()
       if (this.isAdmin || this.isClientAdmin) {
         await this.loadEmployees()
       }
     }
-    
   },
   beforeUnmount() {
     
   },
   methods: {
+    async loadBillingStatus() {
+      try {
+        const res = await billingAPI.getStatus()
+        const data = res.data || {}
+        this.userTier = (data.subscription_tier || 'luxury').toLowerCase()
+        this.isTrialOrGrace = Boolean(data.is_trial_active || data.is_in_grace_period)
+      } catch (e) {
+        console.warn('Could not load billing status in Reports:', e)
+      }
+    },
+    checkExportAllowed() {
+      if (this.isExportLocked) {
+        modal.warning(
+          'Export Locked on Luxury Basic',
+          'Data spreadsheet and audit CSV exports are exclusive to Luxury Team (R999/mo) and Executive Suite. Upgrade to Luxury Team to unlock immediate exports.'
+        )
+        return false
+      }
+      return true
+    },
     async loadData() {
       try {
         const [contactsRes, companiesRes, dealsRes, activitiesRes, ticketsRes] = await Promise.all([
@@ -241,11 +270,11 @@ export default {
           ticketsAPI.getAll()
         ])
         
-        this.contacts = contactsRes.data
-        this.companies = companiesRes.data
-        this.deals = dealsRes.data
-        this.activities = activitiesRes.data
-        this.tickets = ticketsRes.data
+        this.contacts = contactsRes.data || []
+        this.companies = companiesRes.data || []
+        this.deals = dealsRes.data || []
+        this.activities = activitiesRes.data || []
+        this.tickets = ticketsRes.data || []
       } catch (error) {
         console.error('Error loading data:', error)
       }
@@ -263,6 +292,7 @@ export default {
     },
 
     downloadContactsCSV() {
+      if (!this.checkExportAllowed()) return
       const now = new Date()
       const generatedAt = this.getFormattedTimestamp(now)
       const csv = this.generateContactsCSV(generatedAt)
@@ -271,6 +301,7 @@ export default {
     },
 
     downloadCompaniesCSV() {
+      if (!this.checkExportAllowed()) return
       const now = new Date()
       const generatedAt = this.getFormattedTimestamp(now)
       const csv = this.generateCompaniesCSV(generatedAt)
@@ -279,6 +310,7 @@ export default {
     },
 
     downloadDealsCSV() {
+      if (!this.checkExportAllowed()) return
       const now = new Date()
       const generatedAt = this.getFormattedTimestamp(now)
       const csv = this.generateDealsCSV(generatedAt)
@@ -287,6 +319,7 @@ export default {
     },
 
     downloadActivitiesCSV() {
+      if (!this.checkExportAllowed()) return
       const now = new Date()
       const generatedAt = this.getFormattedTimestamp(now)
       const csv = this.generateActivitiesCSV(generatedAt)
@@ -295,6 +328,7 @@ export default {
     },
 
     downloadTicketsCSV() {
+      if (!this.checkExportAllowed()) return
       const now = new Date()
       const generatedAt = this.getFormattedTimestamp(now)
       const csv = this.generateTicketsCSV(generatedAt)

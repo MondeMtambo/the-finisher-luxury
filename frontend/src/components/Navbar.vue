@@ -186,7 +186,7 @@
           </router-link>
           <router-link to="/assets" class="nav-item" active-class="active">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-            <span v-if="!sidebarCollapsed">Assets (ADMP)</span>
+            <span v-if="!sidebarCollapsed">Asset Management</span>
           </router-link>
           <router-link to="/reports" class="nav-item" active-class="active">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
@@ -253,7 +253,7 @@
           <span>CORPORATE PLAN / ULTIMATE</span>
         </div>
         <div v-else-if="!sidebarCollapsed && footerCompact" class="plan-badge-mini" @click="toggleFooterCompact" title="Corporate Plan / Ultimate (Click to expand)">
-          <span>⭐ ULTIMATE</span>
+          <span>ULTIMATE</span>
         </div>
 
         <!-- Dynamic Copyright (At the very bottom) -->

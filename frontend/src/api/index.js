@@ -480,4 +480,9 @@ export const salesLedgerAPI = {
   updateStatus: (data) => api.patch('/admin/sales-ledger/', data)
 }
 
+export const billingAPI = {
+  getStatus: () => api.get('/billing/status/'),
+  createCheckout: (data) => api.post('/billing/checkout/', data)
+}
+
 export default api

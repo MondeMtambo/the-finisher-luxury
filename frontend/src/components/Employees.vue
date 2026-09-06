@@ -3,7 +3,7 @@
 
     <div class="page-header">
       <div>
-        <h1>Employee Directory <span class="admp-badge">ADMP</span></h1>
+        <h1>Employee Directory</h1>
         <p class="page-subtitle">
           {{ isSystemAdmin ? 'System-wide employee management' : 'Manage your organisation\'s employees' }}
         </p>
@@ -37,7 +37,7 @@
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><circle cx="8" cy="5" r="3"/><path d="M2 15c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
         Directory
       </button>
-      <button v-if="canOnboard" @click="activeTab = 'onboard'" :class="{ active: activeTab === 'onboard' }">
+      <button v-if="canOnboard" @click="handleOnboardTabClick" :class="{ active: activeTab === 'onboard' }">
         <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="3" x2="8" y2="13"/><line x1="3" y1="8" x2="13" y2="8"/></svg>
         Onboard
       </button>
@@ -516,19 +516,38 @@
         </div>
       </div>
     </div>
+
+    <!-- 7-Day Trial Loss-Aversion Warning Modal -->
+    <TrialUrgencyModal
+      :show="showTrialUrgencyModal"
+      :days-remaining="trialDaysRemaining"
+      :is-in-grace="isInGrace"
+      :grace-days-remaining="graceDaysRemaining"
+      @close="showTrialUrgencyModal = false"
+      @acknowledge="onTrialAcknowledge"
+    />
   </div>
 </template>
 
 <script>
-import { employeesAPI, authAPI, divisionsAPI } from '../api'
+import { employeesAPI, authAPI, divisionsAPI, billingAPI } from '../api'
 import authService from '../services/auth'
 import toast from '../utils/toast'
+import TrialUrgencyModal from './TrialUrgencyModal.vue'
 
 export default {
   name: 'Employees',
+  components: {
+    TrialUrgencyModal
+  },
   data() {
     return {
-      
+      showTrialUrgencyModal: false,
+      trialDaysRemaining: 7,
+      isInGrace: false,
+      graceDaysRemaining: 3,
+      isTrialOrGrace: false,
+      userTier: 'luxury',
       employees: [],
       divisions: [],  
       loading: false,
@@ -594,8 +613,12 @@ export default {
       if (user.permissions?.is_admin) return 'admin'
       return 'user'
     },
+    isBasicTier() {
+      return (this.userTier === 'basic' || this.userTier === 'classic') && !this.isTrialOrGrace
+    },
     canOnboard() {
       if (this.isSystemAdmin) return true
+      if (this.isBasicTier && this.myRole !== 'admin') return false
       return ['admin', 'executive', 'manager'].includes(this.myRole)
     },
     allowedRoles() {
@@ -673,6 +696,7 @@ export default {
     this.loadDivisions()  
     this.loadAvailableSlots()
     this.loadPendingOffboardCount()
+    this.loadTrialStatus()
     const user = authService.getUser() || {}
     this.currentUserId = user.id || null
     
@@ -681,6 +705,32 @@ export default {
     }).catch(() => {})
   },
   methods: {
+    async loadTrialStatus() {
+      try {
+        const res = await billingAPI.getStatus()
+        const data = res.data || {}
+        this.userTier = (data.subscription_tier || 'luxury').toLowerCase()
+        this.trialDaysRemaining = data.days_remaining_in_trial ?? 7
+        this.isInGrace = Boolean(data.is_in_grace_period)
+        this.graceDaysRemaining = data.days_remaining_in_grace ?? 3
+        this.isTrialOrGrace = Boolean(data.is_trial_active || data.is_in_grace_period)
+      } catch (err) {
+        console.warn('Could not load billing status in Employees:', err)
+      }
+    },
+    handleOnboardTabClick() {
+      const alreadyNotified = sessionStorage.getItem('tfl_trial_notified')
+      if (this.isTrialOrGrace && !alreadyNotified) {
+        this.showTrialUrgencyModal = true
+        return
+      }
+      this.activeTab = 'onboard'
+    },
+    onTrialAcknowledge() {
+      sessionStorage.setItem('tfl_trial_notified', 'true')
+      this.showTrialUrgencyModal = false
+      this.activeTab = 'onboard'
+    },
     // ── Helpers ──
     getRoleValue(role) {
       if (typeof role === 'object' && role?.value) return role.value

@@ -165,7 +165,7 @@
         </div>
         <div class="sc-body">
           <div class="setting-row"><div class="setting-info"><span class="setting-name">Application</span></div><span class="setting-val">THE FINISHER &mdash; LUXURY Edition</span></div>
-          <div class="setting-row"><div class="setting-info"><span class="setting-name">Version</span></div><span class="setting-val">1.0.0</span></div>
+          <div class="setting-row"><div class="setting-info"><span class="setting-name">Version</span></div><span class="setting-val">Version 1.7</span></div>
         </div>
       </div>
     </div>

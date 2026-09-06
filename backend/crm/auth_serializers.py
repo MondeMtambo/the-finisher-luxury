@@ -177,12 +177,17 @@ class UserSerializer(serializers.ModelSerializer):
     job_title = serializers.SerializerMethodField()
     department = serializers.SerializerMethodField()
     requires_password_reset = serializers.SerializerMethodField()
+    raw_tier = serializers.SerializerMethodField()
+    is_trial_active = serializers.SerializerMethodField()
+    days_remaining_in_trial = serializers.SerializerMethodField()
+    trial_end_date = serializers.SerializerMethodField()
     
     class Meta:
         model = User
         fields = (
             'id', 'username', 'email', 'first_name', 'last_name', 'date_joined',
-            'company_name', 'phone', 'tier', 'role', 'permissions', 'job_title', 'department', 'is_staff', 'is_superuser',
+            'company_name', 'phone', 'tier', 'raw_tier', 'is_trial_active', 'days_remaining_in_trial', 'trial_end_date',
+            'role', 'permissions', 'job_title', 'department', 'is_staff', 'is_superuser',
             'requires_password_reset'
         )
         read_only_fields = ('id', 'date_joined', 'is_staff', 'is_superuser')
@@ -231,6 +236,36 @@ class UserSerializer(serializers.ModelSerializer):
 
     def get_requires_password_reset(self, obj):
         return getattr(getattr(obj, 'profile', None), 'requires_password_reset', False)
+
+    def get_raw_tier(self, obj):
+        profile = getattr(obj, 'profile', None)
+        if not profile:
+            return 'luxury'
+        if profile.organization:
+            return (profile.organization.subscription_tier or 'luxury').lower()
+        return (profile.tier or 'luxury').lower()
+
+    def get_is_trial_active(self, obj):
+        profile = getattr(obj, 'profile', None)
+        if not profile:
+            return False
+        if profile.organization:
+            return profile.organization.is_trial_active
+        return getattr(profile, 'days_until_trial_end', 0) > 0
+
+    def get_days_remaining_in_trial(self, obj):
+        profile = getattr(obj, 'profile', None)
+        if not profile:
+            return 0
+        if profile.organization:
+            return profile.organization.days_remaining_in_trial
+        return getattr(profile, 'days_until_trial_end', 0)
+
+    def get_trial_end_date(self, obj):
+        profile = getattr(obj, 'profile', None)
+        if profile and profile.organization and profile.organization.trial_end_date:
+            return profile.organization.trial_end_date.isoformat()
+        return None
 
 
 class ChangePasswordSerializer(serializers.Serializer):

@@ -113,7 +113,7 @@ https://www.thefinishercrm.tech
             ],
             otp_code=code,
             otp_expiry_minutes=10,
-            security_note="Zero-Trust Authentication: If you did not initiate this login attempt, please alert your administrator or contact noreply@mtamboholdings.dev immediately."
+            security_note="Zero-Trust Authentication: If you did not initiate this login attempt, please alert your administrator or contact mtamboholdings@outlook.com immediately."
         )
         send_email_async(
             subject=subject,

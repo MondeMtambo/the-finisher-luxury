@@ -281,7 +281,7 @@ def render_luxury_email_html(
               <div style="font-size:11.5px;font-weight:700;color:#d4af37;letter-spacing:0.5px;">MTAMBO HOLDINGS (PTY) LTD &middot; EXECUTIVE DIRECTORATE</div>
               <div style="font-size:10.5px;color:#64748b;margin-top:4px;">POPIA Section 19 Cryptographic Dispatch &middot; Johannesburg, South Africa</div>
               <div style="font-size:10px;color:#475569;margin-top:8px;">
-                Direct concierge support: <a href="mailto:noreply@mtamboholdings.dev" style="color:#94a3b8;text-decoration:none;">noreply@mtamboholdings.dev</a>
+                Direct concierge support: <a href="mailto:mtamboholdings@outlook.com" style="color:#94a3b8;text-decoration:none;">mtamboholdings@outlook.com</a>
               </div>
             </td>
           </tr>

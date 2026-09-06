@@ -65,7 +65,35 @@ class Organization(models.Model):
         if not self.trial_end_date:
             return 0
         diff = self.trial_end_date - timezone.now()
-        return max(0, diff.days)
+        return max(0, diff.days + (1 if diff.seconds > 0 else 0))
+
+    @property
+    def grace_end_date(self):
+        if not self.trial_end_date:
+            return None
+        return self.trial_end_date + timedelta(days=3)
+
+    @property
+    def is_in_grace_period(self):
+        if not self.trial_end_date:
+            return False
+        ged = self.grace_end_date
+        return self.trial_end_date < timezone.now() <= ged
+
+    @property
+    def days_remaining_in_grace(self):
+        ged = self.grace_end_date
+        if not ged:
+            return 0
+        diff = ged - timezone.now()
+        return max(0, diff.days + (1 if diff.seconds > 0 else 0))
+
+    @property
+    def is_grace_expired(self):
+        ged = self.grace_end_date
+        if not ged:
+            return False
+        return timezone.now() > ged
 
     @property
     def is_verified(self):
