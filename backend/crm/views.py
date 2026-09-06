@@ -69,15 +69,15 @@ def has_user_management_access(request):
 
 
 def visible_contacts_queryset(user):
-    """Return contacts that should appear in client-facing CRM views.
+    """Return contacts that should appear in client-facing operational CRM views.
     Enforces strict Organization multi-tenancy with hierarchical team access (POPIA Sec 19).
     Website inquiries are handled in the dedicated Website Leads inbox and must
     not leak into the Clients tab or contact totals.
+    CROSS-TENANT ISOLATION: Operational views NEVER bleed other businesses' clients,
+    even for superusers/staff. Multi-tenant oversight across all companies is exclusively 
+    handled in the Master Admin Control Deck.
     """
     queryset = Contact.objects.select_related('company', 'organization').filter(website_lead__isnull=True)
-
-    if user.is_superuser or user.is_staff:
-        return queryset
 
     profile = getattr(user, 'profile', None)
     if not profile:
@@ -90,13 +90,17 @@ def visible_contacts_queryset(user):
     # 2. Backward compatibility fallback for legacy company_name string
     if profile.company_name:
         company = normalize_company_name(profile.company_name)
-        if profile.is_admin:
-            return queryset.filter(
-                Q(organization__name__iexact=company) |
-                Q(user__profile__company_name__iexact=company)
-            )
         return queryset.filter(
-            Q(user=user) | Q(user__profile__company_name__iexact=company)
+            Q(organization__name__iexact=company) |
+            Q(user__profile__company_name__iexact=company)
+        )
+
+    # 3. Dedicated owner-admin operational fallback (Mtambo Holdings workspace)
+    if is_owner_admin_user(user):
+        return queryset.filter(
+            Q(organization__slug='mtambo-holdings') |
+            Q(user__username=OWNER_ADMIN_USERNAME) |
+            Q(user=user)
         )
 
     return queryset.filter(user=user)
@@ -605,10 +609,6 @@ class CompanyViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-
-        if user.is_superuser or user.is_staff:
-            return Company.objects.all()
-
         profile = getattr(user, 'profile', None)
         if not profile:
             return Company.objects.filter(user=user)
@@ -618,14 +618,18 @@ class CompanyViewSet(viewsets.ModelViewSet):
 
         if profile.company_name:
             company = normalize_company_name(profile.company_name)
-            if profile.is_admin:
-                return Company.objects.filter(
-                    Q(organization__name__iexact=company) |
-                    Q(user__profile__company_name__iexact=company)
-                )
             return Company.objects.filter(
-                Q(user=user) | Q(user__profile__company_name__iexact=company)
+                Q(organization__name__iexact=company) |
+                Q(user__profile__company_name__iexact=company)
             )
+
+        if is_owner_admin_user(user):
+            return Company.objects.filter(
+                Q(organization__slug='mtambo-holdings') |
+                Q(user__username=OWNER_ADMIN_USERNAME) |
+                Q(user=user)
+            )
+
         return Company.objects.filter(user=user)
 
     def perform_create(self, serializer):
@@ -697,10 +701,6 @@ class DealViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-
-        if user.is_superuser or user.is_staff:
-            return Deal.objects.all()
-
         profile = getattr(user, 'profile', None)
         if not profile:
             return Deal.objects.filter(user=user)
@@ -710,14 +710,18 @@ class DealViewSet(viewsets.ModelViewSet):
 
         if profile.company_name:
             company = normalize_company_name(profile.company_name)
-            if profile.is_admin:
-                return Deal.objects.filter(
-                    Q(organization__name__iexact=company) |
-                    Q(user__profile__company_name__iexact=company)
-                )
             return Deal.objects.filter(
-                Q(user=user) | Q(user__profile__company_name__iexact=company)
+                Q(organization__name__iexact=company) |
+                Q(user__profile__company_name__iexact=company)
             )
+
+        if is_owner_admin_user(user):
+            return Deal.objects.filter(
+                Q(organization__slug='mtambo-holdings') |
+                Q(user__username=OWNER_ADMIN_USERNAME) |
+                Q(user=user)
+            )
+
         return Deal.objects.filter(user=user)
 
     def perform_create(self, serializer):
@@ -831,15 +835,24 @@ class ActivityLogViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-
-        if user.is_superuser or user.is_staff:
-            return ActivityLog.objects.all()
-
         profile = getattr(user, 'profile', None)
-        if profile and profile.is_admin and profile.company_name:
+
+        if profile and profile.organization:
+            return ActivityLog.objects.filter(
+                Q(user__profile__organization=profile.organization) | Q(user=user)
+            )
+
+        if profile and profile.company_name:
             company = normalize_company_name(profile.company_name)
             return ActivityLog.objects.filter(
                 user__profile__company_name__iexact=company
+            )
+
+        if is_owner_admin_user(user):
+            return ActivityLog.objects.filter(
+                Q(user__profile__organization__slug='mtambo-holdings') |
+                Q(user__username=OWNER_ADMIN_USERNAME) |
+                Q(user=user)
             )
 
         return ActivityLog.objects.filter(user=user)
@@ -1054,9 +1067,6 @@ class TicketViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if user.is_superuser or user.is_staff:
-            return Ticket.objects.all()
-        
         profile = getattr(user, 'profile', None)
         if not profile:
             return Ticket.objects.filter(Q(created_by=user) | Q(assigned_to=user))
@@ -1068,19 +1078,24 @@ class TicketViewSet(viewsets.ModelViewSet):
                 organization=profile.organization
             ).filter(Q(created_by=user) | Q(assigned_to=user)).distinct()
 
-        if profile.is_admin:
-            company_name = profile.company_name
-            if company_name:
+        company_name = profile.company_name
+        if company_name:
+            if profile.role in ['admin', 'executive', 'manager'] or profile.is_admin:
                 return Ticket.objects.filter(
                     Q(created_by__profile__company_name=company_name) |
                     Q(assigned_to__profile__company_name=company_name)
                 ).distinct()
-            else:
-                return Ticket.objects.filter(
-                    Q(created_by=user) | Q(assigned_to=user)
-                )
-        else:
-            return Ticket.objects.filter(Q(assigned_to=user) | Q(created_by=user)).distinct()
+            return Ticket.objects.filter(
+                Q(created_by=user) | Q(assigned_to=user)
+            ).distinct()
+
+        if is_owner_admin_user(user):
+            return Ticket.objects.filter(
+                Q(organization__slug='mtambo-holdings') |
+                Q(created_by=user) | Q(assigned_to=user)
+            ).distinct()
+
+        return Ticket.objects.filter(Q(assigned_to=user) | Q(created_by=user)).distinct()
 
     def perform_create(self, serializer):
         user = self.request.user
@@ -2904,16 +2919,12 @@ class AssetViewSet(viewsets.ModelViewSet):
     
     def get_queryset(self):
         user = self.request.user
-
-        if user.is_superuser or user.is_staff:
-            return Asset.objects.all().select_related('category', 'assigned_to', 'division', 'created_by')
-        
         profile = getattr(user, 'profile', None)
         if not profile:
             return Asset.objects.none()
 
         if profile.organization:
-            if profile.role in ['admin', 'manager', 'executive']:
+            if profile.role in ['admin', 'manager', 'executive'] or profile.is_admin:
                 return Asset.objects.filter(organization=profile.organization).select_related(
                     'category', 'assigned_to', 'division', 'created_by'
                 )
@@ -2922,20 +2933,24 @@ class AssetViewSet(viewsets.ModelViewSet):
                 assigned_to=user
             ).select_related('category', 'assigned_to', 'division', 'created_by')
 
-        if not profile.company_name:
-            return Asset.objects.none()
-        
-        company_name = normalize_company_name(profile.company_name)
+        if profile.company_name:
+            company_name = normalize_company_name(profile.company_name)
+            if profile.role in ['admin', 'manager', 'executive'] or profile.is_admin:
+                return Asset.objects.filter(company_name__iexact=company_name).select_related(
+                    'category', 'assigned_to', 'division', 'created_by'
+                )
+            return Asset.objects.filter(
+                company_name__iexact=company_name,
+                assigned_to=user
+            ).select_related('category', 'assigned_to', 'division', 'created_by')
 
-        if profile.role in ['admin', 'manager', 'executive']:
-            return Asset.objects.filter(company_name__iexact=company_name).select_related(
-                'category', 'assigned_to', 'division', 'created_by'
-            )
+        if is_owner_admin_user(user):
+            return Asset.objects.filter(
+                Q(organization__slug='mtambo-holdings') |
+                Q(created_by=user) | Q(assigned_to=user)
+            ).select_related('category', 'assigned_to', 'division', 'created_by')
 
-        return Asset.objects.filter(
-            company_name__iexact=company_name,
-            assigned_to=user
-        ).select_related('category', 'assigned_to', 'division', 'created_by')
+        return Asset.objects.filter(assigned_to=user).select_related('category', 'assigned_to', 'division', 'created_by')
     
     def perform_create(self, serializer):
         """
@@ -3031,11 +3046,27 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if user.is_superuser:
-            return Product.objects.all()
-        company = getattr(user, 'profile', None)
-        company_name = company.company_name if company else ''
-        return Product.objects.filter(company_name=company_name)
+        profile = getattr(user, 'profile', None)
+        if not profile:
+            return Product.objects.none()
+
+        if profile.organization:
+            return Product.objects.filter(
+                Q(organization=profile.organization) |
+                Q(company_name__iexact=profile.organization.name)
+            )
+
+        if profile.company_name:
+            return Product.objects.filter(company_name__iexact=profile.company_name)
+
+        if is_owner_admin_user(user):
+            return Product.objects.filter(
+                Q(organization__slug='mtambo-holdings') |
+                Q(company_name__iexact='THE FINISHER LUXURY') |
+                Q(company_name__iexact='Mtambo Holdings')
+            )
+
+        return Product.objects.filter(company_name='')
 
     def perform_create(self, serializer):
         import logging
@@ -3128,11 +3159,28 @@ class EmailTemplateViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if user.is_superuser:
-            return EmailTemplate.objects.all()
-        company = getattr(user, 'profile', None)
-        company_name = company.company_name if company else ''
-        return EmailTemplate.objects.filter(company_name=company_name)
+        profile = getattr(user, 'profile', None)
+        if not profile:
+            return EmailTemplate.objects.none()
+
+        if profile.organization:
+            return EmailTemplate.objects.filter(
+                Q(company_name__iexact=profile.organization.name) |
+                Q(created_by__profile__organization=profile.organization)
+            )
+
+        company_name = profile.company_name or ''
+        if company_name:
+            return EmailTemplate.objects.filter(company_name__iexact=company_name)
+
+        if is_owner_admin_user(user):
+            return EmailTemplate.objects.filter(
+                Q(company_name__iexact='THE FINISHER LUXURY') |
+                Q(company_name__iexact='Mtambo Holdings') |
+                Q(created_by=user)
+            )
+
+        return EmailTemplate.objects.filter(created_by=user)
 
     def perform_create(self, serializer):
         user = self.request.user
@@ -3153,13 +3201,25 @@ class EmailCampaignViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if user.is_superuser:
-            return EmailCampaign.objects.all()
         profile = getattr(user, 'profile', None)
-        if profile and profile.organization:
+        if not profile:
+            return EmailCampaign.objects.none()
+
+        if profile.organization:
             return EmailCampaign.objects.filter(organization=profile.organization)
-        company_name = profile.company_name if profile else ''
-        return EmailCampaign.objects.filter(company_name=company_name)
+
+        company_name = profile.company_name or ''
+        if company_name:
+            return EmailCampaign.objects.filter(company_name__iexact=company_name)
+
+        if is_owner_admin_user(user):
+            return EmailCampaign.objects.filter(
+                Q(organization__slug='mtambo-holdings') |
+                Q(company_name__iexact='THE FINISHER LUXURY') |
+                Q(company_name__iexact='Mtambo Holdings')
+            )
+
+        return EmailCampaign.objects.filter(created_by=user)
 
     def perform_create(self, serializer):
         user = self.request.user
@@ -3264,13 +3324,25 @@ class WorkflowViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if user.is_superuser:
-            return Workflow.objects.prefetch_related('actions').all()
         profile = getattr(user, 'profile', None)
-        if profile and profile.organization:
+        if not profile:
+            return Workflow.objects.none()
+
+        if profile.organization:
             return Workflow.objects.filter(organization=profile.organization).prefetch_related('actions')
-        company_name = profile.company_name if profile else ''
-        return Workflow.objects.filter(company_name=company_name).prefetch_related('actions')
+
+        company_name = profile.company_name or ''
+        if company_name:
+            return Workflow.objects.filter(company_name__iexact=company_name).prefetch_related('actions')
+
+        if is_owner_admin_user(user):
+            return Workflow.objects.filter(
+                Q(organization__slug='mtambo-holdings') |
+                Q(company_name__iexact='THE FINISHER LUXURY') |
+                Q(company_name__iexact='Mtambo Holdings')
+            ).prefetch_related('actions')
+
+        return Workflow.objects.filter(created_by=user).prefetch_related('actions')
 
     def perform_create(self, serializer):
         user = self.request.user
@@ -4335,4 +4407,147 @@ class SubmitBugQueryView(APIView):
             'success': True,
             'message': 'Your query has been dispatched directly to the executive technical concierge. We will review and respond promptly.'
         }, status=200)
+
+
+class AdminTenantInspectorView(APIView):
+    """
+    Master Admin Control Deck: Tenant Activity & Client Inspector.
+    Exclusively accessible to Platform Owner / Superuser (is_owner_admin_user or is_superuser).
+    Provides deep multi-tenant inspection of any client business workspace:
+    - Business details, CEO name, subscription plan, CIPC status.
+    - Full list of client contacts for that tenant (name, email, phone, company, created_at).
+    - Deals & Commercial Pipeline for that tenant.
+    - User / Employee Team Roster.
+    - Chronological Activity Timeline ('Tebogo added user Sipho', 'Tebogo created contact Acme', 'Monde updated Deal Alpha').
+    """
+    permission_classes = [IsAuthenticated]
+
+    def check_owner(self, request):
+        if not (request.user.is_superuser or is_owner_admin_user(request.user)):
+            raise PermissionDenied("Access restricted to Platform Owner / System Administrator.")
+
+    def get(self, request):
+        self.check_owner(request)
+        tenant_id = request.query_params.get('tenant_id') or request.query_params.get('org_id')
+
+        # 1. If no specific tenant requested, return list of all client businesses / workspaces
+        if not tenant_id:
+            orgs = Organization.objects.all().order_by('-created_at')
+            tenants_data = []
+            for org in orgs:
+                owner = org.owner
+                contact_count = Contact.objects.filter(organization=org, website_lead__isnull=True).count()
+                deal_count = Deal.objects.filter(organization=org).count()
+                user_count = UserProfile.objects.filter(organization=org).count()
+                
+                last_act = ActivityLog.objects.filter(
+                    Q(user__profile__organization=org) | Q(user=owner)
+                ).order_by('-created_at').first()
+
+                last_action_desc = "No activity logged yet"
+                if last_act:
+                    actor_name = last_act.user.get_full_name() or last_act.user.username
+                    last_action_desc = f"{actor_name} {last_act.get_action_display().lower()} {last_act.entity_type} '{last_act.entity_name}'"
+
+                tenants_data.append({
+                    'id': org.id,
+                    'name': org.name,
+                    'slug': org.slug,
+                    'owner_username': owner.username if owner else 'unassigned',
+                    'owner_full_name': (owner.get_full_name() or owner.username) if owner else 'Unassigned',
+                    'owner_email': owner.email if owner else '',
+                    'subscription_tier': org.subscription_tier,
+                    'is_active': org.is_active,
+                    'created_at': org.created_at,
+                    'contact_count': contact_count,
+                    'deal_count': deal_count,
+                    'user_count': user_count,
+                    'last_action': last_action_desc,
+                    'last_action_at': last_act.created_at if last_act else None,
+                })
+            return Response({'tenants': tenants_data})
+
+        # 2. Return deep inspection details for the requested tenant
+        try:
+            org = Organization.objects.get(id=tenant_id)
+        except (Organization.DoesNotExist, ValueError):
+            return Response({'error': 'Tenant organization not found'}, status=status.HTTP_404_NOT_FOUND)
+
+        owner = org.owner
+
+        # Contacts list
+        contacts = Contact.objects.filter(organization=org, website_lead__isnull=True).order_by('-created_at')[:200]
+        contacts_data = [{
+            'id': c.id,
+            'name': f"{c.first_name} {c.last_name}".strip(),
+            'first_name': c.first_name,
+            'last_name': c.last_name,
+            'email': c.email,
+            'phone': c.phone,
+            'company_name': c.company_name_manual or (c.company.name if c.company else ''),
+            'created_at': c.created_at
+        } for c in contacts]
+
+        # Deals list
+        deals = Deal.objects.filter(organization=org).order_by('-created_at')[:100]
+        deals_data = [{
+            'id': d.id,
+            'title': d.title,
+            'value': float(d.value or 0),
+            'stage': d.stage,
+            'contact_name': f"{d.contact.first_name} {d.contact.last_name}" if d.contact else 'N/A',
+            'created_at': d.created_at
+        } for d in deals]
+
+        # Users / Team Roster
+        team = UserProfile.objects.filter(organization=org).select_related('user')
+        team_data = [{
+            'id': p.user.id,
+            'username': p.user.username,
+            'full_name': p.user.get_full_name() or p.user.username,
+            'email': p.user.email,
+            'role': p.role,
+            'job_title': p.job_title,
+            'can_manage_assets': p.has_asset_permission,
+            'is_active': p.user.is_active,
+            'date_joined': p.user.date_joined
+        } for p in team]
+
+        # Chronological Activity Timeline ('Tebogo added a user', 'Tebogo created contact Acme'...)
+        activities = ActivityLog.objects.filter(
+            Q(user__profile__organization=org) | Q(user=owner)
+        ).select_related('user').order_by('-created_at')[:100]
+        
+        timeline_data = [{
+            'id': a.id,
+            'actor_username': a.user.username,
+            'actor_name': a.user.get_full_name() or a.user.username,
+            'action': a.action,
+            'action_display': a.get_action_display(),
+            'entity_type': a.entity_type,
+            'entity_name': a.entity_name,
+            'details': a.details,
+            'created_at': a.created_at,
+            'narrative': f"{a.user.get_full_name() or a.user.username} {a.get_action_display().lower()} {a.entity_type} '{a.entity_name}'"
+        } for a in activities]
+
+        return Response({
+            'tenant': {
+                'id': org.id,
+                'name': org.name,
+                'slug': org.slug,
+                'owner_name': (owner.get_full_name() or owner.username) if owner else 'Unassigned',
+                'owner_email': owner.email if owner else '',
+                'subscription_tier': org.subscription_tier,
+                'is_active': org.is_active,
+                'created_at': org.created_at,
+                'contact_count': len(contacts_data),
+                'deal_count': len(deals_data),
+                'user_count': len(team_data)
+            },
+            'contacts': contacts_data,
+            'deals': deals_data,
+            'team': team_data,
+            'timeline': timeline_data
+        })
 

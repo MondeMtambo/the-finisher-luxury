@@ -44,10 +44,53 @@
 
       <div class="topbar-right">
 
-        <!-- Live Digital Clock -->
-        <div class="live-clock" title="System Live Sync Active">
+        <!-- Live Digital Clock & World Clock Matrix Trigger -->
+        <button 
+          class="live-clock-btn" 
+          @click="showWorldClock = true" 
+          :title="`Timezone: ${pinnedCityName || 'Johannesburg (SAST)'} • Click to open World Clock Matrix`"
+        >
           <span class="pulse-dot"></span>
+          <span class="clock-city-code">{{ pinnedCityCode || 'JHB' }}</span>
           <span class="clock-time">{{ currentTime }}</span>
+        </button>
+
+        <!-- South African Official Languages Selector (All 11 Languages) -->
+        <div class="lang-selector-wrapper" ref="langWrapper">
+          <button 
+            class="lang-toggle-btn" 
+            @click.stop="toggleLangMenu" 
+            :title="`Active Language: ${currentLangObj.label} (${currentLangObj.native})`"
+          >
+            <span class="lang-flag">{{ currentLangObj.flag }}</span>
+            <span class="lang-code">{{ currentLangObj.code.toUpperCase() }}</span>
+            <svg class="lang-chevron" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M6 9l6 6 6-6"/></svg>
+          </button>
+
+          <transition name="fade">
+            <div v-if="showLangMenu" class="lang-dropdown">
+              <div class="lang-dropdown-header">
+                <span class="lang-hdr-title">🇿🇦 Official SA Languages</span>
+                <span class="lang-hdr-subtitle">POPIA S19 Multi-Lingual Matrix</span>
+              </div>
+              <div class="lang-list">
+                <button 
+                  v-for="l in availableLanguages" 
+                  :key="l.code" 
+                  class="lang-option" 
+                  :class="{ active: l.code === activeLangCode }"
+                  @click="selectLanguage(l.code)"
+                >
+                  <span class="option-flag">{{ l.flag }}</span>
+                  <div class="option-text">
+                    <span class="option-name">{{ l.label }}</span>
+                    <span class="option-native">{{ l.native }}</span>
+                  </div>
+                  <span v-if="l.code === activeLangCode" class="active-check">✓</span>
+                </button>
+              </div>
+            </div>
+          </transition>
         </div>
 
         <!-- Dual Theme Switcher (Dark / Light) -->
@@ -165,82 +208,82 @@
 
       <nav class="sidebar-nav">
         <div class="nav-section">
-          <span v-if="!sidebarCollapsed" class="nav-section-label">MAIN</span>
+          <span v-if="!sidebarCollapsed" class="nav-section-label">{{ $t('nav.main') }}</span>
           <router-link to="/dashboard" class="nav-item" active-class="active" exact>
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
-            <span v-if="!sidebarCollapsed">Dashboard</span>
+            <span v-if="!sidebarCollapsed">{{ $t('nav.dashboard') }}</span>
           </router-link>
           <router-link v-if="!isEmployeeOnly" to="/contacts" class="nav-item" active-class="active">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
-            <span v-if="!sidebarCollapsed">Clients</span>
+            <span v-if="!sidebarCollapsed">{{ $t('nav.clients') }}</span>
           </router-link>
           <router-link v-if="!isEmployeeOnly" to="/companies" class="nav-item" active-class="active" @click.prevent="handleCompaniesNavigation">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M3 7v14M21 7v14M6 11h4M6 15h4M14 11h4M14 15h4M9 21v-4h6v4M12 3l9 4M12 3L3 7"/></svg>
-            <span v-if="!sidebarCollapsed">Companies</span>
+            <span v-if="!sidebarCollapsed">{{ $t('nav.companies') }}</span>
           </router-link>
           <router-link v-if="!isEmployeeOnly" to="/deals" class="nav-item" active-class="active" @click.prevent="handleDealsNavigation">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>
-            <span v-if="!sidebarCollapsed">Deals</span>
+            <span v-if="!sidebarCollapsed">{{ $t('nav.deals') }}</span>
           </router-link>
         </div>
 
         <div class="nav-section">
-          <span v-if="!sidebarCollapsed" class="nav-section-label">WORKSPACE</span>
+          <span v-if="!sidebarCollapsed" class="nav-section-label">{{ $t('nav.workspace') }}</span>
           <router-link to="/tickets" class="nav-item" active-class="active">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 5v2M15 11v2M15 17v2M5 5h14a2 2 0 0 1 2 2v3a2 2 0 0 0 0 4v3a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-3a2 2 0 0 0 0-4V7a2 2 0 0 1 2-2z"/></svg>
-            <span v-if="!sidebarCollapsed">Tickets</span>
+            <span v-if="!sidebarCollapsed">{{ $t('nav.tickets') }}</span>
           </router-link>
           <router-link to="/employees" class="nav-item" active-class="active">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="8.5" cy="7" r="4"/><path d="M20 8v6M23 11h-6"/></svg>
-            <span v-if="!sidebarCollapsed">Employee Directory</span>
+            <span v-if="!sidebarCollapsed">{{ $t('nav.employees') }}</span>
           </router-link>
           <router-link to="/assets" class="nav-item" active-class="active">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
-            <span v-if="!sidebarCollapsed">Asset Management</span>
+            <span v-if="!sidebarCollapsed">{{ $t('nav.assets') }}</span>
           </router-link>
           <router-link to="/reports" class="nav-item" active-class="active">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 20V10M12 20V4M6 20v-6"/></svg>
-            <span v-if="!sidebarCollapsed">Reports</span>
+            <span v-if="!sidebarCollapsed">{{ $t('nav.reports') }}</span>
           </router-link>
         </div>
 
         <div class="nav-section">
-          <span v-if="!sidebarCollapsed" class="nav-section-label">LUXURY</span>
+          <span v-if="!sidebarCollapsed" class="nav-section-label">{{ $t('nav.luxury') }}</span>
           <router-link v-if="!isEmployeeOnly" to="/products" class="nav-item" active-class="active">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/><polyline points="3.27 6.96 12 12.01 20.73 6.96"/><line x1="12" y1="22.08" x2="12" y2="12"/></svg>
-            <span v-if="!sidebarCollapsed">Products</span>
+            <span v-if="!sidebarCollapsed">{{ $t('nav.products') }}</span>
           </router-link>
           <router-link v-if="!isEmployeeOnly" to="/campaigns" class="nav-item" active-class="active">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-            <span v-if="!sidebarCollapsed">Campaigns</span>
+            <span v-if="!sidebarCollapsed">{{ $t('nav.campaigns') }}</span>
           </router-link>
           <router-link v-if="!isEmployeeOnly" to="/workflows" class="nav-item" active-class="active">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="16 3 21 3 21 8"/><line x1="4" y1="20" x2="21" y2="3"/><polyline points="21 16 21 21 16 21"/><line x1="15" y1="15" x2="21" y2="21"/><line x1="4" y1="4" x2="9" y2="9"/></svg>
-            <span v-if="!sidebarCollapsed">Workflows</span>
+            <span v-if="!sidebarCollapsed">{{ $t('nav.workflows') }}</span>
           </router-link>
         </div>
 
         <div class="nav-section">
-          <span v-if="!sidebarCollapsed" class="nav-section-label">SYSTEM</span>
+          <span v-if="!sidebarCollapsed" class="nav-section-label">{{ $t('nav.system') }}</span>
           <router-link v-if="isAdmin" to="/admin/console" class="nav-item" active-class="active">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
-            <span v-if="!sidebarCollapsed">Admin Console</span>
+            <span v-if="!sidebarCollapsed">{{ $t('nav.adminConsole') }}</span>
           </router-link>
           <router-link v-if="isOwnerAdminUser" to="/website-leads" class="nav-item" active-class="active">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
-            <span v-if="!sidebarCollapsed">Website Leads</span>
+            <span v-if="!sidebarCollapsed">{{ $t('nav.websiteLeads') }}</span>
           </router-link>
           <router-link to="/verification" class="nav-item" active-class="active">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-            <span v-if="!sidebarCollapsed">Business Verification</span>
+            <span v-if="!sidebarCollapsed">{{ $t('nav.businessVerification') }}</span>
           </router-link>
           <router-link to="/settings" class="nav-item" active-class="active">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12.22 2h-.44a2 2 0 0 0-2 2v.18a2 2 0 0 1-1 1.73l-.43.25a2 2 0 0 1-2 0l-.15-.08a2 2 0 0 0-2.73.73l-.22.38a2 2 0 0 0 .73 2.73l.15.1a2 2 0 0 1 1 1.72v.51a2 2 0 0 1-1 1.74l-.15.09a2 2 0 0 0-.73 2.73l.22.38a2 2 0 0 0 2.73.73l.15-.08a2 2 0 0 1 2 0l.43.25a2 2 0 0 1 1 1.73V20a2 2 0 0 0 2 2h.44a2 2 0 0 0 2-2v-.18a2 2 0 0 1 1-1.73l.43-.25a2 2 0 0 1 2 0l.15.08a2 2 0 0 0 2.73-.73l.22-.39a2 2 0 0 0-.73-2.73l-.15-.08a2 2 0 0 1-1-1.74v-.5a2 2 0 0 1 1-1.74l.15-.09a2 2 0 0 0 .73-2.73l-.22-.38a2 2 0 0 0-2.73-.73l-.15.08a2 2 0 0 1-2 0l-.43-.25a2 2 0 0 1-1-1.73V4a2 2 0 0 0-2-2z"/><circle cx="12" cy="12" r="3"/></svg>
-            <span v-if="!sidebarCollapsed">Settings</span>
+            <span v-if="!sidebarCollapsed">{{ $t('nav.settings') }}</span>
           </router-link>
           <router-link to="/help" class="nav-item" active-class="active">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-            <span v-if="!sidebarCollapsed">Help</span>
+            <span v-if="!sidebarCollapsed">{{ $t('nav.help') }}</span>
           </router-link>
         </div>
       </nav>
@@ -281,6 +324,13 @@
     </aside>
 
     <div v-if="mobileMenuOpen" class="mobile-overlay" @click="mobileMenuOpen = false"></div>
+
+    <!-- World Clock Matrix Modal -->
+    <WorldClockModal 
+      :isOpen="showWorldClock" 
+      @close="showWorldClock = false" 
+      @city-pinned="handleCityPinned"
+    />
   </div>
 </template>
 
@@ -290,9 +340,14 @@ import { authAPI, systemAPI, contactsAPI, companiesAPI, dealsAPI, ticketsAPI, we
 import toast from '../utils/toast'
 import modal from '../utils/modal'
 import { getRandomAvatar, getAvatarById } from '../utils/avatars.js'
+import WorldClockModal from './WorldClockModal.vue'
+import { languages, setLanguage, getActiveLanguage, i18nState } from '../i18n'
 
 export default {
   name: 'Navbar',
+  components: {
+    WorldClockModal
+  },
   emits: ['open-query-modal'],
   data() {
     return {
@@ -305,6 +360,11 @@ export default {
       isSearching: false,
       showNotifications: false,
       showUserMenu: false,
+      showWorldClock: false,
+      showLangMenu: false,
+      pinnedCityTimezone: localStorage.getItem('finisher_pinned_clock_tz') || 'Africa/Johannesburg',
+      pinnedCityCode: localStorage.getItem('finisher_pinned_clock_code') || 'JHB',
+      pinnedCityName: localStorage.getItem('finisher_pinned_clock_city') || 'Johannesburg',
       notifications: [],
       loadingNotifications: false,
       unreadCount: 0,
@@ -331,6 +391,15 @@ export default {
     }
   },
   computed: {
+    availableLanguages() {
+      return languages
+    },
+    activeLangCode() {
+      return i18nState.currentLang
+    },
+    currentLangObj() {
+      return getActiveLanguage()
+    },
     isPublicPage() {
       return ['/', '/login', '/register', '/forgot-password', '/verify-otp', '/disclaimer', '/privacy-policy', '/terms-of-service', '/popia-compliance'].includes(this.$route.path)
     },
@@ -351,7 +420,14 @@ export default {
       return 'U'
     },
     isEmployeeOnly() {
-      return !this.isAdmin && !this.isClientAdmin
+      if (this.isAdmin || this.isClientAdmin) return false
+      const user = authService.getUser()
+      const roleStr = (
+        (typeof user?.role === 'object' ? user?.role?.value : user?.role) ||
+        user?.profile?.role ||
+        ''
+      ).toLowerCase()
+      return !['admin', 'executive', 'manager', 'supervisor', 'sales'].includes(roleStr)
     }
   },
   mounted() {
@@ -412,6 +488,33 @@ export default {
       if (this.showUserMenu && this.$refs.userWrapper && !this.$refs.userWrapper.contains(e.target)) {
         this.showUserMenu = false
       }
+      if (this.showLangMenu && this.$refs.langWrapper && !this.$refs.langWrapper.contains(e.target)) {
+        this.showLangMenu = false
+      }
+    },
+    toggleLangMenu() {
+      this.showLangMenu = !this.showLangMenu
+      if (this.showLangMenu) {
+        this.showNotifications = false
+        this.showUserMenu = false
+      }
+    },
+    selectLanguage(code) {
+      setLanguage(code)
+      this.showLangMenu = false
+      const active = getActiveLanguage()
+      toast.info(`Language set to ${active.label} (${active.native})`)
+    },
+    handleCityPinned(city) {
+      if (!city) return
+      this.pinnedCityTimezone = city.timezone
+      this.pinnedCityCode = city.code
+      this.pinnedCityName = city.city
+      localStorage.setItem('finisher_pinned_clock_tz', city.timezone)
+      localStorage.setItem('finisher_pinned_clock_code', city.code)
+      localStorage.setItem('finisher_pinned_clock_city', city.city)
+      this.updateClock()
+      toast.success(`Pinned ${city.city} (${city.code}) to Topbar Clock`)
     },
     toggleTheme() {
       const nextTheme = this.currentTheme === 'dark' ? 'light' : 'dark'
@@ -425,7 +528,18 @@ export default {
       localStorage.setItem('finisher_footer_compact', this.footerCompact ? 'true' : 'false')
     },
     updateClock() {
-      this.currentTime = new Date().toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit', second: '2-digit' })
+      const tz = this.pinnedCityTimezone || 'Africa/Johannesburg'
+      try {
+        this.currentTime = new Intl.DateTimeFormat('en-ZA', {
+          timeZone: tz,
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false
+        }).format(new Date())
+      } catch (e) {
+        this.currentTime = new Date().toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })
+      }
     },
     toggleSidebar() {
       if (window.innerWidth <= 768) {
@@ -1480,16 +1594,25 @@ export default {
   transform: translateY(-1px);
 }
 
-/* Live Clock & Copyright Styles */
-.live-clock {
-  display: flex;
+/* Live Clock & World Clock Styles */
+.live-clock-btn {
+  display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  background: rgba(212, 175, 55, 0.05);
-  padding: 0.25rem 0.75rem;
+  gap: 0.45rem;
+  background: rgba(212, 175, 55, 0.08);
+  padding: 0.28rem 0.75rem;
   border-radius: 999px;
-  border: 1px solid rgba(212, 175, 55, 0.2);
-  margin-right: 0.5rem;
+  border: 1px solid rgba(212, 175, 55, 0.28);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+  margin-right: 0.25rem;
+}
+.live-clock-btn:hover {
+  background: rgba(212, 175, 55, 0.2);
+  border-color: #d4af37;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 10px rgba(212, 175, 55, 0.25);
 }
 .pulse-dot {
   width: 6px;
@@ -1498,12 +1621,146 @@ export default {
   border-radius: 50%;
   animation: f-pulse 1.5s infinite ease-in-out;
 }
+.clock-city-code {
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.8px;
+  color: #fde047;
+  background: rgba(212, 175, 55, 0.2);
+  padding: 1px 5px;
+  border-radius: 4px;
+}
 .clock-time {
   color: #D4AF37;
   font-weight: 600;
   font-size: 0.8125rem;
   font-family: monospace;
   letter-spacing: 1px;
+}
+
+/* 11 South African Languages Selector Styles */
+.lang-selector-wrapper {
+  position: relative;
+  margin-right: 0.25rem;
+}
+.lang-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(212, 175, 55, 0.08);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  color: #f8fafc;
+  padding: 5px 9px;
+  border-radius: 8px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-family: inherit;
+}
+.lang-toggle-btn:hover {
+  background: rgba(212, 175, 55, 0.18);
+  border-color: #d4af37;
+  transform: translateY(-1px);
+}
+.lang-flag {
+  font-size: 0.95rem;
+  line-height: 1;
+}
+.lang-code {
+  color: #d4af37;
+  letter-spacing: 0.5px;
+}
+.lang-chevron {
+  color: #94a3b8;
+  transition: transform 0.2s ease;
+}
+.lang-dropdown {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  width: 250px;
+  max-height: 360px;
+  overflow-y: auto;
+  background: rgba(12, 16, 26, 0.98);
+  backdrop-filter: blur(20px);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  border-radius: 12px;
+  box-shadow: 0 16px 40px rgba(0,0,0,0.9), 0 0 20px rgba(212, 175, 55, 0.15);
+  z-index: 250;
+  padding: 6px;
+}
+.lang-dropdown-header {
+  padding: 8px 10px 6px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  margin-bottom: 4px;
+}
+.lang-hdr-title {
+  display: block;
+  font-size: 11px;
+  font-weight: 800;
+  color: #d4af37;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+.lang-hdr-subtitle {
+  display: block;
+  font-size: 9.5px;
+  color: #64748b;
+  margin-top: 1px;
+}
+.lang-list {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.lang-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  width: 100%;
+  padding: 7px 10px;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  text-align: left;
+  transition: all 0.15s ease;
+  color: #e2e8f0;
+  font-family: inherit;
+}
+.lang-option:hover {
+  background: rgba(212, 175, 55, 0.12);
+  border-color: rgba(212, 175, 55, 0.25);
+}
+.lang-option.active {
+  background: rgba(212, 175, 55, 0.2);
+  border-color: #d4af37;
+}
+.option-flag {
+  font-size: 1.1rem;
+}
+.option-text {
+  flex: 1;
+  min-width: 0;
+}
+.option-name {
+  display: block;
+  font-size: 12.5px;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.2;
+}
+.option-native {
+  display: block;
+  font-size: 10.5px;
+  color: #94a3b8;
+  line-height: 1.2;
+}
+.active-check {
+  color: #d4af37;
+  font-weight: 900;
+  font-size: 12px;
 }
 .sidebar-copyright {
   text-align: center;

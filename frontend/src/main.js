@@ -52,4 +52,6 @@ if ('serviceWorker' in navigator && window.location.protocol.startsWith('http'))
   })
 }
 
-createApp(App).use(router).mount('#app')
+import { i18nPlugin } from './i18n'
+
+createApp(App).use(router).use(i18nPlugin).mount('#app')

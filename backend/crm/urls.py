@@ -57,6 +57,7 @@ urlpatterns = [
     path('api/performance/me/', views.performance_me, name='performance_me'),
     path('api/performance/user/<int:user_id>/', views.performance_user, name='performance_user'),
     path('api/admin/overview/', views.AdminOverviewView.as_view(), name='admin_overview'),
+    path('api/admin/tenant-inspector/', views.AdminTenantInspectorView.as_view(), name='admin_tenant_inspector'),
     path('api/admin/website-leads/inbox/', views.AdminWebsiteLeadInboxView.as_view(), name='admin_website_leads_inbox'),
     path('api/admin/users/', views.UserManagementView.as_view(), name='user_management'),
     path('api/admin/clients-employees/', views.ClientEmployeeManagementView.as_view(), name='client_employee_management'),

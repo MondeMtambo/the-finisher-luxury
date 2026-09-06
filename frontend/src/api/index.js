@@ -490,4 +490,9 @@ export const billingAPI = {
   createCheckout: (data) => api.post('/billing/checkout/', data)
 }
 
+export const tenantInspectorAPI = {
+  getAll: () => api.get('/admin/tenant-inspector/'),
+  getTenantData: (tenantId) => api.get('/admin/tenant-inspector/', { params: { tenant_id: tenantId } })
+}
+
 export default api

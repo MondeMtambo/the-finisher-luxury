@@ -478,7 +478,244 @@
                 <div class="comp-metrics text-muted">{{ comp.contact_count }}c · {{ comp.deal_count }}d · {{ formatCurrency(comp.pipeline_value) }}</div>
               </div>
             </div>
+            <div style="margin-top: 0.75rem; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 0.6rem;">
+              <button 
+                class="btn btn-sm btn-gold w-100" 
+                style="font-size: 0.78rem; padding: 0.35rem 0.6rem; width: 100%; border-radius: 6px; font-weight: 700;"
+                @click="inspectSpecificTenant(client.company_name || client.username)"
+              >
+                🔍 Inspect Client Workspace
+              </button>
+            </div>
           </div>
+        </div>
+      </div>
+
+      <!-- MASTER TENANT INSPECTOR (EXCLUSIVE TO SYSTEM OWNER) -->
+      <div class="section-container tenant-inspector-section" id="tenant-inspector">
+        <div class="flex-between mb-3" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+              <h2 class="section-title" style="margin-bottom: 0;">Master Tenant Client Inspector &amp; Activity Dossier</h2>
+              <span class="badge font-mono" style="font-size: 0.72rem; padding: 0.2rem 0.5rem; border-radius: 4px; background: rgba(212, 175, 55, 0.2); color: #d4af37; border: 1px solid rgba(212, 175, 55, 0.4); font-weight: 800;">
+                POPIA S19 &middot; OWNER OVERSIGHT
+              </span>
+            </div>
+            <p class="section-subtitle" style="color: #9ca3af; font-size: 0.85rem; margin: 0;">
+              Zero operational data leakage. Inspect isolated client contacts, active deals, team rosters, and real-time activity audit trails for any corporate tenant.
+            </p>
+          </div>
+          <div style="display: flex; gap: 0.75rem; align-items: center;">
+            <select v-model="selectedTenantId" @change="fetchTenantInspectionData" class="form-input" style="background: rgba(0,0,0,0.6); border: 1px solid rgba(212,175,55,0.4); color: #d4af37; font-weight: 700; padding: 0.45rem 1rem; border-radius: 8px;">
+              <option value="">-- Select Corporate Tenant to Inspect --</option>
+              <option v-for="t in tenantList" :key="t.id" :value="t.id">
+                🏢 {{ t.name }} ({{ t.total_contacts }} Contacts &bull; {{ t.total_deals }} Deals)
+              </option>
+            </select>
+            <button class="btn btn-sm btn-gold" @click="fetchTenantInspectionData" :disabled="!selectedTenantId || loadingTenantInspector">
+              {{ loadingTenantInspector ? 'Scanning...' : '🔍 Inspect Dossier' }}
+            </button>
+          </div>
+        </div>
+
+        <!-- If Loading -->
+        <div v-if="loadingTenantInspector" class="audit-loading" style="padding: 3rem; text-align: center;">
+          <div class="spinner"></div>
+          <span>Decrypting tenant operational matrix and chronological audit log...</span>
+        </div>
+
+        <!-- If Inspected Tenant Active -->
+        <div v-else-if="inspectedTenantData" class="tenant-dossier-card card" style="background: rgba(15, 23, 42, 0.65); border: 1px solid rgba(212, 175, 55, 0.35); border-radius: 12px; padding: 1.5rem; margin-top: 1rem;">
+          <!-- Dossier Header -->
+          <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 1rem; margin-bottom: 1.25rem;">
+            <div>
+              <div style="display: flex; align-items: center; gap: 0.75rem;">
+                <h3 style="color: #fff; font-size: 1.35rem; margin: 0; font-weight: 800;">{{ inspectedTenantData.tenant.name }}</h3>
+                <span class="badge badge-primary" style="font-size: 0.75rem;">{{ inspectedTenantData.tenant.tier_display || 'Luxury' }}</span>
+                <span v-if="inspectedTenantData.tenant.is_cipc_verified" style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.72rem; font-weight: 700;">✓ CIPC Verified</span>
+              </div>
+              <div style="color: #9ca3af; font-size: 0.8rem; margin-top: 0.3rem;">
+                Root Administrator: <strong style="color: #d4af37;">{{ inspectedTenantData.tenant.admin_username }}</strong> ({{ inspectedTenantData.tenant.admin_email }}) &bull; Created: {{ formatDate(inspectedTenantData.tenant.created_at) }}
+              </div>
+            </div>
+            <!-- KPI Pills -->
+            <div style="display: flex; gap: 0.75rem;">
+              <div style="background: rgba(0,0,0,0.4); border: 1px solid rgba(212,175,55,0.25); border-radius: 8px; padding: 0.5rem 0.85rem; text-align: center;">
+                <div style="color: #d4af37; font-weight: 800; font-size: 1.15rem; font-family: monospace;">{{ inspectedTenantData.contacts.length }}</div>
+                <div style="color: #9ca3af; font-size: 0.7rem; text-transform: uppercase;">Clients</div>
+              </div>
+              <div style="background: rgba(0,0,0,0.4); border: 1px solid rgba(16,185,129,0.25); border-radius: 8px; padding: 0.5rem 0.85rem; text-align: center;">
+                <div style="color: #10b981; font-weight: 800; font-size: 1.15rem; font-family: monospace;">{{ inspectedTenantData.deals.length }}</div>
+                <div style="color: #9ca3af; font-size: 0.7rem; text-transform: uppercase;">Deals</div>
+              </div>
+              <div style="background: rgba(0,0,0,0.4); border: 1px solid rgba(59,130,246,0.25); border-radius: 8px; padding: 0.5rem 0.85rem; text-align: center;">
+                <div style="color: #60a5fa; font-weight: 800; font-size: 1.15rem; font-family: monospace;">{{ inspectedTenantData.users.length }}</div>
+                <div style="color: #9ca3af; font-size: 0.7rem; text-transform: uppercase;">Seats</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Dossier Tabs -->
+          <div class="inspector-tabs" style="display: flex; gap: 0.5rem; margin-bottom: 1.25rem; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 0.5rem; overflow-x: auto;">
+            <button 
+              class="tab-btn" 
+              :class="{ active: activeInspectorTab === 'contacts' }" 
+              @click="activeInspectorTab = 'contacts'"
+              style="background: transparent; border: none; padding: 0.5rem 1rem; color: #9ca3af; font-weight: 700; cursor: pointer; border-radius: 6px; font-size: 0.85rem; white-space: nowrap;"
+              :style="activeInspectorTab === 'contacts' ? 'color: #d4af37; background: rgba(212,175,55,0.15); border: 1px solid rgba(212,175,55,0.3);' : ''"
+            >
+              👥 Tenant Clients &amp; Contacts ({{ inspectedTenantData.contacts.length }})
+            </button>
+            <button 
+              class="tab-btn" 
+              :class="{ active: activeInspectorTab === 'deals' }" 
+              @click="activeInspectorTab = 'deals'"
+              style="background: transparent; border: none; padding: 0.5rem 1rem; color: #9ca3af; font-weight: 700; cursor: pointer; border-radius: 6px; font-size: 0.85rem; white-space: nowrap;"
+              :style="activeInspectorTab === 'deals' ? 'color: #d4af37; background: rgba(212,175,55,0.15); border: 1px solid rgba(212,175,55,0.3);' : ''"
+            >
+              💼 Active Deals &amp; Pipeline ({{ inspectedTenantData.deals.length }})
+            </button>
+            <button 
+              class="tab-btn" 
+              :class="{ active: activeInspectorTab === 'users' }" 
+              @click="activeInspectorTab = 'users'"
+              style="background: transparent; border: none; padding: 0.5rem 1rem; color: #9ca3af; font-weight: 700; cursor: pointer; border-radius: 6px; font-size: 0.85rem; white-space: nowrap;"
+              :style="activeInspectorTab === 'users' ? 'color: #d4af37; background: rgba(212,175,55,0.15); border: 1px solid rgba(212,175,55,0.3);' : ''"
+            >
+              🛡️ Team Roster ({{ inspectedTenantData.users.length }})
+            </button>
+            <button 
+              class="tab-btn" 
+              :class="{ active: activeInspectorTab === 'activity' }" 
+              @click="activeInspectorTab = 'activity'"
+              style="background: transparent; border: none; padding: 0.5rem 1rem; color: #9ca3af; font-weight: 700; cursor: pointer; border-radius: 6px; font-size: 0.85rem; white-space: nowrap;"
+              :style="activeInspectorTab === 'activity' ? 'color: #d4af37; background: rgba(212,175,55,0.15); border: 1px solid rgba(212,175,55,0.3);' : ''"
+            >
+              📜 Chronological Activity Timeline ({{ inspectedTenantData.activities.length }})
+            </button>
+          </div>
+
+          <!-- Tab Content: Contacts -->
+          <div v-if="activeInspectorTab === 'contacts'">
+            <div v-if="inspectedTenantData.contacts.length === 0" style="padding: 2rem; text-align: center; color: #9ca3af;">
+              No clients or contacts registered under this tenant workspace yet.
+            </div>
+            <table v-else class="luxury-table">
+              <thead>
+                <tr>
+                  <th>Client / Contact Name</th>
+                  <th>Email &amp; Phone</th>
+                  <th>Assigned Company</th>
+                  <th>Status</th>
+                  <th>Created</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="c in inspectedTenantData.contacts" :key="c.id">
+                  <td>
+                    <div style="font-weight: 700; color: #fff;">{{ c.first_name }} {{ c.last_name }}</div>
+                  </td>
+                  <td>
+                    <div style="font-family: monospace; font-size: 0.82rem; color: #e5e7eb;">{{ c.email || '—' }}</div>
+                    <div style="font-size: 0.78rem; color: #9ca3af;">{{ c.phone || '—' }}</div>
+                  </td>
+                  <td style="color: #d4af37; font-weight: 600;">{{ c.company_name || 'Individual' }}</td>
+                  <td><span class="badge badge-success">{{ c.status || 'Active' }}</span></td>
+                  <td class="text-sm font-mono">{{ formatDate(c.created_at) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Tab Content: Deals -->
+          <div v-if="activeInspectorTab === 'deals'">
+            <div v-if="inspectedTenantData.deals.length === 0" style="padding: 2rem; text-align: center; color: #9ca3af;">
+              No deals currently in pipeline for this tenant.
+            </div>
+            <table v-else class="luxury-table">
+              <thead>
+                <tr>
+                  <th>Deal Title</th>
+                  <th>Associated Client</th>
+                  <th>Stage</th>
+                  <th>Value (ZAR)</th>
+                  <th>Expected Close</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="d in inspectedTenantData.deals" :key="d.id">
+                  <td style="font-weight: 700; color: #fff;">{{ d.title }}</td>
+                  <td style="color: #d1d5db;">{{ d.contact_name || '—' }}</td>
+                  <td><span class="badge badge-primary">{{ (d.stage || '').replace('_', ' ').toUpperCase() }}</span></td>
+                  <td style="color: #10b981; font-family: monospace; font-weight: 700;">{{ formatCurrency(d.value) }}</td>
+                  <td class="text-sm font-mono">{{ d.expected_close_date || '—' }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Tab Content: Team Roster -->
+          <div v-if="activeInspectorTab === 'users'">
+            <table class="luxury-table">
+              <thead>
+                <tr>
+                  <th>Member Name</th>
+                  <th>Email &amp; Username</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th>Joined</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="u in inspectedTenantData.users" :key="u.id">
+                  <td><div style="font-weight: 700; color: #fff;">{{ u.full_name }}</div></td>
+                  <td>
+                    <div style="font-family: monospace; font-size: 0.82rem; color: #e5e7eb;">{{ u.email }}</div>
+                    <div style="font-size: 0.75rem; color: #9ca3af;">@{{ u.username }}</div>
+                  </td>
+                  <td><span class="badge badge-primary">{{ formatRole(u.role) }}</span></td>
+                  <td>
+                    <span v-if="u.is_active" class="badge badge-success">Active</span>
+                    <span v-else class="badge badge-gray">Inactive</span>
+                  </td>
+                  <td class="text-sm font-mono">{{ formatDate(u.date_joined) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- Tab Content: Chronological Activity Audit Timeline -->
+          <div v-if="activeInspectorTab === 'activity'">
+            <div v-if="inspectedTenantData.activities.length === 0" style="padding: 2rem; text-align: center; color: #9ca3af;">
+              No recorded activity events for this tenant yet.
+            </div>
+            <div v-else class="activity-timeline" style="display: flex; flex-direction: column; gap: 0.75rem; padding: 0.5rem 0;">
+              <div 
+                v-for="act in inspectedTenantData.activities" 
+                :key="act.id" 
+                class="timeline-item"
+                style="background: rgba(0,0,0,0.35); border: 1px solid rgba(255,255,255,0.08); border-left: 3px solid #d4af37; border-radius: 6px; padding: 0.85rem 1.1rem; display: flex; justify-content: space-between; align-items: center; gap: 1rem;"
+              >
+                <div>
+                  <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.2rem;">
+                    <strong style="color: #d4af37;">{{ act.user__username || act.actor || 'System' }}</strong>
+                    <span class="badge badge-gray" style="font-size: 0.7rem;">{{ act.activity_type || 'UPDATE' }}</span>
+                  </div>
+                  <div style="color: #e2e8f0; font-size: 0.85rem;">{{ act.details || act.description }}</div>
+                </div>
+                <div style="font-family: monospace; font-size: 0.78rem; color: #9ca3af; white-space: nowrap;">
+                  {{ formatAuditTimestamp(act.created_at || act.timestamp) }}
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Placeholder when no tenant is selected -->
+        <div v-else style="padding: 2.5rem; text-align: center; color: #9ca3af; background: rgba(0,0,0,0.2); border-radius: 8px; border: 1px dashed rgba(212,175,55,0.25);">
+          <div style="font-size: 1.8rem; margin-bottom: 0.5rem;">🏢 🔍</div>
+          <p style="font-size: 0.95rem; margin-bottom: 0.5rem; color: #cbd5e1;">Select any corporate tenant above to inspect their segregated contacts, deals pipeline, and activity audit log.</p>
+          <span style="font-size: 0.78rem; color: #d4af37; background: rgba(212,175,55,0.1); padding: 0.25rem 0.65rem; border-radius: 4px;">POPIA Section 19 Cryptographically Isolated Tenant Vault</span>
         </div>
       </div>
 
@@ -1158,6 +1395,12 @@ export default {
       // Private CEO Sales Ledger
       salesLedger: [],
       salesMetrics: { total_mrr: 0, total_arr: 0, total_clients: 0, active_trials: 0, paid_clients: 0, currency: 'ZAR' },
+      // Master Tenant Inspector (POPIA Isolated Client & Audit Review)
+      tenantList: [],
+      selectedTenantId: '',
+      loadingTenantInspector: false,
+      inspectedTenantData: null,
+      activeInspectorTab: 'contacts',
       loadingSalesLedger: false,
       showRecordSaleModal: false,
       isEditingSale: false,
@@ -1231,12 +1474,51 @@ export default {
         await this.fetchVerifications();
         await this.fetchAccessRequests();
         await this.fetchSalesLedger();
+        await this.fetchTenantList();
       } catch (err) {
         this.error = err.message;
         this.dispatchEvent('show-toast', { message: err.message, type: 'error' });
       } finally {
         this.loading = false;
       }
+    },
+    // Master Tenant Inspector Methods
+    async fetchTenantList() {
+      try {
+        const res = await this.fetchApi('/admin/tenant-inspector/');
+        this.tenantList = res.tenants || [];
+      } catch (err) {
+        console.warn('Failed to fetch tenant list:', err);
+      }
+    },
+    async fetchTenantInspectionData() {
+      if (!this.selectedTenantId) return;
+      this.loadingTenantInspector = true;
+      try {
+        const res = await this.fetchApi(`/admin/tenant-inspector/?tenant_id=${encodeURIComponent(this.selectedTenantId)}`);
+        this.inspectedTenantData = res;
+      } catch (err) {
+        console.error('Failed to load tenant dossier:', err);
+        this.dispatchEvent('show-toast', { message: 'Failed to load tenant dossier: ' + err.message, type: 'error' });
+      } finally {
+        this.loadingTenantInspector = false;
+      }
+    },
+    inspectSpecificTenant(tenantIdentifier) {
+      if (!tenantIdentifier) return;
+      const found = this.tenantList.find(t => 
+        t.id === tenantIdentifier || 
+        (t.name && t.name.toLowerCase() === tenantIdentifier.toLowerCase()) ||
+        t.slug === tenantIdentifier
+      );
+      if (found) {
+        this.selectedTenantId = found.id;
+      } else {
+        this.selectedTenantId = tenantIdentifier;
+      }
+      this.fetchTenantInspectionData();
+      const el = document.getElementById('tenant-inspector');
+      if (el) el.scrollIntoView({ behavior: 'smooth' });
     },
     async actionUsers(action, payload) {
         await this.fetchApi('/admin/users/', { method: 'POST', body: JSON.stringify({ action, ...payload }) });

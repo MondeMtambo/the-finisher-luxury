@@ -195,12 +195,7 @@ const routes = [
     meta: { requiresAuth: true }
   },
   {
-    path: '/upgrade',
-    redirect: '/upgrade/luxury',
-    meta: { requiresAuth: true }
-  },
-  {
-    path: '/upgrade/:plan',
+    path: '/upgrade/:plan?',
     name: 'Upgrade',
     component: UpgradePage,
     meta: { requiresAuth: true }
@@ -251,15 +246,24 @@ router.beforeEach(async (to, from, next) => {
     return
   }
 
-  // Restrict employee-only accounts from admin CRM sections
+  // Restrict employee-only accounts from admin CRM sections (Managers, Supervisors, Executives have CRM access)
   const userForRole = authService.getUser()
-  const isEmployeeOnly = userForRole && !userForRole.is_superuser && !userForRole.is_staff && !(
-    (userForRole.permissions && userForRole.permissions.is_admin) ||
-    (userForRole.role && (userForRole.role.value === 'admin' || userForRole.role === 'admin')) ||
-    (userForRole.profile && userForRole.profile.role === 'admin')
+  const userRoleStr = (
+    (typeof userForRole?.role === 'object' ? userForRole?.role?.value : userForRole?.role) ||
+    userForRole?.profile?.role ||
+    ''
+  ).toLowerCase()
+
+  const hasManagementAccess = Boolean(
+    userForRole?.is_superuser ||
+    userForRole?.is_staff ||
+    userForRole?.permissions?.is_admin ||
+    ['admin', 'executive', 'manager', 'supervisor', 'sales'].includes(userRoleStr)
   )
+
+  const isEmployeeOnly = userForRole && !hasManagementAccess
   if (isEmployeeOnly && ['/contacts', '/companies', '/deals'].includes(to.path)) {
-    toast.warning('This section is for administrators. Your role is focused on tickets only.', 'Access Restricted')
+    toast.warning('This section is reserved for management. Your role is focused on tickets only.', 'Access Restricted')
     next('/tickets')
     return
   }
