@@ -12,7 +12,7 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
-from .email_service import send_email_async
+from .email_service import send_email_async, render_luxury_email_html
 from django.conf import settings
 from .models import PasswordResetOTP, UserProfile
 from .mfa_utils import create_mfa_code, verify_mfa_code, is_mfa_required, generate_pre_auth_token, validate_pre_auth_token
@@ -408,14 +408,27 @@ class PasswordResetRequestView(APIView):
                     otp_code=otp_code
                 )
 
+                reset_html = render_luxury_email_html(
+                    title="Security Authentication Protocol",
+                    subtitle="Mtambo Holdings Private Cloud &middot; Key Recovery",
+                    recipient_name=user.first_name or user.username,
+                    message_paragraphs=[
+                        "A master key recovery request was initiated for your enterprise account on <strong>THE FINISHER LUXURY</strong>.",
+                        "To authorize the credential reset and verify your executive identity, input the ephemeral single-use passcode below."
+                    ],
+                    otp_code=otp_code,
+                    otp_expiry_minutes=10,
+                    security_note="If you did not initiate this credential recovery, your account security remains intact. Ignore this dispatch immediately."
+                )
+
                 send_email_async(
-                    subject='🔐 Password Reset OTP - THE FINISHER CRM',
+                    subject='🔐 Password Reset Verification Passcode — THE FINISHER LUXURY',
                     text_body=f"""
 Hello {user.first_name or user.username},
 
-You requested to reset your password for THE FINISHER CRM.
+You requested to reset your password for THE FINISHER LUXURY.
 
-Your One-Time Password (OTP) is:
+Your One-Time Passcode (OTP) is:
 
     {otp_code}
 
@@ -424,11 +437,12 @@ This code will expire in 10 minutes.
 If you didn't request this, please ignore this email and your password will remain unchanged.
 
 Best regards,
-👑 THE FINISHER
-MTAMBO HOLDINGS Team
+The Executive Directorate
+THE FINISHER LUXURY | MTAMBO HOLDINGS
                     """,
                     recipient_list=[email],
-                    from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'security@thefinisher.tech')
+                    from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'The Finisher Luxury Registrations <noreply@mtamboholdings.dev>'),
+                    html_body=reset_html
                 )
                 
                 return Response({

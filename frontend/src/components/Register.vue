@@ -51,6 +51,16 @@
           <span class="scarcity-fire">🔥</span>
           <span>Strictly Limited: <strong>Only 15 Private Fleet Allocations Active</strong> &mdash; Secure Your Space Now</span>
         </div>
+        <div class="selected-package-banner">
+          <div class="package-banner-left">
+            <span class="package-star">👑</span>
+            <div class="package-banner-text">
+              <div class="pkg-title">CHOSEN ALLOCATION: <strong>{{ selectedTierInfo.name }}</strong></div>
+              <div class="pkg-desc">7-Day Free VIP Trial &middot; {{ selectedTierInfo.price }} thereafter &middot; {{ selectedTierInfo.seats }}</div>
+            </div>
+          </div>
+          <button type="button" class="change-plan-btn" @click="$router.push('/#packages')">Change Package</button>
+        </div>
         <h1 class="headline">Request Executive Access</h1>
         <p class="subheadline">Step 1: Verify your authorized executive credentials to initiate corporate workspace provisioning.</p>
       </div>
@@ -617,11 +627,41 @@ export default {
         postal_code: '',
         postal_address: '',
         cipc_number: '',
-        tax_number: ''
+        tax_number: '',
+        requested_tier: 'luxury'
       }
     }
   },
   computed: {
+    selectedTierInfo() {
+      const tierMap = {
+        basic: {
+          name: 'LUXURY BASIC',
+          price: 'R349/month',
+          seats: '1 Dedicated User (Hook Tier)',
+          tag: 'SOLO OPERATOR'
+        },
+        luxury: {
+          name: 'LUXURY TEAM (FLAGSHIP VIP TRIAL)',
+          price: 'R999/month',
+          seats: 'Up to 5 Collaborative Seats',
+          tag: 'MOST POPULAR'
+        },
+        executive: {
+          name: 'EXECUTIVE SUITE',
+          price: 'R1,500/month',
+          seats: 'Up to 15 Seats',
+          tag: 'ESTABLISHED FIRM'
+        },
+        enterprise: {
+          name: 'ENTERPRISE CUSTOM',
+          price: 'Custom Retainer',
+          seats: 'Unlimited Fleet Capacity',
+          tag: 'INSTITUTIONAL'
+        }
+      }
+      return tierMap[this.form.requested_tier] || tierMap.luxury
+    },
     formattedTimeLeft() {
       const mins = Math.floor(this.timerSecondsLeft / 60)
       const secs = this.timerSecondsLeft % 60
@@ -633,6 +673,10 @@ export default {
   },
   mounted() {
     document.documentElement.setAttribute('data-theme', this.currentTheme)
+    const plan = (this.$route.query.plan || 'luxury').toLowerCase()
+    if (['basic', 'luxury', 'executive', 'enterprise'].includes(plan)) {
+      this.form.requested_tier = plan
+    }
   },
   methods: {
     toggleTheme() {
@@ -755,7 +799,8 @@ export default {
             ? `${this.form.physical_address}, ${this.form.city}, ${this.form.province} ${this.form.postal_code}`
             : (this.form.postal_address || this.form.physical_address),
           cipc_number: this.form.cipc_number,
-          tax_number: this.form.tax_number
+          tax_number: this.form.tax_number,
+          requested_tier: this.form.requested_tier || 'luxury'
         }
 
         const res = await accessRequestsAPI.submitPublic(payload)
@@ -1109,6 +1154,55 @@ export default {
 @keyframes pulseDot {
   0%, 100% { transform: scale(1); opacity: 1; }
   50% { transform: scale(1.4); opacity: 0.5; }
+}
+
+.selected-package-banner {
+  background: radial-gradient(ellipse at center, rgba(212, 175, 55, 0.18) 0%, rgba(15, 23, 42, 0.95) 100%);
+  border: 1.5px solid #d4af37;
+  border-radius: 10px;
+  padding: 12px 18px;
+  margin: 1rem 0 1.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.2);
+}
+.package-banner-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  text-align: left;
+}
+.package-star {
+  font-size: 1.5rem;
+}
+.pkg-title {
+  font-size: 0.82rem;
+  font-weight: 800;
+  color: #fde68a;
+  letter-spacing: 0.5px;
+}
+.pkg-desc {
+  font-size: 0.75rem;
+  color: #94a3b8;
+  margin-top: 2px;
+}
+.change-plan-btn {
+  background: rgba(212, 175, 55, 0.15);
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  color: #d4af37;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 5px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.change-plan-btn:hover {
+  background: #d4af37;
+  color: #000;
 }
 
 .headline {

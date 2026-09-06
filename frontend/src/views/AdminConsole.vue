@@ -11,6 +11,9 @@
           <button class="btn btn-secondary" @click="loadAllData" :disabled="loading">
             🔄 Refresh Sync
           </button>
+          <button class="btn btn-gold" @click="openRecordSaleModal">
+            👑 Record Direct Sale
+          </button>
           <button class="btn btn-gold" @click="openOnboardModal">
             🏢 Onboard New Company
           </button>
@@ -32,6 +35,162 @@
     </div>
 
     <template v-else>
+      <!-- 👑 PRIVATE CEO SALES & REVENUE LEDGER (RESTRICTED TO SYSTEM OWNER) -->
+      <div class="section-container ceo-sales-ledger-section">
+        <div class="flex-between mb-3" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
+          <div>
+            <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
+              <span style="font-size: 1.3rem;">👑</span>
+              <h2 class="section-title" style="margin-bottom: 0;">Private CEO Sales &amp; Revenue Ledger</h2>
+              <span class="badge font-mono" style="font-size: 0.72rem; padding: 0.2rem 0.5rem; border-radius: 4px; background: rgba(212, 175, 55, 0.2); color: #d4af37; border: 1px solid rgba(212, 175, 55, 0.4); font-weight: 800;">
+                CONFIDENTIAL &middot; OWNER ONLY
+              </span>
+            </div>
+            <p class="section-subtitle" style="color: #9ca3af; font-size: 0.85rem; margin: 0;">
+              Real-time Monthly Recurring Revenue (MRR), 7-day trial debits, Capitec/PayFast sweeps, and offline contract management.
+            </p>
+          </div>
+          <div style="display: flex; gap: 0.75rem; align-items: center;">
+            <button class="btn btn-sm btn-gold" style="font-weight: 700; padding: 0.5rem 1rem; border-radius: 6px;" @click="openRecordSaleModal">
+              + Record Direct Sale / Contract
+            </button>
+          </div>
+        </div>
+
+        <!-- Sales KPI Strip -->
+        <div class="kpi-grid mb-4">
+          <div class="kpi-card" style="border-left: 3px solid #d4af37;">
+            <div class="kpi-val text-amber" style="color: #d4af37; font-family: monospace;">{{ formatCurrency(salesMetrics.total_mrr) }}</div>
+            <div class="kpi-lbl">Live Monthly Run-Rate (MRR)</div>
+          </div>
+          <div class="kpi-card" style="border-left: 3px solid #10b981;">
+            <div class="kpi-val text-green" style="color: #10b981; font-family: monospace;">{{ formatCurrency(salesMetrics.total_arr) }}</div>
+            <div class="kpi-lbl">Annualized Run-Rate (ARR)</div>
+          </div>
+          <div class="kpi-card" style="border-left: 3px solid #3b82f6;">
+            <div class="kpi-val text-blue">{{ salesMetrics.paid_clients || 0 }}</div>
+            <div class="kpi-lbl">Active Paying Subscriptions</div>
+          </div>
+          <div class="kpi-card" style="border-left: 3px solid #f59e0b;">
+            <div class="kpi-val" style="color: #f59e0b;">{{ salesMetrics.active_trials || 0 }}</div>
+            <div class="kpi-lbl">In 7-Day Free Trial</div>
+          </div>
+        </div>
+
+        <!-- Sales Ledger Table -->
+        <div class="table-container">
+          <div v-if="loadingSalesLedger" class="audit-loading" style="padding: 2rem; text-align: center;">
+            <div class="spinner"></div>
+            <span>Synchronizing executive sales ledger...</span>
+          </div>
+          <div v-else-if="salesLedger.length === 0" style="padding: 2.5rem; text-align: center; color: #9ca3af; background: rgba(0,0,0,0.25); border-radius: 8px;">
+            <p style="margin-bottom: 0.5rem; font-size: 0.95rem;">No client subscriptions or corporate contracts recorded yet.</p>
+            <button class="btn btn-sm btn-gold" @click="openRecordSaleModal">Record First Direct Sale</button>
+          </div>
+          <table v-else class="luxury-table">
+            <thead>
+              <tr>
+                <th>Company / Tenant</th>
+                <th>Selected Plan &amp; Rate</th>
+                <th>Seat Capacity</th>
+                <th>Billing Status</th>
+                <th>Trial / Period Expiry</th>
+                <th>Payment Route &amp; Ref</th>
+                <th>Executive Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr v-for="item in salesLedger" :key="item.id">
+                <td>
+                  <div style="font-weight: 700; color: #fff;">{{ item.company_name }}</div>
+                  <div style="font-size: 0.76rem; color: #9ca3af;" v-if="item.admin_email">{{ item.admin_email }}</div>
+                  <div v-if="item.notes" style="font-size: 0.72rem; color: #d4af37; margin-top: 0.2rem; font-style: italic;">
+                    📝 {{ item.notes }}
+                  </div>
+                </td>
+                <td>
+                  <div style="font-weight: 700; color: #d4af37;">{{ item.tier_display }}</div>
+                  <div style="font-size: 0.82rem; font-family: monospace; color: #10b981; font-weight: 700;">
+                    {{ formatCurrency(item.monthly_price) }} / mo
+                  </div>
+                </td>
+                <td>
+                  <div style="font-size: 0.82rem; color: #e5e7eb;">
+                    <span style="font-weight: 700; color: #fff;">{{ item.current_users }}</span> / {{ item.max_users }} Seats
+                  </div>
+                  <div class="progress-bar-wrap" style="height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; width: 70px; margin-top: 0.3rem;">
+                    <div style="height: 100%; background: #d4af37; border-radius: 2px;" :style="{ width: Math.min(100, Math.round((item.current_users / (item.max_users || 1)) * 100)) + '%' }"></div>
+                  </div>
+                </td>
+                <td>
+                  <span v-if="item.status === 'active'" style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.78rem; font-weight: 700;">
+                    ✓ Active Paid
+                  </span>
+                  <span v-else-if="item.status === 'trial'" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.78rem; font-weight: 700;">
+                    ⭐ 7-Day Trial
+                  </span>
+                  <span v-else-if="item.status === 'past_due'" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.78rem; font-weight: 700;">
+                    ⚠️ Past Due
+                  </span>
+                  <span v-else style="background: rgba(156, 163, 175, 0.2); color: #9ca3af; border: 1px solid rgba(156, 163, 175, 0.4); padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.78rem; font-weight: 700;">
+                    {{ item.status }}
+                  </span>
+                </td>
+                <td>
+                  <div v-if="item.status === 'trial'" style="font-size: 0.82rem;">
+                    <div v-if="item.days_remaining !== null" :style="{ color: item.days_remaining <= 2 ? '#ef4444' : '#f59e0b', fontWeight: '700' }">
+                      ⏳ {{ item.days_remaining }} day{{ item.days_remaining === 1 ? '' : 's' }} left
+                    </div>
+                    <div style="font-size: 0.72rem; color: #9ca3af;">Ends: {{ formatDate(item.trial_end) }}</div>
+                  </div>
+                  <div v-else style="font-size: 0.78rem; color: #9ca3af;">
+                    Cycle: {{ formatDate(item.trial_end) }}
+                  </div>
+                </td>
+                <td>
+                  <div style="font-size: 0.8rem; color: #fff; text-transform: uppercase; font-weight: 600;">
+                    {{ item.payment_method }}
+                  </div>
+                  <div v-if="item.payment_reference" style="font-family: monospace; font-size: 0.74rem; color: #9ca3af;">
+                    Ref: {{ item.payment_reference }}
+                  </div>
+                </td>
+                <td>
+                  <div style="display: flex; gap: 0.4rem; flex-wrap: wrap;">
+                    <button 
+                      v-if="item.status !== 'active'"
+                      class="btn btn-sm btn-gold" 
+                      style="font-size: 0.74rem; padding: 0.25rem 0.55rem; background: #10b981; border-color: #10b981; color: #fff;"
+                      @click="updateSaleStatus(item.id, 'active')"
+                      title="Mark as Active Paid (Funds Cleared in Capitec)"
+                    >
+                      ✓ Mark Paid
+                    </button>
+                    <button 
+                      v-if="item.status === 'trial'"
+                      class="btn btn-sm btn-secondary" 
+                      style="font-size: 0.74rem; padding: 0.25rem 0.55rem; color: #f59e0b; border-color: rgba(245, 158, 11, 0.4);"
+                      @click="extendTrialDays(item.id, 7)"
+                      title="Extend Trial by 7 days"
+                    >
+                      +7d Trial
+                    </button>
+                    <button 
+                      class="btn btn-sm btn-secondary" 
+                      style="font-size: 0.74rem; padding: 0.25rem 0.55rem;"
+                      @click="openEditLedgerModal(item)"
+                      title="Edit rate, plan or billing notes"
+                    >
+                      ✏️ Edit
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
       <!-- Financial & Pipeline Intelligence -->
       <div class="section-container">
         <h2 class="section-title">Revenue & Pipeline Oversight</h2>
@@ -853,6 +1012,82 @@
       </div>
     </div>
 
+    <!-- Record Sale Modal -->
+    <div v-if="showRecordSaleModal" class="modal-overlay">
+      <div class="modal-panel luxury-modal" style="max-width: 600px;">
+        <div class="modal-header">
+          <div class="modal-title-wrap">
+            <span class="modal-badge-tag" style="color: #d4af37; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.1em;">EXECUTIVE REVENUE RECOGNITION</span>
+            <h3 style="margin: 0; color: #fff; font-size: 1.35rem;">{{ isEditingSale ? '✏️ Edit Sales Record' : '👑 Record Direct Sale' }}</h3>
+            <p class="text-muted text-sm mt-1 mb-0">Record offline deals, EFT payments, or adjust corporate subscription allocations.</p>
+          </div>
+          <button class="modal-close" @click="closeRecordSaleModal">×</button>
+        </div>
+        <div class="modal-body" style="padding: 1.5rem;">
+          <form @submit.prevent="saveSaleRecord">
+            <div class="form-group mb-3">
+              <label class="form-label">Company Legal / Account Name *</label>
+              <input class="form-input" v-model="saleForm.company_name" placeholder="e.g. Apex Logistics (Pty) Ltd" :disabled="isEditingSale" required />
+            </div>
+
+            <div class="form-row-2col mb-3">
+              <div class="form-group">
+                <label class="form-label">Subscription Tier *</label>
+                <select class="form-input" v-model="saleForm.tier" @change="onTierChange">
+                  <option value="basic">Luxury Basic (R349/mo · 1 Seat)</option>
+                  <option value="luxury">Luxury Team (R999/mo · 5 Seats)</option>
+                  <option value="executive">Executive Suite (R1,500/mo · 15 Seats)</option>
+                  <option value="enterprise">Enterprise Custom (Retainer)</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Monthly Debit Rate (ZAR) *</label>
+                <input class="form-input font-mono" type="number" step="0.01" v-model="saleForm.monthly_price" required />
+              </div>
+            </div>
+
+            <div class="form-row-2col mb-3">
+              <div class="form-group">
+                <label class="form-label">Payment Channel</label>
+                <select class="form-input" v-model="saleForm.payment_method">
+                  <option value="capitec">Capitec Direct Deposit / Instant EFT</option>
+                  <option value="payfast">PayFast Automated Sweep</option>
+                  <option value="manual_eft">Standard Bank Corporate EFT</option>
+                  <option value="cash">Cash / Upfront Retainer</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Payment Status</label>
+                <select class="form-input" v-model="saleForm.status">
+                  <option value="trial">7-Day Free Trial</option>
+                  <option value="active">Active Paid (Payment Received)</option>
+                  <option value="past_due">Past Due / Overdue</option>
+                  <option value="canceled">Canceled / Inactive</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="form-group mb-3">
+              <label class="form-label">Deposit Reference / Bank Code</label>
+              <input class="form-input font-mono" v-model="saleForm.payment_reference" placeholder="e.g. CAP-2026-9921 or PayFast Sub Ref" />
+            </div>
+
+            <div class="form-group mb-3">
+              <label class="form-label">Private Sales Notes / Deal Terms</label>
+              <textarea class="form-input" rows="2" v-model="saleForm.notes" placeholder="e.g. Signed 12-month direct agreement. Capitec cleared."></textarea>
+            </div>
+
+            <div class="modal-footer mt-4" style="display: flex; justify-content: flex-end; gap: 0.75rem; border-top: 1px solid rgba(255,255,255,0.08); padding-top: 1rem;">
+              <button type="button" class="btn btn-secondary" @click="closeRecordSaleModal" :disabled="savingSale">Cancel</button>
+              <button type="submit" class="btn btn-gold" :disabled="savingSale">
+                {{ savingSale ? 'Saving...' : (isEditingSale ? 'Save Changes' : '💰 Record & Apply Allocation') }}
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
   </div>
 </template>
 
@@ -920,6 +1155,23 @@ export default {
         subscription_tier: 'trial',
         password: '',
         is_verified: false
+      },
+      // Private CEO Sales Ledger
+      salesLedger: [],
+      salesMetrics: { total_mrr: 0, total_arr: 0, total_clients: 0, active_trials: 0, paid_clients: 0, currency: 'ZAR' },
+      loadingSalesLedger: false,
+      showRecordSaleModal: false,
+      isEditingSale: false,
+      savingSale: false,
+      saleForm: {
+        org_id: '',
+        company_name: '',
+        tier: 'luxury',
+        monthly_price: 999.00,
+        payment_method: 'capitec',
+        payment_reference: '',
+        status: 'trial',
+        notes: ''
       }
     }
   },
@@ -979,6 +1231,7 @@ export default {
         await this.fetchAuditLogs();
         await this.fetchVerifications();
         await this.fetchAccessRequests();
+        await this.fetchSalesLedger();
       } catch (err) {
         this.error = err.message;
         this.dispatchEvent('show-toast', { message: err.message, type: 'error' });
@@ -1350,10 +1603,6 @@ export default {
       }
       this.copyDispatchLetter(true);
     },
-    closeApprovalDispatchModal() {
-      this.showApprovalDispatchModal = false;
-      this.approvalDispatchData = null;
-    },
     copyDispatchPassword() {
       if (!this.approvalDispatchData?.password) return;
       navigator.clipboard.writeText(this.approvalDispatchData.password);
@@ -1364,6 +1613,104 @@ export default {
       navigator.clipboard.writeText(this.approvalDispatchData.email_body);
       if (!silent) {
         this.dispatchEvent('show-toast', { message: 'Full letter copied to clipboard', type: 'success' });
+      }
+    },
+    // ─── Private CEO Sales Ledger Methods ───
+    async fetchSalesLedger() {
+      this.loadingSalesLedger = true;
+      try {
+        const res = await this.fetchApi('/admin/sales-ledger/');
+        this.salesLedger = res.ledger || [];
+        this.salesMetrics = res.metrics || this.salesMetrics;
+      } catch (e) {
+        console.warn('Failed to load private sales ledger:', e);
+      } finally {
+        this.loadingSalesLedger = false;
+      }
+    },
+    openRecordSaleModal() {
+      this.isEditingSale = false;
+      this.saleForm = {
+        org_id: '',
+        company_name: '',
+        tier: 'luxury',
+        monthly_price: 999.00,
+        payment_method: 'capitec',
+        payment_reference: '',
+        status: 'trial',
+        notes: ''
+      };
+      this.showRecordSaleModal = true;
+    },
+    openEditLedgerModal(item) {
+      this.isEditingSale = true;
+      this.saleForm = {
+        org_id: item.id,
+        company_name: item.company_name,
+        tier: item.tier || 'luxury',
+        monthly_price: item.monthly_price || 999.00,
+        payment_method: item.payment_method || 'capitec',
+        payment_reference: item.payment_reference || '',
+        status: item.status || 'trial',
+        notes: item.notes || ''
+      };
+      this.showRecordSaleModal = true;
+    },
+    closeRecordSaleModal() {
+      this.showRecordSaleModal = false;
+    },
+    onTierChange() {
+      const rates = { basic: 349.00, luxury: 999.00, executive: 1500.00, enterprise: 5000.00 };
+      if (rates[this.saleForm.tier] !== undefined) {
+        this.saleForm.monthly_price = rates[this.saleForm.tier];
+      }
+    },
+    async saveSaleRecord() {
+      this.savingSale = true;
+      try {
+        if (this.isEditingSale) {
+          await this.fetchApi('/admin/sales-ledger/', {
+            method: 'PATCH',
+            body: JSON.stringify(this.saleForm)
+          });
+          this.dispatchEvent('show-toast', { message: `Updated sales allocation for ${this.saleForm.company_name}`, type: 'success' });
+        } else {
+          await this.fetchApi('/admin/sales-ledger/', {
+            method: 'POST',
+            body: JSON.stringify(this.saleForm)
+          });
+          this.dispatchEvent('show-toast', { message: `Direct sale recorded for ${this.saleForm.company_name}!`, type: 'success' });
+        }
+        this.closeRecordSaleModal();
+        await this.fetchSalesLedger();
+      } catch (e) {
+        alert('Failed to save sales record: ' + e.message);
+      } finally {
+        this.savingSale = false;
+      }
+    },
+    async updateSaleStatus(orgId, status) {
+      try {
+        await this.fetchApi('/admin/sales-ledger/', {
+          method: 'PATCH',
+          body: JSON.stringify({ org_id: orgId, status: status })
+        });
+        this.dispatchEvent('show-toast', { message: `Subscription marked as ${status}.`, type: 'success' });
+        await this.fetchSalesLedger();
+      } catch (e) {
+        alert('Failed to update status: ' + e.message);
+      }
+    },
+    async extendTrialDays(orgId, days = 7) {
+      try {
+        await this.fetchApi('/admin/sales-ledger/', {
+          method: 'PATCH',
+          body: JSON.stringify({ org_id: orgId, extend_days: days })
+        });
+        this.dispatchEvent('show-toast', { message: `Trial extended by ${days} days.`, type: 'success' });
+        await this.fetchSalesLedger();
+      } catch (e) {
+        alert('Failed to extend trial: ' + e.message);
       }
     }
   }

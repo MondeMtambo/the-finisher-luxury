@@ -13,34 +13,34 @@
 
     <!-- 4-Tier Plan Grid -->
     <div class="plans-grid">
-      <!-- Tier 1: Classic Solo -->
-      <div class="plan-card card" :class="{ selected: selectedTier === 'classic' }">
+      <!-- Tier 1: Luxury Basic -->
+      <div class="plan-card card" :class="{ selected: selectedTier === 'basic' || selectedTier === 'classic' }">
         <div class="plan-top">
-          <div class="plan-tier-label">SOLO FOUNDER</div>
-          <h2 class="plan-title">Classic Solo</h2>
+          <div class="plan-tier-label">SOLO FOUNDER • 1 SEAT</div>
+          <h2 class="plan-title">Luxury Basic</h2>
           <p class="plan-desc">For independent brokers, elite consultants & single operators.</p>
           <div class="plan-price">
             <span class="currency">R</span>349<span class="period">/month</span>
           </div>
-          <div class="seat-pill">1 Dedicated User</div>
+          <div class="seat-pill">1 Dedicated User (Hook Tier)</div>
         </div>
 
         <ul class="feature-bullets">
           <li><strong>Unlimited</strong> contacts & company accounts</li>
           <li>Full deal pipeline & stage management</li>
-          <li>Asset & fleet tracking (up to 5 items)</li>
+          <li>Asset tracking (up to 5 items)</li>
           <li>Task manager & automatic reminders</li>
           <li>CIPC entity verification badge</li>
-          <li>Standard email support</li>
+          <li>Standard email concierge</li>
         </ul>
 
         <div class="plan-action">
           <button 
             class="btn btn-secondary w-100" 
-            :class="{ 'btn-primary': selectedTier === 'classic' }"
-            @click="selectPlan('classic')"
+            :class="{ 'btn-primary': selectedTier === 'basic' || selectedTier === 'classic' }"
+            @click="selectPlan('basic')"
           >
-            {{ selectedTier === 'classic' ? 'Selected Plan' : 'Choose Classic' }}
+            {{ (selectedTier === 'basic' || selectedTier === 'classic') ? 'Selected Plan' : 'Choose Luxury Basic' }}
           </button>
         </div>
       </div>
@@ -269,8 +269,13 @@ export default {
   computed: {
     plans() {
       return {
+        basic: {
+          name: 'Luxury Basic',
+          price: 'R349 / month',
+          users: '1 User'
+        },
         classic: {
-          name: 'Classic Solo',
+          name: 'Luxury Basic',
           price: 'R349 / month',
           users: '1 User'
         },
@@ -292,8 +297,8 @@ export default {
   },
   mounted() {
     const routePlan = (this.$route.params.plan || '').toLowerCase()
-    if (['classic', 'luxury', 'executive'].includes(routePlan)) {
-      this.selectedTier = routePlan
+    if (['basic', 'classic', 'luxury', 'executive'].includes(routePlan)) {
+      this.selectedTier = routePlan === 'classic' ? 'basic' : routePlan
     }
   },
   methods: {

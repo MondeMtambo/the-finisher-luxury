@@ -102,12 +102,25 @@ https://www.thefinishercrm.tech
     email_sent = True
     error_msg = ""
     try:
-        from .email_service import send_email_async
+        from .email_service import send_email_async, render_luxury_email_html
+        mfa_html = render_luxury_email_html(
+            title="Multi-Factor Identity Verification",
+            subtitle="Mtambo Holdings Private Cloud &middot; Zero-Trust Gateway",
+            recipient_name=user.first_name or user.username,
+            message_paragraphs=[
+                "A secure session authentication attempt was detected on <strong>THE FINISHER LUXURY</strong>.",
+                "To verify your executive identity and complete your session handshake, please input the ephemeral multi-factor passcode below."
+            ],
+            otp_code=code,
+            otp_expiry_minutes=10,
+            security_note="Zero-Trust Authentication: If you did not initiate this login attempt, please alert your administrator or contact noreply@mtamboholdings.dev immediately."
+        )
         send_email_async(
             subject=subject,
             text_body=message,
             recipient_list=[user.email],
             from_email=from_email,
+            html_body=mfa_html,
         )
     except Exception as e:
         logger.error("Failed to queue MFA email to %s: %s", user.email, e)

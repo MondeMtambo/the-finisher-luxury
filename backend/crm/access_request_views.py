@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from django.contrib.auth.hashers import make_password
 from django.utils import timezone
 from django.core.mail import send_mail
-from .email_service import send_email_async
+from .email_service import send_email_async, render_luxury_email_html
 from django.conf import settings
 from django.db.models import Q
 from rest_framework import status, permissions
@@ -231,6 +231,9 @@ class PublicAccessRequestView(APIView):
         postal_address = (data.get('postal_address') or '').strip()
         cipc_number = (data.get('cipc_number') or '').strip()
         tax_number = (data.get('tax_number') or '').strip()
+        requested_tier = (data.get('requested_tier') or data.get('plan') or 'luxury').lower().strip()
+        if requested_tier not in ['basic', 'luxury', 'executive', 'enterprise']:
+            requested_tier = 'luxury'
 
         if not first_name or not last_name:
             return Response({'error': 'First name and last name are required.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -301,6 +304,7 @@ class PublicAccessRequestView(APIView):
             existing_req.postal_address = postal_address or physical_address
             existing_req.cipc_number = cipc_number
             existing_req.tax_number = tax_number
+            existing_req.requested_tier = requested_tier
             existing_req.verification_code = verification_code
             existing_req.expires_at = expires_at
             existing_req.is_verified = False
@@ -330,6 +334,7 @@ class PublicAccessRequestView(APIView):
                 postal_address=postal_address or physical_address,
                 cipc_number=cipc_number,
                 tax_number=tax_number,
+                requested_tier=requested_tier,
                 verification_code=verification_code,
                 expires_at=expires_at,
                 is_verified=False,
@@ -352,13 +357,26 @@ class PublicAccessRequestView(APIView):
             f"Executive Directorate | THE FINISHER LUXURY | Mtambo Holdings\n"
             f"https://www.thefinishercrm.tech\n"
         )
+        verify_html = render_luxury_email_html(
+            title="Corporate Identity Verification",
+            subtitle=f"{company_name} &middot; Executive Fleet Onboarding",
+            recipient_name=f"{first_name} {last_name}",
+            message_paragraphs=[
+                f"Thank you for initiating corporate onboarding for <strong>{company_name}</strong> on <strong>THE FINISHER LUXURY</strong>.",
+                "To authenticate your organizational identity and protect your corporate registration under POPIA cryptographic governance, please input the ephemeral verification passcode below into the activation portal."
+            ],
+            otp_code=verification_code,
+            otp_expiry_minutes=5,
+            security_note="Zero-Trust TTL Notice: This passcode is cryptographically valid for exactly 5 minutes. Unverified registration dossiers are automatically purged after expiration."
+        )
         from_sender = getattr(settings, 'DEFAULT_FROM_EMAIL', None) or 'The Finisher Luxury Registrations <noreply@mtamboholdings.dev>'
         # Asynchronously dispatch 5-minute verification code via Resend HTTPS API / background daemon thread (< 1ms)
         send_email_async(
             verify_subject,
             verify_body,
             [email],
-            from_email=from_sender
+            from_email=from_sender,
+            html_body=verify_html
         )
 
         return Response({
@@ -474,11 +492,28 @@ class PublicVerifyAccessRequestView(APIView):
             f"https://www.thefinishercrm.tech\n"
         )
 
+        ack_html = render_luxury_email_html(
+            title="Corporate Application Verified",
+            subtitle=f"{req_obj.company_name} &middot; 7-Day VIP Executive Fleet",
+            recipient_name=f"{req_obj.first_name} {req_obj.last_name}",
+            message_paragraphs=[
+                f"Your corporate identity for <strong>{req_obj.company_name}</strong> has been successfully verified.",
+                "Your corporate access dossier has been submitted to the Executive Directorate of Mtambo Holdings for authorization under <strong>7-Day VIP Executive Privileges</strong>."
+            ],
+            activation_steps=[
+                "The Executive Directorate reviews your corporate credentials and company verification dossier.",
+                "Upon executive authorization, your dedicated private cloud workspace is provisioned.",
+                f"Your auto-generated, high-entropy master credentials will be securely delivered to {req_obj.email}."
+            ],
+            security_note="Direct executive inquiries or custom enterprise configuration requests: noreply@mtamboholdings.dev"
+        )
+
         send_email_async(
             ack_subject,
             ack_body,
             [req_obj.email],
-            from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'The Finisher Luxury Registrations <noreply@mtamboholdings.dev>')
+            from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'The Finisher Luxury Registrations <noreply@mtamboholdings.dev>'),
+            html_body=ack_html
         )
 
         # 3. Create WebsiteLead & Notification for Admin Fleet Console
@@ -656,26 +691,43 @@ class AdminAccessRequestActionView(APIView):
             req_obj.save(update_fields=['auto_generated_password', 'hashed_password'])
 
         # 1. Organization Provisioning
-        target_org_id = getattr(req_obj, 'target_organization_id', '')
+        chosen_tier = getattr(req_obj, 'requested_tier', 'luxury') or 'luxury'
+        tier_seats = {'basic': 1, 'luxury': 5, 'trial': 5, 'executive': 15, 'enterprise': 999}
+        max_seats = tier_seats.get(chosen_tier.lower(), 5)
+        monthly_cost = {'basic': 349.00, 'luxury': 999.00, 'trial': 999.00, 'executive': 1500.00, 'enterprise': 0.00}.get(chosen_tier.lower(), 999.00)
+
         org = None
+        target_org_id = getattr(req_obj, 'target_organization_id', '')
         if not req_obj.is_ceo and target_org_id:
             org = Organization.objects.filter(id=target_org_id).first()
-
         if not org:
             org = Organization.objects.filter(name__iexact=req_obj.company_name).first()
 
         if not org:
             org = Organization(
                 name=req_obj.company_name,
-                subscription_tier='trial',
-                max_users=10,
-                is_cipc_verified=bool(req_obj.cipc_number)
+                subscription_tier=chosen_tier,
+                max_users=max_seats,
+                is_cipc_verified=bool(req_obj.cipc_number),
+                trial_start_date=timezone.now(),
+                trial_end_date=timezone.now() + timezone.timedelta(days=7),
             )
             org.save()
         else:
+            org.subscription_tier = chosen_tier
+            org.max_users = max_seats
             if req_obj.cipc_number:
                 org.is_cipc_verified = True
-                org.save(update_fields=['is_cipc_verified'])
+            org.save(update_fields=['subscription_tier', 'max_users', 'is_cipc_verified'])
+
+        # Also provision OrganizationSubscription
+        from .models import OrganizationSubscription
+        sub, _ = OrganizationSubscription.objects.get_or_create(organization=org)
+        sub.status = 'trial'
+        sub.monthly_price = monthly_cost
+        sub.current_period_start = timezone.now()
+        sub.current_period_end = timezone.now() + timezone.timedelta(days=7)
+        sub.save()
 
         # 2. User Provisioning
         user = User.objects.filter(username__iexact=req_obj.email).first() or User.objects.filter(email__iexact=req_obj.email).first()
@@ -773,11 +825,37 @@ class AdminAccessRequestActionView(APIView):
             f"═════════════════════════════════════════════════════════════════════════\n"
         )
 
+        welcome_html = render_luxury_email_html(
+            title="Corporate Workspace Authorized & Provisioned",
+            subtitle=f"{req_obj.company_name} &middot; Private Fleet Operating System",
+            recipient_name=f"{req_obj.first_name} {req_obj.last_name}",
+            message_paragraphs=[
+                f"We are pleased to inform you that your Corporate Access Dossier for <strong>{req_obj.company_name}</strong> has been officially reviewed and authorized by Mtambo Holdings under <strong>7-Day VIP Executive Privileges</strong>.",
+                "Your private enterprise cloud workspace is now live, provisioned on high-performance isolated infrastructure with full pipeline automation and luxury CRM intelligence."
+            ],
+            credentials={
+                "Authorized Workspace Portal": login_url,
+                "Authorized Work Email": req_obj.email,
+                "Temporary Passcode": auto_password,
+                "Provisioned Fleet Tier": "7-Day VIP Executive Fleet"
+            },
+            cta_text="Launch Executive Workspace",
+            cta_url=login_url,
+            activation_steps=[
+                f"Navigate to the secure portal at {login_url}",
+                f"Authenticate using your corporate email (<strong>{req_obj.email}</strong>) and temporary passcode.",
+                "Upon first login, create your permanent, high-entropy confidential master password.",
+                "Your enterprise CRM command deck, executive dashboards, and employee seats are immediately active."
+            ],
+            security_note="POPIA Section 19 Safeguard: In accordance with zero-trust data governance, your temporary passcode expires upon initial authentication. Never disclose these credentials."
+        )
+
         send_email_async(
             email_subject,
             email_body,
             [req_obj.email],
-            from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'The Finisher Luxury Registrations <noreply@mtamboholdings.dev>')
+            from_email=getattr(settings, 'DEFAULT_FROM_EMAIL', 'The Finisher Luxury Registrations <noreply@mtamboholdings.dev>'),
+            html_body=welcome_html
         )
 
         logger.info(f"Corporate Workspace APPROVED and PROVISIONED for {req_obj.company_name} by {request.user.username}")

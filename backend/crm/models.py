@@ -22,10 +22,12 @@ class Organization(models.Model):
     name = models.CharField(max_length=200, unique=True, help_text="Official organization / business entity name")
     slug = models.SlugField(max_length=220, unique=True, blank=True)
     subscription_tier = models.CharField(max_length=50, choices=[
+        ('basic', 'Luxury Basic'),
+        ('luxury', 'Luxury Team'),
+        ('executive', 'Executive Suite'),
+        ('enterprise', 'Enterprise Custom'),
         ('trial', '7-Day VIP Trial'),
-        ('luxury', 'The Finisher Luxury Private OS'),
-        ('enterprise', 'Enterprise Custom Retainer'),
-    ], default='trial')
+    ], default='luxury')
     trial_start_date = models.DateTimeField(default=timezone.now)
     trial_end_date = models.DateTimeField(blank=True, null=True)
     is_active = models.BooleanField(default=True)
@@ -108,6 +110,10 @@ class OrganizationSubscription(models.Model):
     status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='trial')
     current_period_start = models.DateTimeField(default=timezone.now)
     current_period_end = models.DateTimeField(blank=True, null=True)
+    monthly_price = models.DecimalField(max_digits=10, decimal_places=2, default=999.00, help_text="Monthly subscription rate in ZAR")
+    payment_method = models.CharField(max_length=50, default='payfast', help_text="payfast, capitec, eft, cash")
+    payment_reference = models.CharField(max_length=120, blank=True, help_text="Bank reference or PayFast subscription ID")
+    notes = models.TextField(blank=True, help_text="Private CEO sales notes")
     cancel_at_period_end = models.BooleanField(default=False)
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
@@ -1625,6 +1631,7 @@ class CorporateAccessRequest(models.Model):
     postal_address = models.TextField(blank=True, help_text="Postal box or delivery address")
     cipc_number = models.CharField(max_length=50, blank=True, help_text="CIPC Registration Number")
     tax_number = models.CharField(max_length=50, blank=True, help_text="SARS Tax / VAT Number")
+    requested_tier = models.CharField(max_length=50, default='luxury', help_text="Plan chosen by applicant: basic, luxury, executive, enterprise")
 
     # Status & Audit
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='pending', db_index=True)

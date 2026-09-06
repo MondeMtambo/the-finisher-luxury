@@ -474,4 +474,10 @@ export const accessRequestsAPI = {
     api.post(`/admin/access-requests/${id}/action/`, { action, notes, rejection_reason: rejectionReason })
 }
 
+export const salesLedgerAPI = {
+  getLedger: () => api.get('/admin/sales-ledger/'),
+  recordSale: (data) => api.post('/admin/sales-ledger/', data),
+  updateStatus: (data) => api.patch('/admin/sales-ledger/', data)
+}
+
 export default api

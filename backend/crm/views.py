@@ -907,12 +907,21 @@ class WebsiteLeadViewSet(viewsets.ReadOnlyModelViewSet):
             return Response({'error': 'Subject and message are required.'}, status=status.HTTP_400_BAD_REQUEST)
 
         try:
-            from .email_service import send_email_async
+            from .email_service import send_email_async, render_luxury_email_html
+            recipient_label = lead.contact.first_name if lead.contact else lead.first_name
+            lead_html = render_luxury_email_html(
+                title="Executive Concierge Dispatch",
+                subtitle="Mtambo Holdings &middot; Official Correspondence",
+                recipient_name=recipient_label or "Valued Client",
+                message_paragraphs=[p.strip() for p in message.split('\n\n') if p.strip()] or [message],
+                security_note="Official correspondence from Mtambo Holdings (Pty) Ltd. Cryptographically verified under POPIA Section 19 standards."
+            )
             send_email_async(
                 subject=subject,
                 text_body=message,
                 recipient_list=[target_email],
                 from_email=settings.DEFAULT_FROM_EMAIL,
+                html_body=lead_html,
             )
         except Exception as exc:
             return Response(
@@ -1718,6 +1727,7 @@ class EmployeeViewSet(viewsets.ModelViewSet):
             user_tier = getattr(org, 'subscription_tier', 'luxury')
         
         TIER_SEAT_LIMITS = {
+            'basic': 1,
             'classic': 1,
             'luxury': 5,
             'trial': 5,
@@ -1858,7 +1868,7 @@ class EmployeeViewSet(viewsets.ModelViewSet):
                 )
 
                 try:
-                    from .email_service import send_email_async
+                    from .email_service import send_email_async, render_luxury_email_html
                     sender_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'The Finisher Luxury Registrations <noreply@mtamboholdings.dev>')
                     ceo_display = user.get_full_name() or user.username
                     role_label = dict(UserProfile.ROLE_CHOICES).get(new_profile.role, new_profile.role)
@@ -1890,11 +1900,36 @@ The Executive Directorate
 THE FINISHER LUXURY | Mtambo Holdings
 https://www.thefinishercrm.tech
 """
+                    email_html = render_luxury_email_html(
+                        title="Corporate Identity Provisioning",
+                        subtitle=f"{company_name} &middot; Private Fleet Workspace",
+                        recipient_name=f"{new_user.first_name} {new_user.last_name}".strip() or new_user.first_name,
+                        message_paragraphs=[
+                            f"You have been officially provisioned enterprise access to the private operating system for <strong>{company_name}</strong> on <strong>THE FINISHER LUXURY</strong> by Executive Authority <strong>{ceo_display}</strong>.",
+                            "Your dedicated corporate seat has been allocated with high-performance CRM architecture, automated pipeline intelligence, and luxury cryptographic security protocols."
+                        ],
+                        credentials={
+                            "Authorized Portal": "https://www.thefinishercrm.tech/#/login",
+                            "Work Identity (Login)": email_identity,
+                            "Temporary Passcode": raw_password,
+                            "Assigned Enterprise Role": role_label
+                        },
+                        cta_text="Access Private Workspace",
+                        cta_url="https://www.thefinishercrm.tech/#/login",
+                        activation_steps=[
+                            "Navigate to the secure corporate portal at https://www.thefinishercrm.tech/#/login",
+                            f"Sign in using your authorized work email (<strong>{email_identity}</strong>) and temporary passcode.",
+                            "Upon initial authentication, you will be prompted to establish your private, permanent master password.",
+                            "Once confirmed, your corporate workspace and role permissions will be immediately unlocked."
+                        ],
+                        security_note="In compliance with POPIA Section 19 and ISO 27001 data governance, this temporary passcode expires immediately upon initial sign-in. Never share these credentials."
+                    )
                     send_email_async(
                         subject=email_subject,
                         text_body=email_text,
                         recipient_list=[email_identity],
                         from_email=sender_email,
+                        html_body=email_html,
                     )
                 except Exception as e:
                     import logging
@@ -2021,6 +2056,7 @@ https://www.thefinishercrm.tech
             user_tier = getattr(org, 'subscription_tier', 'luxury')
 
         TIER_SEAT_LIMITS = {
+            'basic': 1,
             'classic': 1,
             'luxury': 5,
             'trial': 5,
@@ -3787,4 +3823,207 @@ class AdminTenantVerificationReviewView(APIView):
                 'message': f"Entity {verification.company_name} rejected. Tenant notified.",
                 'verification': TenantVerificationSerializer(verification, context={'request': request}).data
             })
+
+
+class PrivateSalesLedgerView(APIView):
+    """
+    Exclusive Root CEO Sales & Revenue Ledger (POPIA & Financial Governance).
+    Strictly accessible by root Platform Owner / Superuser (adminluxury).
+    Allows manual recording of offline contracts, tracking MRR/ARR, monitoring 7-day trials,
+    and 1-click subscription management.
+    """
+    permission_classes = [IsAuthenticated]
+
+    def _check_owner(self, user):
+        return user.is_superuser or is_owner_admin_user(user)
+
+    def get(self, request):
+        if not self._check_owner(request.user):
+            return Response({'error': 'Unauthorized. Private Executive Deck access only.'}, status=403)
+
+        from .models import Organization, OrganizationSubscription, UserProfile
+        orgs = Organization.objects.all().order_by('-created_at')
+        records = []
+        total_mrr = 0
+        active_trials_count = 0
+        paid_clients_count = 0
+
+        for org in orgs:
+            sub = getattr(org, 'subscription', None)
+            tier = org.subscription_tier or 'luxury'
+            status_val = sub.status if sub else ('trial' if tier == 'trial' else 'active')
+            monthly_rate = float(getattr(sub, 'monthly_price', 0) or 0)
+            if not monthly_rate:
+                tier_rates = {'basic': 349.00, 'luxury': 999.00, 'trial': 999.00, 'executive': 1500.00, 'enterprise': 0.00}
+                monthly_rate = tier_rates.get(tier.lower(), 999.00)
+
+            if status_val == 'active':
+                paid_clients_count += 1
+                total_mrr += monthly_rate
+            elif status_val == 'trial':
+                active_trials_count += 1
+
+            # User count
+            user_count = User.objects.filter(profile__organization=org, is_superuser=False).count()
+
+            # Trial days remaining
+            days_left = None
+            if org.trial_end_date:
+                diff = org.trial_end_date - timezone.now()
+                days_left = max(0, diff.days)
+            elif sub and sub.current_period_end:
+                diff = sub.current_period_end - timezone.now()
+                days_left = max(0, diff.days)
+
+            # CEO / Admin contact
+            ceo_profile = UserProfile.objects.filter(organization=org, role='admin').first() or UserProfile.objects.filter(organization=org).first()
+            admin_email = ceo_profile.user.email if (ceo_profile and ceo_profile.user) else ''
+
+            tier_display_map = {
+                'basic': 'Luxury Basic (R349/mo)',
+                'luxury': 'Luxury Team (R999/mo)',
+                'executive': 'Executive Suite (R1,500/mo)',
+                'enterprise': 'Enterprise Custom',
+                'trial': '7-Day VIP Trial'
+            }
+
+            records.append({
+                'id': str(org.id),
+                'company_name': org.name,
+                'slug': org.slug,
+                'tier': tier,
+                'tier_display': tier_display_map.get(tier.lower(), tier.title()),
+                'max_users': org.max_users,
+                'current_users': user_count,
+                'status': status_val,
+                'monthly_price': monthly_rate,
+                'payment_method': getattr(sub, 'payment_method', 'payfast') or 'payfast',
+                'payment_reference': getattr(sub, 'payment_reference', '') or '',
+                'notes': getattr(sub, 'notes', '') or '',
+                'trial_start': org.trial_start_date.isoformat() if org.trial_start_date else None,
+                'trial_end': org.trial_end_date.isoformat() if org.trial_end_date else None,
+                'days_remaining': days_left,
+                'admin_email': admin_email,
+                'created_at': org.created_at.isoformat() if org.created_at else None,
+            })
+
+        return Response({
+            'metrics': {
+                'total_mrr': total_mrr,
+                'total_arr': total_mrr * 12,
+                'total_clients': len(records),
+                'active_trials': active_trials_count,
+                'paid_clients': paid_clients_count,
+                'currency': 'ZAR'
+            },
+            'ledger': records
+        })
+
+    def post(self, request):
+        if not self._check_owner(request.user):
+            return Response({'error': 'Unauthorized. Private Executive Deck access only.'}, status=403)
+
+        from .models import Organization, OrganizationSubscription
+        data = request.data
+        company_name = (data.get('company_name') or '').strip()
+        tier = (data.get('tier') or 'luxury').lower().strip()
+        monthly_price = data.get('monthly_price')
+        payment_method = (data.get('payment_method') or 'capitec').strip()
+        payment_reference = (data.get('payment_reference') or '').strip()
+        status_val = (data.get('status') or 'trial').strip()
+        notes = (data.get('notes') or '').strip()
+
+        if not company_name:
+            return Response({'error': 'Company name is required.'}, status=400)
+
+        tier_seats = {'basic': 1, 'luxury': 5, 'trial': 5, 'executive': 15, 'enterprise': 999}
+        max_seats = tier_seats.get(tier, 5)
+
+        if not monthly_price:
+            tier_rates = {'basic': 349.00, 'luxury': 999.00, 'trial': 999.00, 'executive': 1500.00, 'enterprise': 0.00}
+            monthly_price = tier_rates.get(tier, 999.00)
+
+        org, created = Organization.objects.get_or_create(
+            name=company_name,
+            defaults={
+                'subscription_tier': tier,
+                'max_users': max_seats,
+                'is_active': True,
+                'trial_start_date': timezone.now(),
+                'trial_end_date': timezone.now() + timezone.timedelta(days=7),
+            }
+        )
+        if not created:
+            org.subscription_tier = tier
+            org.max_users = max_seats
+            org.is_active = True
+            org.save(update_fields=['subscription_tier', 'max_users', 'is_active'])
+
+        sub, _ = OrganizationSubscription.objects.get_or_create(organization=org)
+        sub.status = status_val
+        sub.monthly_price = float(monthly_price)
+        sub.payment_method = payment_method
+        sub.payment_reference = payment_reference
+        sub.notes = notes
+        if status_val == 'active':
+            sub.current_period_start = timezone.now()
+            sub.current_period_end = timezone.now() + timezone.timedelta(days=30)
+        else:
+            sub.current_period_start = timezone.now()
+            sub.current_period_end = timezone.now() + timezone.timedelta(days=7)
+        sub.save()
+
+        return Response({
+            'message': f"Sales record saved for {company_name} ({tier.title()} • R{monthly_price}/mo).",
+            'org_id': str(org.id),
+            'status': sub.status
+        }, status=201)
+
+    def patch(self, request):
+        if not self._check_owner(request.user):
+            return Response({'error': 'Unauthorized. Private Executive Deck access only.'}, status=403)
+
+        from .models import Organization, OrganizationSubscription
+        data = request.data
+        org_id = data.get('org_id')
+        if not org_id:
+            return Response({'error': 'org_id is required.'}, status=400)
+
+        org = Organization.objects.filter(id=org_id).first()
+        if not org:
+            return Response({'error': 'Organization not found.'}, status=404)
+
+        sub, _ = OrganizationSubscription.objects.get_or_create(organization=org)
+        if 'status' in data:
+            sub.status = data['status']
+            if data['status'] == 'active':
+                sub.current_period_start = timezone.now()
+                sub.current_period_end = timezone.now() + timezone.timedelta(days=30)
+                org.is_active = True
+        if 'tier' in data:
+            new_tier = data['tier'].lower().strip()
+            org.subscription_tier = new_tier
+            tier_seats = {'basic': 1, 'luxury': 5, 'trial': 5, 'executive': 15, 'enterprise': 999}
+            org.max_users = tier_seats.get(new_tier, 5)
+            org.save(update_fields=['subscription_tier', 'max_users'])
+        if 'monthly_price' in data:
+            sub.monthly_price = float(data['monthly_price'])
+        if 'payment_reference' in data:
+            sub.payment_reference = data['payment_reference']
+        if 'notes' in data:
+            sub.notes = data['notes']
+        if data.get('extend_days'):
+            days = int(data['extend_days'])
+            org.trial_end_date = (org.trial_end_date or timezone.now()) + timezone.timedelta(days=days)
+            org.save(update_fields=['trial_end_date'])
+            sub.current_period_end = (sub.current_period_end or timezone.now()) + timezone.timedelta(days=days)
+
+        sub.save()
+        org.save()
+
+        return Response({
+            'message': f"Updated sales ledger record for {org.name}.",
+            'status': sub.status,
+            'tier': org.subscription_tier
+        })
 
