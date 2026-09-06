@@ -11,7 +11,7 @@
           Existing Member? Login &rarr;
         </button>
         <button class="nav-trial-btn" @click="selectPlanAndRegister('luxury')">
-          ⭐ Start 7-Day Trial
+          Start 7-Day Trial
         </button>
       </div>
     </nav>
@@ -27,7 +27,7 @@
             <div class="card-subtitle">LUXURY PRIVATE OS</div>
             <div class="card-footer-foil">
               <span>VIP EXECUTIVE</span>
-              <span>7-DAY VIP</span>
+              <span>PRIVATE OS</span>
             </div>
           </div>
         </div>
@@ -35,7 +35,7 @@
       
       <div class="landing-vip-badge">
         <span class="vip-pulse-dot"></span>
-        <span>⭐ 7-DAY VIP EXECUTIVE ACCESS &middot; STRICTLY CAPPED AT 15 WORKSPACES</span>
+        <span>7-DAY VIP EXECUTIVE ALLOCATION &middot; 15 WORKSPACES</span>
       </div>
 
       <h1 class="headline">Your Pipeline. Elevated.</h1>
@@ -53,16 +53,12 @@
 
     <!-- Commercial Packages & 7-Day Trial Showcase -->
     <div class="packages-section" id="packages" ref="packagesSection">
-      <div class="section-tag">COMMERCIAL EDITIONS &amp; 7-DAY VIP ALLOCATIONS</div>
+      <div class="section-tag">COMMERCIAL EDITIONS &amp; EXECUTIVE ALLOCATIONS</div>
       <h2 class="section-title">Select Your 7-Day VIP Free Trial</h2>
       <p class="section-subtitle">
         Every edition includes an unrestricted 7-day executive trial before standard monthly billing.
         Billed in South African Rand (ZAR) &middot; Zero foreign exchange fees &middot; Cancel anytime.
       </p>
-
-      <div class="vat-strip">
-        <span>🛡️ <strong>SARS Section 23 Advantage:</strong> VAT exempt (&lt;R1M threshold) &mdash; you pay zero tax surcharge on all monthly tiers.</span>
-      </div>
 
       <div class="landing-plans-grid">
         <!-- Tier 1: Luxury Basic -->
@@ -73,10 +69,10 @@
           <div class="tier-price">
             <span class="currency">R</span>349<span class="period">/month</span>
           </div>
-          <div class="seat-pill">1 Dedicated User (Hook Tier)</div>
+          <div class="seat-pill">1 User &middot; Up to 5 Contacts</div>
 
           <ul class="tier-features">
-            <li><strong>Unlimited</strong> contacts &amp; company accounts</li>
+            <li><strong>Up to 5 VIP Client Contacts</strong> (Strict Solo Cap)</li>
             <li>Full deal pipeline &amp; stage management</li>
             <li>Fleet asset tracking (up to 5 items)</li>
             <li>Task manager &amp; automatic reminders</li>
@@ -91,24 +87,24 @@
 
         <!-- Tier 2: Luxury Team (Featured Flagship) -->
         <div class="landing-plan-card featured">
-          <div class="popular-ribbon">⭐ MOST POPULAR &middot; BEST VALUE &middot; FLAGSHIP VIP TRIAL</div>
+          <div class="popular-ribbon">RECOMMENDED &middot; 5 SEATS</div>
           <div class="tier-badge gold">GROWING FIRM</div>
           <h3 class="tier-name">Luxury Team</h3>
           <p class="tier-desc">For boutique firms, agencies &amp; collaborative sales departments.</p>
           <div class="tier-price">
             <span class="currency">R</span>999<span class="period">/month</span>
           </div>
-          <div class="seat-pill featured">Up to 5 Users Included (~R200/seat)</div>
+          <div class="seat-pill featured">Up to 5 Users &middot; Unlimited Contacts</div>
 
           <ul class="tier-features">
             <li><strong>Everything in Luxury Basic, plus:</strong></li>
+            <li><strong>Unlimited client contacts &amp; accounts</strong></li>
             <li><strong>Up to 5 collaborative seats</strong></li>
             <li>Shared team pipelines &amp; deal assignment</li>
             <li>Support ticket helpdesk system</li>
             <li>Full luxury fleet vehicle tracking</li>
-            <li>Company laptop &amp; hardware serial register</li>
+            <li>Hardware &amp; equipment serial register</li>
             <li>Client Admin Team Console</li>
-            <li><span class="savings-tag">Saves ~R100,000/yr vs Salesforce</span></li>
           </ul>
 
           <button class="plan-cta-btn primary" @click="selectPlanAndRegister('luxury')">
@@ -124,10 +120,11 @@
           <div class="tier-price">
             <span class="currency">R</span>1,500<span class="period">/month</span>
           </div>
-          <div class="seat-pill">Up to 15 Users Included (~R100/seat)</div>
+          <div class="seat-pill">Up to 15 Users &middot; Unlimited Contacts</div>
 
           <ul class="tier-features">
             <li><strong>Everything in Luxury Team, plus:</strong></li>
+            <li><strong>Unlimited client contacts &amp; accounts</strong></li>
             <li><strong>Up to 15 executive &amp; staff seats</strong></li>
             <li>Multi-branch / department filtering</li>
             <li>Executive KPI scoreboard &amp; custom reports</li>
@@ -149,7 +146,7 @@
           <div class="tier-price">
             <span class="custom-rate">Custom Quote</span>
           </div>
-          <div class="seat-pill">15+ Dedicated Seats</div>
+          <div class="seat-pill">15+ Dedicated Seats &middot; Unlimited Contacts</div>
 
           <ul class="tier-features">
             <li><strong>Everything in Executive Suite, plus:</strong></li>
@@ -169,7 +166,7 @@
       <!-- Bottom Returning User Bar -->
       <div class="landing-returning-bar">
         <div class="returning-text">
-          👑 <strong>Already an Authorized Executive?</strong> Return to your private enterprise command deck.
+          <strong>Authorized Member?</strong> Access your corporate workspace command deck.
         </div>
         <button class="returning-btn" @click="$router.push('/login')">
           Sign In to Workspace &rarr;
@@ -617,72 +614,61 @@ export default {
 
 .section-subtitle {
   text-align: center;
-  max-width: 700px;
-  margin: 0 auto 2rem;
+  max-width: 680px;
+  margin: 0 auto 3.75rem;
   color: #94a3b8;
   font-size: 0.95rem;
-  line-height: 1.6;
-}
-
-.vat-strip {
-  max-width: 680px;
-  margin: 0 auto 3rem;
-  background: rgba(34, 197, 94, 0.08);
-  border: 1px solid rgba(34, 197, 94, 0.25);
-  border-radius: 999px;
-  padding: 8px 20px;
-  text-align: center;
-  font-size: 0.8rem;
-  color: #86efac;
+  line-height: 1.7;
 }
 
 .landing-plans-grid {
-  max-width: 1280px;
+  max-width: 1320px;
   margin: 0 auto;
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 1.5rem;
+  gap: 1.75rem;
   align-items: stretch;
 }
 
 .landing-plan-card {
-  background: linear-gradient(180deg, #0d131f 0%, #080c14 100%);
+  background: linear-gradient(180deg, #0b0f17 0%, #060910 100%);
   border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
-  padding: 2.25rem 1.75rem;
+  padding: 2.75rem 1.85rem 2.25rem;
   display: flex;
   flex-direction: column;
   position: relative;
-  transition: all 0.3s ease;
-  box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
 }
 
 .landing-plan-card:hover {
   transform: translateY(-4px);
   border-color: rgba(212, 175, 55, 0.4);
-  box-shadow: 0 20px 40px rgba(0,0,0,0.8), 0 0 20px rgba(212, 175, 55, 0.15);
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.8), 0 0 20px rgba(212, 175, 55, 0.15);
 }
 
 .landing-plan-card.featured {
   border: 1.5px solid #d4af37;
-  background: linear-gradient(180deg, #131c2e 0%, #0c121e 100%);
-  box-shadow: 0 15px 45px rgba(0,0,0,0.7), 0 0 30px rgba(212, 175, 55, 0.2);
+  background: linear-gradient(180deg, #101622 0%, #090d15 100%);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.8), 0 0 30px rgba(212, 175, 55, 0.15);
 }
 
 .popular-ribbon {
   position: absolute;
-  top: -12px;
+  top: -13px;
   left: 50%;
   transform: translateX(-50%);
-  background: linear-gradient(90deg, #d4af37, #f59e0b);
-  color: #000;
+  background: #d4af37;
+  color: #000000;
   font-size: 0.65rem;
-  font-weight: 900;
-  letter-spacing: 1px;
-  padding: 4px 12px;
-  border-radius: 999px;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  padding: 4px 14px;
+  border-radius: 3px;
   white-space: nowrap;
-  box-shadow: 0 2px 10px rgba(212, 175, 55, 0.4);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.7);
+  text-transform: uppercase;
 }
 
 .tier-badge {

@@ -12,7 +12,7 @@
             🔄 Refresh Sync
           </button>
           <button class="btn btn-gold" @click="openRecordSaleModal">
-            👑 Record Direct Sale
+            Record Direct Sale
           </button>
           <button class="btn btn-gold" @click="openOnboardModal">
             🏢 Onboard New Company
@@ -35,13 +35,12 @@
     </div>
 
     <template v-else>
-      <!-- 👑 PRIVATE CEO SALES & REVENUE LEDGER (RESTRICTED TO SYSTEM OWNER) -->
+      <!-- PRIVATE EXECUTIVE SALES & REVENUE LEDGER (RESTRICTED TO SYSTEM OWNER) -->
       <div class="section-container ceo-sales-ledger-section">
         <div class="flex-between mb-3" style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 1rem;">
           <div>
             <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.25rem;">
-              <span style="font-size: 1.3rem;">👑</span>
-              <h2 class="section-title" style="margin-bottom: 0;">Private CEO Sales &amp; Revenue Ledger</h2>
+              <h2 class="section-title" style="margin-bottom: 0;">Private Executive Sales &amp; Revenue Ledger</h2>
               <span class="badge font-mono" style="font-size: 0.72rem; padding: 0.2rem 0.5rem; border-radius: 4px; background: rgba(212, 175, 55, 0.2); color: #d4af37; border: 1px solid rgba(212, 175, 55, 0.4); font-weight: 800;">
                 CONFIDENTIAL &middot; OWNER ONLY
               </span>
@@ -1018,7 +1017,7 @@
         <div class="modal-header">
           <div class="modal-title-wrap">
             <span class="modal-badge-tag" style="color: #d4af37; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.1em;">EXECUTIVE REVENUE RECOGNITION</span>
-            <h3 style="margin: 0; color: #fff; font-size: 1.35rem;">{{ isEditingSale ? '✏️ Edit Sales Record' : '👑 Record Direct Sale' }}</h3>
+            <h3 style="margin: 0; color: #fff; font-size: 1.35rem;">{{ isEditingSale ? 'Edit Sales Record' : 'Record Direct Sale' }}</h3>
             <p class="text-muted text-sm mt-1 mb-0">Record offline deals, EFT payments, or adjust corporate subscription allocations.</p>
           </div>
           <button class="modal-close" @click="closeRecordSaleModal">×</button>

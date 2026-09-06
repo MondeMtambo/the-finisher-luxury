@@ -466,6 +466,15 @@ class ContactViewSet(viewsets.ModelViewSet):
 
         profile = getattr(user, 'profile', None)
         org = getattr(profile, 'organization', None) if profile else None
+
+        # ─── LUXURY BASIC CONTACT CEILING (Strictly 5 Contacts) ───
+        if org and org.subscription_tier == 'basic':
+            existing_count = Contact.objects.filter(organization=org).count()
+            if existing_count >= 5:
+                raise ValidationError({
+                    'detail': 'Luxury Basic allocation limit reached (5 contacts max). Upgrade to Luxury Team (R999/mo) for unlimited contacts.'
+                })
+
         contact = serializer.save(user=user, organization=org)
         ensure_company_for_contact(contact)
         log_activity(
@@ -515,6 +524,14 @@ class ContactViewSet(viewsets.ModelViewSet):
         LUXURY edition feature.
         POST /api/contacts/import_csv/
         """
+        user = request.user
+        profile = getattr(user, 'profile', None)
+        org = getattr(profile, 'organization', None) if profile else None
+        if org and org.subscription_tier == 'basic':
+            return Response({
+                'error': 'Bulk CSV Import is reserved for Luxury Team. Luxury Basic is limited to 5 VIP contacts.'
+            }, status=status.HTTP_403_FORBIDDEN)
+
         file = request.FILES.get('file')
         
         if not file:

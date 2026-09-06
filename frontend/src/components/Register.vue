@@ -45,18 +45,16 @@
       <div class="auth-header">
         <div class="vip-badge-pill">
           <span class="vip-badge-dot"></span>
-          ⭐ 7-DAY VIP EXECUTIVE ACCESS &middot; CORPORATE ONBOARDING
+          7-DAY VIP EXECUTIVE ACCESS &middot; CORPORATE ONBOARDING
         </div>
         <div class="scarcity-pill-banner">
-          <span class="scarcity-fire">🔥</span>
-          <span>Strictly Limited: <strong>Only 15 Private Fleet Allocations Active</strong> &mdash; Secure Your Space Now</span>
+          <span>Strictly Limited: <strong>15 Private Enterprise Allocations Active</strong> &mdash; Secure Your Space</span>
         </div>
         <div class="selected-package-banner">
           <div class="package-banner-left">
-            <span class="package-star">👑</span>
             <div class="package-banner-text">
               <div class="pkg-title">CHOSEN ALLOCATION: <strong>{{ selectedTierInfo.name }}</strong></div>
-              <div class="pkg-desc">7-Day Free VIP Trial &middot; {{ selectedTierInfo.price }} thereafter &middot; {{ selectedTierInfo.seats }}</div>
+              <div class="pkg-desc">7-Day Free Trial &middot; {{ selectedTierInfo.price }} thereafter &middot; {{ selectedTierInfo.seats }}</div>
             </div>
           </div>
           <button type="button" class="change-plan-btn" @click="$router.push('/#packages')">Change Package</button>
@@ -638,14 +636,14 @@ export default {
         basic: {
           name: 'LUXURY BASIC',
           price: 'R349/month',
-          seats: '1 Dedicated User (Hook Tier)',
+          seats: '1 User &middot; 5 Contacts Max',
           tag: 'SOLO OPERATOR'
         },
         luxury: {
-          name: 'LUXURY TEAM (FLAGSHIP VIP TRIAL)',
+          name: 'LUXURY TEAM',
           price: 'R999/month',
-          seats: 'Up to 5 Collaborative Seats',
-          tag: 'MOST POPULAR'
+          seats: 'Up to 5 Users &middot; Unlimited Contacts',
+          tag: 'RECOMMENDED'
         },
         executive: {
           name: 'EXECUTIVE SUITE',

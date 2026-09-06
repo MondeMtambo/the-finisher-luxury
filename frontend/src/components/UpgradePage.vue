@@ -1,14 +1,9 @@
 <template>
   <div class="upgrade-container">
     <div class="upgrade-header card">
-      <div class="header-badge">COMMERCIAL PLANS & VIP ALLOCATIONS</div>
+      <div class="header-badge">COMMERCIAL PLANS &amp; ALLOCATIONS</div>
       <h1>Choose Your Finisher Luxury Plan</h1>
       <p class="subtitle">Fixed South African Rand (ZAR) billing. Zero foreign exchange volatility. No punitive per-seat penalties.</p>
-      
-      <div class="vat-advantage-callout">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#16a34a" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-        <span><strong>SARS Section 23 Advantage:</strong> VAT is currently zero-rated / exempt (&lt;R1M threshold) — save an immediate 15% upfront cash outlay compared to US competitors.</span>
-      </div>
     </div>
 
     <!-- 4-Tier Plan Grid -->
@@ -16,20 +11,20 @@
       <!-- Tier 1: Luxury Basic -->
       <div class="plan-card card" :class="{ selected: selectedTier === 'basic' || selectedTier === 'classic' }">
         <div class="plan-top">
-          <div class="plan-tier-label">SOLO FOUNDER • 1 SEAT</div>
+          <div class="plan-tier-label">SOLO FOUNDER &bull; 1 SEAT</div>
           <h2 class="plan-title">Luxury Basic</h2>
-          <p class="plan-desc">For independent brokers, elite consultants & single operators.</p>
+          <p class="plan-desc">For independent brokers, elite consultants &amp; single operators.</p>
           <div class="plan-price">
             <span class="currency">R</span>349<span class="period">/month</span>
           </div>
-          <div class="seat-pill">1 Dedicated User (Hook Tier)</div>
+          <div class="seat-pill">1 User &bull; Up to 5 Contacts</div>
         </div>
 
         <ul class="feature-bullets">
-          <li><strong>Unlimited</strong> contacts & company accounts</li>
-          <li>Full deal pipeline & stage management</li>
+          <li><strong>Up to 5 VIP Client Contacts</strong> (Strict Solo Cap)</li>
+          <li>Full deal pipeline &amp; stage management</li>
           <li>Asset tracking (up to 5 items)</li>
-          <li>Task manager & automatic reminders</li>
+          <li>Task manager &amp; automatic reminders</li>
           <li>CIPC entity verification badge</li>
           <li>Standard email concierge</li>
         </ul>
@@ -47,26 +42,26 @@
 
       <!-- Tier 2: Luxury Team (Featured) -->
       <div class="plan-card card featured" :class="{ selected: selectedTier === 'luxury' }">
-        <div class="featured-badge">MOST POPULAR • BEST VALUE</div>
+        <div class="featured-badge">RECOMMENDED &bull; 5 SEATS</div>
         <div class="plan-top">
           <div class="plan-tier-label">GROWING FIRM</div>
           <h2 class="plan-title">Luxury Team</h2>
-          <p class="plan-desc">For boutique firms, agencies & growing sales departments.</p>
+          <p class="plan-desc">For boutique firms, agencies &amp; growing sales departments.</p>
           <div class="plan-price">
             <span class="currency">R</span>999<span class="period">/month</span>
           </div>
-          <div class="seat-pill featured-pill">Up to 5 Users Included (~R200/seat)</div>
+          <div class="seat-pill featured-pill">Up to 5 Users &bull; Unlimited Contacts</div>
         </div>
 
         <ul class="feature-bullets">
-          <li><strong>Everything in Classic Solo, plus:</strong></li>
+          <li><strong>Everything in Luxury Basic, plus:</strong></li>
+          <li><strong>Unlimited client contacts &amp; company accounts</strong></li>
           <li><strong>Up to 5 collaborative seats</strong></li>
-          <li>Shared team pipelines & deal assignment</li>
+          <li>Shared team pipelines &amp; deal assignment</li>
           <li>Support ticket helpdesk system</li>
           <li>Full luxury fleet vehicle tracking</li>
-          <li>Company laptop & hardware serial register</li>
+          <li>Hardware &amp; asset serial register</li>
           <li>Client Admin Team Console</li>
-          <li><span class="savings-tag">Saves ~R100,000/yr vs Salesforce</span></li>
         </ul>
 
         <div class="plan-action">
@@ -84,21 +79,22 @@
         <div class="plan-top">
           <div class="plan-tier-label">ESTABLISHED FIRM</div>
           <h2 class="plan-title">Executive Suite</h2>
-          <p class="plan-desc">For mid-size corporations, regional firms & multi-branch groups.</p>
+          <p class="plan-desc">For mid-size corporations, regional firms &amp; multi-branch groups.</p>
           <div class="plan-price">
             <span class="currency">R</span>1,500<span class="period">/month</span>
           </div>
-          <div class="seat-pill">Up to 15 Users Included (~R100/seat)</div>
+          <div class="seat-pill">Up to 15 Users &bull; Unlimited Contacts</div>
         </div>
 
         <ul class="feature-bullets">
           <li><strong>Everything in Luxury Team, plus:</strong></li>
-          <li><strong>Up to 15 executive & staff seats</strong></li>
+          <li><strong>Unlimited client contacts &amp; accounts</strong></li>
+          <li><strong>Up to 15 executive &amp; staff seats</strong></li>
           <li>Multi-branch / department filtering</li>
-          <li>Executive KPI scoreboard & custom reports</li>
+          <li>Executive KPI scoreboard &amp; custom reports</li>
           <li>Automated email trigger workflows</li>
           <li>POPIA Section 19 compliance vault</li>
-          <li>Priority Concierge WhatsApp & Phone</li>
+          <li>Priority Concierge WhatsApp &amp; Phone</li>
         </ul>
 
         <div class="plan-action">
@@ -377,18 +373,6 @@ export default {
   margin: 0 auto 1rem;
 }
 
-.vat-advantage-callout {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  background: #f0fdf4;
-  border: 1px solid #bbf7d0;
-  color: #166534;
-  padding: 8px 16px;
-  border-radius: 8px;
-  font-size: 0.8125rem;
-  margin-top: 0.5rem;
-}
 
 /* Grid */
 .plans-grid {
