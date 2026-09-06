@@ -211,6 +211,16 @@
                 <span class="form-hint">Defaults to you if left empty</span>
               </div>
             </div>
+
+            <div v-if="form.role === 'manager'" class="form-group" style="margin-top: 0.75rem; background: rgba(212, 175, 55, 0.08); border: 1.5px solid rgba(212, 175, 55, 0.35); border-radius: 8px; padding: 12px 14px;">
+              <label style="display: flex; align-items: flex-start; gap: 12px; cursor: pointer; margin: 0;">
+                <input type="checkbox" v-model="form.can_manage_assets" style="width: 18px; height: 18px; margin-top: 2px; accent-color: #d4af37; cursor: pointer;">
+                <div>
+                  <strong style="color: var(--gray-900, #1e293b); font-size: 0.9rem; display: block;">Grant Asset Management Permission</strong>
+                  <span style="font-size: 0.8rem; color: var(--gray-600, #64748b); line-height: 1.4; display: block;">Allow this Manager to create, assign, and manage company physical assets and fleet equipment.</span>
+                </div>
+              </label>
+            </div>
           </div>
 
           <div class="form-section">
@@ -523,6 +533,8 @@
       :days-remaining="trialDaysRemaining"
       :is-in-grace="isInGrace"
       :grace-days-remaining="graceDaysRemaining"
+      :plan="userTier"
+      :plan-price="userPlanPrice"
       @close="showTrialUrgencyModal = false"
       @acknowledge="onTrialAcknowledge"
     />
@@ -548,6 +560,7 @@ export default {
       graceDaysRemaining: 3,
       isTrialOrGrace: false,
       userTier: 'luxury',
+      userPlanPrice: 'R999/mo',
       employees: [],
       divisions: [],  
       loading: false,
@@ -710,6 +723,9 @@ export default {
         const res = await billingAPI.getStatus()
         const data = res.data || {}
         this.userTier = (data.subscription_tier || 'luxury').toLowerCase()
+        if (data.plan && data.plan.price) {
+          this.userPlanPrice = `R${data.plan.price}/mo`
+        }
         this.trialDaysRemaining = data.days_remaining_in_trial ?? 7
         this.isInGrace = Boolean(data.is_in_grace_period)
         this.graceDaysRemaining = data.days_remaining_in_grace ?? 3
@@ -777,6 +793,7 @@ export default {
         phone: '', job_title: '', department: '', employee_id: '', date_of_birth: null,
         address: '', emergency_contact_name: '', emergency_contact_phone: '',
         start_date: null, notes: '', reports_to: null, division: null, company_name: '',
+        can_manage_assets: false,
       }
     },
     resetForm() { this.form = this.getEmptyForm() },

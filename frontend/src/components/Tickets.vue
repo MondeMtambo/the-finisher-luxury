@@ -51,6 +51,23 @@
 
         <p v-if="ticket.description" class="ticket-desc">{{ ticket.description }}</p>
 
+        <!-- Commercial Selling Badge -->
+        <div v-if="ticket.product_name || ticket.is_sale_initiated" class="commercial-ticket-badge" style="display: flex; align-items: center; justify-content: space-between; background: rgba(212,175,55,0.08); border: 1px solid rgba(212,175,55,0.3); border-radius: 8px; padding: 10px 14px; margin: 12px 0;">
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <span style="font-size: 1.25rem;">💎</span>
+            <div>
+              <strong style="color: #d4af37; font-size: 0.9rem; display: block;">{{ ticket.product_name || 'Commercial Item' }} &times; {{ ticket.quantity || 1 }}</strong>
+              <span v-if="ticket.contact_name" style="font-size: 0.775rem; color: #94a3b8;">Client: {{ ticket.contact_name }}</span>
+            </div>
+          </div>
+          <div style="text-align: right;">
+            <div style="font-weight: 800; color: #f59e0b; font-size: 1rem; letter-spacing: 0.5px;">R{{ Number(ticket.sale_value || 0).toLocaleString() }}</div>
+            <span class="badge" :class="ticket.sale_status === 'paid' ? 'badge-green' : (ticket.sale_status === 'invoiced' ? 'badge-blue' : 'badge-amber')" style="font-size: 0.7rem; font-weight: 700;">
+              {{ formatSaleStatus(ticket.sale_status) }}
+            </span>
+          </div>
+        </div>
+
         <div class="meta-row">
           <span class="meta-tag">Category: {{ (ticket.category || 'general').replace('_',' ') }}</span>
           <span class="meta-tag">Dept: {{ (ticket.department || 'support').replace('_',' ') }}</span>
@@ -63,6 +80,9 @@
 
         <div class="ticket-actions">
           <template v-if="isAdmin">
+            <button v-if="ticket.is_sale_initiated && ticket.sale_status !== 'paid'" @click="completeCommercialSale(ticket.id)" class="btn btn-sm" style="background: linear-gradient(135deg, #d4af37, #b45309); color: #000; font-weight: 800; box-shadow: 0 2px 10px rgba(212,175,55,0.3);">
+              💎 Complete Sale &amp; Issue License
+            </button>
             <button v-if="ticket.status === 'open'" @click="startTicket(ticket.id)" class="btn btn-sm btn-primary">Start</button>
             <button v-if="ticket.status === 'in_progress' && !ticket.started_at" @click="stopTicket(ticket.id)" class="btn btn-sm btn-secondary">Pause</button>
             <button v-if="ticket.status !== 'completed'" @click="completeTicket(ticket.id)" class="btn btn-sm btn-success">Complete</button>
@@ -70,6 +90,9 @@
             <button @click="deleteTicket(ticket.id)" class="btn btn-sm btn-danger">Delete</button>
           </template>
           <template v-else>
+            <button v-if="ticket.is_sale_initiated && ticket.sale_status !== 'paid'" @click="completeCommercialSale(ticket.id)" class="btn btn-sm" style="background: linear-gradient(135deg, #d4af37, #b45309); color: #000; font-weight: 800;">
+              💎 Mark Paid
+            </button>
             <button v-if="ticket.status !== 'completed' && ticket.assigned_to_username === currentUsername" @click="completeTicket(ticket.id)" class="btn btn-sm btn-success">Mark Complete</button>
           </template>
         </div>
@@ -128,6 +151,64 @@
               <option v-for="deal in deals" :key="deal.id" :value="deal.id">{{ deal.title }} - {{ deal.contact_name }}</option>
             </select>
           </div>
+
+          <!-- Commercial Sales & License Section -->
+          <div class="form-section" style="background: rgba(212,175,55,0.05); border: 1.5px solid rgba(212,175,55,0.25); border-radius: 10px; padding: 14px; margin-bottom: 1rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+              <strong style="color: #d4af37; font-size: 0.9rem; display: flex; align-items: center; gap: 6px;">
+                <span>💎</span> Commercial Sale &amp; License Issuance
+              </strong>
+              <label style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: #cbd5e1; cursor: pointer;">
+                <input type="checkbox" v-model="newTicket.is_sale_initiated" style="accent-color: #d4af37;" />
+                <span>Initiate Pipeline Sale</span>
+              </label>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label">Client Contact</label>
+                <select v-model="newTicket.contact" class="form-input">
+                  <option :value="null">— Select Client Contact —</option>
+                  <option v-for="c in contacts" :key="c.id" :value="c.id">{{ c.first_name }} {{ c.last_name }} ({{ c.company_name || 'Individual' }})</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Product / License Catalog</label>
+                <select v-model="newTicket.product" class="form-input" @change="onProductSelect(newTicket)">
+                  <option :value="null">— No Product (Standard Task) —</option>
+                  <option v-for="p in products" :key="p.id" :value="p.id">{{ p.name }} (R{{ p.unit_price }})</option>
+                </select>
+              </div>
+            </div>
+
+            <div v-if="newTicket.product || newTicket.is_sale_initiated" class="form-grid-3" style="margin-top: 10px;">
+              <div class="form-group">
+                <label class="form-label">Quantity</label>
+                <input v-model.number="newTicket.quantity" type="number" min="1" class="form-input" @input="recalcSaleValue(newTicket)">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Unit Price (ZAR)</label>
+                <input v-model.number="newTicket.unit_price" type="number" min="0" step="0.01" class="form-input" @input="recalcSaleValue(newTicket)">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Total Sale Value</label>
+                <div style="padding: 9px 12px; background: rgba(0,0,0,0.35); border: 1px solid rgba(212,175,55,0.3); border-radius: 6px; font-weight: 800; color: #f59e0b; font-size: 1.05rem;">
+                  R{{ Number(newTicket.sale_value || 0).toLocaleString() }}
+                </div>
+              </div>
+            </div>
+
+            <div v-if="newTicket.product || newTicket.is_sale_initiated" class="form-group" style="margin-top: 10px;">
+              <label class="form-label">Sale / License Status</label>
+              <select v-model="newTicket.sale_status" class="form-input">
+                <option value="pending">Quotation / Pending Sale</option>
+                <option value="invoiced">License Issued / Invoiced</option>
+                <option value="paid">Paid &amp; Closed</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </div>
+          </div>
+
           <div class="form-group">
             <label class="form-label">Assign To *</label>
             <select v-model="newTicket.assigned_to" class="form-input">
@@ -199,6 +280,64 @@
               <option v-for="deal in deals" :key="deal.id" :value="deal.id">{{ deal.title }} - {{ deal.contact_name }}</option>
             </select>
           </div>
+
+          <!-- Commercial Sales & License Section (Edit) -->
+          <div class="form-section" style="background: rgba(212,175,55,0.05); border: 1.5px solid rgba(212,175,55,0.25); border-radius: 10px; padding: 14px; margin-bottom: 1rem;">
+            <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px;">
+              <strong style="color: #d4af37; font-size: 0.9rem; display: flex; align-items: center; gap: 6px;">
+                <span>💎</span> Commercial Sale &amp; License Issuance
+              </strong>
+              <label style="display: flex; align-items: center; gap: 6px; font-size: 0.8rem; color: #cbd5e1; cursor: pointer;">
+                <input type="checkbox" v-model="editTicket.is_sale_initiated" style="accent-color: #d4af37;" />
+                <span>Initiate Pipeline Sale</span>
+              </label>
+            </div>
+
+            <div class="form-grid-2">
+              <div class="form-group">
+                <label class="form-label">Client Contact</label>
+                <select v-model="editTicket.contact" class="form-input">
+                  <option :value="null">— Select Client Contact —</option>
+                  <option v-for="c in contacts" :key="c.id" :value="c.id">{{ c.first_name }} {{ c.last_name }} ({{ c.company_name || 'Individual' }})</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Product / License Catalog</label>
+                <select v-model="editTicket.product" class="form-input" @change="onProductSelect(editTicket)">
+                  <option :value="null">— No Product (Standard Task) —</option>
+                  <option v-for="p in products" :key="p.id" :value="p.id">{{ p.name }} (R{{ p.unit_price }})</option>
+                </select>
+              </div>
+            </div>
+
+            <div v-if="editTicket.product || editTicket.is_sale_initiated" class="form-grid-3" style="margin-top: 10px;">
+              <div class="form-group">
+                <label class="form-label">Quantity</label>
+                <input v-model.number="editTicket.quantity" type="number" min="1" class="form-input" @input="recalcSaleValue(editTicket)">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Unit Price (ZAR)</label>
+                <input v-model.number="editTicket.unit_price" type="number" min="0" step="0.01" class="form-input" @input="recalcSaleValue(editTicket)">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Total Sale Value</label>
+                <div style="padding: 9px 12px; background: rgba(0,0,0,0.35); border: 1px solid rgba(212,175,55,0.3); border-radius: 6px; font-weight: 800; color: #f59e0b; font-size: 1.05rem;">
+                  R{{ Number(editTicket.sale_value || 0).toLocaleString() }}
+                </div>
+              </div>
+            </div>
+
+            <div v-if="editTicket.product || editTicket.is_sale_initiated" class="form-group" style="margin-top: 10px;">
+              <label class="form-label">Sale / License Status</label>
+              <select v-model="editTicket.sale_status" class="form-input">
+                <option value="pending">Quotation / Pending Sale</option>
+                <option value="invoiced">License Issued / Invoiced</option>
+                <option value="paid">Paid &amp; Closed</option>
+                <option value="cancelled">Cancelled</option>
+              </select>
+            </div>
+          </div>
+
           <div class="form-group">
             <label class="form-label">Assign To *</label>
             <select v-model="editTicket.assigned_to" class="form-input">
@@ -221,7 +360,7 @@
 </template>
 
 <script>
-import { ticketsAPI, dealsAPI, employeesAPI } from '../api'
+import { ticketsAPI, dealsAPI, employeesAPI, productsAPI, contactsAPI } from '../api'
 import authService from '../services/auth'
 import toast from '../utils/toast'
 import modal from '../utils/modal'
@@ -233,6 +372,8 @@ export default {
       tickets: [],
       deals: [],
       users: [],
+      products: [],
+      contacts: [],
       loading: true,
       showCreateModal: false,
       showEditModal: false,
@@ -243,6 +384,13 @@ export default {
         category: 'general',
         department: 'support',
         deal: null,
+        contact: null,
+        product: null,
+        quantity: 1,
+        unit_price: 0,
+        sale_value: 0,
+        is_sale_initiated: false,
+        sale_status: 'pending',
         assigned_to: null,
         due_at: ''
       },
@@ -254,6 +402,13 @@ export default {
         category: 'general',
         department: 'support',
         deal: null,
+        contact: null,
+        product: null,
+        quantity: 1,
+        unit_price: 0,
+        sale_value: 0,
+        is_sale_initiated: false,
+        sale_status: 'pending',
         assigned_to: null,
         due_at: ''
       },
@@ -284,6 +439,8 @@ export default {
   async mounted() {
     await this.checkAdminStatus()
     await this.loadTickets()
+    await this.loadProducts()
+    await this.loadContacts()
     if (this.isAdmin) {
       await this.loadDeals()
       await this.loadUsers()
@@ -352,6 +509,63 @@ export default {
         console.error('Failed to load deals:', error)
       }
     },
+    async loadProducts() {
+      try {
+        const response = await productsAPI.getAll()
+        this.products = response.data || []
+      } catch (error) {
+        console.error('Failed to load products:', error)
+      }
+    },
+    async loadContacts() {
+      try {
+        const response = await contactsAPI.getAll()
+        this.contacts = response.data || []
+      } catch (error) {
+        console.error('Failed to load contacts:', error)
+      }
+    },
+    onProductSelect(target) {
+      if (!target.product) return
+      const prod = this.products.find(p => p.id === target.product)
+      if (prod) {
+        target.unit_price = Number(prod.unit_price || 0)
+        if (!target.quantity || target.quantity < 1) target.quantity = 1
+        target.is_sale_initiated = true
+        this.recalcSaleValue(target)
+      }
+    },
+    recalcSaleValue(target) {
+      const qty = Number(target.quantity) || 1
+      const price = Number(target.unit_price) || 0
+      target.sale_value = Number((qty * price).toFixed(2))
+    },
+    formatSaleStatus(status) {
+      const map = {
+        pending: 'Pending / Quotation',
+        invoiced: 'Invoiced / License Issued',
+        paid: 'Paid & Closed',
+        cancelled: 'Cancelled'
+      }
+      return map[status] || status
+    },
+    async completeCommercialSale(ticketId) {
+      const ok = await modal.confirm(
+        'Confirm Commercial Sale',
+        'Mark this sale as Paid and issue client license?',
+        'success',
+        { confirmText: 'Complete Sale' }
+      )
+      if (!ok) return
+      try {
+        await ticketsAPI.completeSale(ticketId)
+        toast.success('Sale Completed', 'License issued and commercial deal marked Won!')
+        await this.loadTickets()
+      } catch (error) {
+        console.error('Failed to complete sale:', error)
+        toast.error('Sale Failed', 'Failed to complete sale: ' + (error.response?.data?.error || error.message))
+      }
+    },
     async loadUsers() {
       try {
         const response = await employeesAPI.getAll()
@@ -383,6 +597,13 @@ export default {
           category: this.newTicket.category,
           department: this.newTicket.department,
           deal: this.newTicket.deal,
+          contact: this.newTicket.contact,
+          product: this.newTicket.product,
+          quantity: this.newTicket.quantity,
+          unit_price: this.newTicket.unit_price,
+          sale_value: this.newTicket.sale_value,
+          is_sale_initiated: this.newTicket.is_sale_initiated,
+          sale_status: this.newTicket.sale_status,
           assigned_to: this.newTicket.assigned_to,
           due_at: this.newTicket.due_at || null
         })
@@ -404,6 +625,13 @@ export default {
         category: ticket.category || 'general',
         department: ticket.department || 'support',
         deal: ticket.deal,
+        contact: ticket.contact || null,
+        product: ticket.product || null,
+        quantity: ticket.quantity || 1,
+        unit_price: ticket.unit_price || 0,
+        sale_value: ticket.sale_value || 0,
+        is_sale_initiated: Boolean(ticket.is_sale_initiated),
+        sale_status: ticket.sale_status || 'pending',
         assigned_to: ticket.assigned_to,
         due_at: ticket.due_at ? new Date(ticket.due_at).toISOString().slice(0, 16) : ''
       }
@@ -419,6 +647,13 @@ export default {
         category: 'general',
         department: 'support',
         deal: null,
+        contact: null,
+        product: null,
+        quantity: 1,
+        unit_price: 0,
+        sale_value: 0,
+        is_sale_initiated: false,
+        sale_status: 'pending',
         assigned_to: null,
         due_at: ''
       }
@@ -434,6 +669,13 @@ export default {
           category: this.editTicket.category,
           department: this.editTicket.department,
           deal: this.editTicket.deal,
+          contact: this.editTicket.contact,
+          product: this.editTicket.product,
+          quantity: this.editTicket.quantity,
+          unit_price: this.editTicket.unit_price,
+          sale_value: this.editTicket.sale_value,
+          is_sale_initiated: this.editTicket.is_sale_initiated,
+          sale_status: this.editTicket.sale_status,
           assigned_to: this.editTicket.assigned_to,
           due_at: this.editTicket.due_at || null
         })
@@ -505,6 +747,13 @@ export default {
         category: 'general',
         department: 'support',
         deal: null,
+        contact: null,
+        product: null,
+        quantity: 1,
+        unit_price: 0,
+        sale_value: 0,
+        is_sale_initiated: false,
+        sale_status: 'pending',
         assigned_to: null,
         due_at: ''
       }

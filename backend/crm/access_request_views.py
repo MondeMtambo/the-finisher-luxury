@@ -753,7 +753,7 @@ class AdminAccessRequestActionView(APIView):
         profile, _ = UserProfile.objects.get_or_create(user=user)
         profile.organization = org
         profile.role = 'admin' if req_obj.is_ceo else 'executive'
-        profile.tier = 'luxury'
+        profile.tier = chosen_tier
         profile.company_name = req_obj.company_name
         profile.phone = req_obj.phone
         profile.job_title = req_obj.job_title

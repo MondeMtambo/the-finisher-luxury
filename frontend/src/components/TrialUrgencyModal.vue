@@ -54,7 +54,7 @@
           Continue with VIP Access
         </button>
         <button class="btn btn-primary" @click="goToUpgrade">
-          Lock In Allocation (R999/mo) &rarr;
+          Lock In Allocation ({{ resolvedPrice }}) &rarr;
         </button>
       </div>
     </div>
@@ -62,6 +62,8 @@
 </template>
 
 <script>
+import authService from '../services/auth'
+
 export default {
   name: 'TrialUrgencyModal',
   props: {
@@ -80,6 +82,18 @@ export default {
     graceDaysRemaining: {
       type: Number,
       default: 3
+    },
+    plan: {
+      type: String,
+      default: ''
+    },
+    planName: {
+      type: String,
+      default: ''
+    },
+    planPrice: {
+      type: [String, Number],
+      default: ''
     }
   },
   emits: ['close', 'acknowledge'],
@@ -97,6 +111,25 @@ export default {
       }
       const daysUsed = 7 - Math.min(7, Math.max(0, this.daysRemaining))
       return Math.min(70, Math.round((daysUsed / 7) * 70))
+    },
+    resolvedPlan() {
+      if (this.plan) return this.plan.toLowerCase()
+      const user = authService.getUser() || {}
+      return (user.raw_tier || user.tier || 'luxury').toLowerCase()
+    },
+    resolvedPrice() {
+      if (this.planPrice) {
+        return typeof this.planPrice === 'number' ? `R${this.planPrice}/mo` : this.planPrice
+      }
+      const tierPrices = {
+        basic: 'R349/mo',
+        classic: 'R349/mo',
+        luxury: 'R999/mo',
+        team: 'R999/mo',
+        executive: 'R1,500/mo',
+        enterprise: 'Custom'
+      }
+      return tierPrices[this.resolvedPlan] || 'R999/mo'
     }
   },
   methods: {
@@ -108,7 +141,7 @@ export default {
     },
     goToUpgrade() {
       this.$emit('close')
-      this.$router.push('/upgrade')
+      this.$router.push({ path: '/upgrade', query: { plan: this.resolvedPlan } })
     }
   }
 }

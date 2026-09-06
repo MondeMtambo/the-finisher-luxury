@@ -349,8 +349,11 @@ class WebsiteLeadReplySerializer(serializers.Serializer):
 
 
 class TicketSerializer(serializers.ModelSerializer):
-    contact_name = serializers.CharField(source='deal.contact.__str__', read_only=True)
-    company_name = serializers.CharField(source='deal.company.name', read_only=True)
+    contact_name = serializers.SerializerMethodField()
+    company_name = serializers.SerializerMethodField()
+    product_name = serializers.CharField(source='product.name', read_only=True)
+    product_code = serializers.CharField(source='product.sku', read_only=True)
+    product_price = serializers.DecimalField(source='product.unit_price', max_digits=12, decimal_places=2, read_only=True)
     created_by_username = serializers.CharField(source='created_by.username', read_only=True)
     assigned_to_username = serializers.CharField(source='assigned_to.username', read_only=True)
     created_by = serializers.PrimaryKeyRelatedField(read_only=True)
@@ -362,8 +365,19 @@ class TicketSerializer(serializers.ModelSerializer):
             'title',
             'description',
             'deal',
+            'contact',
+            'company',
             'contact_name',
             'company_name',
+            'product',
+            'product_name',
+            'product_code',
+            'product_price',
+            'quantity',
+            'unit_price',
+            'sale_value',
+            'is_sale_initiated',
+            'sale_status',
             'created_by',
             'created_by_username',
             'assigned_to',
@@ -382,6 +396,20 @@ class TicketSerializer(serializers.ModelSerializer):
         read_only_fields = [
             'id', 'created_by', 'created_by_username', 'assigned_to_username', 'created_at', 'updated_at',
         ]
+
+    def get_contact_name(self, obj):
+        if obj.contact:
+            return f"{obj.contact.first_name} {obj.contact.last_name}".strip()
+        if obj.deal and obj.deal.contact:
+            return f"{obj.deal.contact.first_name} {obj.deal.contact.last_name}".strip()
+        return None
+
+    def get_company_name(self, obj):
+        if obj.company:
+            return obj.company.name
+        if obj.deal and obj.deal.company:
+            return obj.deal.company.name
+        return None
 
     def validate(self, attrs):
         request = self.context['request']
@@ -467,6 +495,7 @@ class EmployeeSerializer(serializers.ModelSerializer):
             'ban_reason',
             'payment_status',
             'can_add_employees',
+            'can_manage_assets',
             'reports_to',
             'reports_to_name',
             'onboarded_by',
@@ -528,6 +557,7 @@ class EmployeeCreateSerializer(serializers.Serializer):
     division = serializers.PrimaryKeyRelatedField(
         queryset=Division.objects.all(), required=False, allow_null=True
     )
+    can_manage_assets = serializers.BooleanField(required=False, default=False)
     reports_to = serializers.PrimaryKeyRelatedField(
         queryset=User.objects.all(), required=False, allow_null=True
     )

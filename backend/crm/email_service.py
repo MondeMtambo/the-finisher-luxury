@@ -219,6 +219,21 @@ def render_luxury_email_html(
         </div>
         """
 
+    # Randomized executive greeting pool for variety, personality, and security feeling
+    import random
+    luxury_greetings = [
+        "Salutations",
+        "Greetings",
+        "Good day",
+        "Esteemed",
+        "Distinguished",
+        "Executive Greetings",
+        "Welcome",
+        "Warmest Regards",
+        "Respectful Greetings"
+    ]
+    greeting = random.choice(luxury_greetings)
+
     return f"""<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -264,7 +279,7 @@ def render_luxury_email_html(
           <tr>
             <td style="padding:28px 36px 24px;">
               <div style="color:#d4af37;font-size:11px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;margin-bottom:8px;">{title}</div>
-              <h1 style="color:#ffffff;font-size:21px;font-weight:700;margin:0 0 16px;line-height:1.3;">Salutations, {recipient_name}</h1>
+              <h1 style="color:#ffffff;font-size:21px;font-weight:700;margin:0 0 16px;line-height:1.3;">{greeting}, {recipient_name}</h1>
               
               {body_p}
               {otp_html}
@@ -279,7 +294,7 @@ def render_luxury_email_html(
           <tr>
             <td style="background:rgba(0,0,0,0.4);padding:24px 36px;border-top:1px solid rgba(255,255,255,0.07);text-align:center;">
               <div style="font-size:11.5px;font-weight:700;color:#d4af37;letter-spacing:0.5px;">MTAMBO HOLDINGS (PTY) LTD &middot; EXECUTIVE DIRECTORATE</div>
-              <div style="font-size:10.5px;color:#64748b;margin-top:4px;">POPIA Section 19 Cryptographic Dispatch &middot; Johannesburg, South Africa</div>
+              <div style="font-size:10.5px;color:#64748b;margin-top:4px;">POPIA Section 19 Cryptographic Dispatch &middot; 7682 Isikova Crescent, Gauteng, Boksburg, 1459</div>
               <div style="font-size:10px;color:#475569;margin-top:8px;">
                 Direct concierge support: <a href="mailto:mtamboholdings@outlook.com" style="color:#94a3b8;text-decoration:none;">mtamboholdings@outlook.com</a>
               </div>

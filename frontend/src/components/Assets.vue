@@ -294,8 +294,8 @@
             </div>
           </div>
           <div class="modal-actions">
-            <button @click="editAsset(selectedAsset)" class="btn btn-secondary">Edit</button>
-            <button @click="confirmDelete(selectedAsset)" class="btn btn-danger">Delete</button>
+            <button v-if="canAddAssets" @click="editAsset(selectedAsset)" class="btn btn-secondary">Edit</button>
+            <button v-if="canAddAssets" @click="confirmDelete(selectedAsset)" class="btn btn-danger">Delete</button>
             <button @click="closeViewModal" class="btn btn-primary">Close</button>
           </div>
         </div>
@@ -335,8 +335,12 @@ export default {
       const user = authService.getUser() || {}
       
       if (user.is_superuser || user.is_staff) return true
-      const role = user.role || user.profile?.role
-      return role === 'admin' || role === 'manager'
+      const roleVal = typeof user.role === 'object' ? user.role?.value : (user.role || user.profile?.role)
+      if (roleVal === 'admin' || roleVal === 'executive') return true
+      if (roleVal === 'manager') {
+        return Boolean(user.permissions?.can_manage_assets || user.profile?.can_manage_assets || user.can_manage_assets)
+      }
+      return false
     }
   },
   mounted() {

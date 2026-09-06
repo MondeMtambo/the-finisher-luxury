@@ -232,7 +232,7 @@
       <div class="modal-content card">
         <h3>Enterprise Custom Architecture</h3>
         <p class="text-muted">Bespoke SLA, dedicated database clusters, and custom Sage/Xero integrations for large operations.</p>
-        <p><strong>Executive Concierge:</strong> <a href="mailto:noreply@mtamboholdings.dev?subject=Enterprise%20Edition%20Consultation">noreply@mtamboholdings.dev</a></p>
+        <p><strong>Executive Concierge:</strong> <a href="mailto:mtamboholdings@outlook.com?subject=Enterprise%20Edition%20Consultation">mtamboholdings@outlook.com</a></p>
         <div class="modal-actions">
           <button class="btn btn-primary" @click="contactSalesModal = false">Close</button>
         </div>
@@ -294,9 +294,15 @@ export default {
     }
   },
   mounted() {
-    const routePlan = (this.$route.params.plan || '').toLowerCase()
-    if (['basic', 'classic', 'luxury', 'executive'].includes(routePlan)) {
-      this.selectedTier = routePlan === 'classic' ? 'basic' : routePlan
+    const routePlan = (this.$route.params.plan || this.$route.query.plan || '').toLowerCase()
+    if (['basic', 'classic', 'luxury', 'team', 'executive'].includes(routePlan)) {
+      this.selectedTier = (routePlan === 'classic' || routePlan === 'basic') ? 'basic' : (routePlan === 'team' ? 'luxury' : routePlan)
+    } else {
+      const user = authService.getUser() || {}
+      const userPlan = (user.raw_tier || user.subscription_tier || user.tier || '').toLowerCase()
+      if (['basic', 'classic', 'luxury', 'executive'].includes(userPlan)) {
+        this.selectedTier = userPlan === 'classic' ? 'basic' : userPlan
+      }
     }
   },
   methods: {

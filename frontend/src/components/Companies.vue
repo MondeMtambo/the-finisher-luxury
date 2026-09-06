@@ -13,6 +13,26 @@
       </div>
     </div>
 
+    <!-- 7-Day VIP Trial & 30-Day Encrypted Vault Quarantine Disclaimer Banner -->
+    <div v-if="isTrialOrGrace" class="trial-disclaimer-banner" style="background: linear-gradient(135deg, rgba(212,175,55,0.08) 0%, rgba(15,23,42,0.9) 100%); border: 1.5px solid rgba(212,175,55,0.35); border-radius: 12px; padding: 14px 18px; margin-bottom: 1.25rem; display: flex; align-items: flex-start; gap: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
+      <div style="color: #d4af37; flex-shrink: 0; margin-top: 2px;">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+        </svg>
+      </div>
+      <div style="flex: 1;">
+        <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 4px;">
+          <strong style="color: #d4af37; font-size: 0.925rem; letter-spacing: 0.5px;">7-Day VIP Allocation Active &bull; Unlimited Client Accounts</strong>
+          <span style="background: rgba(212,175,55,0.18); border: 1px solid rgba(212,175,55,0.4); color: #f59e0b; padding: 2px 10px; border-radius: 9999px; font-size: 0.75rem; font-weight: 700;">
+            {{ isInGrace ? `${graceDaysRemaining} Days Grace Remaining` : `${trialDaysRemaining} of 7 Days Left` }}
+          </span>
+        </div>
+        <p style="margin: 0; font-size: 0.8125rem; color: #cbd5e1; line-height: 1.5;">
+          During your 7-Day VIP Trial (+ 3-Day Settlement Grace Period), you may onboard unlimited client companies and contacts with zero restrictions. If an account remains unsettled past the grace period, records are safely archived in our secure compliance vault for <strong>30 days</strong>. If settled within 30 days, your full workspace is instantly restored with zero downtime. Unsettled workspaces past 30 days are purged permanently under POPIA Section 19 storage limitation regulations.
+        </p>
+      </div>
+    </div>
+
     <div v-if="!canAddCompany" class="info-bar info-bar--amber">
       <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8.982 1.566a1.13 1.13 0 0 0-1.96 0L.165 13.233c-.457.778.091 1.767.98 1.767h13.713c.889 0 1.438-.99.98-1.767L8.982 1.566zM8 5c.535 0 .954.462.9.995l-.35 3.507a.552.552 0 0 1-1.1 0L7.1 5.995A.905.905 0 0 1 8 5zm.002 6a1 1 0 1 1 0 2 1 1 0 0 1 0-2z"/></svg>
       <span>Capture at least one contact before creating a business profile. Add a contact first, then return here.</span>
@@ -147,6 +167,8 @@
       :days-remaining="trialDaysRemaining"
       :is-in-grace="isInGrace"
       :grace-days-remaining="graceDaysRemaining"
+      :plan="userTier"
+      :plan-price="userPlanPrice"
       @close="showTrialUrgencyModal = false"
       @acknowledge="onTrialAcknowledge"
     />
@@ -176,6 +198,8 @@ export default {
       isInGrace: false,
       graceDaysRemaining: 3,
       isTrialOrGrace: false,
+      userTier: 'luxury',
+      userPlanPrice: 'R999/mo',
       companyForm: {
         name: '',
         trading_name: '',
@@ -234,6 +258,11 @@ export default {
       try {
         const res = await billingAPI.getStatus()
         const data = res.data || {}
+        this.userTier = (data.subscription_tier || 'luxury').toLowerCase()
+        if (data.plan && data.plan.price) {
+          this.userPlanPrice = `R${data.plan.price}/mo`
+        }
+        this.isTrialOrGrace = Boolean(data.is_trial_active || data.is_in_grace_period)
         this.trialDaysRemaining = data.days_remaining_in_trial ?? 7
         this.isInGrace = Boolean(data.is_in_grace_period)
         this.graceDaysRemaining = data.days_remaining_in_grace ?? 3

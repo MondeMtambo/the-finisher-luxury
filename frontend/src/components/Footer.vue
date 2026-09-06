@@ -29,9 +29,10 @@
             <a href="https://www.facebook.com/NatedGraphics" target="_blank" rel="noopener">Nated Graphics</a>
           </div>
           <div class="fn-col">
-            <div class="fn-title">Contact</div>
+            <div class="fn-title">Contact &amp; Legal Domicile</div>
+            <a href="mailto:mtamboholdings@outlook.com">mtamboholdings@outlook.com</a>
             <a href="mailto:legal@mtamboholdings.co.za">legal@mtamboholdings.co.za</a>
-            <a href="mailto:support@thefinishersport.co.za">support@thefinishersport.co.za</a>
+            <span style="color: #9ca3af; font-size: 0.75rem; margin-top: 4px; line-height: 1.35;">📍 7682 Isikova Crescent<br>Gauteng, Boksburg, 1459</span>
           </div>
         </nav>
       </div>

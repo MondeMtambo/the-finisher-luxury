@@ -338,6 +338,7 @@ class UserProfile(models.Model):
     trial_ends_at = models.DateTimeField(blank=True, null=True, help_text="7-day trial period end date")
 
     can_add_employees = models.BooleanField(default=False, help_text="Delegated permission: employee can add new employees (requires admin OTP)")
+    can_manage_assets = models.BooleanField(default=False, help_text="Delegated permission: manager can add and manage company physical assets")
 
     reports_to = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True,
                                    related_name='direct_reports',
@@ -370,6 +371,15 @@ class UserProfile(models.Model):
     @property
     def is_admin(self):
         return self.role == 'admin' or self.user.is_superuser
+
+    @property
+    def has_asset_permission(self):
+        """Check if user is authorized to manage/create assets."""
+        if self.user.is_superuser or self.user.is_staff or self.is_admin:
+            return True
+        if self.role == 'manager' and self.can_manage_assets:
+            return True
+        return False
     
     @property
     def can_access(self):
@@ -873,6 +883,24 @@ class Ticket(models.Model):
     title = models.CharField(max_length=200)
     description = models.TextField(blank=True)
     deal = models.ForeignKey(Deal, on_delete=models.SET_NULL, null=True, blank=True, related_name='tickets')
+    contact = models.ForeignKey('Contact', on_delete=models.SET_NULL, null=True, blank=True, related_name='tickets', help_text="Client contact linked to ticket")
+    company = models.ForeignKey('Company', on_delete=models.SET_NULL, null=True, blank=True, related_name='tickets', help_text="Client company linked to ticket")
+    product = models.ForeignKey('Product', on_delete=models.SET_NULL, null=True, blank=True, related_name='tickets', help_text="Product or license to sell")
+    quantity = models.PositiveIntegerField(default=1, help_text="Units or licenses to sell")
+    unit_price = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, help_text="Unit price in ZAR")
+    sale_value = models.DecimalField(max_digits=12, decimal_places=2, default=0.00, help_text="Total calculated sale / license value")
+    is_sale_initiated = models.BooleanField(default=False, help_text="Whether ticket initiates a commercial sale / license issue")
+    sale_status = models.CharField(
+        max_length=30,
+        choices=[
+            ('none', 'No Sale Attached'),
+            ('pending', 'Quotation / Pending Sale'),
+            ('invoiced', 'License Issued / Invoiced'),
+            ('paid', 'Paid & Closed'),
+            ('cancelled', 'Cancelled')
+        ],
+        default='none'
+    )
     created_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tickets_created')
     assigned_to = models.ForeignKey(User, on_delete=models.CASCADE, related_name='tickets_assigned')
     priority = models.CharField(max_length=20, choices=PRIORITY_CHOICES, default='normal')

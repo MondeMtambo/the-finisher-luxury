@@ -49,6 +49,7 @@ urlpatterns = [
     path('api/public/verify-access-request/', access_request_views.PublicVerifyAccessRequestView.as_view(), name='public_verify_access_request'),
     path('api/public/cancel-access-request/<uuid:pk>/', access_request_views.PublicCancelAccessRequestView.as_view(), name='public_cancel_access_request'),
     path('api/public/search-ceo/', access_request_views.PublicCEOSearchView.as_view(), name='public_search_ceo'),
+    path('api/public/submit-query/', views.SubmitBugQueryView.as_view(), name='submit_bug_query'),
 
     path('api/', include(router.urls)),
     path('api/prerequisites/', views.prerequisite_status, name='prerequisite_status'),

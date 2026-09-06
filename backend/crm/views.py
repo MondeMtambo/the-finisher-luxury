@@ -1101,7 +1101,33 @@ class TicketViewSet(viewsets.ModelViewSet):
             if not allowed:
                 raise ValidationError({'detail': msg})
 
+        # Compute sale value if product attached
+        product = serializer.validated_data.get('product')
+        quantity = serializer.validated_data.get('quantity', 1) or 1
+        unit_price = serializer.validated_data.get('unit_price')
+        if product and (unit_price is None or unit_price == 0):
+            unit_price = product.unit_price
+            serializer.validated_data['unit_price'] = unit_price
+        
+        if product:
+            serializer.validated_data['sale_value'] = (unit_price or 0) * quantity
+
         ticket = serializer.save(created_by=user, organization=org)
+
+        # Automated Pipeline Integration: If sale initiated and contact provided, bridge into Deal pipeline
+        if ticket.is_sale_initiated and ticket.contact and not ticket.deal:
+            deal_title = f"{ticket.product.name if ticket.product else 'Sale'} — {ticket.contact.first_name} {ticket.contact.last_name}"
+            deal = Deal.objects.create(
+                organization=org,
+                user=user,
+                title=deal_title,
+                contact=ticket.contact,
+                company=ticket.company or getattr(ticket.contact, 'company', None),
+                value=ticket.sale_value or 0,
+                stage='proposal'
+            )
+            ticket.deal = deal
+            ticket.save(update_fields=['deal'])
 
         Notification.objects.create(
             recipient=ticket.assigned_to,
@@ -1116,13 +1142,50 @@ class TicketViewSet(viewsets.ModelViewSet):
         user = self.request.user
         if not (user.is_superuser or user.is_staff or getattr(user, 'profile', None) and user.profile.is_admin):
             raise PermissionDenied('Only administrators can update tickets.')
-        serializer.save()
+
+        product = serializer.validated_data.get('product', serializer.instance.product)
+        quantity = serializer.validated_data.get('quantity', serializer.instance.quantity) or 1
+        unit_price = serializer.validated_data.get('unit_price', serializer.instance.unit_price)
+        if product and (unit_price is None or unit_price == 0):
+            unit_price = product.unit_price
+            serializer.validated_data['unit_price'] = unit_price
+        if product:
+            serializer.validated_data['sale_value'] = (unit_price or 0) * quantity
+
+        ticket = serializer.save()
+
+        if ticket.is_sale_initiated and ticket.contact and not ticket.deal:
+            deal_title = f"{ticket.product.name if ticket.product else 'Sale'} — {ticket.contact.first_name} {ticket.contact.last_name}"
+            deal = Deal.objects.create(
+                organization=ticket.organization,
+                user=user,
+                title=deal_title,
+                contact=ticket.contact,
+                company=ticket.company or getattr(ticket.contact, 'company', None),
+                value=ticket.sale_value or 0,
+                stage='proposal'
+            )
+            ticket.deal = deal
+            ticket.save(update_fields=['deal'])
 
     def perform_destroy(self, instance):
         user = self.request.user
         if not (user.is_superuser or user.is_staff or getattr(user, 'profile', None) and user.profile.is_admin):
             raise PermissionDenied('Only administrators can delete tickets.')
         instance.delete()
+
+    @action(detail=True, methods=['post'], url_path='complete_sale')
+    def complete_sale(self, request, pk=None):
+        """1-Click Complete Sale & Issue License directly from Ticket."""
+        ticket = self.get_object()
+        ticket.sale_status = 'paid'
+        ticket.status = 'completed'
+        ticket.completed_at = timezone.now()
+        if ticket.deal:
+            ticket.deal.stage = 'closed_won'
+            ticket.deal.save(update_fields=['stage'])
+        ticket.save(update_fields=['sale_status', 'status', 'completed_at'])
+        return Response({'message': 'Sale marked as completed and Deal won!', 'status': ticket.sale_status})
 
     @action(detail=True, methods=['post'])
     def start(self, request, pk=None):
@@ -1900,6 +1963,10 @@ class EmployeeViewSet(viewsets.ModelViewSet):
                 new_profile.notes = user_data.get('notes', '')
                 new_profile.payment_status = 'paid'
                 new_profile.requires_password_reset = True
+                new_profile.can_manage_assets = bool(user_data.get('can_manage_assets', False)) if assigned_role == 'manager' else False
+
+                if org and not new_profile.organization:
+                    new_profile.organization = org
 
                 new_profile.reports_to = reports_to_user if reports_to_user else user  # default: reports to whoever onboarded them
                 new_profile.onboarded_by = user
@@ -2880,8 +2947,14 @@ class AssetViewSet(viewsets.ModelViewSet):
         org = getattr(profile, 'organization', None) if profile else None
 
         if not (user.is_superuser or user.is_staff):
-            if not profile or profile.role not in ['admin', 'manager', 'executive']:
-                raise PermissionDenied('Only administrators and managers can create assets')
+            if not profile:
+                raise PermissionDenied('Only authenticated corporate profiles can create assets.')
+            if profile.role in ['admin', 'executive']:
+                pass
+            elif profile.role == 'manager' and getattr(profile, 'can_manage_assets', False):
+                pass
+            else:
+                raise PermissionDenied('Only CEOs/Administrators, or Managers with delegated asset permissions, can create assets.')
         
         company_name = normalize_company_name(profile.company_name) if profile else ''
         
@@ -4213,4 +4286,53 @@ class PrivateSalesLedgerView(APIView):
             'status': sub.status,
             'tier': org.subscription_tier
         })
+
+
+class SubmitBugQueryView(APIView):
+    """
+    Public / Authenticated query & bug reporting endpoint.
+    POST /api/public/submit-query/
+    Dispatches directly to mtamboholdings@outlook.com and logs a high-priority notification.
+    """
+    permission_classes = [AllowAny]
+
+    def post(self, request):
+        data = request.data or {}
+        subject = (data.get('subject') or 'Enterprise CRM Query / Bug Report').strip()
+        category = data.get('category', 'bug_report')
+        message = (data.get('message') or '').strip()
+        sender_email = (data.get('email') or (request.user.email if request.user.is_authenticated else '')).strip()
+        sender_name = (data.get('name') or (request.user.get_full_name() if request.user.is_authenticated else 'Client Operator')).strip()
+        company = (data.get('company') or (getattr(getattr(request.user, 'profile', None), 'company_name', '') if request.user.is_authenticated else '')).strip()
+
+        if not message:
+            return Response({'error': 'Message content is required.'}, status=400)
+
+        from .email_service import send_email_async, render_luxury_email_html
+        admin_email = 'mtamboholdings@outlook.com'
+
+        email_html = render_luxury_email_html(
+            title="Executive Support & Bug Notification",
+            subtitle="Platform Inbound Query Dispatch",
+            recipient_name="Executive Directorate",
+            message_paragraphs=[
+                "An urgent client query / bug report has been submitted from the platform.",
+                f"<strong>Sender:</strong> {sender_name} ({sender_email or 'Anonymous'}) &middot; <strong>Company:</strong> {company or 'Unspecified'}",
+                f"<strong>Category:</strong> {category.upper()}",
+                f"<strong>Message:</strong><br/>{message}"
+            ],
+            security_note="Direct dispatch to Mtambo Holdings Engineering & Executive Concierge (7682 Isikova Crescent, Gauteng, Boksburg, 1459)."
+        )
+
+        send_email_async(
+            subject=f"🚨 [{category.upper()}] {subject} — from {company or sender_name}",
+            text_body=f"Query from {sender_name} ({sender_email}):\n\n{message}",
+            recipient_list=[admin_email],
+            html_body=email_html
+        )
+
+        return Response({
+            'success': True,
+            'message': 'Your query has been dispatched directly to the executive technical concierge. We will review and respond promptly.'
+        }, status=200)
 

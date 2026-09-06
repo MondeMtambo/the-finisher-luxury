@@ -63,12 +63,12 @@
       </section>
 
       <section>
-        <h2>Security &amp; Retention</h2>
+        <h2>Security &amp; Data Retention Policy</h2>
         <ul>
-          <li>Encrypted transport (HTTPS) and industry-standard hashing for passwords.</li>
+          <li>Encrypted transport (HTTPS / 256-bit TLS) and industry-standard hashing for passwords.</li>
           <li>Access controls, logging, and monitoring for suspicious activity.</li>
-          <li>We retain personal data only as long as necessary to provide the Service and meet legal obligations.</li>
-          <li>Clients may delete their CRM records at any time; backups are purged on a rolling schedule.</li>
+          <li><strong>30-Day Safe Vault Quarantine Guarantee (POPIA Section 19):</strong> All tenant data during the 7-day VIP trial and 3-day grace period is strictly preserved. Following grace expiration, client records are placed in an isolated, encrypted safe vault quarantine for exactly 30 days before clean automated purge, giving executives guaranteed continuity and protection.</li>
+          <li>Clients may export or delete their CRM records at any time during active trials and subscriptions.</li>
         </ul>
       </section>
 
@@ -85,9 +85,9 @@
 
       <section>
         <h2>Contact &amp; Legal Inquiries</h2>
-        <p>For privacy, legal queries, or licensing inquiries, contact MTAMBO HOLDINGS at <strong>thefinishercrm@gmail.com</strong><br>
-        <strong>Address:</strong> MTAMBO HOLDINGS, South Africa<br>
-        <strong>Product Support:</strong> thefinishercrm@gmail.com</p>
+        <p>For executive privacy, legal queries, or licensing inquiries, contact MTAMBO HOLDINGS at <strong>mtamboholdings@outlook.com</strong> or <strong>legal@mtamboholdings.co.za</strong><br>
+        <strong>Registered Physical Domicile:</strong> 7682 Isikova Crescent, Gauteng, Boksburg, 1459<br>
+        <strong>Product &amp; Executive Support:</strong> mtamboholdings@outlook.com</p>
       </section>
 
       <div class="legal-footer">

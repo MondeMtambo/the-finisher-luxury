@@ -1,11 +1,14 @@
 <template>
   <div id="app" :class="{ 'has-sidebar': showSidebar }">
-    <Navbar />
+    <LuxurySplash />
+    <Navbar @open-query-modal="showQueryModal = true" />
     <main class="main-content">
       <router-view />
     </main>
     <ToastNotifications />
     <ConfirmModal />
+    <BugQueryModal v-model="showQueryModal" />
+    <MascotGuide @open-query-modal="showQueryModal = true" />
   </div>
 </template>
 
@@ -13,6 +16,9 @@
 import Navbar from './components/Navbar.vue'
 import ToastNotifications from './components/ToastNotifications.vue'
 import ConfirmModal from './components/ConfirmModal.vue'
+import LuxurySplash from './components/LuxurySplash.vue'
+import BugQueryModal from './components/BugQueryModal.vue'
+import MascotGuide from './components/MascotGuide.vue'
 import authService from './services/auth'
 
 export default {
@@ -20,7 +26,15 @@ export default {
   components: {
     Navbar,
     ToastNotifications,
-    ConfirmModal
+    ConfirmModal,
+    LuxurySplash,
+    BugQueryModal,
+    MascotGuide
+  },
+  data() {
+    return {
+      showQueryModal: false
+    }
   },
   computed: {
     showSidebar() {

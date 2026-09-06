@@ -215,6 +215,7 @@ class UserSerializer(serializers.ModelSerializer):
                 'can_stop_deal_timers': obj.profile.can_stop_deal_timers,
                 'can_delete_deals': obj.profile.can_delete_deals,
                 'can_manage_users': obj.profile.can_manage_users,
+                'can_manage_assets': obj.profile.has_asset_permission,
                 'is_admin': obj.profile.is_admin,
                 'is_manager': obj.profile.is_manager,
                 'is_supervisor': obj.profile.is_supervisor
@@ -223,6 +224,7 @@ class UserSerializer(serializers.ModelSerializer):
             'can_stop_deal_timers': False,
             'can_delete_deals': False,
             'can_manage_users': False,
+            'can_manage_assets': False,
             'is_admin': False,
             'is_manager': False,
             'is_supervisor': False

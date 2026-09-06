@@ -286,7 +286,12 @@ export const ticketsAPI = {
   delete: (id) => api.delete(`/tickets/${id}/`),
   start: (id) => api.post(`/tickets/${id}/start/`),
   stop: (id) => api.post(`/tickets/${id}/stop/`),
-  complete: (id) => api.post(`/tickets/${id}/complete/`)
+  complete: (id) => api.post(`/tickets/${id}/complete/`),
+  completeSale: (id) => api.post(`/tickets/${id}/complete_sale/`)
+}
+
+export const bugQueryAPI = {
+  submit: (data) => api.post('/public/submit-query/', data)
 }
 
 export const notificationsAPI = {
