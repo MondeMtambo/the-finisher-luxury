@@ -7,9 +7,11 @@
       </div>
       <div class="nav-links">
         <button class="nav-link-btn" @click="scrollToPackages">Packages &amp; Pricing</button>
-        <button class="nav-trial-btn" @click="selectPlanAndRegister('luxury')">⭐ Start 7-Day Trial</button>
         <button class="nav-login-btn" @click="$router.push('/login')">
           Existing Member? Login &rarr;
+        </button>
+        <button class="nav-trial-btn" @click="selectPlanAndRegister('luxury')">
+          ⭐ Start 7-Day Trial
         </button>
       </div>
     </nav>
@@ -19,26 +21,32 @@
         <div class="black-card" :style="cardStyle">
           <div class="card-glare" :style="glareStyle"></div>
           <div class="card-content">
+            <div class="card-chip"></div>
             <div class="card-logo">F</div>
             <div class="card-title">THE FINISHER</div>
-            <div class="card-subtitle">LUXURY EDITION</div>
+            <div class="card-subtitle">LUXURY PRIVATE OS</div>
+            <div class="card-footer-foil">
+              <span>VIP EXECUTIVE</span>
+              <span>7-DAY VIP</span>
+            </div>
           </div>
         </div>
       </div>
       
-      <h1 class="headline">Your Pipeline. Elevated.</h1>
-      <p class="subheadline">The most exclusive CRM engine built for generational wealth.</p>
-      
       <div class="landing-vip-badge">
         <span class="vip-pulse-dot"></span>
-        ⭐ 7-Day VIP Executive Access &middot; Strictly Capped at 15 Workspaces
+        <span>⭐ 7-DAY VIP EXECUTIVE ACCESS &middot; STRICTLY CAPPED AT 15 WORKSPACES</span>
       </div>
+
+      <h1 class="headline">Your Pipeline. Elevated.</h1>
+      <p class="subheadline">The most exclusive CRM engine built for generational wealth and multi-million rand deals.</p>
+      
       <div class="scarcity-sub-badge">
         Secure Your Space Now &mdash; Private Enterprise Allocation Active
       </div>
 
       <div class="hero-actions">
-        <button class="request-btn" @click="selectPlanAndRegister('luxury')">Take Our 7-Day Trial &rarr;</button>
+        <button class="request-btn" @click="selectPlanAndRegister('luxury')">Start 7-Day VIP Trial &rarr;</button>
         <button class="packages-scroll-btn" @click="scrollToPackages">View All Packages &darr;</button>
       </div>
     </div>
@@ -301,49 +309,52 @@ export default {
   font-weight: 600;
   letter-spacing: 1px;
   cursor: pointer;
-  transition: all 0.2s;
   padding: 0.5rem 0.75rem;
+  transition: color 0.2s;
 }
 
 .nav-link-btn:hover {
   color: #d4af37;
 }
 
-.nav-trial-btn {
-  background: rgba(212, 175, 55, 0.12);
-  border: 1px solid rgba(212, 175, 55, 0.35);
-  color: #d4af37;
+.nav-login-btn {
+  background: rgba(212, 175, 55, 0.08);
+  border: 1px solid rgba(212, 175, 55, 0.45);
+  color: #f5d76e;
   font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 1px;
-  padding: 0.5rem 1.1rem;
-  border-radius: 6px;
+  padding: 0.5rem 1.25rem;
+  border-radius: 999px;
   cursor: pointer;
-  transition: all 0.2s;
-}
-
-.nav-trial-btn:hover {
-  background: rgba(212, 175, 55, 0.25);
-  box-shadow: 0 0 15px rgba(212, 175, 55, 0.3);
-}
-
-.nav-login-btn {
-  background: linear-gradient(135deg, #d4af37 0%, #b45309 100%);
-  border: none;
-  color: #ffffff;
-  font-size: 0.8rem;
-  font-weight: 800;
-  letter-spacing: 1px;
-  padding: 0.55rem 1.25rem;
-  border-radius: 6px;
-  cursor: pointer;
-  box-shadow: 0 4px 14px rgba(212, 175, 55, 0.35);
   transition: all 0.2s;
 }
 
 .nav-login-btn:hover {
+  background: rgba(212, 175, 55, 0.2);
+  border-color: #d4af37;
+  color: #ffffff;
   transform: translateY(-1px);
-  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.5);
+}
+
+.nav-trial-btn {
+  background: linear-gradient(135deg, #d4af37 0%, #b48608 100%);
+  border: none;
+  color: #000000;
+  font-size: 0.8rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  padding: 0.55rem 1.35rem;
+  border-radius: 999px;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.35);
+  transition: all 0.2s;
+}
+
+.nav-trial-btn:hover {
+  background: linear-gradient(135deg, #f5d76e 0%, #d4af37 100%);
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.55);
+  transform: translateY(-1px);
 }
 
 .center-stage {
@@ -354,35 +365,226 @@ export default {
   justify-content: center;
   position: relative;
   z-index: 10;
-  padding: 3rem 2rem;
+  padding: 2.5rem 2rem 4rem;
+}
+
+/* 3D Centurion Luxury Black Card */
+.card-container {
+  perspective: 1200px;
+  margin: 1.5rem 0 2.5rem;
+}
+
+.black-card {
+  width: 360px;
+  height: 225px;
+  background: radial-gradient(circle at 30% 20%, #1a2230 0%, #0a0d14 55%, #000000 100%);
+  border-radius: 18px;
+  border: 1.5px solid rgba(212, 175, 55, 0.45);
+  box-shadow: 0 25px 60px rgba(0, 0, 0, 0.95), 0 0 35px rgba(212, 175, 55, 0.15), inset 0 1px 1px rgba(255, 255, 255, 0.2);
+  position: relative;
+  transform-style: preserve-3d;
+  transition: transform 0.15s ease-out;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.black-card:hover {
+  border-color: rgba(212, 175, 55, 0.7);
+  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.98), 0 0 50px rgba(212, 175, 55, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.3);
+}
+
+.card-glare {
+  position: absolute;
+  top: 0; left: 0; width: 100%; height: 100%;
+  pointer-events: none;
+  z-index: 2;
+  mix-blend-mode: screen;
+  transition: opacity 0.3s;
+}
+
+.card-content {
+  position: relative;
+  z-index: 3;
+  text-align: center;
+  transform: translateZ(35px);
+  width: 100%;
+  padding: 1.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  box-sizing: border-box;
+}
+
+.card-chip {
+  width: 42px;
+  height: 30px;
+  background: linear-gradient(135deg, #d4af37 0%, #8a6d1c 100%);
+  border-radius: 6px;
+  align-self: flex-start;
+  margin-bottom: 0.25rem;
+  box-shadow: inset 0 0 4px rgba(0,0,0,0.4);
+  border: 1px solid rgba(255,255,255,0.25);
+}
+
+.card-logo {
+  font-size: 3.6rem;
+  font-weight: 900;
+  line-height: 1;
+  background: linear-gradient(135deg, #ffffff 0%, #f5d76e 50%, #d4af37 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  filter: drop-shadow(0 0 15px rgba(212, 175, 55, 0.45));
+  margin-bottom: 0.35rem;
+}
+
+.card-title {
+  font-size: 1.15rem;
+  font-weight: 900;
+  letter-spacing: 6px;
+  color: #d4af37;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9);
+  margin-bottom: 0.2rem;
+}
+
+.card-subtitle {
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 4px;
+  color: #94a3b8;
+  text-transform: uppercase;
+}
+
+.card-footer-foil {
+  display: flex;
+  justify-content: space-between;
+  width: 100%;
+  margin-top: 1.25rem;
+  font-family: monospace;
+  font-size: 0.65rem;
+  letter-spacing: 2px;
+  color: rgba(212, 175, 55, 0.75);
+}
+
+/* Hero Typography & Urgency */
+.headline {
+  font-size: 4.2rem;
+  font-weight: 900;
+  letter-spacing: -1px;
+  margin: 0 0 1rem;
+  background: linear-gradient(180deg, #ffffff 30%, #e2e8f0 70%, #d4af37 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  text-align: center;
+  line-height: 1.15;
+}
+
+.subheadline {
+  font-size: 1.25rem;
+  color: #94a3b8;
+  margin: 0 0 1.75rem;
+  text-align: center;
+  max-width: 650px;
+  line-height: 1.6;
+}
+
+.landing-vip-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.6rem;
+  background: rgba(212, 175, 55, 0.1);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  color: #f5d76e;
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 0.45rem 1.35rem;
+  border-radius: 999px;
+  margin-bottom: 0.75rem;
+  box-shadow: 0 0 20px rgba(212, 175, 55, 0.12);
+}
+
+.vip-pulse-dot {
+  width: 8px;
+  height: 8px;
+  background-color: #d4af37;
+  border-radius: 50%;
+  box-shadow: 0 0 8px #d4af37;
+  animation: pulse-dot 2s infinite;
+}
+
+@keyframes pulse-dot {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.7); }
+  70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(212, 175, 55, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(212, 175, 55, 0); }
+}
+
+.scarcity-sub-badge {
+  font-size: 0.75rem;
+  letter-spacing: 2px;
+  color: #64748b;
+  text-transform: uppercase;
+  font-weight: 600;
+  margin-bottom: 2.5rem;
 }
 
 .hero-actions {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 1.25rem;
   flex-wrap: wrap;
   justify-content: center;
 }
 
-.packages-scroll-btn {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  color: #e2e8f0;
-  padding: 1rem 2rem;
-  font-size: 0.875rem;
-  font-weight: 700;
+.request-btn {
+  background: linear-gradient(135deg, #d4af37 0%, #b48608 100%);
+  border: none;
+  color: #000000;
+  padding: 1.15rem 2.8rem;
+  font-size: 0.9rem;
+  font-weight: 800;
   text-transform: uppercase;
   letter-spacing: 2px;
-  border-radius: 4px;
+  border-radius: 6px;
   cursor: pointer;
-  transition: all 0.3s;
+  box-shadow: 0 8px 25px rgba(212, 175, 55, 0.35);
+  transition: all 0.3s cubic-bezier(0.19, 1, 0.22, 1);
+}
+
+.request-btn:hover {
+  background: linear-gradient(135deg, #f5d76e 0%, #d4af37 100%);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 35px rgba(212, 175, 55, 0.55);
+}
+
+.packages-scroll-btn {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1.5px solid rgba(212, 175, 55, 0.4);
+  color: #f8fafc;
+  padding: 1.15rem 2.4rem;
+  font-size: 0.875rem;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  border-radius: 6px;
+  cursor: pointer;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.5);
 }
 
 .packages-scroll-btn:hover {
   border-color: #d4af37;
   color: #d4af37;
-  background: rgba(212, 175, 55, 0.08);
+  background: rgba(212, 175, 55, 0.12);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 30px rgba(212, 175, 55, 0.2);
 }
 
 /* Packages Section */
