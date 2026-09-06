@@ -17,17 +17,47 @@
     </nav>
 
     <div class="center-stage">
-      <div class="card-container">
-        <div class="black-card" :style="cardStyle">
+      <div class="card-container" @click="handleCardClick" title="Tap to flip and explore commercial allocations">
+        <!-- Sprinkling Champagne Gold Particles -->
+        <div class="sparkles-container">
+          <span 
+            v-for="s in sparkles" 
+            :key="s.id" 
+            class="sparkle-particle"
+            :style="s.style"
+          >{{ s.symbol }}</span>
+        </div>
+
+        <div 
+          class="black-card" 
+          ref="blackCard"
+          :class="{ 'is-flipped': isFlipped, 'is-slapping': isSlapping }" 
+          :style="cardStyle"
+        >
           <div class="card-glare" :style="glareStyle"></div>
-          <div class="card-content">
+
+          <!-- FRONT FACE -->
+          <div class="card-face card-front">
             <div class="card-chip"></div>
             <div class="card-logo">F</div>
             <div class="card-title">THE FINISHER</div>
             <div class="card-subtitle">LUXURY PRIVATE OS</div>
             <div class="card-footer-foil">
               <span>VIP EXECUTIVE</span>
-              <span>PRIVATE OS</span>
+              <span class="click-hint">TAP TO EXPLORE &darr;</span>
+            </div>
+          </div>
+
+          <!-- BACK FACE -->
+          <div class="card-face card-back">
+            <div class="card-mag-strip"></div>
+            <div class="card-sig-panel">
+              <span class="sig-line">EXECUTIVE ALLOCATION ACCESS</span>
+              <span class="cvv">777</span>
+            </div>
+            <div class="card-back-brand">THE FINISHER LUXURY</div>
+            <div class="card-back-status">
+              <span class="back-status-pill">COMMERCIAL EDITIONS UNLOCKED</span>
             </div>
           </div>
         </div>
@@ -185,6 +215,12 @@ export default {
       mouseY: 0,
       containerWidth: 0,
       containerHeight: 0,
+      isFlipped: false,
+      isSlapping: false,
+      sparkles: [],
+      slapTimer: null,
+      sparkleTimer: null,
+      scrollTimer: null
     }
   },
   computed: {
@@ -194,8 +230,10 @@ export default {
       const centerY = this.containerHeight / 2
       const rotateY = ((this.mouseX - centerX) / centerX) * 15
       const rotateX = -((this.mouseY - centerY) / centerY) * 15
+      const flipY = this.isFlipped ? 180 : 0
+      const scale = this.isSlapping ? 0.93 : 1
       return {
-        transform: `rotateX(${rotateX}deg) rotateY(${rotateY}deg)`
+        transform: `rotateX(${rotateX}deg) rotateY(${rotateY + flipY}deg) scale(${scale})`
       }
     },
     glareStyle() {
@@ -204,7 +242,7 @@ export default {
       const percentY = (this.mouseY / this.containerHeight) * 100
       return {
         background: `radial-gradient(circle at ${percentX}% ${percentY}%, rgba(212, 175, 55, 0.4) 0%, transparent 60%)`,
-        opacity: 1
+        opacity: this.isFlipped ? 0.25 : 0.8
       }
     }
   },
@@ -217,6 +255,9 @@ export default {
   },
   beforeUnmount() {
     window.removeEventListener('resize', this.updateDimensions)
+    clearTimeout(this.slapTimer)
+    clearTimeout(this.sparkleTimer)
+    clearTimeout(this.scrollTimer)
   },
   methods: {
     updateDimensions() {
@@ -232,6 +273,67 @@ export default {
         this.mouseX = e.clientX
         this.mouseY = e.clientY
       })
+    },
+    handleCardClick() {
+      // 1. Slap flip physics
+      this.isFlipped = !this.isFlipped
+      this.isSlapping = true
+
+      clearTimeout(this.slapTimer)
+      this.slapTimer = setTimeout(() => {
+        this.isSlapping = false
+      }, 650)
+
+      // 2. Generate champagne gold starlight sprinkle burst
+      this.triggerSparkleBurst()
+
+      // 3. Smooth glide down to Commercial Packages at apex
+      clearTimeout(this.scrollTimer)
+      this.scrollTimer = setTimeout(() => {
+        this.scrollToPackages()
+      }, 420)
+    },
+    triggerSparkleBurst() {
+      const symbols = ['✦', '✧', '⋆', '•', '✨']
+      const colors = ['#f5d76e', '#d4af37', '#ffffff', '#e6ca65', '#ffd700']
+      const count = 32
+      const burst = []
+
+      for (let i = 0; i < count; i++) {
+        const angle = Math.random() * 2 * Math.PI
+        const dist = 70 + Math.random() * 190
+        const dx = `${Math.cos(angle) * dist}px`
+        const dy = `${Math.sin(angle) * dist}px`
+        const rot = `${Math.floor(Math.random() * 360 - 180)}deg`
+        const size = `${Math.floor(11 + Math.random() * 15)}px`
+        const duration = `${Math.floor(750 + Math.random() * 450)}ms`
+        const delay = `${Math.floor(Math.random() * 100)}ms`
+        const symbol = symbols[Math.floor(Math.random() * symbols.length)]
+        const color = colors[Math.floor(Math.random() * colors.length)]
+
+        burst.push({
+          id: `${Date.now()}_${i}_${Math.random()}`,
+          symbol,
+          style: {
+            '--dx': dx,
+            '--dy': dy,
+            '--rot': rot,
+            '--size': size,
+            '--duration': duration,
+            'animation-delay': delay,
+            color: color,
+            left: '50%',
+            top: '50%'
+          }
+        })
+      }
+
+      this.sparkles = burst
+
+      clearTimeout(this.sparkleTimer)
+      this.sparkleTimer = setTimeout(() => {
+        this.sparkles = []
+      }, 1300)
     },
     selectPlanAndRegister(plan) {
       this.$router.push({ path: '/register', query: { plan } })
@@ -365,55 +467,112 @@ export default {
   padding: 2.5rem 2rem 4rem;
 }
 
-/* 3D Centurion Luxury Black Card */
+/* 3D Centurion Luxury Black Card & Flip Animation */
 .card-container {
   perspective: 1200px;
   margin: 1.5rem 0 2.5rem;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+/* Golden Starlight Sprinkles Burst */
+.sparkles-container {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 0;
+  height: 0;
+  pointer-events: none;
+  z-index: 80;
+}
+
+.sparkle-particle {
+  position: absolute;
+  font-size: var(--size, 16px);
+  color: var(--color, #f5d76e);
+  text-shadow: 0 0 8px rgba(212, 175, 55, 0.9), 0 0 16px rgba(245, 215, 110, 0.7);
+  transform: translate(-50%, -50%);
+  animation: sparkle-burst var(--duration, 900ms) cubic-bezier(0.12, 0.8, 0.32, 1) forwards;
+  will-change: transform, opacity;
+  pointer-events: none;
+}
+
+@keyframes sparkle-burst {
+  0% {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.2) rotate(0deg);
+  }
+  25% {
+    opacity: 1;
+    transform: translate(calc(-50% + var(--dx) * 0.45), calc(-50% + var(--dy) * 0.45)) scale(1.4) rotate(calc(var(--rot) * 0.5));
+  }
+  100% {
+    opacity: 0;
+    transform: translate(calc(-50% + var(--dx)), calc(-50% + var(--dy) + 40px)) scale(0.2) rotate(var(--rot));
+  }
 }
 
 .black-card {
   width: 360px;
   height: 225px;
-  background: radial-gradient(circle at 30% 20%, #1a2230 0%, #0a0d14 55%, #000000 100%);
   border-radius: 18px;
   border: 1.5px solid rgba(212, 175, 55, 0.45);
   box-shadow: 0 25px 60px rgba(0, 0, 0, 0.95), 0 0 35px rgba(212, 175, 55, 0.15), inset 0 1px 1px rgba(255, 255, 255, 0.2);
   position: relative;
   transform-style: preserve-3d;
-  transition: transform 0.15s ease-out;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  overflow: hidden;
+  transition: transform 0.15s ease-out, border-color 0.3s, box-shadow 0.3s;
   cursor: pointer;
 }
 
+.black-card.is-slapping {
+  transition: transform 0.65s cubic-bezier(0.175, 0.885, 0.32, 1.275), border-color 0.3s, box-shadow 0.3s;
+}
+
 .black-card:hover {
-  border-color: rgba(212, 175, 55, 0.7);
-  box-shadow: 0 30px 70px rgba(0, 0, 0, 0.98), 0 0 50px rgba(212, 175, 55, 0.3), inset 0 1px 2px rgba(255, 255, 255, 0.3);
+  border-color: rgba(212, 175, 55, 0.8);
+  box-shadow: 0 30px 75px rgba(0, 0, 0, 0.98), 0 0 55px rgba(212, 175, 55, 0.35), inset 0 1px 2px rgba(255, 255, 255, 0.3);
 }
 
 .card-glare {
   position: absolute;
-  top: 0; left: 0; width: 100%; height: 100%;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   pointer-events: none;
-  z-index: 2;
+  z-index: 10;
   mix-blend-mode: screen;
+  border-radius: 17px;
   transition: opacity 0.3s;
 }
 
-.card-content {
-  position: relative;
-  z-index: 3;
-  text-align: center;
-  transform: translateZ(35px);
+/* Card Faces (Front & Back) */
+.card-face {
+  position: absolute;
+  top: 0;
+  left: 0;
   width: 100%;
+  height: 100%;
+  border-radius: 17px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  box-sizing: border-box;
+}
+
+/* FRONT FACE */
+.card-front {
+  background: radial-gradient(circle at 30% 20%, #1a2230 0%, #0a0d14 55%, #000000 100%);
   padding: 1.5rem 2rem;
   display: flex;
   flex-direction: column;
   align-items: center;
-  box-sizing: border-box;
+  justify-content: center;
+  transform: rotateY(0deg) translateZ(1px);
+  z-index: 2;
 }
 
 .card-chip {
@@ -423,8 +582,8 @@ export default {
   border-radius: 6px;
   align-self: flex-start;
   margin-bottom: 0.25rem;
-  box-shadow: inset 0 0 4px rgba(0,0,0,0.4);
-  border: 1px solid rgba(255,255,255,0.25);
+  box-shadow: inset 0 0 4px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.25);
 }
 
 .card-logo {
@@ -465,6 +624,105 @@ export default {
   font-size: 0.65rem;
   letter-spacing: 2px;
   color: rgba(212, 175, 55, 0.75);
+}
+
+.click-hint {
+  color: #f5d76e;
+  font-weight: 700;
+  letter-spacing: 1px;
+  animation: hint-pulse 2s infinite ease-in-out;
+}
+
+@keyframes hint-pulse {
+  0%, 100% {
+    opacity: 0.55;
+    transform: translateY(0);
+  }
+  50% {
+    opacity: 1;
+    transform: translateY(2px);
+  }
+}
+
+/* BACK FACE */
+.card-back {
+  background: radial-gradient(circle at 70% 80%, #161d28 0%, #080a0f 60%, #000000 100%);
+  transform: rotateY(180deg) translateZ(1px);
+  padding: 1.25rem 0 1.25rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  border-radius: 17px;
+}
+
+.card-mag-strip {
+  width: 100%;
+  height: 40px;
+  background: linear-gradient(180deg, #111111 0%, #1f2530 50%, #080808 100%);
+  margin-top: 0.25rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  border-bottom: 1px solid rgba(0, 0, 0, 0.9);
+}
+
+.card-sig-panel {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: repeating-linear-gradient(45deg, #e5e7eb, #e5e7eb 6px, #cbd5e1 6px, #cbd5e1 12px);
+  color: #0f172a;
+  height: 36px;
+  margin: 0 1.5rem;
+  padding: 0 0.85rem;
+  border-radius: 4px;
+  box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.35);
+}
+
+.sig-line {
+  font-family: 'Courier New', monospace;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+  color: #1e293b;
+}
+
+.cvv {
+  font-family: monospace;
+  font-size: 0.85rem;
+  font-weight: 900;
+  font-style: italic;
+  background: #ffffff;
+  padding: 0.15rem 0.5rem;
+  border-radius: 3px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+  letter-spacing: 2px;
+  color: #000;
+}
+
+.card-back-brand {
+  font-size: 0.75rem;
+  font-weight: 900;
+  letter-spacing: 3px;
+  color: #d4af37;
+  text-align: center;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.9);
+}
+
+.card-back-status {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 0.25rem;
+}
+
+.back-status-pill {
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: #000;
+  background: linear-gradient(135deg, #f5d76e 0%, #d4af37 100%);
+  padding: 0.35rem 0.9rem;
+  border-radius: 999px;
+  box-shadow: 0 2px 10px rgba(212, 175, 55, 0.4);
+  text-transform: uppercase;
 }
 
 /* Hero Typography & Urgency */
