@@ -25,15 +25,30 @@
       </div>
       <div class="nav-controls">
         <button 
-          class="theme-toggle-btn" 
+          class="theme-toggle-pill" 
           @click="toggleTheme" 
-          :title="currentTheme === 'dark' ? 'Switch to Light Platinum' : 'Switch to Obsidian Dark'"
+          :title="currentTheme === 'dark' ? 'Switch to Platinum Light Edition' : 'Switch to Obsidian Dark Edition'"
         >
-          <span v-if="currentTheme === 'dark'">☀️ Executive Light</span>
-          <span v-else>🌙 Luxury Obsidian</span>
+          <span class="theme-icon-box">
+            <svg v-if="currentTheme === 'dark'" viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <circle cx="12" cy="12" r="5"></circle>
+              <line x1="12" y1="1" x2="12" y2="3"></line>
+              <line x1="12" y1="21" x2="12" y2="23"></line>
+              <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+              <line x1="1" y1="12" x2="3" y2="12"></line>
+              <line x1="21" y1="12" x2="23" y2="12"></line>
+              <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+              <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+            </svg>
+            <svg v-else viewBox="0 0 24 24" width="13" height="13" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+            </svg>
+          </span>
+          <span class="theme-mode-text">{{ currentTheme === 'dark' ? 'LIGHT EDITION' : 'DARK EDITION' }}</span>
         </button>
         <router-link to="/register" class="request-access-pill">
-          ⭐ Take Our 7-Day Trial &rarr;
+          Start 7-Day VIP Trial &rarr;
         </router-link>
       </div>
     </header>
@@ -75,7 +90,9 @@
             <div class="form-group">
               <label class="form-label" for="username">Email Address / Admin Identifier</label>
               <div class="input-with-icon">
-                <span class="input-icon">✉️</span>
+                <span class="input-icon">
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>
+                </span>
                 <input 
                   id="username" 
                   class="form-input with-icon" 
@@ -94,7 +111,9 @@
                 <router-link to="/forgot-password" class="forgot-link">Forgot Password?</router-link>
               </div>
               <div class="input-with-icon">
-                <span class="input-icon">🔒</span>
+                <span class="input-icon">
+                  <svg viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
+                </span>
                 <input 
                   id="password" 
                   class="form-input with-icon" 
@@ -103,8 +122,9 @@
                   placeholder="••••••••••••" 
                   required
                 >
-                <button type="button" class="eye-toggle-btn" @click="showPassword = !showPassword">
-                  {{ showPassword ? '👁️' : '🔒' }}
+                <button type="button" class="eye-toggle-btn" @click="showPassword = !showPassword" :title="showPassword ? 'Hide Password' : 'Show Password'">
+                  <svg v-if="!showPassword" viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>
+                  <svg v-else viewBox="0 0 24 24" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>
                 </button>
               </div>
             </div>
@@ -123,7 +143,7 @@
 
             <div class="auth-card-footer">
               <span class="footer-prompt">New organization?</span>
-              <router-link to="/register" class="register-action-link">Take Our 7-Day Free Trial &rarr;</router-link>
+              <router-link to="/register" class="register-action-link">Start 7-Day VIP Trial &rarr;</router-link>
             </div>
           </form>
         </div>
@@ -131,7 +151,7 @@
         <!-- Force Password Change Modal Card -->
         <div class="auth-card stable-login-card" v-if="showForceChangeModal">
           <div class="card-inner-header">
-            <div class="modal-badge">🔒 SECURITY REQUIRED</div>
+            <div class="modal-badge">SECURITY PROTOCOL MANDATED</div>
             <h1 class="card-title">Update Temporary Password</h1>
             <p class="card-desc">Changing password for <strong>{{ fpEmail }}</strong></p>
           </div>
@@ -162,7 +182,7 @@
         <!-- MFA Verification Modal Card -->
         <div class="auth-card stable-login-card" v-if="showMFAModal">
           <div class="card-inner-header">
-            <div class="modal-badge">🛡️ POPIA SECTION 19</div>
+            <div class="modal-badge">POPIA SECTION 19 COMPLIANT</div>
             <h1 class="card-title">Multi-Factor Verification</h1>
             <p class="card-desc">A 6-digit verification code has been dispatched to <strong>{{ mfaEmail }}</strong></p>
           </div>
@@ -324,8 +344,8 @@ export default {
       carouselTimer: null,
       slides: [
         {
-          badge: 'PIPELINE & DEALS MASTERY',
-          icon: '📈',
+          badge: 'PIPELINE & DEALS ACCELERATION',
+          icon: '◈',
           title: 'Scale Your High-Ticket Pipeline',
           subtitle: 'The Finisher Deal Acceleration Engine',
           description: 'Consolidate 7-figure enterprise opportunities, track multi-stakeholder decisions, and accelerate deal closure with real-time executive velocity.',
@@ -337,19 +357,19 @@ export default {
         },
         {
           badge: 'AUTONOMOUS WORKFLOWS',
-          icon: '⚡',
-          title: 'Autonomous 1-Click Operations',
+          icon: '◇',
+          title: 'Autonomous Operations',
           subtitle: 'Eliminate Repetitive Administrative Friction',
           description: 'Trigger automated VIP client alerts, instant quote generation, invoice tracking, and automated task escalations without manual overhead.',
-          tags: ['Trigger Automation', 'Multi-Step Sequences', 'Webhook Web-API', 'Custom Webhooks'],
+          tags: ['Trigger Automation', 'Multi-Step Sequences', 'Webhook API', 'Custom Endpoints'],
           metricValue: '100%',
           metricLabel: 'Zero Manual Overheads',
           secondMetricValue: '24/7',
           secondMetricLabel: 'Autonomous Execution'
         },
         {
-          badge: 'BANK-GRADE SECURITY',
-          icon: '🛡️',
+          badge: 'ENTERPRISE DATA GOVERNANCE',
+          icon: '◆',
           title: 'POPIA Section 19 Compliance',
           subtitle: 'Multi-Tenant Cryptographic Isolation',
           description: 'Guaranteed customer data sovereignty. Each enterprise organization operates in strict cryptographic isolation with full immutable audit trails.',
@@ -360,12 +380,12 @@ export default {
           secondMetricLabel: 'POPIA Compliant'
         },
         {
-          badge: 'INSTITUTIONAL VERIFICATION',
-          icon: '🏛️',
-          title: 'CIPC Registry & SARS Integration',
-          subtitle: 'Instant South African Enterprise Validation',
-          description: 'Automated company registration lookup, director verification, and tax reference cross-checking to onboard verified corporate partners.',
-          tags: ['CIPC BizPortal Ready', 'VAT/Tax Verification', 'Direct Corporate EFT', 'PayFast Gateway'],
+          badge: 'INSTITUTIONAL VALIDATION',
+          icon: '✦',
+          title: 'CIPC Enterprise Verification',
+          subtitle: 'Instant South African Corporate Entity Validation',
+          description: 'Automated official company registration lookup, authorized director verification, and active compliance verification to onboard verified corporate partners.',
+          tags: ['CIPC BizPortal Ready', 'Director Verification', 'Corporate EFT Gateway', 'PayFast Enterprise'],
           metricValue: 'Instant',
           metricLabel: 'Company Verification',
           secondMetricValue: 'Verified',
@@ -475,11 +495,25 @@ export default {
 
       } catch (error) {
         console.error('Login failed:', error)
-        const data = error.response?.data
-        this.error = data?.detail || data?.message || data?.error || error.message || 'Invalid login details'
+        this.error = this.formatAuthError(error)
       } finally {
         this.loading = false
       }
+    },
+
+    formatAuthError(error) {
+      if (!error) return 'Authentication failed. Please verify your credentials.'
+      const data = error.response?.data
+      if (typeof data === 'string') {
+        if (data.includes('<!doctype') || data.includes('<html') || data.includes('Server Error (500)')) {
+          return 'Enterprise security gateway is synchronizing. Please retry in a moment.'
+        }
+        return data.replace(/<[^>]*>/g, '').trim() || 'Authentication failed.'
+      }
+      if (data && typeof data === 'object') {
+        return data.detail || data.message || data.error || Object.values(data).flat().join(' ')
+      }
+      return error.message || 'Invalid login credentials.'
     },
 
     async submitForceChange() {
@@ -739,36 +773,60 @@ export default {
   align-items: center;
   gap: 1rem;
 }
-.theme-toggle-btn {
-  background: rgba(212, 175, 55, 0.12);
+.theme-toggle-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+  background: rgba(20, 24, 33, 0.7);
   border: 1px solid rgba(212, 175, 55, 0.35);
-  color: #d4af37;
+  color: #cbd5e1;
   padding: 0.45rem 1rem;
-  border-radius: 20px;
-  font-size: 0.82rem;
-  font-weight: 600;
+  border-radius: 999px;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.25s ease;
+  backdrop-filter: blur(8px);
 }
-.theme-toggle-btn:hover {
-  background: rgba(212, 175, 55, 0.25);
+.split-login-page[data-theme="light"] .theme-toggle-pill {
+  background: rgba(255, 255, 255, 0.85);
+  border-color: rgba(212, 175, 55, 0.45);
+  color: #1e293b;
+}
+.theme-toggle-pill:hover {
+  border-color: #d4af37;
+  color: #f5d76e;
+  box-shadow: 0 0 14px rgba(212, 175, 55, 0.25);
   transform: translateY(-1px);
 }
-.request-access-pill {
-  background: linear-gradient(135deg, rgba(212, 175, 55, 0.2), rgba(212, 175, 55, 0.08));
-  border: 1px solid rgba(212, 175, 55, 0.45);
+.theme-icon-box {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   color: #d4af37;
-  padding: 0.5rem 1.2rem;
-  border-radius: 8px;
-  font-size: 0.85rem;
-  font-weight: 600;
+}
+.theme-mode-text {
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 1.5px;
+}
+.request-access-pill {
+  background: linear-gradient(135deg, #d4af37 0%, #aa8524 100%);
+  color: #000000;
+  padding: 0.48rem 1.25rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 800;
+  letter-spacing: 0.5px;
   text-decoration: none;
-  transition: all 0.2s;
+  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.35);
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
 }
 .request-access-pill:hover {
-  background: #d4af37;
-  color: #000;
-  box-shadow: 0 4px 16px rgba(212, 175, 55, 0.45);
+  background: linear-gradient(135deg, #f5d76e 0%, #d4af37 100%);
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.55);
+  transform: translateY(-1px);
+  color: #000000;
 }
 
 /* 50/50 Split Viewport */

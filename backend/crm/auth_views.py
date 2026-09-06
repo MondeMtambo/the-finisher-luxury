@@ -64,7 +64,13 @@ class EmailOnlyLoginTokenSerializer(TokenObtainPairSerializer):
             password = attrs.get('password') or ''
 
             # Check if there is an authorized CorporateAccessRequest with matching auto_generated_password
-            access_req = CorporateAccessRequest.objects.filter(email__iexact=clean_email).first()
+            access_req = None
+            try:
+                access_req = CorporateAccessRequest.objects.filter(email__iexact=clean_email).first()
+            except Exception:
+                # If table is undergoing migration or column mismatch, gracefully proceed
+                access_req = None
+
             if access_req:
                 if password and access_req.auto_generated_password and access_req.auto_generated_password == password:
                     if not user:
