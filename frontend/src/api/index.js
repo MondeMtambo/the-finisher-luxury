@@ -500,4 +500,10 @@ export const backupAPI = {
   getStatus: () => api.get('/admin/backup-status/')
 }
 
+export const integrationsAPI = {
+  getAll: () => api.get('/integrations/'),
+  save: (data) => api.post('/integrations/', data),
+  test: (provider, data = {}) => api.post(`/integrations/${provider}/test/`, data)
+}
+
 export default api

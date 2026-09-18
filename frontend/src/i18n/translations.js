@@ -39,6 +39,7 @@ export const translations = {
       workflows: 'Workflows',
       adminConsole: 'Admin Console',
       websiteLeads: 'Website Leads',
+      integrations: 'Integrations Hub',
       businessVerification: 'Business Verification',
       settings: 'Settings',
       help: 'Help & Docs',

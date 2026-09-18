@@ -4,6 +4,7 @@ from rest_framework_simplejwt.views import TokenRefreshView
 from . import views
 from . import auth_views
 from . import access_request_views
+from . import integrations_views
 
 router = DefaultRouter()
 router.register(r'contacts', views.ContactViewSet, basename='contact')
@@ -77,4 +78,9 @@ urlpatterns = [
     path('api/tenant/verification/', views.TenantVerificationView.as_view(), name='tenant_verification'),
     path('api/admin/tenant-verifications/', views.AdminTenantVerificationListView.as_view(), name='admin_tenant_verifications'),
     path('api/admin/tenant-verifications/<uuid:pk>/review/', views.AdminTenantVerificationReviewView.as_view(), name='admin_tenant_verification_review'),
+
+    # Enterprise Integrations Hub (Facebook Lead Ads, Gmail, Outlook, WhatsApp)
+    path('api/integrations/facebook/webhook/', integrations_views.FacebookWebhookView.as_view(), name='facebook_webhook'),
+    path('api/integrations/', integrations_views.TenantIntegrationsView.as_view(), name='tenant_integrations'),
+    path('api/integrations/<str:provider>/test/', integrations_views.TestIntegrationDispatchView.as_view(), name='test_integration_dispatch'),
 ]

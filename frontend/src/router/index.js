@@ -32,6 +32,7 @@ import TermsOfService from '../components/docs/TermsOfService.vue'
 import PopiaCompliance from '../components/docs/PopiaCompliance.vue'
 import ApiDocs from '../components/docs/ApiDocs.vue'
 import BusinessVerification from '../views/BusinessVerification.vue'
+import IntegrationsHub from '../views/IntegrationsHub.vue'
 
 const routes = [
   {
@@ -175,6 +176,12 @@ const routes = [
     name: 'WebsiteLeads',
     component: WebsiteLeads,
     meta: { requiresAuth: true, requiresOwnerAdmin: true }
+  },
+  {
+    path: '/integrations',
+    name: 'IntegrationsHub',
+    component: IntegrationsHub,
+    meta: { requiresAuth: true }
   },
   {
     path: '/admin/team',

@@ -1722,4 +1722,44 @@ class CorporateAccessRequest(models.Model):
         verbose_name_plural = 'Corporate Access Requests'
 
     def __str__(self):
-        return f"{self.first_name} {self.last_name} ({self.company_name}) - {self.status}"
+        return f"{self.first_name} {self.last_name} ({self.company_name}) - {self.status}"
+
+
+class TenantIntegration(models.Model):
+    """
+    Multi-tenant enterprise integration configuration.
+    Stores tenant-specific credentials, API tokens, webhook secrets,
+    and active statuses for Meta Facebook Ads, Gmail, Outlook, WhatsApp, etc.
+    """
+    PROVIDER_CHOICES = [
+        ('facebook', 'Meta / Facebook Lead Ads'),
+        ('gmail', 'Google Workspace / Gmail'),
+        ('outlook', 'Microsoft 365 / Outlook'),
+        ('whatsapp', 'WhatsApp Business API'),
+        ('payfast', 'PayFast Payment Gateway'),
+    ]
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey(
+        'Organization', on_delete=models.CASCADE, related_name='integrations',
+        help_text="Tenant organization that owns this integration"
+    )
+    provider = models.CharField(max_length=40, choices=PROVIDER_CHOICES, db_index=True)
+    is_active = models.BooleanField(default=True)
+    config = models.JSONField(default=dict, blank=True, help_text="Encrypted provider credentials and settings")
+    total_events_ingested = models.PositiveIntegerField(default=0)
+    last_sync_at = models.DateTimeField(null=True, blank=True)
+    last_error = models.TextField(blank=True)
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['provider']
+        unique_together = ['organization', 'provider']
+        verbose_name = 'Tenant Integration'
+        verbose_name_plural = 'Tenant Integrations'
+
+    def __str__(self):
+        return f"{self.organization.name} — {self.get_provider_display()} ({'Active' if self.is_active else 'Inactive'})"
+
