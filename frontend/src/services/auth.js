@@ -132,9 +132,15 @@ export default {
 
   setUser(user) {
     if (user) {
-      localStorage.setItem(USER_KEY, JSON.stringify(user))
+      const serialized = JSON.stringify(user)
+      localStorage.setItem(USER_KEY, serialized)
+      localStorage.setItem('user', serialized)
     } else {
       localStorage.removeItem(USER_KEY)
+      localStorage.removeItem('user')
+    }
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('tfl-auth-changed', { detail: user }))
     }
   },
 
@@ -144,7 +150,12 @@ export default {
   saveAuth(tokens, user) {
     localStorage.setItem(TOKEN_KEY, tokens.access)
     localStorage.setItem(REFRESH_KEY, tokens.refresh)
-    localStorage.setItem(USER_KEY, JSON.stringify(user))
+    const serialized = JSON.stringify(user)
+    localStorage.setItem(USER_KEY, serialized)
+    localStorage.setItem('user', serialized)
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('tfl-auth-changed', { detail: user }))
+    }
   },
 
   /**
@@ -154,6 +165,9 @@ export default {
     localStorage.setItem(TOKEN_KEY, access)
     localStorage.setItem(REFRESH_KEY, refresh)
     localStorage.setItem(LOGIN_TIME_KEY, Date.now().toString())
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('tfl-auth-changed'))
+    }
   },
 
   /**
@@ -170,7 +184,11 @@ export default {
     localStorage.removeItem(TOKEN_KEY)
     localStorage.removeItem(REFRESH_KEY)
     localStorage.removeItem(USER_KEY)
+    localStorage.removeItem('user')
     localStorage.removeItem(LOGIN_TIME_KEY)
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('tfl-auth-changed', { detail: null }))
+    }
   },
 
   /**

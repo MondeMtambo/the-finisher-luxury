@@ -488,6 +488,9 @@ export default {
           authService.setUser(profile.data)
         } catch (profileError) {
           console.warn('Failed to load profile:', profileError)
+          if (loginResponse.data.user) {
+            authService.setUser(loginResponse.data.user)
+          }
         }
 
         toast.success('Welcome back', 'Authenticated into Finisher Luxury')
@@ -586,6 +589,12 @@ export default {
         if (response.data.access && response.data.refresh) {
           authService.setTokens(response.data.access, response.data.refresh)
           authService.setUser(response.data.user)
+        }
+        try {
+          const profile = await authAPI.getProfile()
+          authService.setUser(profile.data)
+        } catch (e) {
+          console.warn('Profile fetch warning in verifyMFA:', e)
         }
 
         toast.success('Verified', 'Welcome to The Finisher')

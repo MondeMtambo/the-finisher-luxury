@@ -370,6 +370,7 @@ import { contactsAPI, companiesAPI, dealsAPI, ticketsAPI } from '../api'
 import { Chart, registerables } from 'chart.js'
 import saCompanies from '../utils/saCompanies'
 import EmployeePerformance from './EmployeePerformance.vue'
+import authService from '../services/auth'
 import toast from '../utils/toast'
 import modal from '../utils/modal'
 
@@ -447,33 +448,39 @@ export default {
     }
   },
   computed: {
+    userObject() {
+      return authService.getUser() || {}
+    },
     isAdminUser() {
-      const raw = localStorage.getItem('user')
-      const user = raw ? JSON.parse(raw) : null
+      const user = this.userObject
       return !!(user && (user.is_superuser || (user.username||'').toLowerCase()==='adminluxury'))
     },
     isEmployeeOnly() {
-      const raw = localStorage.getItem('user')
-      const user = raw ? JSON.parse(raw) : null
-      const isAdmin = !!(user && (user.is_superuser || (user.username||'').toLowerCase()==='adminluxury'))
-      const isClientAdmin = !!(user && !isAdmin && (
+      const user = this.userObject
+      if (!user || !user.username) return false
+      const isAdmin = !!(user.is_superuser || (user.username||'').toLowerCase()==='adminluxury')
+      const isClientAdmin = !!(!isAdmin && (
         (user.permissions && user.permissions.is_admin) ||
         (user.role && (user.role.value === 'admin' || user.role === 'admin')) ||
         (user.profile && user.profile.role === 'admin')
       ))
-      return !(isAdmin || isClientAdmin)
+      const roleStr = (
+        (typeof user.role === 'object' ? user.role?.value : user.role) ||
+        user.profile?.role ||
+        ''
+      ).toLowerCase()
+      const isManagerOrSales = ['executive', 'manager', 'supervisor', 'sales'].includes(roleStr)
+      return !(isAdmin || isClientAdmin || isManagerOrSales)
     },
     currentUser() {
-      const raw = localStorage.getItem('user')
-      return raw ? JSON.parse(raw) : {}
+      return this.userObject
     },
     myUserId() {
       return Number(this.currentUser?.id || 0)
     },
     userTier() {
-      
-      const user = JSON.parse(localStorage.getItem('user') || '{}')
-      return user.tier || 'luxury' 
+      const user = this.userObject
+      return user.tier || user.subscription_tier || 'luxury' 
     },
     isSportTier() {
       return this.userTier === 'sport'
@@ -497,10 +504,10 @@ export default {
       return icons[this.userTier] || '🏆'
     },
     trialDaysRemaining() {
-      const user = JSON.parse(localStorage.getItem('user') || '{}')
+      const user = this.userObject
       if (user.days_remaining !== undefined && user.days_remaining !== null) return user.days_remaining
       if (user.days_remaining_in_trial !== undefined && user.days_remaining_in_trial !== null) return user.days_remaining_in_trial
-      return 7
+      return 15
     },
     tierDisplayName() {
       const names = {

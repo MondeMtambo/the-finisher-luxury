@@ -506,4 +506,10 @@ export const integrationsAPI = {
   test: (provider, data = {}) => api.post(`/integrations/${provider}/test/`, data)
 }
 
+export const eulaAPI = {
+  getStatus: () => api.get('/eula/status/'),
+  accept: (data) => api.post('/eula/accept/', data),
+  getCertificateUrl: (id) => `${API_BASE_URL}/eula/certificate/${id}/`
+}
+
 export default api

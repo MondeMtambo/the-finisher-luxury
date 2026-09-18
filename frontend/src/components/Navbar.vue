@@ -115,6 +115,16 @@
           </svg>
         </button>
 
+        <!-- Interactive System Tour & Intro Video Trigger -->
+        <button 
+          class="topbar-query-btn tour-topbar-btn" 
+          @click="openTutorial" 
+          title="Watch Interactive System Tour & Executive Video"
+        >
+          <span class="query-btn-icon">🎬</span>
+          <span class="query-btn-text">System Tour</span>
+        </button>
+
         <!-- Submit Query / Bug Button -->
         <button 
           class="topbar-query-btn" 
@@ -435,12 +445,8 @@ export default {
     }
   },
   mounted() {
-    if (!authService.isAuthenticated()) return
-    this.loadUserName()
-    this.hydrateProfile()
-    this.refreshPrerequisites()
-    this.fetchNotifications()
-    this.notificationInterval = setInterval(this.fetchNotifications, 60000)
+    this.handleAuthRefresh()
+    window.addEventListener('tfl-auth-changed', this.handleAuthRefresh)
     if (window.innerWidth <= 1024) this.sidebarCollapsed = true
     window.addEventListener('resize', this.handleResize)
     document.addEventListener('click', this.handleClickOutside)
@@ -456,9 +462,11 @@ export default {
   },
   watch: {
     '$route.path'(newPath) {
-      if (this.isPublicPage) return
-      this.loadUserName()
-      if (['/deals', '/companies'].includes(newPath)) this.refreshPrerequisites()
+      if (this.isPublicPage) {
+        this.updateLayoutOffsets()
+        return
+      }
+      this.handleAuthRefresh()
       this.mobileMenuOpen = false
       this.updateLayoutOffsets()
     },
@@ -473,10 +481,25 @@ export default {
     if (this.notificationInterval) clearInterval(this.notificationInterval)
     if (this.clockInterval) clearInterval(this.clockInterval)
     window.removeEventListener('resize', this.handleResize)
+    window.removeEventListener('tfl-auth-changed', this.handleAuthRefresh)
     document.removeEventListener('click', this.handleClickOutside)
     document.documentElement.style.setProperty('--sidebar-current-width', '0px')
   },
   methods: {
+    handleAuthRefresh() {
+      if (!authService.isAuthenticated()) return
+      this.loadUserName()
+      this.hydrateProfile()
+      this.refreshPrerequisites()
+      this.fetchNotifications()
+      if (!this.notificationInterval) {
+        this.notificationInterval = setInterval(this.fetchNotifications, 60000)
+      }
+      this.updateLayoutOffsets()
+    },
+    openTutorial() {
+      window.dispatchEvent(new CustomEvent('open-system-tutorial'))
+    },
     toggleNotifications() {
       this.showNotifications = !this.showNotifications
       if (this.showNotifications) this.showUserMenu = false

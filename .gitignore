@@ -28,6 +28,8 @@ ENV/
 htmlcov/
 staticfiles/
 backend/staticfiles/
+media/
+backend/media/
 
 # Node & Frontend
 node_modules/

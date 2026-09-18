@@ -18,7 +18,7 @@ from django.core.mail import send_mail as django_send_mail
 logger = logging.getLogger(__name__)
 
 
-def _send_via_resend_api(api_key: str, from_email: str, recipient_list: list, subject: str, text_body: str, html_body: str = None) -> bool:
+def _send_via_resend_api(api_key: str, from_email: str, recipient_list: list, subject: str, text_body: str, html_body: str = None, attachments: list = None) -> bool:
     """Dispatches email via Resend HTTPS REST API over port 443 (100% open on Render)."""
     try:
         url = "https://api.resend.com/emails"
@@ -30,6 +30,11 @@ def _send_via_resend_api(api_key: str, from_email: str, recipient_list: list, su
         }
         if html_body:
             payload["html"] = html_body
+        if attachments:
+            payload["attachments"] = [
+                {"filename": a.get("filename", "document.pdf"), "content": a.get("content")}
+                for a in attachments if a.get("content")
+            ]
 
         data = json.dumps(payload).encode('utf-8')
         req = urllib.request.Request(
@@ -59,14 +64,14 @@ def _send_via_resend_api(api_key: str, from_email: str, recipient_list: list, su
         # Automated Failover: If custom domain is pending DNS verification on Resend (403), auto-retry via envelope sender
         if http_err.code == 403 and 'onboarding@resend.dev' not in from_email:
             logger.info("[EmailEngine] Custom domain pending Resend DNS verification. Auto-retrying via verified envelope sender...")
-            return _send_via_resend_api(api_key, "The Finisher Luxury Registrations <onboarding@resend.dev>", recipient_list, subject, text_body, html_body)
+            return _send_via_resend_api(api_key, "The Finisher Luxury Registrations <onboarding@resend.dev>", recipient_list, subject, text_body, html_body, attachments)
         return False
     except Exception as e:
         logger.error(f"[EmailEngine] Resend HTTPS API failed: {e}")
         return False
 
 
-def _send_email_worker(subject: str, text_body: str, recipient_list: list, from_email: str = None, html_body: str = None):
+def _send_email_worker(subject: str, text_body: str, recipient_list: list, from_email: str = None, html_body: str = None, attachments: list = None):
     """Internal synchronous worker executed inside the background thread."""
     if not recipient_list:
         return
@@ -80,26 +85,33 @@ def _send_email_worker(subject: str, text_body: str, recipient_list: list, from_
 
     # Strategy 1: Resend HTTPS REST API (Port 443 — immune to SMTP port blocks)
     if resend_key:
-        success = _send_via_resend_api(resend_key, sender, recipient_list, subject, text_body, html_body)
+        success = _send_via_resend_api(resend_key, sender, recipient_list, subject, text_body, html_body, attachments)
         if success:
             return
 
-    # Strategy 2: Fallback to Django send_mail (fail_silently=True with strict timeout)
+    # Strategy 2: Fallback to Django send_mail or EmailMultiAlternatives
     try:
-        django_send_mail(
+        from django.core.mail import EmailMultiAlternatives
+        msg = EmailMultiAlternatives(
             subject=subject,
-            message=text_body,
+            body=text_body,
             from_email=sender,
-            recipient_list=recipient_list,
-            html_message=html_body,
-            fail_silently=True
+            to=recipient_list
         )
+        if html_body:
+            msg.attach_alternative(html_body, "text/html")
+        if attachments:
+            for att in attachments:
+                raw_bytes = att.get('raw_bytes')
+                if raw_bytes:
+                    msg.attach(att.get('filename', 'document.pdf'), raw_bytes, att.get('content_type', 'application/pdf'))
+        msg.send(fail_silently=True)
         logger.info(f"[EmailEngine] Fallback send_mail dispatched to {recipient_list}")
     except Exception as e:
         logger.warning(f"[EmailEngine] Fallback send_mail failed: {e}")
 
 
-def send_email_async(subject: str, text_body: str, recipient_list: list, from_email: str = None, html_body: str = None):
+def send_email_async(subject: str, text_body: str, recipient_list: list, from_email: str = None, html_body: str = None, attachments: list = None):
     """
     Asynchronous Non-Blocking Email Dispatcher.
     Spawns a daemon thread to deliver the message in the background.
@@ -110,7 +122,7 @@ def send_email_async(subject: str, text_body: str, recipient_list: list, from_em
 
     thread = threading.Thread(
         target=_send_email_worker,
-        args=(subject, text_body, recipient_list, from_email, html_body),
+        args=(subject, text_body, recipient_list, from_email, html_body, attachments),
         daemon=True,
         name=f"email-dispatch-{recipient_list[0] if recipient_list else 'unknown'}"
     )

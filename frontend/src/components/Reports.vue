@@ -145,6 +145,7 @@
 <script>
 import { contactsAPI, companiesAPI, dealsAPI, activitiesAPI, ticketsAPI, employeesAPI, billingAPI } from '../api'
 import EmployeePerformance from './EmployeePerformance.vue'
+import authService from '../services/auth'
 import modal from '../utils/modal'
 
 export default {
@@ -166,8 +167,8 @@ export default {
   },
   computed: {
     isEmployeeOnly() {
-      const raw = localStorage.getItem('user')
-      const user = raw ? JSON.parse(raw) : null
+      const user = authService.getUser()
+      if (!user) return false
       const isAdmin = !!(user && (user.is_superuser || (user.username||'').toLowerCase()==='adminluxury'))
       const isClientAdmin = !!(user && !isAdmin && (
         (user.permissions && user.permissions.is_admin) ||
@@ -177,13 +178,11 @@ export default {
       return !(isAdmin || isClientAdmin)
     },
     isAdmin() {
-      const raw = localStorage.getItem('user')
-      const user = raw ? JSON.parse(raw) : null
+      const user = authService.getUser()
       return !!(user && (user.is_superuser || (user.username||'').toLowerCase()==='adminluxury'))
     },
     isClientAdmin() {
-      const raw = localStorage.getItem('user')
-      const user = raw ? JSON.parse(raw) : null
+      const user = authService.getUser()
       const isAdminCheck = !!(user && (user.is_superuser || (user.username||'').toLowerCase()==='adminluxury'))
       return !isAdminCheck && !!(user && (
         (user.permissions && user.permissions.is_admin) ||

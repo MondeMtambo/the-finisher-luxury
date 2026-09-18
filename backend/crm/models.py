@@ -1762,4 +1762,42 @@ class TenantIntegration(models.Model):
 
     def __str__(self):
         return f"{self.organization.name} — {self.get_provider_display()} ({'Active' if self.is_active else 'Inactive'})"
+
+
+class EulaAcceptance(models.Model):
+    """
+    Legally binding End User License Agreement (EULA) and POPIA Data Processing
+    acceptance record for THE FINISHER LUXURY CRM.
+    Stores immutable cryptographic audit log, digital signature, IP address,
+    and generated acceptance certificate reference.
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    organization = models.ForeignKey(
+        'Organization', on_delete=models.CASCADE, related_name='eula_acceptances',
+        help_text="Tenant enterprise that accepted the license agreement"
+    )
+    user = models.ForeignKey(
+        User, on_delete=models.CASCADE, related_name='eula_acceptances',
+        help_text="User/Director who digitally executed the agreement"
+    )
+    version = models.CharField(max_length=30, default='v1.0-2026', help_text="Active legal version of EULA")
+    signer_full_name = models.CharField(max_length=200, help_text="Legal name of authorized signatory")
+    signer_email = models.EmailField(help_text="Corporate email of signatory")
+    signer_title = models.CharField(max_length=100, default='Authorized Officer', help_text="Signatory capacity/title (e.g. CEO, Director)")
+    certificate_id = models.CharField(max_length=80, unique=True, db_index=True, help_text="Cryptographic certificate identifier")
+    ip_address = models.GenericIPAddressField(null=True, blank=True, help_text="Signer IP address at execution time")
+    user_agent = models.TextField(blank=True, help_text="Signer client user agent")
+    pdf_filename = models.CharField(max_length=255, blank=True, help_text="Filename of generated certificate PDF")
+    pdf_document = models.FileField(upload_to='eula_certificates/', null=True, blank=True, help_text="Permanent PDF certificate file")
+    accepted_at = models.DateTimeField(auto_now_add=True, db_index=True)
+
+    class Meta:
+        ordering = ['-accepted_at']
+        unique_together = ['organization', 'version']
+        verbose_name = 'EULA Acceptance Audit Record'
+        verbose_name_plural = 'EULA Acceptance Audit Records'
+
+    def __str__(self):
+        return f"{self.organization.name} — {self.signer_full_name} ({self.version}) [{self.certificate_id}]"
+
 

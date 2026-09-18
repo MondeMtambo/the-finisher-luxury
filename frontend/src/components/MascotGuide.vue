@@ -15,6 +15,9 @@
           <p class="greeting-text">{{ currentMessage }}</p>
 
           <div class="quick-chips">
+            <button class="chip-btn" @click="handleAction('tutorial')">
+              <span>🎬</span> System Video Tour
+            </button>
             <button class="chip-btn" @click="handleAction('query')">
               <span>🐛</span> Report Bug / Query
             </button>
@@ -144,7 +147,10 @@ export default {
       this.isMinimized = true
     },
     handleAction(action) {
-      if (action === 'query') {
+      if (action === 'tutorial') {
+        window.dispatchEvent(new CustomEvent('open-system-tutorial'))
+        this.isOpen = false
+      } else if (action === 'query') {
         this.$emit('open-query-modal')
         this.isOpen = false
       } else if (action === 'billionaire') {

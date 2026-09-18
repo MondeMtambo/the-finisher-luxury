@@ -43,7 +43,7 @@
             <span class="diamond">◆</span>
           </div>
           <p class="brand-subtitle">EXECUTIVE ENTERPRISE CRM &bull; MTAMBO HOLDINGS</p>
-          <p class="brand-tagline">POPIA COMPLIANT &bull; ENCRYPTED SAFE VAULT &bull; R25M ASSET ARCHITECTURE</p>
+          <p class="brand-tagline">POPIA COMPLIANT &bull; ENCRYPTED SAFE VAULT &bull; ENTERPRISE ASSET ARCHITECTURE</p>
         </div>
 
         <!-- Progress Bar -->

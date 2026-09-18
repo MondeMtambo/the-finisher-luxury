@@ -9,6 +9,8 @@
     <ConfirmModal />
     <BugQueryModal v-model="showQueryModal" />
     <MascotGuide @open-query-modal="showQueryModal = true" />
+    <EulaModal />
+    <SystemTutorialModal />
   </div>
 </template>
 
@@ -19,6 +21,8 @@ import ConfirmModal from './components/ConfirmModal.vue'
 import LuxurySplash from './components/LuxurySplash.vue'
 import BugQueryModal from './components/BugQueryModal.vue'
 import MascotGuide from './components/MascotGuide.vue'
+import EulaModal from './components/EulaModal.vue'
+import SystemTutorialModal from './components/SystemTutorialModal.vue'
 import authService from './services/auth'
 
 export default {
@@ -29,7 +33,9 @@ export default {
     ConfirmModal,
     LuxurySplash,
     BugQueryModal,
-    MascotGuide
+    MascotGuide,
+    EulaModal,
+    SystemTutorialModal
   },
   data() {
     return {

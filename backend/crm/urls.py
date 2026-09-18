@@ -5,6 +5,7 @@ from . import views
 from . import auth_views
 from . import access_request_views
 from . import integrations_views
+from . import eula_views
 
 router = DefaultRouter()
 router.register(r'contacts', views.ContactViewSet, basename='contact')
@@ -83,4 +84,9 @@ urlpatterns = [
     path('api/integrations/facebook/webhook/', integrations_views.FacebookWebhookView.as_view(), name='facebook_webhook'),
     path('api/integrations/', integrations_views.TenantIntegrationsView.as_view(), name='tenant_integrations'),
     path('api/integrations/<str:provider>/test/', integrations_views.TestIntegrationDispatchView.as_view(), name='test_integration_dispatch'),
+
+    # End User License Agreement (EULA) Legal Compliance & Certificates
+    path('api/eula/status/', eula_views.EulaStatusView.as_view(), name='eula_status'),
+    path('api/eula/accept/', eula_views.EulaAcceptView.as_view(), name='eula_accept'),
+    path('api/eula/certificate/<uuid:pk>/', eula_views.EulaCertificateDownloadView.as_view(), name='eula_certificate_download'),
 ]
