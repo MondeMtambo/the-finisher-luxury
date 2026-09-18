@@ -4,13 +4,21 @@ from django.db import migrations, models
 
 
 def add_billing_type_if_not_exists(apps, schema_editor):
-    # Use ALTER TABLE ... ADD COLUMN IF NOT EXISTS to avoid errors if column already exists
-    schema_editor.execute(
-        """
-        ALTER TABLE crm_product
-        ADD COLUMN IF NOT EXISTS billing_type varchar(30) NOT NULL DEFAULT 'standard';
-        """
-    )
+    # Support both PostgreSQL (production) and SQLite (testing/local sandbox)
+    connection = schema_editor.connection
+    if connection.vendor == 'sqlite':
+        with connection.cursor() as cursor:
+            cursor.execute("PRAGMA table_info(crm_product)")
+            columns = [row[1] for row in cursor.fetchall()]
+            if 'billing_type' not in columns:
+                cursor.execute("ALTER TABLE crm_product ADD COLUMN billing_type varchar(30) NOT NULL DEFAULT 'standard';")
+    else:
+        schema_editor.execute(
+            """
+            ALTER TABLE crm_product
+            ADD COLUMN IF NOT EXISTS billing_type varchar(30) NOT NULL DEFAULT 'standard';
+            """
+        )
 
 
 class Migration(migrations.Migration):

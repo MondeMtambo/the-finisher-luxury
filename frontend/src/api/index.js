@@ -272,7 +272,8 @@ export const dealsAPI = {
   update: (id, data) => api.put(`/deals/${id}/`, data),
   delete: (id) => api.delete(`/deals/${id}/`),
   startTimer: (id) => api.post(`/deals/${id}/start_timer/`),
-  stopTimer: (id) => api.post(`/deals/${id}/stop_timer/`)
+  stopTimer: (id) => api.post(`/deals/${id}/stop_timer/`),
+  sendQuote: (id, data = {}) => api.post(`/deals/${id}/send_quote/`, data)
 }
 
 export const activitiesAPI = {
@@ -493,6 +494,10 @@ export const billingAPI = {
 export const tenantInspectorAPI = {
   getAll: () => api.get('/admin/tenant-inspector/'),
   getTenantData: (tenantId) => api.get('/admin/tenant-inspector/', { params: { tenant_id: tenantId } })
+}
+
+export const backupAPI = {
+  getStatus: () => api.get('/admin/backup-status/')
 }
 
 export default api

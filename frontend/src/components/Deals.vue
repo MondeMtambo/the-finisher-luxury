@@ -34,6 +34,10 @@
               </button>
             </div>
             <div class="deal-actions">
+              <button class="btn btn-sm btn-gold" @click.stop="handleSendQuote(deal)" :disabled="sendingQuoteId === deal.id" title="Generate and email formal quotation to client">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
+                {{ sendingQuoteId === deal.id ? 'Sending...' : 'Quote' }}
+              </button>
               <button class="btn btn-sm btn-secondary" @click="editDeal(deal)">Edit</button>
               <button class="btn btn-sm btn-danger" @click="deleteDeal(deal.id)" :disabled="!canDeleteDeals">Delete</button>
             </div>
@@ -107,6 +111,7 @@ export default {
       showAddModal: false,
       showEditModal: false,
       userPermissions: null,
+      sendingQuoteId: null,
       dealForm: {
         title: '',
         company: '',
@@ -292,6 +297,26 @@ export default {
         console.error('Error stopping timer:', error)
         toast.error('Timer Error', 'Failed to stop timer: ' + (error.response?.data?.error || error.message))
       }
+    },
+    async handleSendQuote(deal) {
+      const confirmed = await modal.confirm(
+        'Dispatch Formal Quotation',
+        `Generate and dispatch an official, luxury-branded commercial quotation for "${deal.title}" (R${this.formatNumber(deal.value)}) to the client's email address?\n\nThis will automatically advance the deal to the Proposal stage.`
+      )
+      if (!confirmed) return
+
+      this.sendingQuoteId = deal.id
+      try {
+        const res = await dealsAPI.sendQuote(deal.id)
+        toast.success('Quotation Dispatched', res.data?.message || 'Official quotation emailed to client.')
+        await this.loadDeals()
+      } catch (err) {
+        console.error('Quote error:', err)
+        const msg = err.response?.data?.error || err.message || 'Failed to dispatch quotation.'
+        toast.error('Dispatch Failed', msg)
+      } finally {
+        this.sendingQuoteId = null
+      }
     }
   }
 }
@@ -326,7 +351,22 @@ export default {
 .timer-btn:disabled { opacity: 0.4; cursor: not-allowed; }
 .timer-stop:not(:disabled) { animation: pulse-stop 1.5s ease-in-out infinite; }
 @keyframes pulse-stop { 0%,100%{opacity:1}50%{opacity:0.5} }
-.deal-actions { display: flex; gap: 0.35rem; }
+.deal-actions { display: flex; gap: 0.35rem; margin-top: 0.5rem; flex-wrap: wrap; }
+.btn-gold {
+  background: linear-gradient(135deg, #d4af37 0%, #b45309 100%);
+  color: #ffffff;
+  border: none;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  box-shadow: 0 2px 6px rgba(212, 175, 55, 0.25);
+  transition: all 0.2s ease;
+}
+.btn-gold:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(212, 175, 55, 0.4);
+}
 @media (max-width: 1024px) {
   .pipeline-board { grid-template-columns: repeat(3, 1fr); }
 }
