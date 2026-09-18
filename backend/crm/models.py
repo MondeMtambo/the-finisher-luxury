@@ -26,13 +26,15 @@ class Organization(models.Model):
         ('luxury', 'Luxury Team'),
         ('executive', 'Executive Suite'),
         ('enterprise', 'Enterprise Custom'),
-        ('trial', '7-Day VIP Trial'),
-    ], default='luxury')
+        ('trial', '15-Day VIP Trial'),
+    ], default='trial')
     trial_start_date = models.DateTimeField(default=timezone.now)
     trial_end_date = models.DateTimeField(blank=True, null=True)
+    lead_limit = models.PositiveIntegerField(default=50, help_text="Maximum lead intake limit during trial period")
+    can_export_csv = models.BooleanField(default=False, help_text="Anti-theft data lock: False during trial, True for paid")
     is_active = models.BooleanField(default=True)
     is_cipc_verified = models.BooleanField(default=False, help_text="CIPC business entity verified")
-    max_users = models.PositiveIntegerField(default=10)
+    max_users = models.PositiveIntegerField(default=2, help_text="Maximum active user seats for organization (2 on trial)")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -51,7 +53,7 @@ class Organization(models.Model):
                 counter += 1
             self.slug = slug
         if not self.trial_end_date:
-            self.trial_end_date = self.trial_start_date + timedelta(days=7)
+            self.trial_end_date = self.trial_start_date + timedelta(days=15)
         super().save(*args, **kwargs)
 
     @property
@@ -335,7 +337,7 @@ class UserProfile(models.Model):
         ('overdue', 'Overdue'),
         ('trial', 'Trial Period'),
     ], default='pending')
-    trial_ends_at = models.DateTimeField(blank=True, null=True, help_text="7-day trial period end date")
+    trial_ends_at = models.DateTimeField(blank=True, null=True, help_text="15-day trial period end date")
 
     can_add_employees = models.BooleanField(default=False, help_text="Delegated permission: employee can add new employees (requires admin OTP)")
     can_manage_assets = models.BooleanField(default=False, help_text="Delegated permission: manager can add and manage company physical assets")

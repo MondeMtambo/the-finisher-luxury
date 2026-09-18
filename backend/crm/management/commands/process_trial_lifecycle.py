@@ -9,11 +9,11 @@ from crm.email_service import send_email_async, render_luxury_email_html
 logger = logging.getLogger(__name__)
 
 class Command(BaseCommand):
-    help = 'Automate 7-day VIP trial transitions, 3-day grace period alerts, and vault locks with 100% data preservation.'
+    help = 'Automate 15-day VIP trial transitions, 3-day grace period alerts, and vault locks with 100% data preservation.'
 
     def handle(self, *args, **options):
         now = timezone.now()
-        self.stdout.write(self.style.NOTICE(f"[{now.isoformat()}] Processing 7-day trial and 3-day grace period lifecycle..."))
+        self.stdout.write(self.style.NOTICE(f"[{now.isoformat()}] Processing 15-day trial and 3-day grace period lifecycle..."))
 
         active_orgs = Organization.objects.filter(is_active=True)
         grace_notified_count = 0
@@ -39,7 +39,7 @@ class Command(BaseCommand):
                         Notification.objects.create(
                             recipient=admin.user,
                             title="VIP Trial Ended — 3-Day Grace Period Active",
-                            message=f"Your 7-day VIP allocation has ended. You have {days_left} day(s) remaining in your grace period. Settle your plan to avoid workspace quarantine.",
+                            message=f"Your 15-day VIP allocation has ended. You have {days_left} day(s) remaining in your grace period. Settle your plan to avoid workspace quarantine.",
                             entity_type="billing",
                             meta={'tag': notif_tag, 'days_remaining': days_left}
                         )
@@ -50,7 +50,7 @@ class Command(BaseCommand):
                                 subtitle=f"{org.name} &middot; VIP Allocation Expiring",
                                 recipient_name=admin.user.first_name or admin.user.username,
                                 message_paragraphs=[
-                                    f"Your 7-day VIP All-Access allocation on <strong>THE FINISHER LUXURY</strong> has ended.",
+                                    f"Your 15-day VIP All-Access allocation on <strong>THE FINISHER LUXURY</strong> has ended.",
                                     f"Your private workspace has entered a <strong>3-Day Settlement Grace Period ({days_left} day(s) remaining)</strong>.",
                                     "Your database records, deals, contacts, and employee permissions remain cryptographically preserved. Settle your monthly allocation now to maintain continuous uninterrupted service."
                                 ],
@@ -60,7 +60,7 @@ class Command(BaseCommand):
                             )
                             send_email_async(
                                 subject=f"Action Required: 3-Day Grace Period Active for {org.name}",
-                                text_body=f"Your 7-day trial has ended. You have {days_left} days left in your settlement grace period. Please upgrade to maintain uninterrupted service: https://www.thefinishercrm.tech/#/upgrade",
+                                text_body=f"Your 15-day trial has ended. You have {days_left} days left in your settlement grace period. Please upgrade to maintain uninterrupted service: https://www.thefinishercrm.tech/#/upgrade",
                                 recipient_list=[admin.user.email],
                                 html_body=email_html
                             )
@@ -79,7 +79,7 @@ class Command(BaseCommand):
                         Notification.objects.create(
                             recipient=admin.user,
                             title="Workspace Quarantined — Payment Required",
-                            message="Your 7-day trial and 3-day grace period have concluded. Settle your monthly allocation to restore immediate access.",
+                            message="Your 15-day trial and 3-day grace period have concluded. Settle your monthly allocation to restore immediate access.",
                             entity_type="billing",
                             meta={'tag': notif_tag}
                         )
@@ -89,7 +89,7 @@ class Command(BaseCommand):
                                 subtitle=f"{org.name} &middot; Secure Storage Vault",
                                 recipient_name=admin.user.first_name or admin.user.username,
                                 message_paragraphs=[
-                                    "Your 7-day VIP trial and 3-day settlement grace period have elapsed without payment confirmation.",
+                                    "Your 15-day VIP trial and 3-day settlement grace period have elapsed without payment confirmation.",
                                     "In accordance with our enterprise retention policy, your workspace has been placed into <strong>Secure Quarantine</strong>.",
                                     "All client records, pipeline deals, contacts, and configuration data are 100% safely preserved in our encrypted vault. Settle your monthly allocation to instantly restore access."
                                 ],
@@ -106,7 +106,7 @@ class Command(BaseCommand):
 
                 record_audit_event(
                     'TRIAL_LIFECYCLE_QUARANTINE',
-                    f"Organization '{org.name}' transitioned to quarantined status following expiration of 7-day trial + 3-day grace period. Data preserved.",
+                    f"Organization '{org.name}' transitioned to quarantined status following expiration of 15-day trial + 3-day grace period. Data preserved.",
                     user=None,
                     organization=org,
                     severity='WARNING'

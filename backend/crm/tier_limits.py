@@ -5,7 +5,7 @@ Configures commercial limits for:
   - luxury (Luxury Team - R999/month Flagship)
   - executive (Executive Suite - R1,500/month)
   - enterprise (Enterprise Cluster)
-  - trial (7-Day Unrestricted VIP Allocation - ALL FEATURES UNLOCKED)
+  - trial (15-Day Unrestricted VIP Allocation - ALL FEATURES UNLOCKED)
 """
 
 TIER_QUOTAS = {
@@ -69,20 +69,20 @@ TIER_QUOTAS = {
         'manager_max_subordinates': None,
     },
     'trial': {
-        # 7-Day VIP Allocation: EVERYTHING UNLOCKED!
-        'max_users': 999,
+        # 15-Day VIP Allocation with smart lead intake cap & anti-theft export lock
+        'max_users': 2,
         'max_companies': None,
-        'max_contacts': None,
+        'max_contacts': 50,
         'max_deals': None,
         'max_products': None,
-        'max_campaigns': None,
-        'max_templates': None,
-        'max_workflows': None,
+        'max_campaigns': 2,
+        'max_templates': 2,
+        'max_workflows': 2,
         'max_tickets': None,
         'max_assets': None,
-        'can_export_reports': True,
+        'can_export_reports': False,
         'manager_can_add_employees': True,
-        'manager_max_subordinates': None,
+        'manager_max_subordinates': 1,
     }
 }
 
@@ -90,17 +90,11 @@ def check_org_quota(organization, resource: str, current_count: int = None):
     """
     Checks if an organization can create another item of `resource`.
     Returns (allowed: bool, limit: int or None, message: str).
-    Trial organizations get 100% UNRESTRICTED ALL-ACCESS.
     """
     if not organization:
         return True, None, ""
     
     tier = (organization.subscription_tier or 'luxury').lower()
-    
-    # 7-Day Trial gets EVERYTHING UNLOCKED
-    if tier == 'trial' or getattr(organization, 'is_trial_active', False):
-        return True, None, ""
-        
     quotas = TIER_QUOTAS.get(tier, TIER_QUOTAS['luxury'])
     limit = quotas.get(f'max_{resource}')
     
@@ -108,8 +102,11 @@ def check_org_quota(organization, resource: str, current_count: int = None):
         return True, None, ""
         
     if current_count is not None and current_count >= limit:
-        tier_title = "Luxury Basic" if tier == "basic" else tier.title()
-        msg = f"{tier_title} allocation limit reached ({limit} {resource} max). Upgrade to Luxury Team (R999/mo) for unrestricted allocation."
+        if tier == 'trial' or getattr(organization, 'is_trial_active', False):
+            msg = f"15-Day VIP Trial limit reached ({limit} {resource} max). Activate subscription to uncap your pipeline."
+        else:
+            tier_title = "Luxury Basic" if tier == "basic" else tier.title()
+            msg = f"{tier_title} allocation limit reached ({limit} {resource} max). Upgrade to Luxury Team for unrestricted allocation."
         return False, limit, msg
         
     return True, limit, ""
@@ -119,9 +116,7 @@ def can_add_user(organization=None, user=None):
     if not organization:
         return True
     tier = (organization.subscription_tier or 'luxury').lower()
-    if tier == 'trial' or getattr(organization, 'is_trial_active', False):
-        return True
-    limit = TIER_QUOTAS.get(tier, {}).get('max_users', 5)
+    limit = TIER_QUOTAS.get(tier, {}).get('max_users', 2 if tier == 'trial' else 5)
     from .models import UserProfile
     count = UserProfile.objects.filter(organization=organization).count()
     return count < limit
@@ -131,9 +126,7 @@ def get_remaining_user_slots(organization=None):
     if not organization:
         return 999
     tier = (organization.subscription_tier or 'luxury').lower()
-    if tier == 'trial' or getattr(organization, 'is_trial_active', False):
-        return 999
-    limit = TIER_QUOTAS.get(tier, {}).get('max_users', 5)
+    limit = TIER_QUOTAS.get(tier, {}).get('max_users', 2 if tier == 'trial' else 5)
     from .models import UserProfile
     count = UserProfile.objects.filter(organization=organization).count()
     return max(0, limit - count)

@@ -67,7 +67,7 @@
         <ul>
           <li>Encrypted transport (HTTPS / 256-bit TLS) and industry-standard hashing for passwords.</li>
           <li>Access controls, logging, and monitoring for suspicious activity.</li>
-          <li><strong>30-Day Safe Vault Quarantine Guarantee (POPIA Section 19):</strong> All tenant data during the 7-day VIP trial and 3-day grace period is strictly preserved. Following grace expiration, client records are placed in an isolated, encrypted safe vault quarantine for exactly 30 days before clean automated purge, giving executives guaranteed continuity and protection.</li>
+          <li><strong>30-Day Safe Vault Quarantine Guarantee (POPIA Section 19):</strong> All tenant data during the 15-day VIP trial and 3-day grace period is strictly preserved. Following grace expiration, client records are placed in an isolated, encrypted safe vault quarantine for exactly 30 days before clean automated purge, giving executives guaranteed continuity and protection.</li>
           <li>Clients may export or delete their CRM records at any time during active trials and subscriptions.</li>
         </ul>
       </section>

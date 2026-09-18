@@ -11,7 +11,7 @@
           Existing Member? Login &rarr;
         </button>
         <button class="nav-trial-btn" @click="selectPlanAndRegister('luxury')">
-          Start 7-Day Trial
+          Start 15-Day Trial
         </button>
       </div>
     </nav>
@@ -65,7 +65,7 @@
       
       <div class="landing-vip-badge">
         <span class="vip-pulse-dot"></span>
-        <span>7-DAY VIP EXECUTIVE ALLOCATION &middot; 15 WORKSPACES</span>
+        <span>15-DAY VIP EXECUTIVE ALLOCATION &middot; 15 WORKSPACES</span>
       </div>
 
       <h1 class="headline">Your Pipeline. Elevated.</h1>
@@ -76,17 +76,17 @@
       </div>
 
       <div class="hero-actions">
-        <button class="request-btn" @click="selectPlanAndRegister('luxury')">Start 7-Day VIP Trial &rarr;</button>
+        <button class="request-btn" @click="selectPlanAndRegister('luxury')">Start 15-Day VIP Trial &rarr;</button>
         <button class="packages-scroll-btn" @click="scrollToPackages">View All Packages &darr;</button>
       </div>
     </div>
 
-    <!-- Commercial Packages & 7-Day Trial Showcase -->
+    <!-- Commercial Packages & 15-Day Trial Showcase -->
     <div class="packages-section" id="packages" ref="packagesSection">
       <div class="section-tag">COMMERCIAL EDITIONS &amp; EXECUTIVE ALLOCATIONS</div>
-      <h2 class="section-title">Select Your 7-Day VIP Free Trial</h2>
+      <h2 class="section-title">Select Your 15-Day VIP Free Trial</h2>
       <p class="section-subtitle">
-        Every edition includes an unrestricted 7-day executive trial before standard monthly billing.
+        Every edition includes an unrestricted 15-day executive trial before standard monthly billing.
         Billed in South African Rand (ZAR) &middot; Zero foreign exchange fees &middot; Cancel anytime.
       </p>
 
@@ -111,7 +111,7 @@
           </ul>
 
           <button class="plan-cta-btn secondary" @click="selectPlanAndRegister('basic')">
-            Start 7-Day Free Trial &rarr;
+            Start 15-Day Free Trial &rarr;
           </button>
         </div>
 
@@ -138,7 +138,7 @@
           </ul>
 
           <button class="plan-cta-btn primary" @click="selectPlanAndRegister('luxury')">
-            Start 7-Day Free Trial &rarr;
+            Start 15-Day Free Trial &rarr;
           </button>
         </div>
 
@@ -164,7 +164,7 @@
           </ul>
 
           <button class="plan-cta-btn secondary" @click="selectPlanAndRegister('executive')">
-            Start 7-Day Free Trial &rarr;
+            Start 15-Day Free Trial &rarr;
           </button>
         </div>
 

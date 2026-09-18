@@ -45,7 +45,7 @@
       <div class="auth-header">
         <div class="vip-badge-pill">
           <span class="vip-badge-dot"></span>
-          7-DAY VIP EXECUTIVE ACCESS &middot; CORPORATE ONBOARDING
+          15-DAY VIP EXECUTIVE ACCESS &middot; CORPORATE ONBOARDING
         </div>
         <div class="scarcity-pill-banner">
           <span>Strictly Limited: <strong>15 Private Enterprise Allocations Active</strong> &mdash; Secure Your Space</span>
@@ -54,7 +54,7 @@
           <div class="package-banner-left">
             <div class="package-banner-text">
               <div class="pkg-title">CHOSEN ALLOCATION: <strong>{{ selectedTierInfo.name }}</strong></div>
-              <div class="pkg-desc">7-Day Free Trial &middot; {{ selectedTierInfo.price }} thereafter &middot; {{ selectedTierInfo.seats }}</div>
+              <div class="pkg-desc">15-Day Free Trial &middot; {{ selectedTierInfo.price }} thereafter &middot; {{ selectedTierInfo.seats }}</div>
             </div>
           </div>
           <button type="button" class="change-plan-btn" @click="$router.push('/#packages')">Change Package</button>
@@ -550,7 +550,7 @@
         </div>
         <div class="dossier-row">
           <span class="dossier-key">Allocation Tier:</span>
-          <span class="dossier-val highlight-gold">7-Day VIP Executive Private OS</span>
+          <span class="dossier-val highlight-gold">15-Day VIP Executive Private OS</span>
         </div>
         <div class="dossier-row">
           <span class="dossier-key">Executive Dispatch:</span>

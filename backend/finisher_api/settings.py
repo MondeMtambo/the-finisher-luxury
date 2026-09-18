@@ -124,14 +124,11 @@ if DATABASE_URL:
     DATABASES['default']['OPTIONS']['keepalives_count'] = 5      # Drop after 5 failed keepalives
     DATABASES['default']['OPTIONS']['connect_timeout'] = 10      # Max 10s to establish connection
 else:
+    # Local fallback for offline commands / migrations when no cloud DATABASE_URL is set
     DATABASES = {
         'default': {
-            'ENGINE': 'django.db.backends.postgresql',
-            'NAME': config('POSTGRES_DB', default='thefinisher'),
-            'USER': config('POSTGRES_USER', default='postgres'),
-            'PASSWORD': config('POSTGRES_PASSWORD', default=''),
-            'HOST': config('POSTGRES_HOST', default='localhost'),
-            'PORT': config('POSTGRES_PORT', default='5432'),
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
         }
     }
 

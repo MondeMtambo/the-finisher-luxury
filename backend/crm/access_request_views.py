@@ -170,7 +170,7 @@ class PublicCEOSearchView(APIView):
                 'ceo_email': req.email,
                 'job_title': req.job_title or "Chief Executive Officer (CEO)",
                 'is_verified': bool(req.cipc_number),
-                'tier': '7-Day VIP Executive'
+                'tier': '15-Day VIP Executive'
             })
 
         # 4. Search Company CRM records
@@ -193,7 +193,7 @@ class PublicCEOSearchView(APIView):
                 'ceo_email': c_user.email if c_user else "",
                 'job_title': "Chief Executive Officer (CEO)",
                 'is_verified': bool(c.registration_number),
-                'tier': '7-Day VIP Executive'
+                'tier': '15-Day VIP Executive'
             })
 
         return Response(results)
@@ -480,7 +480,7 @@ class PublicVerifyAccessRequestView(APIView):
         ack_body = (
             f"Dear {req_obj.first_name} {req_obj.last_name},\n\n"
             f"Your corporate identity has been verified successfully.\n"
-            f"Your access application for {req_obj.company_name} is now queued for executive review by Mtambo Holdings under 7-Day VIP Executive privileges.\n\n"
+            f"Your access application for {req_obj.company_name} is now queued for executive review by Mtambo Holdings under 15-Day VIP Executive privileges.\n\n"
             f"What happens next?\n"
             f"1. The Executive Directorate will review your company dossier.\n"
             f"2. Upon executive authorization, your enterprise workspace will be provisioned.\n"
@@ -494,11 +494,11 @@ class PublicVerifyAccessRequestView(APIView):
 
         ack_html = render_luxury_email_html(
             title="Corporate Application Verified",
-            subtitle=f"{req_obj.company_name} &middot; 7-Day VIP Executive Fleet",
+            subtitle=f"{req_obj.company_name} &middot; 15-Day VIP Executive Fleet",
             recipient_name=f"{req_obj.first_name} {req_obj.last_name}",
             message_paragraphs=[
                 f"Your corporate identity for <strong>{req_obj.company_name}</strong> has been successfully verified.",
-                "Your corporate access dossier has been submitted to the Executive Directorate of Mtambo Holdings for authorization under <strong>7-Day VIP Executive Privileges</strong>."
+                "Your corporate access dossier has been submitted to the Executive Directorate of Mtambo Holdings for authorization under <strong>15-Day VIP Executive Privileges</strong>."
             ],
             activation_steps=[
                 "The Executive Directorate reviews your corporate credentials and company verification dossier.",
@@ -640,7 +640,7 @@ class AdminAccessRequestActionView(APIView):
     """
     Executive 1-Click Action:
     - 'approve': Automatically provisions the Organization tenant, User, UserProfile (role=admin),
-                 TenantVerification, 7-Day VIP trial, and dispatches activation email with auto-generated credentials.
+                 TenantVerification, 15-Day VIP trial, and dispatches activation email with auto-generated credentials.
     - 'reject': Marks request rejected with reason.
     """
     permission_classes = [permissions.IsAuthenticated]
@@ -798,7 +798,7 @@ class AdminAccessRequestActionView(APIView):
             f"Dear {req_obj.first_name} {req_obj.last_name},\n\n"
             f"We are pleased to inform you that your Corporate Access Dossier for\n"
             f"{req_obj.company_name} has been reviewed and officially authorized by\n"
-            f"Mtambo Holdings under 7-Day VIP Executive Privileges.\n\n"
+            f"Mtambo Holdings under 15-Day VIP Executive Privileges.\n\n"
             f"Your dedicated enterprise workspace has been provisioned and is now live\n"
             f"on our secure private cloud infrastructure.\n\n"
             f"─────────────────────────────────────────────────────────────────────────\n"
@@ -807,7 +807,7 @@ class AdminAccessRequestActionView(APIView):
             f"• Workspace Portal   : {login_url}\n"
             f"• Authorized Email   : {req_obj.email}\n"
             f"• Temporary Passcode : {auto_password}\n"
-            f"• Provisioned Tier   : 7-Day VIP Executive Fleet\n"
+            f"• Provisioned Tier   : 15-Day VIP Executive Fleet\n"
             f"─────────────────────────────────────────────────────────────────────────\n\n"
             f"🔒 MANDATORY FIRST-LOGIN SECURITY PROTOCOL:\n"
             f"In accordance with zero-trust data governance and POPIA Section 19\n"
@@ -830,14 +830,14 @@ class AdminAccessRequestActionView(APIView):
             subtitle=f"{req_obj.company_name} &middot; Private Fleet Operating System",
             recipient_name=f"{req_obj.first_name} {req_obj.last_name}",
             message_paragraphs=[
-                f"We are pleased to inform you that your Corporate Access Dossier for <strong>{req_obj.company_name}</strong> has been officially reviewed and authorized by Mtambo Holdings under <strong>7-Day VIP Executive Privileges</strong>.",
+                f"We are pleased to inform you that your Corporate Access Dossier for <strong>{req_obj.company_name}</strong> has been officially reviewed and authorized by Mtambo Holdings under <strong>15-Day VIP Executive Privileges</strong>.",
                 "Your private enterprise cloud workspace is now live, provisioned on high-performance isolated infrastructure with full pipeline automation and luxury CRM intelligence."
             ],
             credentials={
                 "Authorized Workspace Portal": login_url,
                 "Authorized Work Email": req_obj.email,
                 "Temporary Passcode": auto_password,
-                "Provisioned Fleet Tier": "7-Day VIP Executive Fleet"
+                "Provisioned Fleet Tier": "15-Day VIP Executive Fleet"
             },
             cta_text="Launch Executive Workspace",
             cta_url=login_url,

@@ -148,7 +148,7 @@
           <div v-if="!isSystemAdmin" class="tier-seat-banner" :class="{ 'seat-limit-reached': remainingSlots === 0 }">
             <div class="seat-info">
               <span class="seat-badge" :class="{ 'badge-limit': remainingSlots === 0 }">
-                {{ remainingSlots === 0 ? 'SEAT ALLOCATION FILLED' : '7-DAY VIP TRIAL ALLOCATION' }}
+                {{ remainingSlots === 0 ? 'SEAT ALLOCATION FILLED' : '15-DAY VIP TRIAL ALLOCATION' }}
               </span>
               <span class="seat-text">
                 Your Luxury Team Plan includes <strong>{{ maxUsers || 5 }} Collaborative Seats</strong> (<strong>{{ remainingSlots }}</strong> seats remaining).
@@ -527,7 +527,7 @@
       </div>
     </div>
 
-    <!-- 7-Day Trial Loss-Aversion Warning Modal -->
+    <!-- 15-Day Trial Loss-Aversion Warning Modal -->
     <TrialUrgencyModal
       :show="showTrialUrgencyModal"
       :days-remaining="trialDaysRemaining"

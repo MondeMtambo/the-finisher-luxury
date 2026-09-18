@@ -21,7 +21,7 @@
       <div v-if="!isAdminUser" class="info-bar info-bar--vip">
         <span class="vip-pulse-dot"></span>
         <span class="vip-text">
-          <strong>7-DAY VIP ALLOCATION ACTIVE:</strong> You are on the <strong>{{ tierDisplayName }}</strong> &middot; {{ trialDaysRemaining }} Days Remaining in Trial.
+          <strong>15-DAY VIP ALLOCATION ACTIVE:</strong> You are on the <strong>{{ tierDisplayName }}</strong> &middot; {{ trialDaysRemaining }} Days Remaining in Trial.
         </span>
         <button class="btn btn-sm btn-primary" @click="$router.push('/upgrade/' + (userTier === 'classic' ? 'classic' : 'luxury'))">
           Commercial Plans & EFT

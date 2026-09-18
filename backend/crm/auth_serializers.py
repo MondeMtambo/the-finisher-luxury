@@ -113,10 +113,10 @@ class RegisterSerializer(serializers.ModelSerializer):
             active_trials_count = Organization.objects.filter(subscription_tier='trial', is_active=True).count()
             if active_trials_count >= TRIAL_COHORT_LIMIT:
                 raise serializers.ValidationError({
-                    'error': 'The VIP 7-Day Free Trial cohort is currently at maximum capacity (15/15 businesses enrolled). Please contact executive support or join the waitlist for Batch #2.'
+                    'error': 'The VIP 15-Day Free Trial cohort is currently at maximum capacity (15/15 businesses enrolled). Please contact executive support or join the waitlist for Batch #2.'
                 })
 
-            # Provision Tenant Organization with 7-Day VIP Trial
+            # Provision Tenant Organization with 15-Day VIP Trial
             org, _ = Organization.objects.get_or_create(
                 name=company_name,
                 defaults={

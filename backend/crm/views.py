@@ -4161,7 +4161,7 @@ class PrivateSalesLedgerView(APIView):
     """
     Exclusive Root CEO Sales & Revenue Ledger (POPIA & Financial Governance).
     Strictly accessible by root Platform Owner / Superuser (adminluxury).
-    Allows manual recording of offline contracts, tracking MRR/ARR, monitoring 7-day trials,
+    Allows manual recording of offline contracts, tracking MRR/ARR, monitoring 15-day trials,
     and 1-click subscription management.
     """
     permission_classes = [IsAuthenticated]
@@ -4216,7 +4216,7 @@ class PrivateSalesLedgerView(APIView):
                 'luxury': 'Luxury Team (R999/mo)',
                 'executive': 'Executive Suite (R1,500/mo)',
                 'enterprise': 'Enterprise Custom',
-                'trial': '7-Day VIP Trial'
+                'trial': '15-Day VIP Trial'
             }
 
             records.append({

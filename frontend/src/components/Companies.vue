@@ -13,7 +13,7 @@
       </div>
     </div>
 
-    <!-- 7-Day VIP Trial & 30-Day Encrypted Vault Quarantine Disclaimer Banner -->
+    <!-- 15-Day VIP Trial & 30-Day Encrypted Vault Quarantine Disclaimer Banner -->
     <div v-if="isTrialOrGrace" class="trial-disclaimer-banner" style="background: linear-gradient(135deg, rgba(212,175,55,0.08) 0%, rgba(15,23,42,0.9) 100%); border: 1.5px solid rgba(212,175,55,0.35); border-radius: 12px; padding: 14px 18px; margin-bottom: 1.25rem; display: flex; align-items: flex-start; gap: 14px; box-shadow: 0 4px 20px rgba(0,0,0,0.2);">
       <div style="color: #d4af37; flex-shrink: 0; margin-top: 2px;">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -22,13 +22,13 @@
       </div>
       <div style="flex: 1;">
         <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; margin-bottom: 4px;">
-          <strong style="color: #d4af37; font-size: 0.925rem; letter-spacing: 0.5px;">7-Day VIP Allocation Active &bull; Unlimited Client Accounts</strong>
+          <strong style="color: #d4af37; font-size: 0.925rem; letter-spacing: 0.5px;">15-Day VIP Allocation Active &bull; Unlimited Client Accounts</strong>
           <span style="background: rgba(212,175,55,0.18); border: 1px solid rgba(212,175,55,0.4); color: #f59e0b; padding: 2px 10px; border-radius: 9999px; font-size: 0.75rem; font-weight: 700;">
             {{ isInGrace ? `${graceDaysRemaining} Days Grace Remaining` : `${trialDaysRemaining} of 7 Days Left` }}
           </span>
         </div>
         <p style="margin: 0; font-size: 0.8125rem; color: #cbd5e1; line-height: 1.5;">
-          During your 7-Day VIP Trial (+ 3-Day Settlement Grace Period), you may onboard unlimited client companies and contacts with zero restrictions. If an account remains unsettled past the grace period, records are safely archived in our secure compliance vault for <strong>30 days</strong>. If settled within 30 days, your full workspace is instantly restored with zero downtime. Unsettled workspaces past 30 days are purged permanently under POPIA Section 19 storage limitation regulations.
+          During your 15-Day VIP Trial (+ 3-Day Settlement Grace Period), you may onboard unlimited client companies and contacts with zero restrictions. If an account remains unsettled past the grace period, records are safely archived in our secure compliance vault for <strong>30 days</strong>. If settled within 30 days, your full workspace is instantly restored with zero downtime. Unsettled workspaces past 30 days are purged permanently under POPIA Section 19 storage limitation regulations.
         </p>
       </div>
     </div>
@@ -161,7 +161,7 @@
       </div>
     </div>
 
-    <!-- 7-Day Trial Loss-Aversion Warning Modal -->
+    <!-- 15-Day Trial Loss-Aversion Warning Modal -->
     <TrialUrgencyModal
       :show="showTrialUrgencyModal"
       :days-remaining="trialDaysRemaining"
