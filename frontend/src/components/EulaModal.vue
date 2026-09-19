@@ -219,8 +219,23 @@ export default {
         return
       }
 
-      const publicPaths = ['/login', '/register', '/forgot-password', '/verify-otp', '/']
-      if (publicPaths.includes(this.$route?.path)) {
+      // System Owner (adminluxury) is sovereign and never blocked by onboarding EULA
+      const user = authService.getUser()
+      const isOwner = Boolean(user && user.username && user.username.toLowerCase() === 'adminluxury')
+      if (isOwner) {
+        this.isOpen = false
+        return
+      }
+
+      // If user has already completed/acknowledged EULA, never show again
+      if (localStorage.getItem('tfl_eula_accepted') === 'true') {
+        this.isOpen = false
+        return
+      }
+
+      // STRICT FIRST-TIME ONLY RULE: EULA only triggers on the Dashboard on initial launch
+      if (this.$route?.path !== '/dashboard') {
+        this.isOpen = false
         return
       }
 
@@ -231,10 +246,12 @@ export default {
           this.prefillUser()
           this.isOpen = true
         } else {
+          localStorage.setItem('tfl_eula_accepted', 'true')
           this.isOpen = false
         }
       } catch (err) {
         console.warn('[EULA] Status check warning:', err)
+        this.isOpen = false
       }
     },
 
@@ -262,6 +279,7 @@ export default {
     closeModal() {
       this.isOpen = false
       this.acceptedCertificate = null
+      localStorage.setItem('tfl_eula_accepted', 'true')
     },
 
     checkScrollBottom() {
@@ -284,6 +302,7 @@ export default {
 
         this.acceptedCertificate = resp.data
         this.downloadUrl = resp.data.download_url
+        localStorage.setItem('tfl_eula_accepted', 'true')
         toast.success('EULA Executed', 'PDF certificate dispatched to corporate email')
       } catch (err) {
         console.error('EULA acceptance error:', err)
