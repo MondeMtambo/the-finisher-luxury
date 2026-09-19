@@ -4447,7 +4447,7 @@ class PrivateSalesLedgerView(APIView):
         monthly_price = data.get('monthly_price')
         payment_method = (data.get('payment_method') or 'capitec').strip()
         payment_reference = (data.get('payment_reference') or '').strip()
-        status_val = (data.get('status') or 'trial').strip()
+        status_val = (data.get('status') or 'active').strip()
         notes = (data.get('notes') or '').strip()
 
         if not company_name:
@@ -4466,15 +4466,20 @@ class PrivateSalesLedgerView(APIView):
                 'subscription_tier': tier,
                 'max_users': max_seats,
                 'is_active': True,
+                'lead_limit': 6000,
+                'can_export_csv': True,
                 'trial_start_date': timezone.now(),
-                'trial_end_date': timezone.now() + timezone.timedelta(days=7),
+                'trial_end_date': timezone.now() + timezone.timedelta(days=3650),
             }
         )
         if not created:
             org.subscription_tier = tier
             org.max_users = max_seats
             org.is_active = True
-            org.save(update_fields=['subscription_tier', 'max_users', 'is_active'])
+            org.lead_limit = 6000
+            org.can_export_csv = True
+            org.trial_end_date = timezone.now() + timezone.timedelta(days=3650)
+            org.save(update_fields=['subscription_tier', 'max_users', 'is_active', 'lead_limit', 'can_export_csv', 'trial_end_date'])
 
         sub, _ = OrganizationSubscription.objects.get_or_create(organization=org)
         sub.status = status_val
@@ -4482,12 +4487,8 @@ class PrivateSalesLedgerView(APIView):
         sub.payment_method = payment_method
         sub.payment_reference = payment_reference
         sub.notes = notes
-        if status_val == 'active':
-            sub.current_period_start = timezone.now()
-            sub.current_period_end = timezone.now() + timezone.timedelta(days=30)
-        else:
-            sub.current_period_start = timezone.now()
-            sub.current_period_end = timezone.now() + timezone.timedelta(days=7)
+        sub.current_period_start = timezone.now()
+        sub.current_period_end = timezone.now() + timezone.timedelta(days=3650)
         sub.save()
 
         return Response({
