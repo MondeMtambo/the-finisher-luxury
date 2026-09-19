@@ -160,8 +160,8 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
-# Frontend URL (for password reset links)
-FRONTEND_URL = config('FRONTEND_URL', default='https://thefinisher.tech')
+# Frontend URL (for password reset links & payment redirects)
+FRONTEND_URL = config('FRONTEND_URL', default='https://www.thefinishercrm.tech')
 
 # CORS Settings — Production whitelist. Localhost ONLY in DEBUG mode.
 # In production: CORS_ALLOW_ALL_ORIGINS is DISABLED for zero-trust security.

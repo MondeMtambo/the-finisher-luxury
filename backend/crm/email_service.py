@@ -158,11 +158,22 @@ def render_luxury_email_html(
     otp_html = ""
     if otp_code:
         expiry_txt = f"Valid for exactly {otp_expiry_minutes} minutes" if otp_expiry_minutes else "Ephemeral Single-Use Cryptographic Passcode"
+        raw_code = str(otp_code).strip()
+        digit_tds = "".join([
+            f'<td style="width:44px;height:54px;background:#020617;border:2px solid #d4af37;border-radius:10px;text-align:center;vertical-align:middle;font-family:Consolas,Monaco,\'Courier New\',monospace;font-size:30px;font-weight:900;color:#ffffff;box-shadow:0 4px 16px rgba(212,175,55,0.3);-webkit-user-select:all;user-select:all;">{char}</td>'
+            for char in raw_code
+        ])
         otp_html = f"""
-        <div style="margin:26px 0;text-align:center;background:radial-gradient(ellipse at center, rgba(212,175,55,0.14) 0%, rgba(15,23,42,0.95) 100%);border:1.5px solid #d4af37;border-radius:12px;padding:24px 16px;box-shadow:0 0 30px rgba(212,175,55,0.22);">
-          <div style="font-size:10.5px;letter-spacing:2.5px;color:#d4af37;font-weight:800;text-transform:uppercase;margin-bottom:8px;">SECURE VERIFICATION PASSCODE</div>
-          <div style="font-family:Consolas, Monaco, 'Courier New', monospace;font-size:38px;font-weight:900;letter-spacing:10px;color:#ffffff;text-shadow:0 0 20px rgba(212,175,55,0.6);margin:8px 0;">{otp_code}</div>
-          <div style="font-size:11.5px;color:#94a3b8;margin-top:8px;">{expiry_txt} &middot; Zero-Trust Ephemeral Token</div>
+        <div style="margin:26px 0;text-align:center;background:radial-gradient(ellipse at center, rgba(212,175,55,0.18) 0%, rgba(15,23,42,0.98) 100%);border:1.5px solid #d4af37;border-radius:14px;padding:26px 18px;box-shadow:0 0 35px rgba(212,175,55,0.25);">
+          <div style="font-size:10.5px;letter-spacing:2.5px;color:#d4af37;font-weight:800;text-transform:uppercase;margin-bottom:12px;">SECURE ONE-TIME VERIFICATION PASSCODE (OTP)</div>
+          <table align="center" cellpadding="0" cellspacing="0" style="margin:12px auto;border-collapse:separate;border-spacing:8px;">
+            <tr>{digit_tds}</tr>
+          </table>
+          <div style="margin-top:14px;">
+            <div style="font-family:Consolas, Monaco, 'Courier New', monospace;font-size:22px;font-weight:900;letter-spacing:6px;color:#d4af37;background:#020617;border:1.5px dashed #d4af37;border-radius:8px;padding:8px 20px;display:inline-block;-webkit-user-select:all;user-select:all;cursor:pointer;" title="Tap or hold to copy passcode">{raw_code}</div>
+          </div>
+          <div style="font-size:11.5px;color:#e2e8f0;margin-top:10px;font-weight:600;">📱 Tap or hold code above to quickly copy to clipboard</div>
+          <div style="font-size:11px;color:#94a3b8;margin-top:6px;">{expiry_txt} &middot; Zero-Trust Ephemeral Token</div>
         </div>
         """
 
@@ -172,7 +183,7 @@ def render_luxury_email_html(
         cred_rows = []
         for key, val in credentials.items():
             if 'password' in key.lower() or 'passcode' in key.lower():
-                val_markup = f"""<span style="background:#fef3c7;color:#92400e;padding:6px 14px;border-radius:6px;font-weight:800;font-size:15px;letter-spacing:1.5px;border:1px solid #d97706;font-family:Consolas,Monaco,monospace;display:inline-block;">{val}</span>"""
+                val_markup = f"""<span style="background:#020617;color:#d4af37;padding:6px 14px;border-radius:6px;font-weight:800;font-size:15px;letter-spacing:1.5px;border:1.5px solid #d4af37;font-family:Consolas,Monaco,monospace;display:inline-block;-webkit-user-select:all;user-select:all;cursor:pointer;" title="Tap or hold to copy">{val}</span>"""
             elif 'portal' in key.lower() or 'url' in key.lower() or 'link' in key.lower():
                 val_markup = f"""<a href="{val}" style="color:#d4af37;text-decoration:underline;font-weight:600;">{val}</a>"""
             else:

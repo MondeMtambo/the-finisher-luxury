@@ -31,6 +31,12 @@ PAYFAST_SANDBOX_URL = "https://sandbox.payfast.co.za/eng/process"
 DEFAULT_MERCHANT_ID = "37019297"
 DEFAULT_MERCHANT_KEY = "dououppbwqtve"
 
+def get_verified_frontend_url():
+    url = str(getattr(settings, 'FRONTEND_URL', 'https://www.thefinishercrm.tech') or '').rstrip('/')
+    if 'thefinisher.tech' in url and 'thefinishercrm.tech' not in url:
+        return 'https://www.thefinishercrm.tech'
+    return url or 'https://www.thefinishercrm.tech'
+
 
 class NumberedCanvas(canvas.Canvas):
     """
@@ -318,7 +324,7 @@ class WhiteLabelCheckoutView(APIView):
         merchant_key = getattr(settings, 'PAYFAST_MERCHANT_KEY', DEFAULT_MERCHANT_KEY) or DEFAULT_MERCHANT_KEY
         is_sandbox = getattr(settings, 'PAYFAST_SANDBOX', False)
         process_url = PAYFAST_SANDBOX_URL if is_sandbox else PAYFAST_PROCESS_URL
-        frontend_url = getattr(settings, 'FRONTEND_URL', 'https://www.thefinishercrm.tech').rstrip('/')
+        frontend_url = get_verified_frontend_url()
         client_ip = request.META.get('HTTP_X_FORWARDED_FOR', '').split(',')[0].strip() or request.META.get('REMOTE_ADDR')
 
         # Record Pending Transaction with Forensic Audit Evidence (POPIA Section 19)
@@ -400,7 +406,7 @@ class TenderPackCheckoutView(APIView):
         merchant_key = getattr(settings, 'PAYFAST_MERCHANT_KEY', DEFAULT_MERCHANT_KEY) or DEFAULT_MERCHANT_KEY
         is_sandbox = getattr(settings, 'PAYFAST_SANDBOX', False)
         process_url = PAYFAST_SANDBOX_URL if is_sandbox else PAYFAST_PROCESS_URL
-        frontend_url = getattr(settings, 'FRONTEND_URL', 'https://www.thefinishercrm.tech').rstrip('/')
+        frontend_url = get_verified_frontend_url()
         client_ip = request.META.get('HTTP_X_FORWARDED_FOR', '').split(',')[0].strip() or request.META.get('REMOTE_ADDR')
 
         # Record Pending Transaction with Forensic Audit Evidence (POPIA Section 19)
@@ -494,7 +500,7 @@ class DealSplitPaymentCheckoutView(APIView):
         primary_merchant_key = getattr(settings, 'PAYFAST_MERCHANT_KEY', DEFAULT_MERCHANT_KEY) or DEFAULT_MERCHANT_KEY
         is_sandbox = getattr(settings, 'PAYFAST_SANDBOX', False)
         process_url = PAYFAST_SANDBOX_URL if is_sandbox else PAYFAST_PROCESS_URL
-        frontend_url = getattr(settings, 'FRONTEND_URL', 'https://www.thefinishercrm.tech').rstrip('/')
+        frontend_url = get_verified_frontend_url()
 
         # Check if the seller organization has configured their own PayFast Merchant ID in TenantIntegration
         from .models import TenantIntegration

@@ -1,62 +1,190 @@
 <template>
   <div class="help-page">
-    <div class="page-header">
-      <div>
-        <h1>Help &amp; Enablement</h1>
-        <p class="page-subtitle">Everything you need to master THE FINISHER — from first contact capture to winning the deal.</p>
-      </div>
-    </div>
-
-    <div class="card" style="padding:1.5rem">
-      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem">
-        <div>
-          <h2 style="font-size:1rem;font-weight:600;color:var(--gray-900);margin:0">Guided Tutorial</h2>
-          <p style="font-size:.8125rem;color:var(--gray-500);margin:.25rem 0 0">Interactive walkthrough of the CRM workflow</p>
+    <!-- Header -->
+    <div class="help-header">
+      <div class="header-left">
+        <div class="brand-crest-badge">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          <span>MTAMBO HOLDINGS DIRECTORATE</span>
         </div>
-        <div style="display:flex;gap:.5rem;flex-wrap:wrap">
-          <button type="button" @click="launchTutorial" class="btn btn-primary">Launch Tutorial</button>
-          <button type="button" @click="skipTutorial" class="btn btn-secondary">Skip Tutorial</button>
+        <h1 class="page-title">Help &amp; Enterprise Enablement</h1>
+        <p class="page-subtitle">Master THE FINISHER LUXURY ecosystem — from high-ticket contact onboarding to automated split settlements.</p>
+      </div>
+      <div class="header-actions">
+        <button type="button" @click="launchTutorial" class="btn btn-gold">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+          Launch Interactive Tour
+        </button>
+        <button type="button" @click="skipTutorial" class="btn btn-outline-luxury">
+          Dismiss Tour
+        </button>
+      </div>
+    </div>
+
+    <!-- Tour Status Notice -->
+    <div v-if="tutorialStatus === 'completed'" class="status-pill status-completed">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+      <span>Interactive system tour completed. You can relaunch it at any time to train new executive staff.</span>
+    </div>
+    <div v-else-if="tutorialStatus === 'skipped'" class="status-pill status-skipped">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+      <span>Interactive tour is currently dismissed. Click "Launch Interactive Tour" whenever you are ready.</span>
+    </div>
+
+    <!-- Official Compliance & Documentation Hub Links -->
+    <div class="docs-quick-grid">
+      <router-link to="/popia-compliance" class="doc-card">
+        <div class="doc-icon">⚖️</div>
+        <div class="doc-info">
+          <h4>POPIA Section 19</h4>
+          <p>Bank-grade audited compliance safeguards</p>
+        </div>
+        <span class="doc-arrow">&rarr;</span>
+      </router-link>
+      <router-link to="/api-docs" class="doc-card">
+        <div class="doc-icon">⚙️</div>
+        <div class="doc-info">
+          <h4>Enterprise API Docs</h4>
+          <p>REST endpoints, webhooks &amp; tokens</p>
+        </div>
+        <span class="doc-arrow">&rarr;</span>
+      </router-link>
+      <router-link to="/privacy-policy" class="doc-card">
+        <div class="doc-info">
+          <h4>Privacy Policy</h4>
+          <p>Zero operational data leakage protocols</p>
+        </div>
+        <span class="doc-arrow">&rarr;</span>
+      </router-link>
+      <router-link to="/terms-of-service" class="doc-card">
+        <div class="doc-icon">📜</div>
+        <div class="doc-info">
+          <h4>Terms of Service</h4>
+          <p>Enterprise SaaS licensing agreement</p>
+        </div>
+        <span class="doc-arrow">&rarr;</span>
+      </router-link>
+    </div>
+
+    <!-- Guided 5-Step Workflow -->
+    <div class="luxury-card">
+      <div class="card-head">
+        <div class="head-title-wrap">
+          <span class="card-badge">STANDARD OPERATING PROTOCOL</span>
+          <h2>Executive 5-Step Workflow</h2>
+        </div>
+        <span class="card-note">Data Discipline Standard</span>
+      </div>
+
+      <div class="workflow-timeline">
+        <div class="timeline-step">
+          <div class="step-badge">1</div>
+          <div class="step-content">
+            <h3>Register Client Tenant</h3>
+            <p>Establish the corporate workspace entity, configure tenant settings, and confirm master administrative credentials.</p>
+          </div>
+        </div>
+
+        <div class="timeline-step">
+          <div class="step-badge">2</div>
+          <div class="step-content">
+            <h3>Capture High-Ticket Contact</h3>
+            <p>Under <strong>Clients &amp; Contacts</strong>, capture the primary stakeholder (executive sponsor, phone, and company name).</p>
+          </div>
+        </div>
+
+        <div class="timeline-step">
+          <div class="step-badge">3</div>
+          <div class="step-content">
+            <h3>Formalize Corporate Company Profile</h3>
+            <p>Once a human counterpart exists, establish the corporate entity record with registration numbers, industry, and address.</p>
+          </div>
+        </div>
+
+        <div class="timeline-step">
+          <div class="step-badge">4</div>
+          <div class="step-content">
+            <h3>Link Stakeholders to Company Record</h3>
+            <p>Associate team members, signatories, and decision-makers to maintain an audited commercial contact dossier.</p>
+          </div>
+        </div>
+
+        <div class="timeline-step">
+          <div class="step-badge">5</div>
+          <div class="step-content">
+            <h3>Launch Deal Pipeline &amp; Split Settlement</h3>
+            <p>Open <strong>Deals</strong>, assign valuation, dispatch certified PDF quotes, and process commercial settlements with automated tollbooth splits.</p>
+          </div>
         </div>
       </div>
-      <p v-if="tutorialStatus === 'completed'" style="margin:.75rem 0 0;font-size:.8125rem;color:var(--green-500)">Tutorial marked as completed. You can relaunch anytime.</p>
-      <p v-else-if="tutorialStatus === 'skipped'" style="margin:.75rem 0 0;font-size:.8125rem;color:var(--gray-500)">Tutorial will stay hidden until you relaunch it.</p>
-    </div>
 
-    <div class="card" style="padding:1.5rem">
-      <h2 style="font-size:1rem;font-weight:600;color:var(--gray-900);margin:0 0 1rem">Guided Walkthrough</h2>
-      <ol class="walk-list">
-        <li><strong>Register a client tenant:</strong> Complete the registration form and confirm the welcome email.</li>
-        <li><strong>Capture a contact:</strong> In Contacts, record the client champion and manually capture their company name.</li>
-        <li><strong>Create the company profile:</strong> Once a contact exists, formalise the company record with full business details.</li>
-        <li><strong>Link contact to company:</strong> Edit the contact and assign the newly created company.</li>
-        <li><strong>Build the first deal:</strong> With contacts and companies ready, log the opportunity, stage, and value.</li>
-      </ol>
-      <p style="font-size:.8125rem;color:var(--primary-500);font-weight:600;margin:.75rem 0 0">Tip: The tutorial will highlight each screen and you can hit Skip All anytime.</p>
-    </div>
-
-    <div class="card" style="padding:1.5rem">
-      <h2 style="font-size:1rem;font-weight:600;color:var(--gray-900);margin:0 0 1rem">Frequently Asked Questions</h2>
-      <div v-for="question in faqs" :key="question.q" class="faq-item">
-        <h3>{{ question.q }}</h3>
-        <p v-for="(line, idx) in question.a" :key="idx">{{ line }}</p>
+      <div class="pro-tip-box">
+        <div class="tip-icon">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+        </div>
+        <div class="tip-body">
+          <strong>Executive Pro-Tip:</strong> The Finisher CRM enforces human-first data architecture. Always capture at least one human contact before formalizing an enterprise company to prevent ghost records.
+        </div>
       </div>
     </div>
 
-    <div class="card" style="padding:1.5rem">
-      <h2 style="font-size:1rem;font-weight:600;color:var(--gray-900);margin:0 0 .25rem">Contact Support</h2>
-      <p style="font-size:.8125rem;color:var(--gray-500);margin:0 0 1.25rem">Need help? Our dedicated support team is here to assist you.</p>
+    <!-- Interactive FAQs -->
+    <div class="luxury-card">
+      <div class="card-head">
+        <div class="head-title-wrap">
+          <span class="card-badge">KNOWLEDGE BASE</span>
+          <h2>Frequently Asked Questions</h2>
+        </div>
+        <span class="card-note">Clear Executive Answers</span>
+      </div>
+
+      <div class="faq-accordion">
+        <div 
+          v-for="(faq, index) in faqs" 
+          :key="faq.q" 
+          class="faq-item"
+          :class="{ 'is-open': openFaqIndex === index }"
+        >
+          <div class="faq-question" @click="toggleFaq(index)">
+            <div class="faq-q-left">
+              <span class="faq-bullet">Q:</span>
+              <h3>{{ faq.q }}</h3>
+            </div>
+            <span class="faq-chevron">{{ openFaqIndex === index ? '−' : '+' }}</span>
+          </div>
+          <div v-if="openFaqIndex === index" class="faq-answer">
+            <p v-for="(line, idx) in faq.a" :key="idx">{{ line }}</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Contact Support Cards -->
+    <div class="luxury-card">
+      <div class="card-head">
+        <div class="head-title-wrap">
+          <span class="card-badge">DIRECT ASSISTANCE</span>
+          <h2>Executive Concierge &amp; Support</h2>
+        </div>
+        <span class="card-note">Dedicated 24/7 Desk</span>
+      </div>
+      <p class="section-intro">Need customized platform assistance, white-label setup, or tender pack compliance certification? Our senior engineering team is standing by.</p>
+
       <div class="support-grid">
         <div class="sc" v-for="s in supportCards" :key="s.title">
-          <div class="sc-icon" :class="s.color"><svg width="20" height="20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path :d="s.icon"/></svg></div>
+          <div class="sc-icon" :class="s.color">
+            <svg width="22" height="22" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path :d="s.icon"/></svg>
+          </div>
           <h3>{{ s.title }}</h3>
           <p>{{ s.desc }}</p>
-          <a :href="s.href" class="btn btn-sm btn-secondary">{{ s.linkText }}</a>
+          <a :href="s.href" class="sc-btn">{{ s.linkText }} &rarr;</a>
         </div>
       </div>
+
       <div class="support-footer">
-        <p><strong>THE FINISHER LUXURY CRM</strong></p>
-        <p style="color:var(--gray-500);font-size:.8125rem">2026 MTAMBO HOLDINGS - Premium Luxury Edition</p>
-        <p style="color:var(--gray-500);font-size:.75rem;margin-top:.25rem">Average response time: 24-48 hours</p>
+        <div class="footer-crest">MTAMBO HOLDINGS GROUP</div>
+        <p class="footer-title">THE FINISHER LUXURY CRM &middot; JSE &amp; POPIA CERTIFIED PLATFORM</p>
+        <p class="footer-sub">Cryptographically Secured Client Data &middot; South African Commercial Gateway</p>
       </div>
     </div>
   </div>
@@ -71,78 +199,580 @@ export default {
   name: 'HelpCenter',
   data() {
     return {
+      openFaqIndex: 0,
       faqs: [
         {
-          q: 'How do I create a contact?',
+          q: 'How do I create a new client contact?',
           a: [
-            'Navigate to Contacts and click "Add Contact".',
-            'Capture first name, last name, email, phone, and the company name manually.',
-            'Optionally assign the contact to a company once it exists.'
+            'Navigate to "Clients" in the main sidebar and click "Create Contact".',
+            'Capture their first name, last name, corporate email address, and direct phone number.',
+            'Once saved, this contact can be attached to formal company dossiers and deal opportunities.'
           ]
         },
         {
-          q: 'Why can’t I open Companies first?',
+          q: 'Why does the system require a contact before creating a company?',
           a: [
-            'THE FINISHER enforces data discipline — capture at least one contact before formalising a company.',
-            'This ensures every company record has a human counterpart for support and password recovery.'
+            'THE FINISHER enforces rigorous data discipline: every corporate account must have a verified human decision-maker.',
+            'This guarantees zero orphan records and ensures all quotes, invoices, and password recovery emails reach real people.'
           ]
         },
         {
-          q: 'How do I log a deal?',
+          q: 'How does PayFast Split Payments work for my deals?',
           a: [
-            'Create or link a contact to a company.',
-            'Open Deals, choose the company, then the linked contact, add value and stage, and save.'
+            'Under Integrations Hub, configure your own PayFast Merchant ID.',
+            'When your client pays an invoice through the CRM, PayFast automatically splits the payment at the gateway.',
+            'Your business receives 98% net proceeds directly into your merchant bank account, while the CRM facilitaton tollbooth (2%) is routed to Mtambo Holdings.'
           ]
         },
         {
-          q: 'Can I revisit the tutorial?',
+          q: 'How do I download the Certified Tender & SEDA Funding Sales Pack?',
           a: [
-            'Yes. Use the "Launch Guided Tutorial" button above. The tutorial can be replayed anytime.'
+            'Navigate to "Reports" in the sidebar and look for the "Official Tender & SEDA Funding Pack" card.',
+            'Unlock the certification for R350 once-off via PayFast.',
+            'The system will immediately generate a cryptographically signed, 12-month audited sales ledger PDF compliant with POPIA Section 19.'
+          ]
+        },
+        {
+          q: 'Can I replay the Interactive System Tour anytime?',
+          a: [
+            'Yes. Simply click the golden "Launch Interactive Tour" button at the top of this page.',
+            'The step-by-step tutorial will guide you across your live dashboard and workspaces.'
           ]
         }
       ],
       tutorialStatus: localStorage.getItem(TUTORIAL_KEY) || 'pending',
       supportCards: [
-        { title: 'Email Support', desc: 'Get detailed help via email', href: 'mailto:support@thefinishersport.co.za', linkText: 'Email Us', icon: 'M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z M22 6l-10 7L2 6', color: 'blue' },
-        { title: 'Legal & Licensing', desc: 'Legal inquiries and licensing', href: 'mailto:legal@mtamboholdings.co.za', linkText: 'Contact Legal', icon: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z', color: 'gray' },
-        { title: 'Enablement Desk', desc: 'Custom dashboards & integrations', href: 'mailto:support@thefinisher.co.za', linkText: 'Get Help', icon: 'M22 10v6M2 10l10-5 10 5-10 5z M6 12v5c6 3 12 0 12 0v-5', color: 'green' },
-        { title: 'Report a Bug', desc: 'Found an issue? Let us know!', href: 'mailto:support@thefinishersport.co.za?subject=Bug Report', linkText: 'Report Bug', icon: 'M8 2v4 M16 2v4 M3 10h18 M12 14v4 M8 14l-2 4 M16 14l2 4', color: 'red' }
+        { 
+          title: 'Executive Concierge', 
+          desc: 'High-priority enterprise assistance and SLA escalations.', 
+          href: 'mailto:support@thefinishercrm.tech', 
+          linkText: 'Email Concierge', 
+          icon: 'M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z M22 6l-10 7L2 6', 
+          color: 'gold' 
+        },
+        { 
+          title: 'Legal & POPIA Directorate', 
+          desc: 'Data privacy, cryptographic validation, and compliance inquiries.', 
+          href: 'mailto:legal@mtamboholdings.co.za', 
+          linkText: 'Contact Directorate', 
+          icon: 'M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z', 
+          color: 'gold' 
+        },
+        { 
+          title: 'Integration Desk', 
+          desc: 'Webhook endpoints, API tokens, and PayFast multi-merchant setups.', 
+          href: 'mailto:support@thefinishercrm.tech?subject=Integration%20Setup', 
+          linkText: 'Integration Setup', 
+          icon: 'M22 10v6M2 10l10-5 10 5-10 5z M6 12v5c6 3 12 0 12 0v-5', 
+          color: 'gold' 
+        },
+        { 
+          title: 'Direct Telemetry Desk', 
+          desc: 'Found a visual bug or workflow issue? Alert the engineering team.', 
+          href: 'mailto:support@thefinishercrm.tech?subject=Bug%20Report', 
+          linkText: 'Report Issue', 
+          icon: 'M8 2v4 M16 2v4 M3 10h18 M12 14v4 M8 14l-2 4 M16 14l2 4', 
+          color: 'gold' 
+        }
       ]
     }
   },
   methods: {
+    toggleFaq(index) {
+      this.openFaqIndex = this.openFaqIndex === index ? null : index
+    },
     launchTutorial() {
       localStorage.setItem(TUTORIAL_KEY, 'completed')
       this.tutorialStatus = 'completed'
       this.$emit('launch-tutorial')
-      toast.success('Tutorial Launched', 'Tutorial will start from the dashboard. Return to the dashboard to follow the guided steps.')
+      toast.success('Interactive Tour Launched', 'Tour initialized. Returning to Dashboard to guide you through your workspace.')
+      setTimeout(() => {
+        this.$router.push('/dashboard')
+      }, 1000)
     },
     skipTutorial() {
       localStorage.setItem(TUTORIAL_KEY, 'skipped')
       this.tutorialStatus = 'skipped'
-      toast.info('Tutorial Skipped', 'You can relaunch it anytime from this Help Centre.')
+      toast.info('Tour Dismissed', 'You can relaunch the interactive guide at any time from this page.')
     }
   }
 }
 </script>
+
 <style scoped>
-.help-page { max-width:900px; margin:0 auto; display:flex; flex-direction:column; gap:1.25rem; }
-.walk-list { margin:0; padding-left:1.5rem; display:flex; flex-direction:column; gap:.75rem; font-size:.8125rem; color:var(--gray-700); line-height:1.6; }
-.walk-list strong { color:var(--gray-900); }
-.faq-item + .faq-item { margin-top:1rem; border-top:1px solid var(--gray-100); padding-top:1rem; }
-.faq-item h3 { font-size:.875rem; font-weight:600; color:var(--gray-900); margin:0 0 .375rem; }
-.faq-item p { font-size:.8125rem; color:var(--gray-600); margin:.125rem 0; line-height:1.5; }
-.support-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:1rem; margin-bottom:1.5rem; }
-.sc { background:var(--gray-50); border:1px solid var(--border-color); border-radius:var(--radius-md); padding:1.25rem; text-align:center; transition:border-color .2s; }
-.sc:hover { border-color:var(--primary-500); }
-.sc-icon { width:40px; height:40px; border-radius:var(--radius-md); display:flex; align-items:center; justify-content:center; margin:0 auto .75rem; }
-.sc-icon.blue { background:#eff6ff; color:var(--primary-500); }
-.sc-icon.gray { background:var(--gray-100); color:var(--gray-600); }
-.sc-icon.green { background:#ecfdf5; color:var(--green-500); }
-.sc-icon.red { background:#fef2f2; color:var(--red-500); }
-.sc h3 { font-size:.875rem; font-weight:600; color:var(--gray-900); margin:0 0 .25rem; }
-.sc p { font-size:.75rem; color:var(--gray-500); margin:0 0 .75rem; }
-.support-footer { border-top:1px solid var(--border-color); padding-top:1rem; text-align:center; }
-.support-footer p { margin:.25rem 0; }
-@media(max-width:600px){ .support-grid{grid-template-columns:1fr;} }
+.help-page {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 1.5rem 2rem 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+/* Header */
+.help-header {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.brand-crest-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.725rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: #d4af37;
+  text-transform: uppercase;
+  margin-bottom: 0.35rem;
+}
+
+.page-title {
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0 0 0.35rem;
+  letter-spacing: -0.5px;
+}
+
+.page-subtitle {
+  font-size: 0.9rem;
+  color: #94a3b8;
+  margin: 0;
+  line-height: 1.5;
+  max-width: 650px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* Buttons */
+.btn-gold {
+  background: linear-gradient(135deg, #d4af37 0%, #b45309 100%);
+  color: #ffffff;
+  border: none;
+  font-weight: 700;
+  font-size: 0.85rem;
+  padding: 0.65rem 1.2rem;
+  border-radius: 8px;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  box-shadow: 0 4px 14px rgba(212, 175, 55, 0.3);
+  transition: all 0.2s ease;
+}
+
+.btn-gold:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.45);
+}
+
+.btn-outline-luxury {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #cbd5e1;
+  font-weight: 600;
+  font-size: 0.85rem;
+  padding: 0.65rem 1.1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-outline-luxury:hover {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(212, 175, 55, 0.5);
+  color: #ffffff;
+}
+
+/* Status Pills */
+.status-pill {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  padding: 0.85rem 1.2rem;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.status-completed {
+  background: rgba(34, 197, 94, 0.1);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+  color: #4ade80;
+}
+
+.status-skipped {
+  background: rgba(212, 175, 55, 0.08);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  color: #facc15;
+}
+
+/* Docs Quick Grid */
+.docs-quick-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1rem;
+}
+
+.doc-card {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  padding: 1rem 1.2rem;
+  background: #0f172a;
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 10px;
+  text-decoration: none;
+  transition: all 0.2s ease;
+}
+
+.doc-card:hover {
+  border-color: #d4af37;
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.5);
+}
+
+.doc-icon {
+  font-size: 1.5rem;
+  flex-shrink: 0;
+}
+
+.doc-info {
+  flex: 1;
+}
+
+.doc-info h4 {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.doc-info p {
+  margin: 0.15rem 0 0;
+  font-size: 0.75rem;
+  color: #94a3b8;
+}
+
+.doc-arrow {
+  color: #d4af37;
+  font-weight: 700;
+  font-size: 1.1rem;
+  transition: transform 0.2s ease;
+}
+
+.doc-card:hover .doc-arrow {
+  transform: translateX(3px);
+}
+
+/* Luxury Card Container */
+.luxury-card {
+  background: #0f172a;
+  border: 1px solid rgba(212, 175, 55, 0.22);
+  border-radius: 14px;
+  padding: 1.75rem;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+}
+
+.card-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 0.85rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.card-badge {
+  display: inline-block;
+  font-size: 0.675rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: #d4af37;
+  text-transform: uppercase;
+  margin-bottom: 0.25rem;
+}
+
+.card-head h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0;
+}
+
+.card-note {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.section-intro {
+  color: #cbd5e1;
+  font-size: 0.85rem;
+  margin: 0 0 1.25rem;
+  line-height: 1.5;
+}
+
+/* Workflow Timeline */
+.workflow-timeline {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.timeline-step {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 0.85rem 1rem;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 10px;
+  transition: all 0.2s ease;
+}
+
+.timeline-step:hover {
+  background: rgba(212, 175, 55, 0.04);
+  border-color: rgba(212, 175, 55, 0.25);
+}
+
+.step-badge {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #d4af37, #b45309);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 800;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(212, 175, 55, 0.3);
+}
+
+.step-content {
+  flex: 1;
+}
+
+.step-content h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 0.25rem;
+}
+
+.step-content p {
+  font-size: 0.825rem;
+  color: #cbd5e1;
+  margin: 0;
+  line-height: 1.5;
+}
+
+.pro-tip-box {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
+  padding: 0.85rem 1.1rem;
+  background: rgba(212, 175, 55, 0.08);
+  border-left: 3px solid #d4af37;
+  border-radius: 8px;
+  color: #fde68a;
+  font-size: 0.825rem;
+  line-height: 1.5;
+}
+
+.tip-icon {
+  color: #d4af37;
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+
+/* Accordion FAQs */
+.faq-accordion {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.faq-item {
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 10px;
+  background: rgba(255, 255, 255, 0.02);
+  overflow: hidden;
+  transition: all 0.2s ease;
+}
+
+.faq-item.is-open {
+  border-color: rgba(212, 175, 55, 0.4);
+  background: rgba(212, 175, 55, 0.03);
+}
+
+.faq-question {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 1rem 1.2rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.faq-q-left {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+}
+
+.faq-bullet {
+  color: #d4af37;
+  font-weight: 800;
+  font-size: 0.95rem;
+}
+
+.faq-question h3 {
+  font-size: 0.925rem;
+  font-weight: 600;
+  color: #ffffff;
+  margin: 0;
+}
+
+.faq-chevron {
+  color: #d4af37;
+  font-size: 1.25rem;
+  font-weight: 700;
+}
+
+.faq-answer {
+  padding: 0.25rem 1.2rem 1.1rem 2.4rem;
+  color: #cbd5e1;
+  font-size: 0.85rem;
+  line-height: 1.6;
+  border-top: 1px solid rgba(255, 255, 255, 0.04);
+}
+
+.faq-answer p {
+  margin: 0.35rem 0;
+}
+
+/* Support Grid */
+.support-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.sc {
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 12px;
+  padding: 1.25rem;
+  text-align: center;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.sc:hover {
+  border-color: #d4af37;
+  transform: translateY(-2px);
+  background: rgba(212, 175, 55, 0.04);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+}
+
+.sc-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 10px;
+  background: rgba(212, 175, 55, 0.12);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  color: #d4af37;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 0.85rem;
+}
+
+.sc h3 {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0 0 0.35rem;
+}
+
+.sc p {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  margin: 0 0 1rem;
+  line-height: 1.45;
+  flex: 1;
+}
+
+.sc-btn {
+  display: inline-block;
+  background: rgba(212, 175, 55, 0.15);
+  border: 1px solid #d4af37;
+  color: #d4af37;
+  font-weight: 700;
+  font-size: 0.8rem;
+  padding: 0.45rem 0.9rem;
+  border-radius: 6px;
+  text-decoration: none;
+  transition: all 0.15s ease;
+}
+
+.sc-btn:hover {
+  background: #d4af37;
+  color: #000000;
+}
+
+/* Support Footer */
+.support-footer {
+  border-top: 1px solid rgba(212, 175, 55, 0.2);
+  padding-top: 1.25rem;
+  text-align: center;
+}
+
+.footer-crest {
+  font-size: 0.725rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  color: #d4af37;
+}
+
+.footer-title {
+  font-size: 0.825rem;
+  font-weight: 700;
+  color: #ffffff;
+  margin: 0.25rem 0;
+}
+
+.footer-sub {
+  font-size: 0.75rem;
+  color: #64748b;
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .help-page { padding: 1rem; }
+  .help-header { flex-direction: column; align-items: stretch; }
+  .header-actions { width: 100%; }
+  .header-actions button { flex: 1; }
+  .support-grid { grid-template-columns: 1fr; }
+}
 </style>

@@ -7,7 +7,13 @@
 
       <form @submit.prevent="handleResetPassword" class="auth-form">
         <div class="form-group">
-          <label class="form-label">6-Digit OTP Code</label>
+          <div class="otp-label-row">
+            <label class="form-label">6-Digit OTP Code</label>
+            <button type="button" class="btn-paste-otp" @click="pasteFromClipboard" title="Paste 6-digit code from clipboard">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2"/><rect x="8" y="2" width="8" height="4" rx="1" ry="1"/></svg>
+              <span>Paste from Clipboard</span>
+            </button>
+          </div>
           <input v-model="form.otp_code" type="text" maxlength="6" pattern="[0-9]{6}" placeholder="123456" required class="form-input otp-input" @input="validateOTP" />
           <span class="form-hint">Code expires in 10 minutes</span>
         </div>
@@ -50,6 +56,7 @@
 
 <script>
 import { authAPI } from '../api'
+import toast from '../utils/toast'
 
 export default {
   name: 'VerifyOTP',
@@ -76,8 +83,25 @@ export default {
   },
   methods: {
     validateOTP(event) {
-      
       this.form.otp_code = event.target.value.replace(/\D/g, '')
+    },
+    async pasteFromClipboard() {
+      try {
+        if (navigator.clipboard && navigator.clipboard.readText) {
+          const text = await navigator.clipboard.readText()
+          const digits = text.replace(/\D/g, '').slice(0, 6)
+          if (digits) {
+            this.form.otp_code = digits
+            toast.success('Passcode pasted from clipboard!', 'Pasted')
+          } else {
+            toast.info('No digits found in clipboard.', 'Clipboard Empty')
+          }
+        } else {
+          toast.warning('Clipboard read not supported in this browser.', 'Notice')
+        }
+      } catch (err) {
+        toast.info('Please paste the code manually.', 'Clipboard Access')
+      }
     },
     async handleResetPassword() {
       this.loading = true
@@ -161,5 +185,24 @@ export default {
 .security-note { margin-top:1.5rem; background:var(--gray-50); border-radius:var(--radius-md); padding:1rem; border:1px solid var(--border-color); }
 .security-note h4 { font-size:.8125rem; font-weight:600; color:var(--gray-900); margin:0 0 .5rem; }
 .security-note ul { margin:0; padding-left:1.25rem; font-size:.8125rem; color:var(--gray-600); line-height:1.8; }
+.otp-label-row { display:flex; justify-content:space-between; align-items:center; margin-bottom:0.35rem; }
+.btn-paste-otp {
+  display:inline-flex;
+  align-items:center;
+  gap:0.35rem;
+  background:rgba(212,175,55,0.12);
+  border:1px solid #d4af37;
+  color:#b45309;
+  font-size:0.75rem;
+  font-weight:700;
+  padding:0.25rem 0.6rem;
+  border-radius:6px;
+  cursor:pointer;
+  transition:all 0.15s ease;
+}
+.btn-paste-otp:hover {
+  background:#d4af37;
+  color:#ffffff;
+}
 @media(max-width:600px){ .auth-card{padding:1.5rem;} }
 </style>
