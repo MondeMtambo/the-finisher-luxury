@@ -320,13 +320,14 @@ class WhiteLabelCheckoutView(APIView):
         # Record Pending Transaction (R199.00 clean pricing, tax breakdown on final receipt)
         PaymentTransaction.objects.create(
             organization=org,
-            user=user,
             transaction_reference=tx_ref,
-            amount=199.00,
+            amount_cents=19900,
             currency='ZAR',
             gateway='payfast',
             status='pending',
             raw_payload={
+                'user_id': user.id,
+                'user_email': user.email,
                 'type': 'white_label_subscription',
                 'period': 'monthly',
                 'base_amount': 199.00,
@@ -381,13 +382,14 @@ class TenderPackCheckoutView(APIView):
         # Record Pending Transaction (R350.00 clean pricing, tax breakdown on final receipt)
         PaymentTransaction.objects.create(
             organization=org,
-            user=user,
             transaction_reference=tx_ref,
-            amount=350.00,
+            amount_cents=35000,
             currency='ZAR',
             gateway='payfast',
             status='pending',
             raw_payload={
+                'user_id': user.id,
+                'user_email': user.email,
                 'type': 'tender_pack_purchase',
                 'base_amount': 350.00,
                 'amount': 350.00

@@ -12,19 +12,6 @@
           <span class="tier-price">{{ isAdminUser ? 'Full System Access' : tierSubtitle }}</span>
         </div>
       </div>
-
-      <div v-if="isAdminUser" class="info-bar info-bar--blue">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.399l-.244.012.024-.39 1.958-.36h.17l-.818 3.918zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/></svg>
-        <span>ULTIMATE: Unlimited Access &middot; All Features &middot; Full Admin Control &middot; System Owner</span>
-      </div>
-
-      <div v-if="!isAdminUser" class="info-bar info-bar--blue">
-        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.399l-.244.012.024-.39 1.958-.36h.17l-.818 3.918zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/></svg>
-        <span><strong>CORPORATE SOVEREIGN:</strong> Active Fleet Allocation &middot; Permanent Sovereign Tier (5 Collaborative Seats &middot; 6,000 Verified Contacts &middot; All Features Unlocked)</span>
-        <button class="btn btn-sm btn-outline-gold" @click="$router.push('/upgrade')">
-          Add-ons &amp; Scaling
-        </button>
-      </div>
     </div>
 
     <div class="top-stats-grid">

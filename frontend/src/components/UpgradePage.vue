@@ -186,60 +186,22 @@
       </div>
     </div>
 
-    <!-- Settlement & Corporate EFT Invoice Centre -->
-    <div v-if="selectedPlanDetails" class="settlement-centre card">
-      <div class="settlement-header">
-        <div>
-          <h3>Corporate Settlement: {{ selectedPlanDetails.name }}</h3>
-          <p class="text-muted">Generate an official Pro-Forma Tax Invoice or settle via Direct Corporate EFT.</p>
+    <!-- Enterprise Fleet Expansion & Custom SLAs -->
+    <div class="enterprise-desk card">
+      <div class="enterprise-desk-content">
+        <div class="enterprise-desk-info">
+          <div class="desk-badge">BESPOKE INFRASTRUCTURE &bull; 15+ SEATS</div>
+          <h3>Need Fleet Expansion or Custom Enterprise SLAs?</h3>
+          <p class="text-muted">
+            For multi-branch organizations, custom database clusters, dedicated IP mail gateways, and bespoke CIPC regulatory integrations, consult directly with our executive team.
+          </p>
         </div>
-        <div class="settlement-amount">
-          <span class="label">Amount Due:</span>
-          <span class="val">{{ selectedPlanDetails.price }}</span>
+        <div class="enterprise-desk-actions">
+          <a href="mailto:mtamboholdings@outlook.com?subject=Enterprise%20Edition%20Fleet%20Consultation" class="btn btn-primary">
+            Contact Corporate Sales &rarr;
+          </a>
+          <button class="btn btn-ghost" @click="goBack">Back to Dashboard</button>
         </div>
-      </div>
-
-      <div class="eft-details-box">
-        <div class="eft-col">
-          <div class="bank-row">
-            <span class="label">Account Holder:</span>
-            <span class="val"><strong>Mtambo Holdings (Pty) Ltd</strong></span>
-          </div>
-          <div class="bank-row">
-            <span class="label">Bank Name:</span>
-            <span class="val">First National Bank (FNB)</span>
-          </div>
-          <div class="bank-row">
-            <span class="label">Account Type:</span>
-            <span class="val">Commercial Business Cheque</span>
-          </div>
-        </div>
-        <div class="eft-col">
-          <div class="bank-row">
-            <span class="label">Branch Code:</span>
-            <span class="val">250655</span>
-          </div>
-          <div class="bank-row">
-            <span class="label">Tax Exemption:</span>
-            <span class="val">SARS Section 23 (&lt;R1M Threshold)</span>
-          </div>
-          <div class="bank-row">
-            <span class="label">Beneficiary Reference:</span>
-            <span class="val ref-tag">{{ paymentReference }}</span>
-          </div>
-        </div>
-      </div>
-
-      <div class="settlement-actions">
-        <button class="btn btn-secondary" @click="copyBankDetails">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-          {{ copied ? 'Copied to Clipboard!' : 'Copy Bank Details' }}
-        </button>
-        <button class="btn btn-primary" @click="notifyPaymentModal = true">
-          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-          I Have Paid / Submit Proof of Payment
-        </button>
-        <button class="btn btn-ghost" @click="goBack">Back to Dashboard</button>
       </div>
     </div>
 
@@ -893,5 +855,46 @@ export default {
   color: #10b981;
   font-weight: 800;
   margin-right: 8px;
+}
+
+.enterprise-desk {
+  padding: 2rem;
+  background: rgba(15, 15, 15, 0.85);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  border-radius: var(--border-radius-lg);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+}
+
+.enterprise-desk-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.enterprise-desk-info {
+  max-width: 650px;
+}
+
+.desk-badge {
+  font-size: 0.75rem;
+  color: #d4af37;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.5rem;
+}
+
+.enterprise-desk-info h3 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #fff;
+  margin: 0 0 0.5rem;
+}
+
+.enterprise-desk-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
 }
 </style>

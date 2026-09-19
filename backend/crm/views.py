@@ -3933,7 +3933,7 @@ class BillingWebhookView(APIView):
                     record_audit_event(
                         'WHITE_LABEL_ACTIVATED',
                         f"Corporate White-Label & Custom Branding (R199/mo) unlocked for '{tx.organization.name}' (Ref: {tx_ref})",
-                        user=tx.user,
+                        user=None,
                         organization=tx.organization,
                         severity='INFO'
                     )
@@ -3945,7 +3945,7 @@ class BillingWebhookView(APIView):
                     record_audit_event(
                         'TENDER_PACK_UNLOCKED',
                         f"Official Tender & SEDA Funding Compliance Pack (R350) unlocked for '{tx.organization.name}' (Ref: {tx_ref})",
-                        user=tx.user,
+                        user=None,
                         organization=tx.organization,
                         severity='INFO'
                     )
