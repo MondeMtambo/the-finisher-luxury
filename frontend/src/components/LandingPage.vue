@@ -84,65 +84,42 @@
     <!-- Commercial Packages & 15-Day Trial Showcase -->
     <div class="packages-section" id="packages" ref="packagesSection">
       <div class="section-tag">COMMERCIAL EDITIONS &amp; EXECUTIVE ALLOCATIONS</div>
-      <h2 class="section-title">Select Your 15-Day VIP Free Trial</h2>
+      <h2 class="section-title">Select Your Commercial Allocation</h2>
       <p class="section-subtitle">
-        Every edition includes an unrestricted 15-day executive trial before standard monthly billing.
-        Billed in South African Rand (ZAR) &middot; Zero foreign exchange fees &middot; Cancel anytime.
+        Empowering modern business operations with bank-grade CRM infrastructure.
+        Fixed ZAR billing &middot; Zero foreign exchange volatility &middot; Cancel anytime.
       </p>
 
       <div class="landing-plans-grid">
-        <!-- Tier 1: Corporate Sovereign (Permanent License) -->
-        <div class="landing-plan-card sovereign-card">
-          <div class="tier-badge sovereign-badge">PERMANENT ALLOCATION &middot; 5 SEATS</div>
+        <!-- Tier 1: Corporate Sovereign (Was R999 -> Scratched to R0 Permanent) -->
+        <div class="landing-plan-card featured sovereign-card">
+          <div class="popular-ribbon">RECOMMENDED &middot; 5 SEATS</div>
+          <div class="tier-badge gold">FLAGSHIP ALLOCATION</div>
           <h3 class="tier-name">Corporate Sovereign</h3>
-          <p class="tier-desc">Empowering South African business enterprises with full CRM capabilities.</p>
+          <p class="tier-desc">Empower business enterprises with full CRM capabilities.</p>
           <div class="tier-price">
+            <span class="scratched-price"><del>R999</del></span>
             <span class="currency">R</span>0<span class="period">/permanent</span>
           </div>
-          <div class="seat-pill sovereign-pill">5 Seats &middot; Up to 6,000 Verified Contacts</div>
+          <div class="seat-pill featured">5 Collaborative Seats &middot; Up to 6,000 Verified Contacts</div>
 
           <ul class="tier-features">
             <li><strong>5 Collaborative Team Seats</strong> (CEO, Managers &amp; Reps)</li>
             <li><strong>Up to 6,000 Verified Client Contacts</strong></li>
             <li>Full deal pipeline &amp; Kanban stage management</li>
             <li>Meta / Facebook Lead Ads Webhook Integration</li>
-            <li>Quotation engine &amp; POPIA Section 19 Vault</li>
+            <li>Standard Quotation engine &amp; Invoicing</li>
+            <li>Automated Email Workflows &amp; Direct Engagement</li>
+            <li>POPIA Section 19 Compliance Vault</li>
             <li>Standard Enterprise Network Security Stamp</li>
           </ul>
 
-          <button class="plan-cta-btn secondary sovereign-btn" @click="selectPlanAndRegister('basic')">
+          <button class="plan-cta-btn primary sovereign-btn" @click="selectPlanAndRegister('basic')">
             Claim 5 Seats License (R0) &rarr;
           </button>
         </div>
 
-        <!-- Tier 2: Luxury Team (Featured Flagship) -->
-        <div class="landing-plan-card featured">
-          <div class="popular-ribbon">RECOMMENDED &middot; 5 SEATS</div>
-          <div class="tier-badge gold">GROWING FIRM</div>
-          <h3 class="tier-name">Luxury Team</h3>
-          <p class="tier-desc">For boutique firms, agencies &amp; collaborative sales departments.</p>
-          <div class="tier-price">
-            <span class="currency">R</span>999<span class="period">/month</span>
-          </div>
-          <div class="seat-pill featured">Up to 5 Users &middot; Unlimited Contacts</div>
-
-          <ul class="tier-features">
-            <li><strong>Everything in Luxury Basic, plus:</strong></li>
-            <li><strong>Unlimited client contacts &amp; accounts</strong></li>
-            <li><strong>Up to 5 collaborative seats</strong></li>
-            <li>Shared team pipelines &amp; deal assignment</li>
-            <li>Support ticket helpdesk system</li>
-            <li>Full luxury fleet vehicle tracking</li>
-            <li>Hardware &amp; equipment serial register</li>
-            <li>Client Admin Team Console</li>
-          </ul>
-
-          <button class="plan-cta-btn primary" @click="selectPlanAndRegister('luxury')">
-            Start 15-Day Free Trial &rarr;
-          </button>
-        </div>
-
-        <!-- Tier 3: Executive Suite -->
+        <!-- Tier 2: Executive Suite -->
         <div class="landing-plan-card">
           <div class="tier-badge">ESTABLISHED FIRM</div>
           <h3 class="tier-name">Executive Suite</h3>
@@ -153,7 +130,7 @@
           <div class="seat-pill">Up to 15 Users &middot; Unlimited Contacts</div>
 
           <ul class="tier-features">
-            <li><strong>Everything in Luxury Team, plus:</strong></li>
+            <li><strong>Everything in Corporate Sovereign, plus:</strong></li>
             <li><strong>Unlimited client contacts &amp; accounts</strong></li>
             <li><strong>Up to 15 executive &amp; staff seats</strong></li>
             <li>Multi-branch / department filtering</li>
@@ -168,7 +145,7 @@
           </button>
         </div>
 
-        <!-- Tier 4: Enterprise Custom -->
+        <!-- Tier 3: Enterprise Custom -->
         <div class="landing-plan-card enterprise">
           <div class="tier-badge">INSTITUTIONAL FLEET</div>
           <h3 class="tier-name">Enterprise Custom</h3>
@@ -916,7 +893,7 @@ export default {
   max-width: 1320px;
   margin: 0 auto;
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 1.75rem;
   align-items: stretch;
 }
@@ -995,6 +972,18 @@ export default {
   font-weight: 900;
   color: #ffffff;
   margin-bottom: 0.25rem;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
+.scratched-price {
+  font-size: 1.35rem;
+  color: #ef4444;
+  text-decoration: line-through;
+  margin-right: 0.5rem;
+  font-weight: 700;
+  opacity: 0.85;
 }
 
 .tier-price .currency {

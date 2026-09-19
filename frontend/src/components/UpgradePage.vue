@@ -8,13 +8,15 @@
 
     <!-- 4-Tier Plan Grid -->
     <div class="plans-grid">
-      <!-- Tier 1: Corporate Sovereign -->
-      <div class="plan-card card sovereign-tier-card" :class="{ selected: selectedTier === 'basic' || selectedTier === 'classic' }">
+      <!-- Tier 1: Corporate Sovereign (Was R999 -> Scratched to R0 Permanent) -->
+      <div class="plan-card card featured sovereign-tier-card" :class="{ selected: selectedTier === 'basic' || selectedTier === 'classic' }">
+        <div class="featured-badge">RECOMMENDED &bull; 5 SEATS</div>
         <div class="plan-top">
-          <div class="plan-tier-label sovereign-label">SOVEREIGN ALLOCATION &bull; 5 SEATS</div>
+          <div class="plan-tier-label sovereign-label">FLAGSHIP ALLOCATION &bull; 5 SEATS</div>
           <h2 class="plan-title">Corporate Sovereign</h2>
-          <p class="plan-desc">For emerging enterprises, commercial brokers &amp; consultancies requiring elite CRM foundations.</p>
+          <p class="plan-desc">Empower business enterprises with full CRM capabilities.</p>
           <div class="plan-price">
+            <span class="scratched-price"><del>R999</del></span>
             <span class="currency">R</span>0<span class="period">/permanent</span>
           </div>
           <div class="seat-pill sovereign-seat-pill">5 Collaborative Seats &bull; 6,000 Verified Contacts</div>
@@ -33,45 +35,11 @@
 
         <div class="plan-action">
           <button 
-            class="btn btn-secondary w-100" 
+            class="btn btn-primary w-100 highlight-btn" 
             :class="{ 'btn-primary': selectedTier === 'basic' || selectedTier === 'classic' }"
             @click="selectPlan('basic')"
           >
             {{ (selectedTier === 'basic' || selectedTier === 'classic') ? 'Active Sovereign Allocation' : 'Choose Sovereign Allocation' }}
-          </button>
-        </div>
-      </div>
-
-      <!-- Tier 2: Luxury Team (Featured) -->
-      <div class="plan-card card featured" :class="{ selected: selectedTier === 'luxury' }">
-        <div class="featured-badge">RECOMMENDED FLAGSHIP &bull; 5 SEATS</div>
-        <div class="plan-top">
-          <div class="plan-tier-label">GROWING FIRM</div>
-          <h2 class="plan-title">Luxury Team</h2>
-          <p class="plan-desc">For boutique firms, agencies &amp; growing sales departments.</p>
-          <div class="plan-price">
-            <span class="currency">R</span>999<span class="period">/month</span>
-          </div>
-          <div class="seat-pill featured-pill">Up to 5 Users &bull; Unlimited Everything</div>
-        </div>
-
-        <ul class="feature-bullets">
-          <li><strong>Everything in Luxury Basic, plus:</strong></li>
-          <li><strong>Unlimited client contacts &amp; company profiles</strong></li>
-          <li><strong>Unlimited active pipeline deals</strong></li>
-          <li><strong>Up to 5 collaborative team seats</strong></li>
-          <li>Manager Onboarding Delegation (up to 2 subordinates)</li>
-          <li>Unlimited Email Campaigns &amp; Automated Workflows</li>
-          <li>Full Asset Management Tracking</li>
-          <li>Full Excel &amp; CSV Audit Data Export</li>
-        </ul>
-
-        <div class="plan-action">
-          <button 
-            class="btn btn-primary w-100 highlight-btn"
-            @click="selectPlan('luxury')"
-          >
-            {{ selectedTier === 'luxury' ? 'Selected Plan' : 'Choose Luxury Team' }}
           </button>
         </div>
       </div>
@@ -501,7 +469,7 @@ export default {
 /* Grid */
 .plans-grid {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(3, 1fr);
   gap: 1.25rem;
 }
 
@@ -586,6 +554,18 @@ export default {
   font-weight: 800;
   color: var(--gray-900);
   margin-bottom: 0.5rem;
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+}
+
+.scratched-price {
+  font-size: 1.25rem;
+  color: #ef4444;
+  text-decoration: line-through;
+  margin-right: 0.5rem;
+  font-weight: 700;
+  opacity: 0.85;
 }
 
 .plan-price .currency {
