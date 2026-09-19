@@ -104,10 +104,10 @@ def check_org_quota(organization, resource: str, current_count: int = None):
         
     if current_count is not None and current_count >= limit:
         if tier == 'trial' or getattr(organization, 'is_trial_active', False):
-            msg = f"15-Day VIP Trial limit reached ({limit} {resource} max). Activate subscription to uncap your pipeline."
+            msg = f"Allocation limit reached ({limit} {resource} max). Upgrade to Executive Suite to uncap your pipeline."
         else:
-            tier_title = "Luxury Basic" if tier == "basic" else tier.title()
-            msg = f"{tier_title} allocation limit reached ({limit} {resource} max). Upgrade to Luxury Team for unrestricted allocation."
+            tier_title = "Corporate Sovereign" if tier == "basic" else tier.title()
+            msg = f"{tier_title} allocation limit reached ({limit} {resource} max). Upgrade to Executive Suite for unrestricted fleet allocation."
         return False, limit, msg
         
     return True, limit, ""

@@ -262,11 +262,14 @@ export default {
         if (data.plan && data.plan.price) {
           this.userPlanPrice = `R${data.plan.price}/mo`
         }
-        this.isTrialOrGrace = Boolean(data.is_trial_active || data.is_in_grace_period)
+        if (this.userTier === 'basic' || this.userTier === 'classic') {
+          this.isTrialOrGrace = false
+        } else {
+          this.isTrialOrGrace = Boolean(data.is_trial_active || data.is_in_grace_period)
+        }
         this.trialDaysRemaining = data.days_remaining_in_trial ?? 7
         this.isInGrace = Boolean(data.is_in_grace_period)
         this.graceDaysRemaining = data.days_remaining_in_grace ?? 3
-        this.isTrialOrGrace = Boolean(data.is_trial_active || data.is_in_grace_period)
       } catch (err) {
         console.warn('Could not load billing status:', err)
       }

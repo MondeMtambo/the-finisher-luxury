@@ -45,16 +45,16 @@
       <div class="auth-header">
         <div class="vip-badge-pill">
           <span class="vip-badge-dot"></span>
-          15-DAY VIP EXECUTIVE ACCESS &middot; CORPORATE ONBOARDING
+          CORPORATE SOVEREIGN ALLOCATION &middot; ENTERPRISE WORKSPACE ONBOARDING
         </div>
         <div class="scarcity-pill-banner">
-          <span>Strictly Limited: <strong>15 Private Enterprise Allocations Active</strong> &mdash; Secure Your Space</span>
+          <span>Official Corporate Access: <strong>Enterprise Cloud Workspace Provisioning</strong> &mdash; Instant Activation</span>
         </div>
         <div class="selected-package-banner">
           <div class="package-banner-left">
             <div class="package-banner-text">
               <div class="pkg-title">CHOSEN ALLOCATION: <strong>{{ selectedTierInfo.name }}</strong></div>
-              <div class="pkg-desc">15-Day Free Trial &middot; {{ selectedTierInfo.price }} thereafter &middot; {{ selectedTierInfo.seats }}</div>
+              <div class="pkg-desc">{{ selectedTierInfo.price }} &middot; {{ selectedTierInfo.seats }}</div>
             </div>
           </div>
           <button type="button" class="change-plan-btn" @click="$router.push('/#packages')">Change Package</button>
@@ -550,7 +550,7 @@
         </div>
         <div class="dossier-row">
           <span class="dossier-key">Allocation Tier:</span>
-          <span class="dossier-val highlight-gold">15-Day VIP Executive Private OS</span>
+          <span class="dossier-val highlight-gold">{{ selectedTierInfo.name }}</span>
         </div>
         <div class="dossier-row">
           <span class="dossier-key">Executive Dispatch:</span>
@@ -626,7 +626,7 @@ export default {
         postal_address: '',
         cipc_number: '',
         tax_number: '',
-        requested_tier: 'luxury'
+        requested_tier: 'basic'
       }
     }
   },
@@ -634,31 +634,31 @@ export default {
     selectedTierInfo() {
       const tierMap = {
         basic: {
-          name: 'LUXURY BASIC',
-          price: 'R349/month',
-          seats: '1 User &middot; 5 Contacts Max',
-          tag: 'SOLO OPERATOR'
+          name: 'CORPORATE SOVEREIGN',
+          price: 'R0 / permanent (0% VAT)',
+          seats: '5 Collaborative Seats &middot; 6,000 Verified Contacts',
+          tag: 'FLAGSHIP ALLOCATION &middot; R0'
         },
         luxury: {
-          name: 'LUXURY TEAM',
-          price: 'R999/month',
-          seats: 'Up to 5 Users &middot; Unlimited Contacts',
-          tag: 'RECOMMENDED'
+          name: 'CORPORATE SOVEREIGN',
+          price: 'R0 / permanent (0% VAT)',
+          seats: '5 Collaborative Seats &middot; 6,000 Verified Contacts',
+          tag: 'FLAGSHIP ALLOCATION &middot; R0'
         },
         executive: {
           name: 'EXECUTIVE SUITE',
-          price: 'R1,500/month',
-          seats: 'Up to 15 Seats',
+          price: 'R1,500/month + 15% VAT (R1,725.00 incl. VAT)',
+          seats: 'Up to 15 Collaborative Seats &middot; Unlimited Contacts',
           tag: 'ESTABLISHED FIRM'
         },
         enterprise: {
           name: 'ENTERPRISE CUSTOM',
-          price: 'Custom Retainer',
+          price: 'Custom Institutional Retainer (+ 15% VAT)',
           seats: 'Unlimited Fleet Capacity',
           tag: 'INSTITUTIONAL'
         }
       }
-      return tierMap[this.form.requested_tier] || tierMap.luxury
+      return tierMap[this.form.requested_tier] || tierMap.basic
     },
     formattedTimeLeft() {
       const mins = Math.floor(this.timerSecondsLeft / 60)
@@ -671,7 +671,7 @@ export default {
   },
   mounted() {
     document.documentElement.setAttribute('data-theme', this.currentTheme)
-    const plan = (this.$route.query.plan || 'luxury').toLowerCase()
+    const plan = (this.$route.query.plan || 'basic').toLowerCase()
     if (['basic', 'luxury', 'executive', 'enterprise'].includes(plan)) {
       this.form.requested_tier = plan
     }

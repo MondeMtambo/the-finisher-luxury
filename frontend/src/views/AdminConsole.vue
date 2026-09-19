@@ -46,7 +46,7 @@
               </span>
             </div>
             <p class="section-subtitle" style="color: #9ca3af; font-size: 0.85rem; margin: 0;">
-              Real-time Monthly Recurring Revenue (MRR), 15-day trial debits, Capitec/PayFast sweeps, and offline contract management.
+              Real-time Monthly Recurring Revenue (MRR), Corporate Sovereign allocations, Capitec/PayFast sweeps, and offline contract management.
             </p>
           </div>
           <div style="display: flex; gap: 0.75rem; align-items: center;">
@@ -72,7 +72,7 @@
           </div>
           <div class="kpi-card" style="border-left: 3px solid #f59e0b;">
             <div class="kpi-val" style="color: #f59e0b;">{{ salesMetrics.active_trials || 0 }}</div>
-            <div class="kpi-lbl">In 15-Day Free Trial</div>
+            <div class="kpi-lbl">Corporate Sovereign (R0)</div>
           </div>
         </div>
 
@@ -126,7 +126,7 @@
                     ✓ Active Paid
                   </span>
                   <span v-else-if="item.status === 'trial'" style="background: rgba(245, 158, 11, 0.2); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.4); padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.78rem; font-weight: 700;">
-                    ⭐ 15-Day Trial
+                    ⭐ Sovereign Core (R0)
                   </span>
                   <span v-else-if="item.status === 'past_due'" style="background: rgba(239, 68, 68, 0.2); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.4); padding: 0.25rem 0.6rem; border-radius: 6px; font-size: 0.78rem; font-weight: 700;">
                     ⚠️ Past Due
@@ -219,7 +219,7 @@
           <div>
             <h2 class="section-title" style="margin-bottom: 0.25rem;">Corporate Access Requests &amp; Executive Approvals</h2>
             <p class="section-subtitle" style="color: #9ca3af; font-size: 0.85rem; margin: 0;">
-              Review applicant dossiers and provision enterprise tenant workspaces with 15-Day VIP Executive privileges.
+              Review applicant dossiers and provision enterprise tenant workspaces with Corporate Sovereign privileges.
             </p>
           </div>
           <div class="header-badges">
@@ -338,8 +338,8 @@
           <div class="kpi-card mini"><div class="kpi-val-mini">{{ userSummary.total_users }}</div><div class="kpi-lbl-mini">Total Users</div></div>
           <div class="kpi-card mini"><div class="kpi-val-mini text-green">{{ userSummary.active_users }}</div><div class="kpi-lbl-mini">Active</div></div>
           <div class="kpi-card mini">
-            <div class="kpi-val-mini text-blue">{{ userSummary.trial_users }} <span style="font-size: 0.9rem; color: #a0aec0;">/ 15</span></div>
-            <div class="kpi-lbl-mini">15-Day Trial (15 Max)</div>
+            <div class="kpi-val-mini text-blue">{{ userSummary.trial_users }}</div>
+            <div class="kpi-lbl-mini">Corporate Sovereign (R0)</div>
           </div>
           <div class="kpi-card mini"><div class="kpi-val-mini text-amber">{{ userSummary.paid_users }}</div><div class="kpi-lbl-mini">Paid</div></div>
           <div class="kpi-card mini"><div class="kpi-val-mini text-yellow">{{ userSummary.overdue_users }}</div><div class="kpi-lbl-mini">Overdue</div></div>
@@ -1165,8 +1165,9 @@
               <div class="form-group">
                 <label class="form-label">Subscription Tier / License</label>
                 <select class="form-input" v-model="onboardForm.subscription_tier">
-                  <option value="trial">15-Day VIP Trial (15 Max Cohort)</option>
-                  <option value="luxury">The Finisher Luxury Private OS</option>
+                  <option value="basic">Corporate Sovereign (Permanent Free Tier)</option>
+                  <option value="luxury">Executive Core</option>
+                  <option value="executive">Executive Suite (R1,500/mo)</option>
                   <option value="enterprise">Enterprise Custom Retainer</option>
                 </select>
               </div>
@@ -1341,7 +1342,7 @@
               <div class="form-group">
                 <label class="form-label">Payment Status</label>
                 <select class="form-input" v-model="saleForm.status">
-                  <option value="trial">15-Day Free Trial</option>
+                  <option value="trial">Corporate Sovereign (Permanent R0 Core)</option>
                   <option value="active">Active Paid (Payment Received)</option>
                   <option value="past_due">Past Due / Overdue</option>
                   <option value="canceled">Canceled / Inactive</option>
@@ -1636,7 +1637,7 @@ export default {
     },
     async processAccessRequest(id, action, companyName, email) {
       if (action === 'approve') {
-        if (!confirm(`Authorize & provision dedicated corporate workspace for ${companyName} (${email})?\n\nThis will automatically:\n1. Provision Organization tenant\n2. Create Admin User account\n3. Activate 15-Day VIP Executive privileges\n4. Dispatch live credentials to ${email}`)) {
+        if (!confirm(`Authorize & provision dedicated corporate workspace for ${companyName} (${email})?\n\nThis will automatically:\n1. Provision Organization tenant\n2. Create Admin User account\n3. Activate Corporate Sovereign privileges (5 Seats · 6,000 Contacts)\n4. Dispatch live credentials to ${email}`)) {
           return;
         }
       } else if (action === 'reject') {

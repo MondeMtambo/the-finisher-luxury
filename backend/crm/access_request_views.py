@@ -691,10 +691,12 @@ class AdminAccessRequestActionView(APIView):
             req_obj.save(update_fields=['auto_generated_password', 'hashed_password'])
 
         # 1. Organization Provisioning
-        chosen_tier = getattr(req_obj, 'requested_tier', 'luxury') or 'luxury'
-        tier_seats = {'basic': 1, 'luxury': 5, 'trial': 5, 'executive': 15, 'enterprise': 999}
+        chosen_tier = getattr(req_obj, 'requested_tier', 'basic') or 'basic'
+        if chosen_tier.lower() in ['luxury', 'classic', 'trial']:
+            chosen_tier = 'basic'
+        tier_seats = {'basic': 5, 'classic': 5, 'luxury': 5, 'trial': 5, 'executive': 15, 'enterprise': 999}
         max_seats = tier_seats.get(chosen_tier.lower(), 5)
-        monthly_cost = {'basic': 349.00, 'luxury': 999.00, 'trial': 999.00, 'executive': 1500.00, 'enterprise': 0.00}.get(chosen_tier.lower(), 999.00)
+        monthly_cost = {'basic': 0.00, 'classic': 0.00, 'luxury': 0.00, 'trial': 0.00, 'executive': 1500.00, 'enterprise': 0.00}.get(chosen_tier.lower(), 0.00)
 
         org = None
         target_org_id = getattr(req_obj, 'target_organization_id', '')
@@ -710,7 +712,7 @@ class AdminAccessRequestActionView(APIView):
                 max_users=max_seats,
                 is_cipc_verified=bool(req_obj.cipc_number),
                 trial_start_date=timezone.now(),
-                trial_end_date=timezone.now() + timezone.timedelta(days=7),
+                trial_end_date=timezone.now() + timezone.timedelta(days=3650),
             )
             org.save()
         else:
@@ -723,10 +725,10 @@ class AdminAccessRequestActionView(APIView):
         # Also provision OrganizationSubscription
         from .models import OrganizationSubscription
         sub, _ = OrganizationSubscription.objects.get_or_create(organization=org)
-        sub.status = 'trial'
+        sub.status = 'active' if chosen_tier == 'basic' else 'trial'
         sub.monthly_price = monthly_cost
         sub.current_period_start = timezone.now()
-        sub.current_period_end = timezone.now() + timezone.timedelta(days=7)
+        sub.current_period_end = timezone.now() + timezone.timedelta(days=3650)
         sub.save()
 
         # 2. User Provisioning
@@ -798,7 +800,7 @@ class AdminAccessRequestActionView(APIView):
             f"Dear {req_obj.first_name} {req_obj.last_name},\n\n"
             f"We are pleased to inform you that your Corporate Access Dossier for\n"
             f"{req_obj.company_name} has been reviewed and officially authorized by\n"
-            f"Mtambo Holdings under 15-Day VIP Executive Privileges.\n\n"
+            f"Mtambo Holdings under Corporate Sovereign Privileges (Permanent R0 Core).\n\n"
             f"Your dedicated enterprise workspace has been provisioned and is now live\n"
             f"on our secure private cloud infrastructure.\n\n"
             f"─────────────────────────────────────────────────────────────────────────\n"
@@ -807,7 +809,7 @@ class AdminAccessRequestActionView(APIView):
             f"• Workspace Portal   : {login_url}\n"
             f"• Authorized Email   : {req_obj.email}\n"
             f"• Temporary Passcode : {auto_password}\n"
-            f"• Provisioned Tier   : 15-Day VIP Executive Fleet\n"
+            f"• Provisioned Tier   : Corporate Sovereign Allocation (5 Seats · 6,000 Contacts)\n"
             f"─────────────────────────────────────────────────────────────────────────\n\n"
             f"🔒 MANDATORY FIRST-LOGIN SECURITY PROTOCOL:\n"
             f"In accordance with zero-trust data governance and POPIA Section 19\n"
@@ -830,7 +832,7 @@ class AdminAccessRequestActionView(APIView):
             subtitle=f"{req_obj.company_name} &middot; Private Fleet Operating System",
             recipient_name=f"{req_obj.first_name} {req_obj.last_name}",
             message_paragraphs=[
-                f"We are pleased to inform you that your Corporate Access Dossier for <strong>{req_obj.company_name}</strong> has been officially reviewed and authorized by Mtambo Holdings under <strong>15-Day VIP Executive Privileges</strong>.",
+                f"We are pleased to inform you that your Corporate Access Dossier for <strong>{req_obj.company_name}</strong> has been officially reviewed and authorized by Mtambo Holdings under <strong>Corporate Sovereign Allocation (Permanent R0 Core)</strong>.",
                 "Your private enterprise cloud workspace is now live, provisioned on high-performance isolated infrastructure with full pipeline automation and luxury CRM intelligence."
             ],
             credentials={

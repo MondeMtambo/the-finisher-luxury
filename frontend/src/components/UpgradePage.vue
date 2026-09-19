@@ -3,7 +3,7 @@
     <div class="upgrade-header card">
       <div class="header-badge">COMMERCIAL PLANS &amp; ALLOCATIONS</div>
       <h1>Choose Your Finisher Luxury Plan</h1>
-      <p class="subtitle">Fixed South African Rand (ZAR) billing. Zero foreign exchange volatility. No punitive per-seat penalties.</p>
+      <p class="subtitle">Fixed South African Rand (ZAR) billing. Zero foreign exchange volatility. All prices subject to 15% VAT per South African Revenue Service (SARS) regulations.</p>
     </div>
 
     <!-- 4-Tier Plan Grid -->
@@ -18,6 +18,7 @@
           <div class="plan-price">
             <span class="scratched-price"><del>R999</del></span>
             <span class="currency">R</span>0<span class="period">/permanent</span>
+            <span class="vat-tag" style="display: block; font-size: 0.8rem; color: #a1a1aa; margin-top: 4px;">(0% VAT &bull; R0.00)</span>
           </div>
           <div class="seat-pill sovereign-seat-pill">5 Collaborative Seats &bull; 6,000 Verified Contacts</div>
         </div>
@@ -52,6 +53,7 @@
           <p class="plan-desc">For mid-size corporations, regional firms &amp; multi-branch groups.</p>
           <div class="plan-price">
             <span class="currency">R</span>1,500<span class="period">/month</span>
+            <span class="vat-tag" style="display: block; font-size: 0.8rem; color: #a1a1aa; margin-top: 4px;">+ 15% VAT (R1,725.00 incl. VAT)</span>
           </div>
           <div class="seat-pill">Up to 15 Users &bull; Unlimited Contacts</div>
         </div>
@@ -129,7 +131,7 @@
             </div>
             <div>
               <div class="addon-title">Corporate White-Label &amp; Custom Branding</div>
-              <div class="addon-price">R199 <span class="addon-period">/ month recurring</span></div>
+              <div class="addon-price">R199 <span class="addon-period">/ month recurring + 15% VAT (R228.85 incl. VAT)</span></div>
             </div>
           </div>
           <p class="addon-desc">
@@ -160,7 +162,7 @@
             </div>
             <div>
               <div class="addon-title">Official Tender &amp; SEDA Compliance Pack</div>
-              <div class="addon-price">R350 <span class="addon-period">once-off certified pack</span></div>
+              <div class="addon-price">R350 <span class="addon-period">once-off certified pack + 15% VAT (R402.50 incl. VAT)</span></div>
             </div>
           </div>
           <p class="addon-desc">

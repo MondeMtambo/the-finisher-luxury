@@ -10,8 +10,8 @@
         <button class="nav-login-btn" @click="$router.push('/login')">
           Existing Member? Login &rarr;
         </button>
-        <button class="nav-trial-btn" @click="selectPlanAndRegister('luxury')">
-          Start 15-Day Trial
+        <button class="nav-trial-btn" @click="selectPlanAndRegister('basic')">
+          Get Started Free &rarr;
         </button>
       </div>
     </nav>
@@ -65,29 +65,29 @@
       
       <div class="landing-vip-badge">
         <span class="vip-pulse-dot"></span>
-        <span>15-DAY VIP EXECUTIVE ALLOCATION &middot; 15 WORKSPACES</span>
+        <span>CORPORATE SOVEREIGN ALLOCATION &middot; UNRESTRICTED CORE</span>
       </div>
 
       <h1 class="headline">Your Pipeline. Elevated.</h1>
       <p class="subheadline">The most exclusive CRM engine built for generational wealth and multi-million rand deals.</p>
       
       <div class="scarcity-sub-badge">
-        Secure Your Space Now &mdash; Private Enterprise Allocation Active
+        Official Corporate Access &mdash; Enterprise Sovereign Workspace Provisioning Active
       </div>
 
       <div class="hero-actions">
-        <button class="request-btn" @click="selectPlanAndRegister('luxury')">Start 15-Day VIP Trial &rarr;</button>
+        <button class="request-btn" @click="selectPlanAndRegister('basic')">Get Started Free (R0) &rarr;</button>
         <button class="packages-scroll-btn" @click="scrollToPackages">View All Packages &darr;</button>
       </div>
     </div>
 
-    <!-- Commercial Packages & 15-Day Trial Showcase -->
+    <!-- Commercial Packages & Sovereign Allocation Showcase -->
     <div class="packages-section" id="packages" ref="packagesSection">
       <div class="section-tag">COMMERCIAL EDITIONS &amp; EXECUTIVE ALLOCATIONS</div>
       <h2 class="section-title">Select Your Commercial Allocation</h2>
       <p class="section-subtitle">
         Empowering modern business operations with bank-grade CRM infrastructure.
-        Fixed ZAR billing &middot; Zero foreign exchange volatility &middot; Cancel anytime.
+        All prices subject to 15% VAT per South African Revenue Service (SARS) regulations &middot; Fixed ZAR billing &middot; Cancel anytime.
       </p>
 
       <div class="landing-plans-grid">
@@ -100,6 +100,7 @@
           <div class="tier-price">
             <span class="scratched-price"><del>R999</del></span>
             <span class="currency">R</span>0<span class="period">/permanent</span>
+            <span class="vat-tag">(0% VAT &middot; R0.00)</span>
           </div>
           <div class="seat-pill featured">5 Collaborative Seats &middot; Up to 6,000 Verified Contacts</div>
 
@@ -126,6 +127,7 @@
           <p class="tier-desc">For mid-size corporations, regional firms &amp; multi-branch groups.</p>
           <div class="tier-price">
             <span class="currency">R</span>1,500<span class="period">/month</span>
+            <span class="vat-tag">+ 15% VAT (R1,725.00 incl. VAT)</span>
           </div>
           <div class="seat-pill">Up to 15 Users &middot; Unlimited Contacts</div>
 
@@ -141,7 +143,7 @@
           </ul>
 
           <button class="plan-cta-btn secondary" @click="selectPlanAndRegister('executive')">
-            Start 15-Day Free Trial &rarr;
+            Choose Executive Suite &rarr;
           </button>
         </div>
 
@@ -185,7 +187,7 @@
               <p>Remove the Finisher network watermark from all client-facing quotes, proposals, and automated emails. Upload your custom logo and corporate letterhead.</p>
             </div>
             <div class="addon-bottom">
-              <div class="addon-price"><span class="currency">R</span>199<span class="period">/month</span></div>
+              <div class="addon-price"><span class="currency">R</span>199<span class="period">/month</span> <small class="vat-tag">+ 15% VAT (R228.85 incl. VAT)</small></div>
               <button class="btn-addon" @click="$router.push('/settings')">Manage in Settings &rarr;</button>
             </div>
           </div>
@@ -196,7 +198,7 @@
               <p>Download a certified, bank-grade 12-Month Audited Sales Ledger with POPIA Section 19 Cryptographic Certification and SHA-256 digital stamp for government tenders.</p>
             </div>
             <div class="addon-bottom">
-              <div class="addon-price"><span class="currency">R</span>350<span class="period">/once-off</span></div>
+              <div class="addon-price"><span class="currency">R</span>350<span class="period">/once-off</span> <small class="vat-tag">+ 15% VAT (R402.50 incl. VAT)</small></div>
               <button class="btn-addon gold" @click="$router.push('/reports')">Generate in Reports &rarr;</button>
             </div>
           </div>

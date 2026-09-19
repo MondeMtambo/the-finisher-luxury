@@ -534,9 +534,11 @@ class ContactViewSet(viewsets.ModelViewSet):
         profile = getattr(user, 'profile', None)
         org = getattr(profile, 'organization', None) if profile else None
         if org and org.subscription_tier == 'basic':
-            return Response({
-                'error': 'Bulk CSV Import is reserved for Luxury Team. Luxury Basic is limited to 5 VIP contacts.'
-            }, status=status.HTTP_403_FORBIDDEN)
+            existing_count = Contact.objects.filter(organization=org).count()
+            if existing_count >= 6000:
+                return Response({
+                    'error': 'Corporate Sovereign contact allocation reached (6,000 / 6,000 contacts). Upgrade to Executive Suite for unlimited contacts.'
+                }, status=status.HTTP_403_FORBIDDEN)
 
         file = request.FILES.get('file')
         
@@ -1986,8 +1988,8 @@ class EmployeeViewSet(viewsets.ModelViewSet):
         is_trial = (user_tier == 'trial') or (org and getattr(org, 'is_trial_active', False))
 
         TIER_SEAT_LIMITS = {
-            'basic': 3,
-            'classic': 3,
+            'basic': 5,
+            'classic': 5,
             'luxury': 5,
             'trial': 999,
             'executive': 15,
@@ -1999,7 +2001,7 @@ class EmployeeViewSet(viewsets.ModelViewSet):
         if not is_system_admin and not is_trial and (user_tier == 'basic' or user_tier == 'classic'):
             if profile.role != 'admin':
                 return Response({
-                    'error': 'On Luxury Basic, only the CEO/Administrator may onboard team members. Upgrade to Luxury Team (R999/mo) to delegate onboarding permissions to Managers.',
+                    'error': 'On Corporate Sovereign, only the CEO/Administrator may onboard team members. Upgrade to Executive Suite (R1,500/mo) to delegate onboarding permissions to Managers.',
                     'upgrade_required': True
                 }, status=403)
 
@@ -2341,8 +2343,8 @@ https://www.thefinishercrm.tech
         is_trial = (user_tier == 'trial') or (org and getattr(org, 'is_trial_active', False))
 
         TIER_SEAT_LIMITS = {
-            'basic': 3,
-            'classic': 3,
+            'basic': 5,
+            'classic': 5,
             'luxury': 5,
             'trial': 999,
             'executive': 15,
@@ -2361,7 +2363,7 @@ https://www.thefinishercrm.tech
         blocked_reason = None
         if not is_trial and (user_tier == 'basic' or user_tier == 'classic') and profile and profile.role != 'admin':
             can_add = False
-            blocked_reason = 'Only the CEO/Administrator can onboard employees on Luxury Basic'
+            blocked_reason = 'Only the CEO/Administrator can onboard employees on Corporate Sovereign'
         elif not is_trial and user_tier == 'luxury' and profile and profile.role == 'manager':
             manager_subordinates = UserProfile.objects.filter(
                 Q(onboarded_by=user) | Q(reports_to=user),
@@ -4441,12 +4443,12 @@ class PrivateSalesLedgerView(APIView):
         if not company_name:
             return Response({'error': 'Company name is required.'}, status=400)
 
-        tier_seats = {'basic': 1, 'luxury': 5, 'trial': 5, 'executive': 15, 'enterprise': 999}
+        tier_seats = {'basic': 5, 'classic': 5, 'luxury': 5, 'trial': 5, 'executive': 15, 'enterprise': 999}
         max_seats = tier_seats.get(tier, 5)
 
         if not monthly_price:
-            tier_rates = {'basic': 349.00, 'luxury': 999.00, 'trial': 999.00, 'executive': 1500.00, 'enterprise': 0.00}
-            monthly_price = tier_rates.get(tier, 999.00)
+            tier_rates = {'basic': 0.00, 'classic': 0.00, 'luxury': 999.00, 'trial': 0.00, 'executive': 1500.00, 'enterprise': 0.00}
+            monthly_price = tier_rates.get(tier, 0.00)
 
         org, created = Organization.objects.get_or_create(
             name=company_name,
@@ -4508,7 +4510,7 @@ class PrivateSalesLedgerView(APIView):
         if 'tier' in data:
             new_tier = data['tier'].lower().strip()
             org.subscription_tier = new_tier
-            tier_seats = {'basic': 1, 'luxury': 5, 'trial': 5, 'executive': 15, 'enterprise': 999}
+            tier_seats = {'basic': 5, 'classic': 5, 'luxury': 5, 'trial': 5, 'executive': 15, 'enterprise': 999}
             org.max_users = tier_seats.get(new_tier, 5)
             org.save(update_fields=['subscription_tier', 'max_users'])
         if 'monthly_price' in data:

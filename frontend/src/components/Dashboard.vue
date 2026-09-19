@@ -21,10 +21,15 @@
       <div v-if="!isAdminUser" class="info-bar info-bar--vip">
         <span class="vip-pulse-dot"></span>
         <span class="vip-text">
-          <strong>15-DAY VIP ALLOCATION ACTIVE:</strong> You are on the <strong>{{ tierDisplayName }}</strong> &middot; {{ trialDaysRemaining }} Days Remaining in Trial.
+          <template v-if="userTier === 'basic' || userTier === 'classic'">
+            <strong>ACTIVE ALLOCATION:</strong> You are on <strong>Corporate Sovereign</strong> &middot; Permanent Free Tier (5 Collaborative Seats &middot; 6,000 Verified Contacts).
+          </template>
+          <template v-else>
+            <strong>ACTIVE ALLOCATION:</strong> You are on the <strong>{{ tierDisplayName }}</strong>.
+          </template>
         </span>
-        <button class="btn btn-sm btn-primary" @click="$router.push('/upgrade/' + (userTier === 'classic' ? 'classic' : 'luxury'))">
-          Commercial Plans & EFT
+        <button class="btn btn-sm btn-primary" @click="$router.push('/upgrade')">
+          Upgrade &amp; Add-ons
         </button>
       </div>
     </div>

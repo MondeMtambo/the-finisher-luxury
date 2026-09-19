@@ -48,7 +48,7 @@
           <span class="theme-mode-text">{{ currentTheme === 'dark' ? 'LIGHT EDITION' : 'DARK EDITION' }}</span>
         </button>
         <router-link to="/register" class="request-access-pill">
-          Start 15-Day VIP Trial &rarr;
+          Get Started Free (R0) &rarr;
         </router-link>
       </div>
     </header>
@@ -143,7 +143,7 @@
 
             <div class="auth-card-footer">
               <span class="footer-prompt">New organization?</span>
-              <router-link to="/register" class="register-action-link">Start 15-Day VIP Trial &rarr;</router-link>
+              <router-link to="/register" class="register-action-link">Get Started Free (R0) &rarr;</router-link>
             </div>
           </form>
         </div>

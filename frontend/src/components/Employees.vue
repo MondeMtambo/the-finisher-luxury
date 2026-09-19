@@ -148,10 +148,10 @@
           <div v-if="!isSystemAdmin" class="tier-seat-banner" :class="{ 'seat-limit-reached': remainingSlots === 0 }">
             <div class="seat-info">
               <span class="seat-badge" :class="{ 'badge-limit': remainingSlots === 0 }">
-                {{ remainingSlots === 0 ? 'SEAT ALLOCATION FILLED' : '15-DAY VIP TRIAL ALLOCATION' }}
+                {{ remainingSlots === 0 ? 'SEAT ALLOCATION FILLED' : '5-SEAT COLLABORATIVE ALLOCATION' }}
               </span>
               <span class="seat-text">
-                Your Luxury Team Plan includes <strong>{{ maxUsers || 5 }} Collaborative Seats</strong> (<strong>{{ remainingSlots }}</strong> seats remaining).
+                Your Corporate Sovereign Allocation includes <strong>{{ maxUsers || 5 }} Collaborative Seats</strong> (<strong>{{ remainingSlots }}</strong> seats remaining).
               </span>
             </div>
             <router-link v-if="remainingSlots === 0 || remainingSlots <= 1" to="/upgrade/executive" class="btn btn-sm btn-upgrade-seat">
@@ -728,8 +728,11 @@ export default {
         }
         this.trialDaysRemaining = data.days_remaining_in_trial ?? 7
         this.isInGrace = Boolean(data.is_in_grace_period)
-        this.graceDaysRemaining = data.days_remaining_in_grace ?? 3
-        this.isTrialOrGrace = Boolean(data.is_trial_active || data.is_in_grace_period)
+        if (this.userTier === 'basic' || this.userTier === 'classic') {
+          this.isTrialOrGrace = false
+        } else {
+          this.isTrialOrGrace = Boolean(data.is_trial_active || data.is_in_grace_period)
+        }
       } catch (err) {
         console.warn('Could not load billing status in Employees:', err)
       }
