@@ -7,7 +7,7 @@
 
     <!-- Exclusive Header Bar -->
     <nav class="exclusive-nav">
-      <div class="nav-brand-group">
+      <div class="nav-brand-group" @click="$router.push('/')" style="cursor: pointer;" title="Return to Main Presentation">
         <div class="brand-crest">F</div>
         <div class="brand-text">
           <span class="brand-title">THE FINISHER</span>
@@ -15,6 +15,10 @@
         </div>
       </div>
       <div class="nav-actions">
+        <button class="nav-back-home-btn" @click="$router.push('/')" title="Return to Home">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          <span>Back to Home</span>
+        </button>
         <button class="theme-pill-btn" @click="toggleTheme" :title="currentTheme === 'dark' ? 'Switch to Light' : 'Switch to Dark'">
           {{ currentTheme === 'dark' ? '☀️ Light' : '🌙 Dark' }}
         </button>
@@ -42,6 +46,16 @@
 
     <!-- STEP 1: Applicant & Executive Authentication -->
     <div class="auth-card register-card glass-panel" v-if="currentStep === 1">
+      <div class="card-back-nav">
+        <button type="button" class="back-link-btn" @click="$router.push('/')">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          <span>Back to Home</span>
+        </button>
+        <span class="back-link-sep">&middot;</span>
+        <button type="button" class="back-link-btn" @click="$router.push('/login')">
+          <span>Already registered? Member Login</span>
+        </button>
+      </div>
       <div class="auth-header">
         <div class="vip-badge-pill">
           <span class="vip-badge-dot"></span>
@@ -262,6 +276,12 @@
 
     <!-- STEP 2: Company Dossier & Physical / Postal Address -->
     <div class="auth-card register-card glass-panel" v-if="currentStep === 2">
+      <div class="card-back-nav">
+        <button type="button" class="back-link-btn" @click="currentStep = 1">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          <span>&larr; Back to Step 1 (Applicant Auth)</span>
+        </button>
+      </div>
       <div class="auth-header">
         <div class="vip-badge-pill">
           <span class="vip-badge-dot"></span>
@@ -455,6 +475,12 @@
 
     <!-- STEP 3: 5-Minute Ephemeral Identity Verification -->
     <div class="auth-card register-card glass-panel" v-if="currentStep === 3">
+      <div class="card-back-nav">
+        <button type="button" class="back-link-btn" @click="currentStep = 2">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="19" y1="12" x2="5" y2="12"/><polyline points="12 19 5 12 12 5"/></svg>
+          <span>&larr; Back to Step 2 (Corporate Dossier)</span>
+        </button>
+      </div>
       <div class="auth-header">
         <div class="vip-badge-pill">
           <span class="vip-badge-dot"></span>
@@ -1051,6 +1077,55 @@ export default {
   display: flex;
   align-items: center;
   gap: 0.75rem;
+}
+.nav-back-home-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  color: #d4af37;
+  padding: 0.45rem 0.95rem;
+  border-radius: 9999px;
+  font-size: 0.8rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.nav-back-home-btn:hover {
+  background: rgba(212, 175, 55, 0.15);
+  border-color: #d4af37;
+  color: #ffffff;
+  transform: translateX(-2px);
+}
+.card-back-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  margin-bottom: 1.1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.07);
+}
+.back-link-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  background: none;
+  border: none;
+  color: #94a3b8;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0.25rem 0;
+  transition: all 0.15s ease;
+}
+.back-link-btn:hover {
+  color: #d4af37;
+  transform: translateX(-2px);
+}
+.back-link-sep {
+  color: #64748b;
+  font-size: 0.85rem;
 }
 .theme-pill-btn {
   background: rgba(212, 175, 55, 0.12);
