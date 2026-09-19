@@ -28,7 +28,7 @@
       <div class="stat-row-6">
         <div class="stat-mini"><span class="sm-val">{{ userSummary.total_users }}</span><span class="sm-lbl">Total Users</span></div>
         <div class="stat-mini"><span class="sm-val">{{ userSummary.active_users }}</span><span class="sm-lbl">Active</span></div>
-        <div class="stat-mini"><span class="sm-val">{{ userSummary.trial_users }}</span><span class="sm-lbl">Trial</span></div>
+        <div class="stat-mini"><span class="sm-val">{{ userSummary.trial_users }}</span><span class="sm-lbl">Sovereign</span></div>
         <div class="stat-mini"><span class="sm-val">{{ userSummary.paid_users }}</span><span class="sm-lbl">Paid</span></div>
         <div class="stat-mini"><span class="sm-val">{{ userSummary.overdue_users }}</span><span class="sm-lbl">Overdue</span></div>
         <div class="stat-mini"><span class="sm-val">{{ userSummary.banned_users }}</span><span class="sm-lbl">Banned</span></div>
@@ -60,7 +60,6 @@
               <td><code style="font-size:.75rem">{{ user.last_login_ip || '\u2014' }}</code></td>
               <td>
                 <span class="badge" :class="'pay-' + user.payment_status">{{ formatPaymentStatus(user.payment_status) }}</span>
-                <div v-if="user.payment_status === 'trial'" style="font-size:.6875rem;color:var(--gray-500)">{{ user.days_until_trial_end }}d left</div>
               </td>
               <td>
                 <span v-if="user.is_banned" class="badge badge-red">Banned</span>
@@ -539,7 +538,7 @@ export default {
         'pending': '⏳ Pending',
         'paid': '✅ Paid',
         'overdue': '⚠️ Overdue',
-        'trial': '⏱️ Trial'
+        'trial': '⭐ Sovereign Core'
       }
       return map[status] || status
     },

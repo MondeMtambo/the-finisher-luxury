@@ -226,7 +226,6 @@ export default {
       employees: [],
       selectedEmployeeId: '',
       userTier: 'luxury',
-      isTrialOrGrace: false,
       tenderPackUnlocked: false,
       downloadingTenderPack: false,
       unlockingTenderPack: false
@@ -299,7 +298,7 @@ export default {
       return Math.round(total / this.deals.length);
     },
     isBasicTier() {
-      return (this.userTier === 'basic' || this.userTier === 'classic') && !this.isTrialOrGrace
+      return this.userTier === 'basic' || this.userTier === 'classic'
     },
     isExportLocked() {
       return false
@@ -326,15 +325,10 @@ export default {
     async loadBillingStatus() {
       const raw = localStorage.getItem('user')
       const user = raw ? JSON.parse(raw) : {}
-      const isUserTrial = user.raw_tier === 'trial' || Boolean(user.is_trial_active) || (user.profile && user.profile.payment_status === 'trial')
-      if (isUserTrial) {
-        this.isTrialOrGrace = true
-      }
       try {
         const res = await billingAPI.getStatus()
         const data = res.data || {}
         this.userTier = (data.subscription_tier || user.raw_tier || 'luxury').toLowerCase()
-        this.isTrialOrGrace = Boolean(data.is_trial_active || data.is_in_grace_period || isUserTrial)
       } catch (e) {
         console.warn('Could not load billing status in Reports:', e)
       }

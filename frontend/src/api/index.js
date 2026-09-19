@@ -526,4 +526,9 @@ export const securityAPI = {
   checkNetwork: () => api.get('/security/network-check/')
 }
 
+export const sentinelAgentAPI = {
+  getStatus: () => api.get('/agent/sentinel/status/'),
+  triggerPulse: () => api.post('/agent/sentinel/pulse/')
+}
+
 export default api

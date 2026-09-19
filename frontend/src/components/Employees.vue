@@ -527,17 +527,6 @@
       </div>
     </div>
 
-    <!-- 15-Day Trial Loss-Aversion Warning Modal -->
-    <TrialUrgencyModal
-      :show="showTrialUrgencyModal"
-      :days-remaining="trialDaysRemaining"
-      :is-in-grace="isInGrace"
-      :grace-days-remaining="graceDaysRemaining"
-      :plan="userTier"
-      :plan-price="userPlanPrice"
-      @close="showTrialUrgencyModal = false"
-      @acknowledge="onTrialAcknowledge"
-    />
   </div>
 </template>
 
@@ -545,22 +534,13 @@
 import { employeesAPI, authAPI, divisionsAPI, billingAPI } from '../api'
 import authService from '../services/auth'
 import toast from '../utils/toast'
-import TrialUrgencyModal from './TrialUrgencyModal.vue'
 
 export default {
   name: 'Employees',
-  components: {
-    TrialUrgencyModal
-  },
   data() {
     return {
-      showTrialUrgencyModal: false,
-      trialDaysRemaining: 7,
-      isInGrace: false,
-      graceDaysRemaining: 3,
-      isTrialOrGrace: false,
-      userTier: 'luxury',
-      userPlanPrice: 'R999/mo',
+      userTier: 'basic',
+      userPlanPrice: 'R0/mo',
       employees: [],
       divisions: [],  
       loading: false,
@@ -627,7 +607,7 @@ export default {
       return 'user'
     },
     isBasicTier() {
-      return (this.userTier === 'basic' || this.userTier === 'classic') && !this.isTrialOrGrace
+      return this.userTier === 'basic' || this.userTier === 'classic'
     },
     canOnboard() {
       if (this.isSystemAdmin) return true
@@ -709,7 +689,7 @@ export default {
     this.loadDivisions()  
     this.loadAvailableSlots()
     this.loadPendingOffboardCount()
-    this.loadTrialStatus()
+    this.loadBillingTier()
     const user = authService.getUser() || {}
     this.currentUserId = user.id || null
     
@@ -718,36 +698,19 @@ export default {
     }).catch(() => {})
   },
   methods: {
-    async loadTrialStatus() {
+    async loadBillingTier() {
       try {
         const res = await billingAPI.getStatus()
         const data = res.data || {}
-        this.userTier = (data.subscription_tier || 'luxury').toLowerCase()
+        this.userTier = (data.subscription_tier || 'basic').toLowerCase()
         if (data.plan && data.plan.price) {
           this.userPlanPrice = `R${data.plan.price}/mo`
-        }
-        this.trialDaysRemaining = data.days_remaining_in_trial ?? 7
-        this.isInGrace = Boolean(data.is_in_grace_period)
-        if (this.userTier === 'basic' || this.userTier === 'classic') {
-          this.isTrialOrGrace = false
-        } else {
-          this.isTrialOrGrace = Boolean(data.is_trial_active || data.is_in_grace_period)
         }
       } catch (err) {
         console.warn('Could not load billing status in Employees:', err)
       }
     },
     handleOnboardTabClick() {
-      const alreadyNotified = sessionStorage.getItem('tfl_trial_notified')
-      if (this.isTrialOrGrace && !alreadyNotified) {
-        this.showTrialUrgencyModal = true
-        return
-      }
-      this.activeTab = 'onboard'
-    },
-    onTrialAcknowledge() {
-      sessionStorage.setItem('tfl_trial_notified', 'true')
-      this.showTrialUrgencyModal = false
       this.activeTab = 'onboard'
     },
     // ── Helpers ──

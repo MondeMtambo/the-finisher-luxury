@@ -317,12 +317,12 @@ class WhiteLabelCheckoutView(APIView):
         is_sandbox = getattr(settings, 'PAYFAST_SANDBOX', False)
         process_url = PAYFAST_SANDBOX_URL if is_sandbox else PAYFAST_PROCESS_URL
 
-        # Record Pending Transaction (R199.00 + 15% VAT = R228.85)
+        # Record Pending Transaction (R199.00 clean pricing, tax breakdown on final receipt)
         PaymentTransaction.objects.create(
             organization=org,
             user=user,
             transaction_reference=tx_ref,
-            amount=228.85,
+            amount=199.00,
             currency='ZAR',
             gateway='payfast',
             status='pending',
@@ -330,24 +330,22 @@ class WhiteLabelCheckoutView(APIView):
                 'type': 'white_label_subscription',
                 'period': 'monthly',
                 'base_amount': 199.00,
-                'vat_rate': 0.15,
-                'vat_amount': 29.85,
-                'amount': 228.85
+                'amount': 199.00
             }
         )
 
         return Response({
             'process_url': process_url,
             'merchant_id': merchant_id,
-            'amount': '228.85',
-            'item_name': 'THE FINISHER LUXURY — Corporate White-Label (R199 + 15% VAT)',
-            'item_description': 'Monthly recurring custom branding license removing all watermarks (incl. 15% VAT).',
+            'amount': '199.00',
+            'item_name': 'THE FINISHER LUXURY — Corporate White-Label (R199/mo)',
+            'item_description': 'Monthly recurring custom branding license removing all watermarks.',
             'm_payment_id': tx_ref,
             'custom_str1': 'white_label',
             'custom_str2': str(org.id),
             'subscription_type': '1',
             'billing_date': (timezone.now() + timedelta(days=1)).strftime('%Y-%m-%d'),
-            'recurring_amount': '228.85',
+            'recurring_amount': '199.00',
             'frequency': '3',  # Monthly in PayFast
             'cycles': '0',      # Indefinite
             'name_first': user.first_name or 'Executive',
@@ -380,30 +378,28 @@ class TenderPackCheckoutView(APIView):
         is_sandbox = getattr(settings, 'PAYFAST_SANDBOX', False)
         process_url = PAYFAST_SANDBOX_URL if is_sandbox else PAYFAST_PROCESS_URL
 
-        # Record Pending Transaction (R350.00 + 15% VAT = R402.50)
+        # Record Pending Transaction (R350.00 clean pricing, tax breakdown on final receipt)
         PaymentTransaction.objects.create(
             organization=org,
             user=user,
             transaction_reference=tx_ref,
-            amount=402.50,
+            amount=350.00,
             currency='ZAR',
             gateway='payfast',
             status='pending',
             raw_payload={
                 'type': 'tender_pack_purchase',
                 'base_amount': 350.00,
-                'vat_rate': 0.15,
-                'vat_amount': 52.50,
-                'amount': 402.50
+                'amount': 350.00
             }
         )
 
         return Response({
             'process_url': process_url,
             'merchant_id': merchant_id,
-            'amount': '402.50',
-            'item_name': 'Official Tender & SEDA Funding Compliance Pack (R350 + 15% VAT)',
-            'item_description': '12-Month Audited Sales Ledger & POPIA S19 Certificate for Tenders (incl. 15% VAT).',
+            'amount': '350.00',
+            'item_name': 'Official Tender & SEDA Funding Compliance Pack (R350)',
+            'item_description': '12-Month Audited Sales Ledger & POPIA S19 Certificate for Tenders.',
             'm_payment_id': tx_ref,
             'custom_str1': 'tender_pack',
             'custom_str2': str(org.id),

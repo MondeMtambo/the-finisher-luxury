@@ -79,12 +79,8 @@
                   <div class="product-desc">{{ product.description || 'No description provided.' }}</div>
                   <div class="product-metrics">
                     <div class="metric">
-                      <span class="metric-lbl">Price excl</span>
+                      <span class="metric-lbl">Price</span>
                       <span class="metric-val text-gold">R{{ formatNumber(product.price) }}</span>
-                    </div>
-                    <div class="metric">
-                      <span class="metric-lbl">Price incl</span>
-                      <span class="metric-val text-blue">R{{ formatNumber(product.price_incl_tax) }}</span>
                     </div>
                     <div class="metric">
                       <span class="metric-lbl">Margin</span>
@@ -135,12 +131,8 @@
                   <div class="product-desc">{{ product.description || 'No description provided.' }}</div>
                   <div class="product-metrics">
                     <div class="metric">
-                      <span class="metric-lbl">Price excl</span>
+                      <span class="metric-lbl">Price</span>
                       <span class="metric-val text-gold">R{{ formatNumber(product.price) }}</span>
-                    </div>
-                    <div class="metric">
-                      <span class="metric-lbl">Price incl</span>
-                      <span class="metric-val text-blue">R{{ formatNumber(product.price_incl_tax) }}</span>
                     </div>
                     <div class="metric">
                       <span class="metric-lbl">Margin</span>
@@ -190,8 +182,7 @@
                 <div class="card-body">
                   <div class="product-desc">{{ product.description || 'No description provided.' }}</div>
                   <div class="product-metrics">
-                    <div class="metric"><span class="metric-lbl">Price excl</span><span class="metric-val text-gold">R{{ formatNumber(product.price) }}</span></div>
-                    <div class="metric"><span class="metric-lbl">Price incl</span><span class="metric-val text-blue">R{{ formatNumber(product.price_incl_tax) }}</span></div>
+                    <div class="metric"><span class="metric-lbl">Price</span><span class="metric-val text-gold">R{{ formatNumber(product.price) }}</span></div>
                     <div class="metric"><span class="metric-lbl">Margin</span><span v-if="product.margin !== null" class="metric-val" :class="product.margin >= 30 ? 'text-gold' : product.margin >= 15 ? 'text-blue' : 'text-red'">{{ product.margin.toFixed(1) }}%</span><span v-else class="metric-val text-muted">—</span></div>
                   </div>
                 </div>
@@ -236,8 +227,7 @@
                 <div class="card-body">
                   <div class="product-desc">{{ product.description || 'No description provided.' }}</div>
                   <div class="product-metrics">
-                    <div class="metric"><span class="metric-lbl">Price excl</span><span class="metric-val text-gold">R{{ formatNumber(product.price) }}</span></div>
-                    <div class="metric"><span class="metric-lbl">Price incl</span><span class="metric-val text-blue">R{{ formatNumber(product.price_incl_tax) }}</span></div>
+                    <div class="metric"><span class="metric-lbl">Price</span><span class="metric-val text-gold">R{{ formatNumber(product.price) }}</span></div>
                     <div class="metric"><span class="metric-lbl">Margin</span><span v-if="product.margin !== null" class="metric-val" :class="product.margin >= 30 ? 'text-gold' : product.margin >= 15 ? 'text-blue' : 'text-red'">{{ product.margin.toFixed(1) }}%</span><span v-else class="metric-val text-muted">—</span></div>
                   </div>
                 </div>
@@ -285,12 +275,8 @@
                   <div class="product-desc">{{ product.description || 'No description provided.' }}</div>
                   <div class="product-metrics">
                     <div class="metric">
-                      <span class="metric-lbl">Price excl</span>
+                      <span class="metric-lbl">Price</span>
                       <span class="metric-val text-gold">R{{ formatNumber(product.price) }}</span>
-                    </div>
-                    <div class="metric">
-                      <span class="metric-lbl">Price incl</span>
-                      <span class="metric-val text-blue">R{{ formatNumber(product.price_incl_tax) }}</span>
                     </div>
                     <div class="metric">
                       <span class="metric-lbl">Margin</span>
@@ -369,7 +355,7 @@
             </div>
             <div class="form-row">
               <div class="form-group flex-1">
-                <label class="form-label">Price (excl. VAT) *</label>
+                <label class="form-label">Price (ZAR) *</label>
                 <input class="form-input" v-model="form.price" type="number" step="0.01" min="0" required>
               </div>
               <div class="form-group flex-1">

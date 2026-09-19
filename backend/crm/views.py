@@ -898,7 +898,7 @@ class DealViewSet(viewsets.ModelViewSet):
             text_summary = (
                 f"Official Quotation: {deal.title}\n"
                 f"Client: {recipient_name} ({company_name})\n"
-                f"Total Value: R{total:,.2f} (incl. 15% VAT)\n\n"
+                f"Total Value: R{total:,.2f}\n\n"
                 f"Please review the attached formal quotation. Binding for 30 days.\n\n"
                 f"Sincerely,\nExecutive Directorate | THE FINISHER LUXURY"
             )
@@ -1979,26 +1979,25 @@ class EmployeeViewSet(viewsets.ModelViewSet):
 
             company_name = normalize_company_name(profile.company_name)
 
-        # Determine organization tier limits (Luxury Basic=3, Luxury Team=5, Executive=15, Enterprise=999, Trial=999)
+        # Determine organization tier limits (Corporate Sovereign=5, Luxury Team=5, Executive=15, Enterprise=999)
         user_tier = getattr(profile, 'tier', 'luxury')
         org = getattr(profile, 'organization', None)
         if org:
-            user_tier = getattr(org, 'subscription_tier', 'luxury')
-        
-        is_trial = (user_tier == 'trial') or (org and getattr(org, 'is_trial_active', False))
+            user_tier = getattr(org, 'subscription_tier', 'basic')
+        if user_tier == 'trial':
+            user_tier = 'basic'
 
         TIER_SEAT_LIMITS = {
             'basic': 5,
             'classic': 5,
             'luxury': 5,
-            'trial': 999,
             'executive': 15,
             'enterprise': 999,
         }
-        max_users = 999 if is_trial else TIER_SEAT_LIMITS.get((user_tier or 'luxury').lower(), 5)
+        max_users = TIER_SEAT_LIMITS.get((user_tier or 'basic').lower(), 5)
 
-        # Basic Tier Rule: Only CEO (admin) can onboard employees
-        if not is_system_admin and not is_trial and (user_tier == 'basic' or user_tier == 'classic'):
+        # Basic/Sovereign Tier Rule: Only CEO (admin) can onboard employees
+        if not is_system_admin and (user_tier == 'basic' or user_tier == 'classic'):
             if profile.role != 'admin':
                 return Response({
                     'error': 'On Corporate Sovereign, only the CEO/Administrator may onboard team members. Upgrade to Executive Suite (R1,500/mo) to delegate onboarding permissions to Managers.',
@@ -2006,7 +2005,7 @@ class EmployeeViewSet(viewsets.ModelViewSet):
                 }, status=403)
 
         # Luxury Team Tier Rule: Manager can onboard up to 2 subordinates
-        if not is_system_admin and not is_trial and user_tier == 'luxury' and profile.role == 'manager':
+        if not is_system_admin and user_tier == 'luxury' and profile.role == 'manager':
             manager_subordinates_count = UserProfile.objects.filter(
                 Q(onboarded_by=user) | Q(reports_to=user),
                 company_name__iexact=company_name
@@ -2023,8 +2022,8 @@ class EmployeeViewSet(viewsets.ModelViewSet):
             profile__company_name__iexact=company_name
         ).count()
         
-        if not is_system_admin and not is_trial and client_user_count >= max_users:
-            tier_display = "Luxury Basic" if user_tier == "basic" else (user_tier or 'Luxury Team').upper()
+        if not is_system_admin and client_user_count >= max_users:
+            tier_display = "Corporate Sovereign" if user_tier == "basic" else (user_tier or 'Luxury Team').upper()
             return Response({
                 'error': f'Seat limit reached ({client_user_count}/{max_users} active). Your {tier_display} plan includes up to {max_users} collaborative seats. Upgrade to Executive Suite (15 seats) or Enterprise for additional capacity.',
                 'current_users': client_user_count,
@@ -2338,33 +2337,32 @@ https://www.thefinishercrm.tech
         user_tier = getattr(profile, 'tier', 'luxury')
         org = getattr(profile, 'organization', None)
         if org:
-            user_tier = getattr(org, 'subscription_tier', 'luxury')
-
-        is_trial = (user_tier == 'trial') or (org and getattr(org, 'is_trial_active', False))
+            user_tier = getattr(org, 'subscription_tier', 'basic')
+        if user_tier == 'trial':
+            user_tier = 'basic'
 
         TIER_SEAT_LIMITS = {
             'basic': 5,
             'classic': 5,
             'luxury': 5,
-            'trial': 999,
             'executive': 15,
             'enterprise': 999,
         }
-        max_users = 999 if is_trial else TIER_SEAT_LIMITS.get((user_tier or 'luxury').lower(), 5)
+        max_users = TIER_SEAT_LIMITS.get((user_tier or 'basic').lower(), 5)
 
         client_user_count = User.objects.filter(
             is_superuser=False,
             is_staff=False,
             profile__company_name__iexact=company_name
         ).count()
-        remaining = 999 if is_trial else max(0, max_users - client_user_count)
+        remaining = max(0, max_users - client_user_count)
 
         can_add = remaining > 0
         blocked_reason = None
-        if not is_trial and (user_tier == 'basic' or user_tier == 'classic') and profile and profile.role != 'admin':
+        if (user_tier == 'basic' or user_tier == 'classic') and profile and profile.role != 'admin':
             can_add = False
             blocked_reason = 'Only the CEO/Administrator can onboard employees on Corporate Sovereign'
-        elif not is_trial and user_tier == 'luxury' and profile and profile.role == 'manager':
+        elif user_tier == 'luxury' and profile and profile.role == 'manager':
             manager_subordinates = UserProfile.objects.filter(
                 Q(onboarded_by=user) | Q(reports_to=user),
                 company_name__iexact=company_name
@@ -2374,14 +2372,14 @@ https://www.thefinishercrm.tech
                 blocked_reason = 'Managers on Luxury Team can onboard up to 2 subordinates'
         
         return Response({
-            'tier': 'trial' if is_trial else user_tier,
+            'tier': user_tier,
             'remaining_slots': remaining,
             'current_users': client_user_count,
             'max_users': max_users,
             'can_add_more': can_add,
-            'upgrade_required': (remaining == 0 and not is_trial),
+            'upgrade_required': (remaining == 0),
             'blocked_reason': blocked_reason,
-            'is_trial': is_trial
+            'is_trial': False
         })
     
     @action(detail=False, methods=['post'])
@@ -2694,7 +2692,7 @@ class ClientEmployeeManagementView(APIView):
             admin_name = (request.data.get('admin_name') or '').strip()
             admin_email = (request.data.get('admin_email') or '').strip().lower()
             admin_phone = (request.data.get('admin_phone') or '').strip()
-            subscription_tier = request.data.get('subscription_tier', 'trial')
+            subscription_tier = request.data.get('subscription_tier', 'basic')
             password = (request.data.get('password') or '').strip()
             is_verified = bool(request.data.get('is_verified', False))
 
@@ -2747,14 +2745,14 @@ class ClientEmployeeManagementView(APIView):
                     profile.organization = org
                     profile.role = 'admin'
                     profile.phone = admin_phone
-                    profile.payment_status = 'paid' if subscription_tier != 'trial' else 'trial'
+                    profile.payment_status = 'paid'
                     profile.save()
 
                     from .models import OrganizationSubscription
                     OrganizationSubscription.objects.update_or_create(
                         organization=org,
                         defaults={
-                            'status': 'active' if subscription_tier != 'trial' else 'trial',
+                            'status': 'active',
                             'current_period_start': timezone.now()
                         }
                     )
@@ -3772,7 +3770,8 @@ from .models import Organization, OrganizationSubscription, SubscriptionPlan, Pa
 
 class OrganizationBillingStatusView(APIView):
     """
-    Get organization subscription and 14-day trial status.
+    Get organization subscription and billing status.
+    Corporate Sovereign (basic) tier = permanent free access, always active.
     GET /api/billing/status/
     """
     permission_classes = [IsAuthenticated]
@@ -3783,55 +3782,66 @@ class OrganizationBillingStatusView(APIView):
         org = getattr(profile, 'organization', None) if profile else None
 
         if not org:
-            trial_days = getattr(profile, 'days_until_trial_end', 0) if profile else 0
             tier = (getattr(profile, 'tier', 'luxury') or 'luxury').lower()
-            is_trial = trial_days > 0
+            if tier in ('classic', 'trial'):
+                tier = 'basic'
             return Response({
                 'organization_name': getattr(profile, 'company_name', 'Workspace'),
-                'subscription_tier': 'basic' if tier == 'classic' else tier,
-                'status': getattr(profile, 'payment_status', 'trial'),
-                'is_trial_active': is_trial,
-                'days_remaining': trial_days,
-                'days_remaining_in_trial': trial_days,
-                'days_remaining_in_grace': 3 if trial_days == 0 else 3,
+                'subscription_tier': tier,
+                'status': 'active',
+                'is_trial_active': False,
+                'days_remaining': 0,
+                'days_remaining_in_trial': 0,
+                'days_remaining_in_grace': 0,
                 'is_in_grace_period': False,
                 'is_grace_expired': False,
-                'can_access': getattr(profile, 'can_access', True) if profile else True,
+                'can_access': True,
             })
 
         sub = getattr(org, 'subscription', None)
-        status_val = sub.status if sub else org.subscription_tier
-        is_paid = (status_val == 'active')
-        is_trial = org.is_trial_active and not is_paid
-        in_grace = org.is_in_grace_period and not is_paid
-        grace_expired = org.is_grace_expired and not is_paid
-
-        # Unrestricted during trial and grace period; locked after grace period expires without settlement
-        can_access = is_paid or is_trial or in_grace or user.is_superuser
-
-        current_tier = org.subscription_tier or 'luxury'
-        if current_tier == 'classic':
+        current_tier = (org.subscription_tier or 'basic').lower()
+        if current_tier in ('classic', 'trial'):
             current_tier = 'basic'
+
+        # Corporate Sovereign (basic) tier = ALWAYS active, NEVER locked
+        is_sovereign = current_tier == 'basic'
+
+        if is_sovereign:
+            status_val = 'active'
+            can_access = True
+            is_trial = False
+            in_grace = False
+            grace_expired = False
+        else:
+            # Paid tiers: check actual payment status
+            status_val = sub.status if sub else org.subscription_tier
+            is_paid = (status_val == 'active')
+            is_trial = org.is_trial_active and not is_paid
+            in_grace = org.is_in_grace_period and not is_paid
+            grace_expired = org.is_grace_expired and not is_paid
+            can_access = is_paid or is_trial or in_grace or user.is_superuser
+            status_val = 'active' if is_paid else ('grace_period' if in_grace else ('trial' if is_trial else 'locked'))
 
         return Response({
             'organization_id': str(org.id),
             'organization_name': org.name,
             'subscription_tier': current_tier,
-            'status': 'active' if is_paid else ('grace_period' if in_grace else ('trial' if is_trial else 'locked')),
+            'status': status_val,
             'is_trial_active': is_trial,
-            'days_remaining_in_trial': org.days_remaining_in_trial,
-            'trial_end_date': org.trial_end_date.isoformat() if org.trial_end_date else None,
+            'days_remaining_in_trial': 0 if is_sovereign else org.days_remaining_in_trial,
+            'trial_end_date': None if is_sovereign else (org.trial_end_date.isoformat() if org.trial_end_date else None),
             'is_in_grace_period': in_grace,
-            'days_remaining_in_grace': org.days_remaining_in_grace,
-            'grace_end_date': org.grace_end_date.isoformat() if org.grace_end_date else None,
+            'days_remaining_in_grace': 0 if is_sovereign else org.days_remaining_in_grace,
+            'grace_end_date': None if is_sovereign else (org.grace_end_date.isoformat() if org.grace_end_date else None),
             'is_grace_expired': grace_expired,
             'can_access': can_access,
             'plan': {
-                'name': sub.plan.name if sub and sub.plan else f"Luxury {current_tier.title()}",
+                'name': sub.plan.name if sub and sub.plan else f"Corporate {'Sovereign' if is_sovereign else current_tier.title()}",
                 'currency': sub.plan.currency if sub and sub.plan else 'ZAR',
-                'price': (sub.plan.price_cents / 100) if sub and sub.plan else (349.0 if current_tier == 'basic' else 999.0),
+                'price': (sub.plan.price_cents / 100) if sub and sub.plan else (0.0 if is_sovereign else (999.0 if current_tier == 'luxury' else 1500.0)),
             }
         })
+
 
 
 class CreateCheckoutSessionView(APIView):

@@ -8,6 +8,7 @@ from . import integrations_views
 from . import eula_views
 from . import monetization_views
 from . import geo_views
+from . import agent_views
 
 router = DefaultRouter()
 router.register(r'contacts', views.ContactViewSet, basename='contact')
@@ -100,4 +101,8 @@ urlpatterns = [
     path('api/billing/white-label/upload-logo/', monetization_views.WhiteLabelLogoUploadView.as_view(), name='white_label_logo_upload'),
     path('api/billing/tender-pack/checkout/', monetization_views.TenderPackCheckoutView.as_view(), name='tender_pack_checkout'),
     path('api/reports/tender-compliance-pack/', monetization_views.TenderPackDownloadView.as_view(), name='tender_compliance_pack_download'),
+
+    # 24/7 Autonomous Sentinel Guardian Agent
+    path('api/agent/sentinel/status/', agent_views.SentinelAgentStatusView.as_view(), name='sentinel_agent_status'),
+    path('api/agent/sentinel/pulse/', agent_views.SentinelAgentTriggerPulseView.as_view(), name='sentinel_agent_pulse'),
 ]

@@ -22,12 +22,11 @@ class Organization(models.Model):
     name = models.CharField(max_length=200, unique=True, help_text="Official organization / business entity name")
     slug = models.SlugField(max_length=220, unique=True, blank=True)
     subscription_tier = models.CharField(max_length=50, choices=[
-        ('basic', 'Luxury Basic'),
+        ('basic', 'Corporate Sovereign'),
         ('luxury', 'Luxury Team'),
         ('executive', 'Executive Suite'),
         ('enterprise', 'Enterprise Custom'),
-        ('trial', '15-Day VIP Trial'),
-    ], default='trial')
+    ], default='basic')
     trial_start_date = models.DateTimeField(default=timezone.now)
     trial_end_date = models.DateTimeField(blank=True, null=True)
     lead_limit = models.PositiveIntegerField(default=50, help_text="Maximum lead intake limit during trial period")
@@ -57,11 +56,14 @@ class Organization(models.Model):
                 counter += 1
             self.slug = slug
         if not self.trial_end_date:
-            self.trial_end_date = self.trial_start_date + timedelta(days=15)
+            self.trial_end_date = self.trial_start_date + timedelta(days=3650)
         super().save(*args, **kwargs)
 
     @property
     def is_trial_active(self):
+        """Always returns True for Sovereign/basic tier (permanent free access)."""
+        if self.subscription_tier in ('basic', 'trial'):
+            return True
         if not self.trial_end_date:
             return False
         return timezone.now() <= self.trial_end_date
@@ -81,6 +83,8 @@ class Organization(models.Model):
 
     @property
     def is_in_grace_period(self):
+        if self.subscription_tier in ('basic', 'trial'):
+            return False
         if not self.trial_end_date:
             return False
         ged = self.grace_end_date
@@ -96,6 +100,8 @@ class Organization(models.Model):
 
     @property
     def is_grace_expired(self):
+        if self.subscription_tier in ('basic', 'trial'):
+            return False
         ged = self.grace_end_date
         if not ged:
             return False
@@ -134,14 +140,14 @@ class SubscriptionPlan(models.Model):
 class OrganizationSubscription(models.Model):
     """Tracks active subscription and billing state per organization."""
     STATUS_CHOICES = [
-        ('trial', 'Trial Period'),
-        ('active', 'Active Paid'),
+        ('active', 'Active'),
         ('past_due', 'Past Due'),
         ('canceled', 'Canceled'),
+        ('trial', 'Legacy Trial'),
     ]
     organization = models.OneToOneField(Organization, on_delete=models.CASCADE, related_name='subscription')
     plan = models.ForeignKey(SubscriptionPlan, on_delete=models.SET_NULL, null=True, blank=True, related_name='subscriptions')
-    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='trial')
+    status = models.CharField(max_length=30, choices=STATUS_CHOICES, default='active')
     current_period_start = models.DateTimeField(default=timezone.now)
     current_period_end = models.DateTimeField(blank=True, null=True)
     monthly_price = models.DecimalField(max_digits=10, decimal_places=2, default=999.00, help_text="Monthly subscription rate in ZAR")
@@ -339,9 +345,9 @@ class UserProfile(models.Model):
         ('pending', 'Pending Payment'),
         ('paid', 'Paid'),
         ('overdue', 'Overdue'),
-        ('trial', 'Trial Period'),
-    ], default='pending')
-    trial_ends_at = models.DateTimeField(blank=True, null=True, help_text="15-day trial period end date")
+        ('trial', 'Legacy Trial'),
+    ], default='paid')
+    trial_ends_at = models.DateTimeField(blank=True, null=True, help_text="Legacy trial end date (no longer used)")
 
     can_add_employees = models.BooleanField(default=False, help_text="Delegated permission: employee can add new employees (requires admin OTP)")
     can_manage_assets = models.BooleanField(default=False, help_text="Delegated permission: manager can add and manage company physical assets")
@@ -389,13 +395,20 @@ class UserProfile(models.Model):
     
     @property
     def can_access(self):
-        """Check if user can access the system (not banned, payment valid)"""
+        """Check if user can access the system (not banned, payment valid).
+        Sovereign tier users always have access."""
 
         if self.user.is_superuser or self.user.is_staff or self.is_admin:
             return True
         
         if self.is_banned:
             return False
+
+        # Sovereign/basic tier always has access (free permanent tier)
+        org = getattr(self, 'organization', None)
+        if org and org.subscription_tier in ('basic', 'trial'):
+            return True
+
         if self.payment_status in ['paid', 'trial']:
             return True
         return False

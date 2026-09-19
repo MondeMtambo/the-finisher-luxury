@@ -103,7 +103,7 @@ export default {
         "💡 Billionaire Rule #1: High-margin subscription engines thrive on multi-seat retention. Every support ticket is a direct sales opportunity!",
         "🔒 POPIA Section 19: All inactive tenant records are safely quarantined in encrypted vaults for 30 days before clean automated purge.",
         "📊 CEO Tip: You can now initiate commercial deals and license issuance directly from Helpdesk Tickets!",
-        "✨ Pro-tip: CSV exports are 100% unlocked with zero restrictions during your VIP trial and grace period."
+        "✨ Pro-tip: CSV exports and enterprise reporting are 100% unlocked with zero restrictions across all active workspaces."
       ]
     }
   },

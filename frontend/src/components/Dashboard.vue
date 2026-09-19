@@ -508,12 +508,6 @@ export default {
       }
       return icons[this.userTier] || '🏆'
     },
-    trialDaysRemaining() {
-      const user = this.userObject
-      if (user.days_remaining !== undefined && user.days_remaining !== null) return user.days_remaining
-      if (user.days_remaining_in_trial !== undefined && user.days_remaining_in_trial !== null) return user.days_remaining_in_trial
-      return 15
-    },
     tierDisplayName() {
       const names = {
         classic: 'CLASSIC SOLO',
