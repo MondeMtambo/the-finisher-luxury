@@ -226,6 +226,29 @@ const router = createRouter({
 
 // Navigation guard: Redirect to login if not authenticated and enforce prerequisites
 router.beforeEach(async (to, from, next) => {
+  // ─── PAYMENT GATEWAY CALLBACK INTERCEPTOR (PayFast Live Routing) ───
+  if (typeof window !== 'undefined' && window.location.search) {
+    const searchParams = new URLSearchParams(window.location.search)
+    if (searchParams.has('tender_pack')) {
+      const status = searchParams.get('tender_pack')
+      window.history.replaceState({}, document.title, window.location.pathname + window.location.hash)
+      next({ path: '/reports', query: { tender_pack: status } })
+      return
+    }
+    if (searchParams.has('white_label')) {
+      const status = searchParams.get('white_label')
+      window.history.replaceState({}, document.title, window.location.pathname + window.location.hash)
+      next({ path: '/settings', query: { white_label: status } })
+      return
+    }
+    if (searchParams.has('deal_payment')) {
+      const status = searchParams.get('deal_payment')
+      window.history.replaceState({}, document.title, window.location.pathname + window.location.hash)
+      next({ path: '/deals', query: { deal_payment: status } })
+      return
+    }
+  }
+
   const requiresAuth = to.matched.some(record => record.meta.requiresAuth)
   let isAuthenticated = authService.isAuthenticated()
 

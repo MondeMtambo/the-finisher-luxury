@@ -309,6 +309,8 @@ export default {
     this.loadWhiteLabelStatus()
     if (this.$route.query.white_label === 'success') {
       toast.success('Your Corporate White-Label subscription has been activated!', 'White-Label Active')
+    } else if (this.$route.query.white_label === 'cancel') {
+      toast.info('White-label subscription checkout was cancelled. No charges were made.', 'Checkout Cancelled')
     }
   },
   methods: {

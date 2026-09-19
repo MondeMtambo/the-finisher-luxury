@@ -310,6 +310,8 @@ export default {
     await this.loadTenderPackStatus()
     if (this.$route.query.tender_pack === 'success') {
       toast.success('Your Official Tender & SEDA Funding Compliance Pack has been unlocked! Click Download to retrieve your certified dossier.', 'Tender Pack Unlocked')
+    } else if (this.$route.query.tender_pack === 'cancel') {
+      toast.info('Tender pack checkout was cancelled. No charges were made.', 'Checkout Cancelled')
     }
     if (!this.isEmployeeOnly) {
       await this.loadData()

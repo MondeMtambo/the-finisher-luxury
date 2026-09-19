@@ -519,7 +519,8 @@ export const monetizationAPI = {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
   checkoutTenderPack: () => api.post('/billing/tender-pack/checkout/'),
-  getTenderPackDownloadUrl: () => `${API_BASE_URL}/reports/tender-compliance-pack/`
+  getTenderPackDownloadUrl: () => `${API_BASE_URL}/reports/tender-compliance-pack/`,
+  checkoutDealSplit: (data) => api.post('/billing/deals/checkout/', data)
 }
 
 export const securityAPI = {

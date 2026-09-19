@@ -38,6 +38,10 @@
                 <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>
                 {{ sendingQuoteId === deal.id ? 'Sending...' : 'Quote' }}
               </button>
+              <button class="btn btn-sm btn-primary" @click.stop="handlePayDeal(deal)" :disabled="payingDealId === deal.id" title="Pay via PayFast (Instant Split Settlement)">
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="1" y="4" width="22" height="16" rx="2" ry="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+                {{ payingDealId === deal.id ? '...' : 'Pay' }}
+              </button>
               <button class="btn btn-sm btn-secondary" @click="editDeal(deal)">Edit</button>
               <button class="btn btn-sm btn-danger" @click="deleteDeal(deal.id)" :disabled="!canDeleteDeals">Delete</button>
             </div>
@@ -96,7 +100,7 @@
 
 
 <script>
-import { dealsAPI, contactsAPI, companiesAPI } from '../api'
+import { dealsAPI, contactsAPI, companiesAPI, monetizationAPI } from '../api'
 import authService from '../services/auth'
 import toast from '../utils/toast'
 import modal from '../utils/modal'
@@ -112,6 +116,7 @@ export default {
       showEditModal: false,
       userPermissions: null,
       sendingQuoteId: null,
+      payingDealId: null,
       dealForm: {
         title: '',
         company: '',
@@ -150,6 +155,7 @@ export default {
     await this.loadDeals()
     await this.loadContacts()
     await this.loadCompanies()
+    this.checkPaymentReturn()
   },
   methods: {
     async loadUserPermissions() {
@@ -317,6 +323,49 @@ export default {
       } finally {
         this.sendingQuoteId = null
       }
+    },
+    checkPaymentReturn() {
+      const paymentStatus = this.$route.query.deal_payment
+      if (paymentStatus === 'success') {
+        toast.success('PayFast split payment processed successfully! Net proceeds routed to your merchant account.', 'Payment Confirmed')
+      } else if (paymentStatus === 'cancel') {
+        toast.info('PayFast commercial checkout was cancelled by the buyer.', 'Payment Cancelled')
+      }
+    },
+    async handlePayDeal(deal) {
+      if (!deal.value || Number(deal.value) <= 0) {
+        toast.warning('Please enter a valid deal amount before generating checkout.', 'Invalid Amount')
+        return
+      }
+      this.payingDealId = deal.id
+      try {
+        const res = await monetizationAPI.checkoutDealSplit({
+          deal_id: deal.id,
+          amount: deal.value,
+          item_name: `Deal Settlement: ${deal.title}`
+        })
+        this.submitPayFast(res.data)
+      } catch (err) {
+        toast.error(err.response?.data?.error || 'Failed to initialize PayFast split checkout.', 'PayFast Error')
+      } finally {
+        this.payingDealId = null
+      }
+    },
+    submitPayFast(payfastData) {
+      const form = document.createElement('form')
+      form.method = 'POST'
+      form.action = payfastData.process_url
+      Object.keys(payfastData).forEach(key => {
+        if (key !== 'process_url' && payfastData[key] !== undefined && payfastData[key] !== null) {
+          const input = document.createElement('input')
+          input.type = 'hidden'
+          input.name = key
+          input.value = payfastData[key]
+          form.appendChild(input)
+        }
+      })
+      document.body.appendChild(form)
+      form.submit()
     }
   }
 }
