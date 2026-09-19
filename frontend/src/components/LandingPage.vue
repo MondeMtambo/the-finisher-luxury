@@ -91,27 +91,27 @@
       </p>
 
       <div class="landing-plans-grid">
-        <!-- Tier 1: Luxury Basic -->
-        <div class="landing-plan-card">
-          <div class="tier-badge">SOLO OPERATOR</div>
-          <h3 class="tier-name">Luxury Basic</h3>
-          <p class="tier-desc">For independent brokers, elite consultants &amp; single operators.</p>
+        <!-- Tier 1: Corporate Sovereign (Permanent License) -->
+        <div class="landing-plan-card sovereign-card">
+          <div class="tier-badge sovereign-badge">PERMANENT ALLOCATION &middot; 5 SEATS</div>
+          <h3 class="tier-name">Corporate Sovereign</h3>
+          <p class="tier-desc">Empowering South African business enterprises with full CRM capabilities.</p>
           <div class="tier-price">
-            <span class="currency">R</span>349<span class="period">/month</span>
+            <span class="currency">R</span>0<span class="period">/permanent</span>
           </div>
-          <div class="seat-pill">1 User &middot; Up to 5 Contacts</div>
+          <div class="seat-pill sovereign-pill">5 Seats &middot; Up to 6,000 Verified Contacts</div>
 
           <ul class="tier-features">
-            <li><strong>Up to 5 VIP Client Contacts</strong> (Strict Solo Cap)</li>
-            <li>Full deal pipeline &amp; stage management</li>
-            <li>Fleet asset tracking (up to 5 items)</li>
-            <li>Task manager &amp; automatic reminders</li>
-            <li>CIPC entity verification badge</li>
-            <li>Standard email concierge</li>
+            <li><strong>5 Collaborative Team Seats</strong> (CEO, Managers &amp; Reps)</li>
+            <li><strong>Up to 6,000 Verified Client Contacts</strong></li>
+            <li>Full deal pipeline &amp; Kanban stage management</li>
+            <li>Meta / Facebook Lead Ads Webhook Integration</li>
+            <li>Quotation engine &amp; POPIA Section 19 Vault</li>
+            <li>Standard Enterprise Network Security Stamp</li>
           </ul>
 
-          <button class="plan-cta-btn secondary" @click="selectPlanAndRegister('basic')">
-            Start 15-Day Free Trial &rarr;
+          <button class="plan-cta-btn secondary sovereign-btn" @click="selectPlanAndRegister('basic')">
+            Claim 5 Seats License (R0) &rarr;
           </button>
         </div>
 
@@ -190,6 +190,39 @@
           <a href="mailto:noreply@mtamboholdings.dev?subject=The%20Finisher%20Luxury%20Enterprise%20Edition" class="plan-cta-btn enterprise">
             Contact Executive Concierge &rarr;
           </a>
+        </div>
+      </div>
+
+      <!-- Enterprise Add-On Suite -->
+      <div class="landing-addons-banner">
+        <div class="addons-header">
+          <span class="addons-tag">MODULAR ENTERPRISE ADD-ONS</span>
+          <h3>Enhance Your Corporate Operations</h3>
+          <p>Activate white-label sovereignty and accredited compliance certification on demand.</p>
+        </div>
+        <div class="addons-grid">
+          <div class="addon-card">
+            <div class="addon-top">
+              <span class="addon-badge">WHITE-LABEL</span>
+              <h4>Corporate White-Label Branding</h4>
+              <p>Remove the Finisher network watermark from all client-facing quotes, proposals, and automated emails. Upload your custom logo and corporate letterhead.</p>
+            </div>
+            <div class="addon-bottom">
+              <div class="addon-price"><span class="currency">R</span>199<span class="period">/month</span></div>
+              <button class="btn-addon" @click="$router.push('/settings')">Manage in Settings &rarr;</button>
+            </div>
+          </div>
+          <div class="addon-card">
+            <div class="addon-top">
+              <span class="addon-badge gold">TENDER CERTIFICATION</span>
+              <h4>Official Tender &amp; SEDA Funding Sales Pack</h4>
+              <p>Download a certified, bank-grade 12-Month Audited Sales Ledger with POPIA Section 19 Cryptographic Certification and SHA-256 digital stamp for government tenders.</p>
+            </div>
+            <div class="addon-bottom">
+              <div class="addon-price"><span class="currency">R</span>350<span class="period">/once-off</span></div>
+              <button class="btn-addon gold" @click="$router.push('/reports')">Generate in Reports &rarr;</button>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -1110,6 +1143,138 @@ export default {
 }
 
 .returning-btn:hover {
+  background: #d4af37;
+  color: #000;
+}
+
+/* Sovereign Card & Addons Banner */
+.sovereign-card {
+  border-color: rgba(59, 130, 246, 0.4) !important;
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.6) 0%, rgba(15, 23, 42, 0.9) 100%) !important;
+}
+.sovereign-badge {
+  background: rgba(59, 130, 246, 0.15) !important;
+  color: #60a5fa !important;
+  border: 1px solid rgba(59, 130, 246, 0.4);
+}
+.sovereign-pill {
+  background: rgba(59, 130, 246, 0.12) !important;
+  color: #93c5fd !important;
+}
+.sovereign-btn {
+  background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%) !important;
+  color: #ffffff !important;
+  border: 1px solid rgba(147, 197, 253, 0.4) !important;
+}
+.sovereign-btn:hover {
+  background: #3b82f6 !important;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.4);
+}
+
+.landing-addons-banner {
+  margin-top: 3rem;
+  background: rgba(15, 23, 42, 0.65);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  border-radius: 12px;
+  padding: 2rem;
+}
+.addons-header {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+.addons-tag {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: #d4af37;
+  display: inline-block;
+  margin-bottom: 4px;
+}
+.addons-header h3 {
+  font-size: 1.3rem;
+  color: #ffffff;
+  font-weight: 700;
+  margin: 0 0 4px;
+}
+.addons-header p {
+  font-size: 0.85rem;
+  color: #94a3b8;
+  margin: 0;
+}
+.addons-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 1.5rem;
+}
+.addon-card {
+  background: rgba(10, 15, 29, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 10px;
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+.addon-badge {
+  font-size: 0.68rem;
+  font-weight: 800;
+  color: #60a5fa;
+  background: rgba(59, 130, 246, 0.12);
+  padding: 3px 8px;
+  border-radius: 4px;
+  display: inline-block;
+  margin-bottom: 8px;
+}
+.addon-badge.gold {
+  color: #d4af37;
+  background: rgba(212, 175, 55, 0.12);
+}
+.addon-card h4 {
+  color: #f8fafc;
+  font-size: 1.05rem;
+  font-weight: 700;
+  margin: 0 0 6px;
+}
+.addon-card p {
+  color: #94a3b8;
+  font-size: 0.8rem;
+  line-height: 1.45;
+  margin: 0 0 1.25rem;
+}
+.addon-bottom {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+.addon-price {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #ffffff;
+}
+.addon-price .currency { color: #d4af37; }
+.addon-price .period { font-size: 0.75rem; color: #64748b; }
+.btn-addon {
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: #e2e8f0;
+  padding: 6px 14px;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.btn-addon:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+}
+.btn-addon.gold {
+  border-color: rgba(212, 175, 55, 0.4);
+  color: #d4af37;
+}
+.btn-addon.gold:hover {
   background: #d4af37;
   color: #000;
 }

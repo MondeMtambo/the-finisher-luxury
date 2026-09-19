@@ -6,6 +6,7 @@ from . import auth_views
 from . import access_request_views
 from . import integrations_views
 from . import eula_views
+from . import monetization_views
 
 router = DefaultRouter()
 router.register(r'contacts', views.ContactViewSet, basename='contact')
@@ -89,4 +90,11 @@ urlpatterns = [
     path('api/eula/status/', eula_views.EulaStatusView.as_view(), name='eula_status'),
     path('api/eula/accept/', eula_views.EulaAcceptView.as_view(), name='eula_accept'),
     path('api/eula/certificate/<uuid:pk>/', eula_views.EulaCertificateDownloadView.as_view(), name='eula_certificate_download'),
+
+    # Corporate White-Label & Tender Compliance Monetization Suite
+    path('api/billing/white-label/checkout/', monetization_views.WhiteLabelCheckoutView.as_view(), name='white_label_checkout'),
+    path('api/billing/white-label/status/', monetization_views.WhiteLabelStatusView.as_view(), name='white_label_status'),
+    path('api/billing/white-label/upload-logo/', monetization_views.WhiteLabelLogoUploadView.as_view(), name='white_label_logo_upload'),
+    path('api/billing/tender-pack/checkout/', monetization_views.TenderPackCheckoutView.as_view(), name='tender_pack_checkout'),
+    path('api/reports/tender-compliance-pack/', monetization_views.TenderPackDownloadView.as_view(), name='tender_compliance_pack_download'),
 ]

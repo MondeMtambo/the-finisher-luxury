@@ -70,6 +70,76 @@
         </div>
       </div>
 
+      <!-- Corporate White-Label & Custom Branding Card -->
+      <div class="card settings-card white-label-card">
+        <div class="sc-header">
+          <div class="sc-icon gold">
+            <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+          </div>
+          <div style="flex: 1;">
+            <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 0.5rem;">
+              <h3 class="sc-title">Corporate White-Label &amp; Custom Branding</h3>
+              <span v-if="whiteLabelStatus.is_white_labeled" class="badge" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3);">ACTIVE (R199/mo)</span>
+              <span v-else class="badge" style="background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3);">ADD-ON AVAILABLE</span>
+            </div>
+            <p class="sc-desc">Remove Finisher network watermarks and establish independent corporate identity on quotes &amp; invoices</p>
+          </div>
+        </div>
+
+        <div class="sc-body">
+          <!-- Active White-Label State -->
+          <div v-if="whiteLabelStatus.is_white_labeled" class="white-label-active-box">
+            <div class="setting-row">
+              <div class="setting-info">
+                <span class="setting-name">Network Watermark Status</span>
+                <span class="setting-hint">Client-facing quotes, tax invoices, and emails are 100% white-labeled.</span>
+              </div>
+              <span style="color: #10b981; font-weight: 700;">✓ Watermark Disabled</span>
+            </div>
+
+            <div class="setting-row" style="align-items: flex-start;">
+              <div class="setting-info">
+                <span class="setting-name">Enterprise Letterhead &amp; Logo</span>
+                <span class="setting-hint">Upload your high-resolution PNG or JPG company logo (max 5MB).</span>
+              </div>
+              <div class="logo-upload-box">
+                <div v-if="whiteLabelStatus.custom_logo" class="current-logo-preview">
+                  <img :src="whiteLabelStatus.custom_logo" alt="Corporate Logo" class="preview-img" />
+                </div>
+                <div class="upload-controls">
+                  <input type="file" ref="logoInput" accept="image/*" @change="onLogoSelected" class="file-input-hidden" id="logoUpload" />
+                  <label for="logoUpload" class="btn btn-secondary btn-sm" style="cursor: pointer;">
+                    {{ uploadingLogo ? 'Uploading...' : (whiteLabelStatus.custom_logo ? 'Replace Logo' : 'Upload Corporate Logo') }}
+                  </label>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Inactive / Locked State -->
+          <div v-else class="white-label-locked-box" style="padding: 1.25rem;">
+            <div class="locked-watermark-preview">
+              <div class="watermark-notice-title">Default Network Watermark Active:</div>
+              <div class="watermark-tag">Secured by THE FINISHER LUXURY CRM Enterprise Network • thefinisher.co.za</div>
+            </div>
+            <p class="locked-hint" style="margin: 0.75rem 0; font-size: 0.85rem; color: var(--gray-600); line-height: 1.5;">
+              White-label authorization removes this watermark from all official PDFs, tax invoices, client pro-formas, and transactional emails. 
+              Billing is processed via automated PayFast monthly subscription of R199.00 ZAR.
+            </p>
+            <div class="action-row" style="margin-top: 1rem;">
+              <button 
+                class="btn btn-primary" 
+                :disabled="activatingWhiteLabel" 
+                @click="activateWhiteLabel"
+              >
+                <span v-if="activatingWhiteLabel">Connecting to PayFast...</span>
+                <span v-else>Activate White-Label Subscription (R199 / month)</span>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="card settings-card">
         <div class="sc-header">
           <div class="sc-icon" style="background: rgba(212, 175, 55, 0.1); color: #D4AF37;">
@@ -177,7 +247,7 @@ import animationsPreference from '../utils/animations'
 import authService from '../services/auth'
 import toast from '../utils/toast'
 import { avatars } from '../utils/avatars.js'
-import { authAPI } from '../api'
+import { authAPI, monetizationAPI } from '../api'
 import { getStorageEstimate, clearAppCache } from '../utils/cacheManager'
 
 export default {
@@ -197,7 +267,15 @@ export default {
         formatted: 'Calculating...',
         swActive: true
       },
-      clearingCache: false
+      clearingCache: false,
+      whiteLabelStatus: {
+        is_white_labeled: false,
+        subscription_id: '',
+        custom_logo: '',
+        watermark_text: ''
+      },
+      activatingWhiteLabel: false,
+      uploadingLogo: false
     }
   },
   computed: {
@@ -211,14 +289,27 @@ export default {
     },
     tierDisplay() {
       if (this.isAdminUser) return 'ULTIMATE'
-      const map = { sport: 'SPORT', luxury: 'LUXURY', free: 'Free', pro: 'Pro', enterprise: 'Enterprise' }
-      return map[this.tier] || this.tier || '—'
+      const map = {
+        sport: 'SPORT',
+        luxury: 'LUXURY',
+        free: 'CORPORATE SOVEREIGN',
+        basic: 'CORPORATE SOVEREIGN',
+        classic: 'CORPORATE SOVEREIGN',
+        executive: 'EXECUTIVE SUITE',
+        pro: 'PRO',
+        enterprise: 'ENTERPRISE'
+      }
+      return map[this.tier] || this.tier || 'CORPORATE SOVEREIGN'
     }
   },
   mounted() {
     this.animationsEnabled = animationsPreference.isEnabled()
     this.loadProfile()
     this.loadStorageInfo()
+    this.loadWhiteLabelStatus()
+    if (this.$route.query.white_label === 'success') {
+      toast.success('Your Corporate White-Label subscription has been activated!', 'White-Label Active')
+    }
   },
   methods: {
     onAnimationsToggle() {
@@ -286,6 +377,57 @@ export default {
           toast.error('Failed to clear cache')
         }
       }, 350)
+    },
+    async loadWhiteLabelStatus() {
+      try {
+        const res = await monetizationAPI.getWhiteLabelStatus()
+        this.whiteLabelStatus = res.data
+      } catch (err) {
+        console.warn('Could not load white-label status', err)
+      }
+    },
+    async activateWhiteLabel() {
+      this.activatingWhiteLabel = true
+      try {
+        const res = await monetizationAPI.checkoutWhiteLabel()
+        this.submitPayFast(res.data)
+      } catch (err) {
+        toast.error(err.response?.data?.error || 'Failed to initialize PayFast checkout', 'PayFast Error')
+      } finally {
+        this.activatingWhiteLabel = false
+      }
+    },
+    async onLogoSelected(e) {
+      const file = e.target.files[0]
+      if (!file) return
+      this.uploadingLogo = true
+      try {
+        const formData = new FormData()
+        formData.append('logo', file)
+        const res = await monetizationAPI.uploadWhiteLabelLogo(formData)
+        toast.success(res.data.message || 'Corporate logo uploaded successfully!', 'Branding Updated')
+        await this.loadWhiteLabelStatus()
+      } catch (err) {
+        toast.error(err.response?.data?.error || 'Failed to upload corporate logo', 'Upload Error')
+      } finally {
+        this.uploadingLogo = false
+      }
+    },
+    submitPayFast(payfastData) {
+      const form = document.createElement('form')
+      form.method = 'POST'
+      form.action = payfastData.process_url
+      Object.keys(payfastData).forEach(key => {
+        if (key !== 'process_url') {
+          const input = document.createElement('input')
+          input.type = 'hidden'
+          input.name = key
+          input.value = payfastData[key]
+          form.appendChild(input)
+        }
+      })
+      document.body.appendChild(form)
+      form.submit()
     }
   }
 }
@@ -469,5 +611,69 @@ input:checked + .toggle-track::before { transform: translateX(20px); }
 @media (max-width: 640px) {
   .setting-row { padding: .625rem 1rem; }
   .action-setting-row { flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+}
+
+/* White-Label Settings Styles */
+.white-label-card {
+  border-color: rgba(212, 175, 55, 0.4) !important;
+}
+
+.white-label-active-box {
+  display: flex;
+  flex-direction: column;
+}
+
+.logo-upload-box {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.current-logo-preview {
+  max-width: 140px;
+  max-height: 48px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.05);
+  padding: 4px 8px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.preview-img {
+  max-width: 100%;
+  max-height: 40px;
+  object-fit: contain;
+}
+
+.file-input-hidden {
+  display: none;
+}
+
+.locked-watermark-preview {
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  padding: 0.85rem 1rem;
+}
+
+.watermark-notice-title {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: var(--gray-400);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 0.35rem;
+}
+
+.watermark-tag {
+  font-size: 0.8rem;
+  font-family: monospace;
+  color: #94a3b8;
+  background: rgba(255, 255, 255, 0.04);
+  padding: 4px 8px;
+  border-radius: 4px;
+  border-left: 2px solid #d4af37;
 }
 </style>

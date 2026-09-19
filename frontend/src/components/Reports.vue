@@ -72,6 +72,69 @@
       </div>
     </section>
 
+    <!-- Official Government Tender & SEDA Funding Compliance Pack -->
+    <section v-if="!isEmployeeOnly" class="card tender-pack-card" style="padding: 1.75rem; margin-bottom: 1.5rem; border: 1.5px solid rgba(212, 175, 55, 0.4); background: linear-gradient(180deg, rgba(15, 23, 42, 0.95) 0%, rgba(10, 15, 28, 0.98) 100%);">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; margin-bottom: 1.25rem;">
+        <div style="max-width: 720px;">
+          <div style="display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.4rem;">
+            <span class="badge" style="background: rgba(212, 175, 55, 0.15); color: #d4af37; border: 1px solid rgba(212, 175, 55, 0.3); font-weight: 800; font-size: 0.7rem; letter-spacing: 1px;">STATUTORY &bull; AUDITED COMPLIANCE</span>
+            <span v-if="tenderPackUnlocked" class="badge" style="background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); font-weight: 800; font-size: 0.7rem;">CERTIFIED UNLOCKED</span>
+          </div>
+          <h2 style="font-size: 1.35rem; font-weight: 800; color: #ffffff; margin: 0 0 0.5rem;">
+            Official Tender &amp; SEDA Funding Compliance Pack
+          </h2>
+          <p style="font-size: 0.85rem; color: #94a3b8; line-height: 1.6; margin: 0;">
+            Bank-grade certified PDF package formatted for submission to the National Treasury Central Supplier Database (CSD), 
+            Small Enterprise Development Agency (SEDA), and commercial banking credit committees. 
+            Includes a 12-Month Audited Sales Conversion Ledger and POPIA Act 4 of 2013 Section 19 Cryptographic Certificate with SHA-256 seal.
+          </p>
+        </div>
+
+        <div style="text-align: right; min-width: 200px;">
+          <div v-if="!tenderPackUnlocked" style="margin-bottom: 0.75rem;">
+            <div style="font-size: 1.4rem; font-weight: 800; color: #d4af37;">R350 <span style="font-size: 0.75rem; color: #94a3b8; font-weight: 500;">once-off</span></div>
+            <div style="font-size: 0.75rem; color: #64748b;">Instant PayFast Unlock</div>
+          </div>
+          <div>
+            <button 
+              v-if="tenderPackUnlocked" 
+              @click="downloadTenderPack" 
+              class="btn btn-primary" 
+              :disabled="downloadingTenderPack"
+              style="padding: 0.65rem 1.5rem; font-weight: 700; font-size: 0.9rem;"
+            >
+              <span v-if="downloadingTenderPack">Generating Certified PDF...</span>
+              <span v-else>Download Certified Bank Pack (PDF)</span>
+            </button>
+            <button 
+              v-else 
+              @click="unlockTenderPack" 
+              class="btn btn-primary" 
+              :disabled="unlockingTenderPack"
+              style="padding: 0.65rem 1.5rem; font-weight: 700; font-size: 0.9rem;"
+            >
+              <span v-if="unlockingTenderPack">Connecting to PayFast...</span>
+              <span v-else>Unlock Tender Pack (R350)</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; padding-top: 1rem; border-top: 1px solid rgba(255, 255, 255, 0.06);">
+        <div style="font-size: 0.8rem; color: #cbd5e1; display: flex; align-items: center; gap: 0.5rem;">
+          <span style="color: #10b981; font-weight: 800;">✓</span> 12-Month Audited Sales Conversion Ledger
+        </div>
+        <div style="font-size: 0.8rem; color: #cbd5e1; display: flex; align-items: center; gap: 0.5rem;">
+          <span style="color: #10b981; font-weight: 800;">✓</span> POPIA Section 19 Cryptographic Certificate
+        </div>
+        <div style="font-size: 0.8rem; color: #cbd5e1; display: flex; align-items: center; gap: 0.5rem;">
+          <span style="color: #10b981; font-weight: 800;">✓</span> Tamper-Proof SHA-256 Audit Seal &amp; QR
+        </div>
+        <div style="font-size: 0.8rem; color: #cbd5e1; display: flex; align-items: center; gap: 0.5rem;">
+          <span style="color: #10b981; font-weight: 800;">✓</span> Adjudication Board &amp; CSD Compliant
+        </div>
+      </div>
+    </section>
 
     <div v-if="!isEmployeeOnly" class="reports-grid">
       <div class="report-card card">
@@ -143,10 +206,11 @@
 </template>
 
 <script>
-import { contactsAPI, companiesAPI, dealsAPI, activitiesAPI, ticketsAPI, employeesAPI, billingAPI } from '../api'
+import api, { contactsAPI, companiesAPI, dealsAPI, activitiesAPI, ticketsAPI, employeesAPI, billingAPI, monetizationAPI } from '../api'
 import EmployeePerformance from './EmployeePerformance.vue'
 import authService from '../services/auth'
 import modal from '../utils/modal'
+import toast from '../utils/toast'
 
 export default {
   name: 'Reports',
@@ -162,7 +226,10 @@ export default {
       employees: [],
       selectedEmployeeId: '',
       userTier: 'luxury',
-      isTrialOrGrace: false
+      isTrialOrGrace: false,
+      tenderPackUnlocked: false,
+      downloadingTenderPack: false,
+      unlockingTenderPack: false
     }
   },
   computed: {
@@ -183,8 +250,7 @@ export default {
     },
     isClientAdmin() {
       const user = authService.getUser()
-      const isAdminCheck = !!(user && (user.is_superuser || (user.username||'').toLowerCase()==='adminluxury'))
-      return !isAdminCheck && !!(user && (
+      return !!(user && !this.isAdmin && (
         (user.permissions && user.permissions.is_admin) ||
         (user.role && (user.role.value === 'admin' || user.role === 'admin')) ||
         (user.profile && user.profile.role === 'admin')
@@ -194,24 +260,38 @@ export default {
       return this.deals.reduce((sum, deal) => sum + parseFloat(deal.value || 0), 0).toLocaleString()
     },
     activeDeals() {
-      return this.deals.filter(d => d.stage !== 'closed_won' && d.stage !== 'closed_lost').length
+      return this.deals.filter(d => !['won', 'lost'].includes(d.stage)).length;
+    },
+    wonDeals() {
+      return this.deals.filter(d => d.stage === 'won').length;
+    },
+    lostDeals() {
+      return this.deals.filter(d => d.stage === 'lost').length;
+    },
+    closedDeals() {
+      return this.wonDeals + this.lostDeals;
     },
     completedTicketsCount() {
       return this.tickets.filter(t => t.status === 'completed').length
     },
     forecastedRevenue() {
-      const weights = { lead: 0.1, contact_made: 0.25, proposal: 0.5, negotiation: 0.75, closed_won: 1.0, closed_lost: 0.0 };
+      const stageProbabilities = {
+        'lead': 0.1,
+        'contacted': 0.2,
+        'meeting': 0.4,
+        'proposal': 0.6,
+        'negotiation': 0.8,
+        'won': 1.0,
+        'lost': 0.0
+      };
       return this.deals.reduce((sum, d) => {
-        const w = weights[d.stage] !== undefined ? weights[d.stage] : 0.3;
-        return sum + (parseFloat(d.value || 0) * w);
+        const prob = stageProbabilities[d.stage] !== undefined ? stageProbabilities[d.stage] : 0.2;
+        return sum + (parseFloat(d.value || 0) * prob);
       }, 0);
     },
     winRatePercentage() {
-      const won = this.deals.filter(d => d.stage === 'closed_won').length;
-      const lost = this.deals.filter(d => d.stage === 'closed_lost').length;
-      const totalClosed = won + lost;
-      if (totalClosed === 0) return won > 0 ? 100 : 0;
-      return Math.round((won / totalClosed) * 100);
+      if (this.closedDeals === 0) return 0;
+      return Math.round((this.wonDeals / this.closedDeals) * 100);
     },
     avgDealSize() {
       if (this.deals.length === 0) return 0;
@@ -222,12 +302,16 @@ export default {
       return (this.userTier === 'basic' || this.userTier === 'classic') && !this.isTrialOrGrace
     },
     isExportLocked() {
-      return this.isBasicTier && !this.isAdmin
+      return false
     }
   },
 
   async mounted() {
     await this.loadBillingStatus()
+    await this.loadTenderPackStatus()
+    if (this.$route.query.tender_pack === 'success') {
+      toast.success('Your Official Tender & SEDA Funding Compliance Pack has been unlocked! Click Download to retrieve your certified dossier.', 'Tender Pack Unlocked')
+    }
     if (!this.isEmployeeOnly) {
       await this.loadData()
       if (this.isAdmin || this.isClientAdmin) {
@@ -254,6 +338,70 @@ export default {
       } catch (e) {
         console.warn('Could not load billing status in Reports:', e)
       }
+    },
+    async loadTenderPackStatus() {
+      try {
+        const res = await monetizationAPI.getWhiteLabelStatus()
+        const user = authService.getUser()
+        const isSuper = !!(user && (user.is_superuser || (user.username || '').toLowerCase() === 'adminluxury'))
+        this.tenderPackUnlocked = Boolean(res.data?.tender_pack_unlocked || isSuper)
+      } catch (e) {
+        console.warn('Could not load tender pack status:', e)
+      }
+    },
+    async unlockTenderPack() {
+      this.unlockingTenderPack = true
+      try {
+        const res = await monetizationAPI.checkoutTenderPack()
+        this.submitPayFast(res.data)
+      } catch (err) {
+        toast.error(err.response?.data?.error || 'Failed to initialize PayFast checkout', 'PayFast Error')
+      } finally {
+        this.unlockingTenderPack = false
+      }
+    },
+    async downloadTenderPack() {
+      this.downloadingTenderPack = true
+      try {
+        const response = await api.get('/reports/tender-compliance-pack/', {
+          responseType: 'blob'
+        })
+        const blob = new Blob([response.data], { type: 'application/pdf' })
+        const url = window.URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = `Official_Tender_Compliance_Pack_${new Date().toISOString().slice(0, 10)}.pdf`
+        document.body.appendChild(a)
+        a.click()
+        window.URL.revokeObjectURL(url)
+        a.remove()
+        toast.success('Certified Tender & SEDA Funding Compliance Pack downloaded successfully!', 'Download Complete')
+      } catch (err) {
+        if (err.response && err.response.status === 402) {
+          toast.warning('Tender Compliance Pack is locked. Complete the R350 unlock to download.', 'Payment Required')
+          this.tenderPackUnlocked = false
+        } else {
+          toast.error(err.response?.data?.error || 'Failed to download Tender Compliance Pack', 'Download Error')
+        }
+      } finally {
+        this.downloadingTenderPack = false
+      }
+    },
+    submitPayFast(payfastData) {
+      const form = document.createElement('form')
+      form.method = 'POST'
+      form.action = payfastData.process_url
+      Object.keys(payfastData).forEach(key => {
+        if (key !== 'process_url') {
+          const input = document.createElement('input')
+          input.type = 'hidden'
+          input.name = key
+          input.value = payfastData[key]
+          form.appendChild(input)
+        }
+      })
+      document.body.appendChild(form)
+      form.submit()
     },
     checkExportAllowed() {
       if (this.isExportLocked) {

@@ -8,27 +8,27 @@
 
     <!-- 4-Tier Plan Grid -->
     <div class="plans-grid">
-      <!-- Tier 1: Luxury Basic -->
-      <div class="plan-card card" :class="{ selected: selectedTier === 'basic' || selectedTier === 'classic' }">
+      <!-- Tier 1: Corporate Sovereign -->
+      <div class="plan-card card sovereign-tier-card" :class="{ selected: selectedTier === 'basic' || selectedTier === 'classic' }">
         <div class="plan-top">
-          <div class="plan-tier-label">ESSENTIAL STARTER &bull; 3 SEATS</div>
-          <h2 class="plan-title">Luxury Basic</h2>
-          <p class="plan-desc">For independent brokers, lean consultancies &amp; solo founders.</p>
+          <div class="plan-tier-label sovereign-label">SOVEREIGN ALLOCATION &bull; 5 SEATS</div>
+          <h2 class="plan-title">Corporate Sovereign</h2>
+          <p class="plan-desc">For emerging enterprises, commercial brokers &amp; consultancies requiring elite CRM foundations.</p>
           <div class="plan-price">
-            <span class="currency">R</span>349<span class="period">/month</span>
+            <span class="currency">R</span>0<span class="period">/permanent</span>
           </div>
-          <div class="seat-pill">3 Seats (CEO + Manager + Rep) &bull; 5 Contacts</div>
+          <div class="seat-pill sovereign-seat-pill">5 Collaborative Seats &bull; 6,000 Verified Contacts</div>
         </div>
 
         <ul class="feature-bullets">
-          <li><strong>Strictly 1 Company Profile</strong></li>
-          <li><strong>Strictly 5 VIP Client Contacts</strong></li>
-          <li><strong>1 Active Pipeline Deal</strong></li>
-          <li>Up to 5 Products in Catalog</li>
-          <li>2 Campaigns &amp; 2 Workflows</li>
-          <li>1 Physical / Digital Tracked Asset</li>
-          <li>CEO-Only Hiring (Managers cannot onboard)</li>
-          <li>View-Only Reports (Raw Export Locked)</li>
+          <li><strong>5 Collaborative Team Seats</strong> Included</li>
+          <li><strong>Up to 6,000 Client Contacts</strong> &amp; Verified Leads</li>
+          <li><strong>Unlimited Active Pipeline Deals</strong> &amp; Stages</li>
+          <li>Full Standard Quotation &amp; Invoicing Engine</li>
+          <li>Automated Email Workflows &amp; Direct Engagement</li>
+          <li>SARS Tax Computation &amp; Financial Ledger</li>
+          <li>Finisher Network Secured Watermark Included</li>
+          <li>Complete Excel &amp; CSV Audit Data Export</li>
         </ul>
 
         <div class="plan-action">
@@ -37,7 +37,7 @@
             :class="{ 'btn-primary': selectedTier === 'basic' || selectedTier === 'classic' }"
             @click="selectPlan('basic')"
           >
-            {{ (selectedTier === 'basic' || selectedTier === 'classic') ? 'Selected Plan' : 'Choose Luxury Basic' }}
+            {{ (selectedTier === 'basic' || selectedTier === 'classic') ? 'Active Sovereign Allocation' : 'Choose Sovereign Allocation' }}
           </button>
         </div>
       </div>
@@ -137,6 +137,81 @@
             @click="contactSalesModal = true"
           >
             Contact Sales
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Enterprise Add-On Suite -->
+    <div class="addons-container card">
+      <div class="addons-header">
+        <div>
+          <div class="addons-badge">INSTANT PAYFAST INTEGRATION</div>
+          <h2>Enterprise Add-On Suite</h2>
+          <p class="subtitle">Deploy white-label custom branding or certified statutory tender dossiers on demand.</p>
+        </div>
+      </div>
+
+      <div class="addons-grid">
+        <!-- Add-on 1: White Label -->
+        <div class="addon-card">
+          <div class="addon-card-top">
+            <div class="addon-icon gold-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#d4af37" stroke-width="2"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg>
+            </div>
+            <div>
+              <div class="addon-title">Corporate White-Label &amp; Custom Branding</div>
+              <div class="addon-price">R199 <span class="addon-period">/ month recurring</span></div>
+            </div>
+          </div>
+          <p class="addon-desc">
+            Removes the Finisher Luxury CRM watermark from all quotations, tax invoices, and emails.
+            Unlocks instant enterprise logo upload and custom branded PDF correspondence for your company.
+          </p>
+          <ul class="addon-bullets">
+            <li>Zero Finisher CRM branding on client documents</li>
+            <li>Custom high-resolution enterprise logo upload</li>
+            <li>Branded tax invoices &amp; pro-forma quotes</li>
+            <li>Direct automated PayFast monthly recurring subscription</li>
+          </ul>
+          <button 
+            class="btn btn-primary w-100" 
+            :disabled="processingWhiteLabel" 
+            @click="checkoutWhiteLabel"
+          >
+            <span v-if="processingWhiteLabel">Connecting to PayFast...</span>
+            <span v-else>Activate White-Label (R199/mo)</span>
+          </button>
+        </div>
+
+        <!-- Add-on 2: Tender Pack -->
+        <div class="addon-card">
+          <div class="addon-card-top">
+            <div class="addon-icon blue-icon">
+              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
+            </div>
+            <div>
+              <div class="addon-title">Official Tender &amp; SEDA Compliance Pack</div>
+              <div class="addon-price">R350 <span class="addon-period">once-off certified pack</span></div>
+            </div>
+          </div>
+          <p class="addon-desc">
+            Bank-grade certified compliance dossier formatted for National Treasury CSD tenders,
+            SEDA financing applications, and commercial bank credit committee reviews.
+          </p>
+          <ul class="addon-bullets">
+            <li>12-Month Audited Sales &amp; Contract Ledger</li>
+            <li>POPIA Act 4 of 2013 Section 19 Cryptographic Certificate</li>
+            <li>SHA-256 Tamper-Proof Audit Seal &amp; QR verification</li>
+            <li>Instant PDF generation &amp; certified document download</li>
+          </ul>
+          <button 
+            class="btn btn-secondary w-100" 
+            :disabled="processingTenderPack" 
+            @click="checkoutTenderPack"
+          >
+            <span v-if="processingTenderPack">Connecting to PayFast...</span>
+            <span v-else>Unlock Tender Pack (R350)</span>
           </button>
         </div>
       </div>
@@ -244,6 +319,7 @@
 <script>
 import toast from '../utils/toast'
 import authService from '../services/auth'
+import { monetizationAPI } from '../api'
 
 export default {
   name: 'UpgradePage',
@@ -261,21 +337,23 @@ export default {
       contactSalesModal: false,
       submitting: false,
       companyName: company,
-      contactEmail: user.email || ''
+      contactEmail: user.email || '',
+      processingWhiteLabel: false,
+      processingTenderPack: false
     }
   },
   computed: {
     plans() {
       return {
         basic: {
-          name: 'Luxury Basic',
-          price: 'R349 / month',
-          users: '1 User'
+          name: 'Corporate Sovereign',
+          price: 'R0 / permanent',
+          users: '5 Collaborative Seats (6,000 Contacts)'
         },
         classic: {
-          name: 'Luxury Basic',
-          price: 'R349 / month',
-          users: '1 User'
+          name: 'Corporate Sovereign',
+          price: 'R0 / permanent',
+          users: '5 Collaborative Seats (6,000 Contacts)'
         },
         luxury: {
           name: 'Luxury Team',
@@ -332,6 +410,44 @@ export default {
           'Proof of Payment Logged'
         )
       }, 1000)
+    },
+    async checkoutWhiteLabel() {
+      this.processingWhiteLabel = true
+      try {
+        const res = await monetizationAPI.checkoutWhiteLabel()
+        this.submitPayFast(res.data)
+      } catch (err) {
+        toast.error(err.response?.data?.error || 'Failed to initiate white-label checkout', 'PayFast Error')
+      } finally {
+        this.processingWhiteLabel = false
+      }
+    },
+    async checkoutTenderPack() {
+      this.processingTenderPack = true
+      try {
+        const res = await monetizationAPI.checkoutTenderPack()
+        this.submitPayFast(res.data)
+      } catch (err) {
+        toast.error(err.response?.data?.error || 'Failed to initiate tender pack checkout', 'PayFast Error')
+      } finally {
+        this.processingTenderPack = false
+      }
+    },
+    submitPayFast(payfastData) {
+      const form = document.createElement('form')
+      form.method = 'POST'
+      form.action = payfastData.process_url
+      Object.keys(payfastData).forEach(key => {
+        if (key !== 'process_url') {
+          const input = document.createElement('input')
+          input.type = 'hidden'
+          input.name = key
+          input.value = payfastData[key]
+          form.appendChild(input)
+        }
+      })
+      document.body.appendChild(form)
+      form.submit()
     }
   }
 }
@@ -653,5 +769,148 @@ export default {
   border: 1px solid var(--border-color);
   border-radius: 6px;
   font-size: 0.875rem;
+}
+
+/* Corporate Sovereign Tier Card */
+.sovereign-tier-card {
+  border-color: rgba(59, 130, 246, 0.4) !important;
+}
+
+.sovereign-label {
+  color: #3b82f6 !important;
+}
+
+.sovereign-seat-pill {
+  background: rgba(59, 130, 246, 0.1) !important;
+  border-color: rgba(59, 130, 246, 0.3) !important;
+  color: #2563eb !important;
+}
+
+/* Enterprise Add-On Suite */
+.addons-container {
+  padding: 2rem;
+  border-radius: var(--border-radius-lg);
+  background: #ffffff;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.04);
+}
+
+.addons-header {
+  margin-bottom: 1.5rem;
+}
+
+.addons-badge {
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: #10b981;
+  text-transform: uppercase;
+  margin-bottom: 0.25rem;
+}
+
+.addons-header h2 {
+  font-size: 1.5rem;
+  font-weight: 800;
+  color: var(--gray-900);
+  margin: 0 0 0.25rem;
+}
+
+.addons-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1.5rem;
+}
+
+@media (max-width: 768px) {
+  .addons-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.addon-card {
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius-md);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  background: #f8fafc;
+  transition: all 0.2s ease;
+}
+
+.addon-card:hover {
+  border-color: var(--gray-400);
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.06);
+}
+
+.addon-card-top {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.addon-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.addon-icon.gold-icon {
+  background: rgba(212, 175, 55, 0.15);
+}
+
+.addon-icon.blue-icon {
+  background: rgba(59, 130, 246, 0.15);
+}
+
+.addon-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--gray-900);
+}
+
+.addon-price {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #0f172a;
+}
+
+.addon-period {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--gray-500);
+}
+
+.addon-desc {
+  font-size: 0.85rem;
+  color: var(--gray-600);
+  line-height: 1.5;
+  margin: 0 0 1rem;
+  flex: 1;
+}
+
+.addon-bullets {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 1.25rem;
+}
+
+.addon-bullets li {
+  font-size: 0.8rem;
+  color: var(--gray-700);
+  padding: 4px 0;
+  display: flex;
+  align-items: center;
+}
+
+.addon-bullets li::before {
+  content: "✓";
+  color: #10b981;
+  font-weight: 800;
+  margin-right: 8px;
 }
 </style>

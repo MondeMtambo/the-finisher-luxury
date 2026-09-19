@@ -34,7 +34,11 @@ class Organization(models.Model):
     can_export_csv = models.BooleanField(default=False, help_text="Anti-theft data lock: False during trial, True for paid")
     is_active = models.BooleanField(default=True)
     is_cipc_verified = models.BooleanField(default=False, help_text="CIPC business entity verified")
-    max_users = models.PositiveIntegerField(default=2, help_text="Maximum active user seats for organization (2 on trial)")
+    max_users = models.PositiveIntegerField(default=5, help_text="Maximum active user seats for organization (5 on Sovereign tier)")
+    is_white_labeled = models.BooleanField(default=False, help_text="True if R199/mo white-label is active (removes Finisher watermark)")
+    white_label_subscription_id = models.CharField(max_length=120, blank=True, help_text="PayFast recurring subscription ID for white-label")
+    tender_pack_unlocked = models.BooleanField(default=False, help_text="True if R350 once-off tender & funding pack has been unlocked")
+    custom_logo = models.ImageField(upload_to='company_logos/', blank=True, null=True, help_text="Custom company logo for white-label quotes/invoices")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

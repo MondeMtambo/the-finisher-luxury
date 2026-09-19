@@ -3912,6 +3912,33 @@ class BillingWebhookView(APIView):
                 tx.raw_payload = {**existing_payload, **data}
                 tx.save(update_fields=['status', 'raw_payload'])
 
+                # Handle White-Label (R199/mo) and Tender Pack (R350) Add-on activations
+                custom_type = (data.get('custom_str1') or existing_payload.get('type') or '').lower()
+                if 'white_label' in custom_type:
+                    tx.organization.is_white_labeled = True
+                    tx.organization.white_label_subscription_id = data.get('token') or tx_ref
+                    tx.organization.save(update_fields=['is_white_labeled', 'white_label_subscription_id'])
+                    record_audit_event(
+                        'WHITE_LABEL_ACTIVATED',
+                        f"Corporate White-Label & Custom Branding (R199/mo) unlocked for '{tx.organization.name}' (Ref: {tx_ref})",
+                        user=tx.user,
+                        organization=tx.organization,
+                        severity='INFO'
+                    )
+                    return Response({'status': 'success', 'message': 'White-Label license activated.'})
+
+                if 'tender_pack' in custom_type:
+                    tx.organization.tender_pack_unlocked = True
+                    tx.organization.save(update_fields=['tender_pack_unlocked'])
+                    record_audit_event(
+                        'TENDER_PACK_UNLOCKED',
+                        f"Official Tender & SEDA Funding Compliance Pack (R350) unlocked for '{tx.organization.name}' (Ref: {tx_ref})",
+                        user=tx.user,
+                        organization=tx.organization,
+                        severity='INFO'
+                    )
+                    return Response({'status': 'success', 'message': 'Tender Compliance Pack unlocked.'})
+
                 # Determine purchased plan tier
                 chosen_tier = existing_payload.get('tier', 'luxury').lower()
                 if chosen_tier == 'classic':

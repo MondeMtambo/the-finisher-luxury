@@ -10,18 +10,19 @@ Configures commercial limits for:
 
 TIER_QUOTAS = {
     'basic': {
-        'max_users': 3,
-        'max_companies': 1,
-        'max_contacts': 5,
-        'max_deals': 1,
-        'max_products': 5,
-        'max_campaigns': 2,
-        'max_templates': 2,
-        'max_workflows': 2,
-        'max_tickets': 5,
-        'max_assets': 1,
-        'can_export_reports': False,
-        'manager_can_add_employees': False,
+        'max_users': 5,
+        'max_companies': None,  # Unlimited
+        'max_contacts': 6000,   # Corporate Sovereign allocation
+        'max_deals': None,      # Unlimited
+        'max_products': 50,
+        'max_campaigns': 5,
+        'max_templates': 5,
+        'max_workflows': 3,
+        'max_tickets': None,
+        'max_assets': 10,
+        'can_export_reports': True,
+        'manager_can_add_employees': True,
+        'manager_max_subordinates': 2,
     },
     'luxury': {
         'max_users': 5,
@@ -69,20 +70,20 @@ TIER_QUOTAS = {
         'manager_max_subordinates': None,
     },
     'trial': {
-        # 15-Day VIP Allocation with smart lead intake cap & anti-theft export lock
-        'max_users': 2,
+        # Corporate Sovereign Allocation
+        'max_users': 5,
         'max_companies': None,
-        'max_contacts': 50,
+        'max_contacts': 6000,
         'max_deals': None,
-        'max_products': None,
-        'max_campaigns': 2,
-        'max_templates': 2,
-        'max_workflows': 2,
+        'max_products': 50,
+        'max_campaigns': 5,
+        'max_templates': 5,
+        'max_workflows': 3,
         'max_tickets': None,
-        'max_assets': None,
-        'can_export_reports': False,
+        'max_assets': 10,
+        'can_export_reports': True,
         'manager_can_add_employees': True,
-        'manager_max_subordinates': 1,
+        'manager_max_subordinates': 2,
     }
 }
 

@@ -512,4 +512,14 @@ export const eulaAPI = {
   getCertificateUrl: (id) => `${API_BASE_URL}/eula/certificate/${id}/`
 }
 
+export const monetizationAPI = {
+  getWhiteLabelStatus: () => api.get('/billing/white-label/status/'),
+  checkoutWhiteLabel: () => api.post('/billing/white-label/checkout/'),
+  uploadWhiteLabelLogo: (formData) => api.post('/billing/white-label/upload-logo/', formData, {
+    headers: { 'Content-Type': 'multipart/form-data' }
+  }),
+  checkoutTenderPack: () => api.post('/billing/tender-pack/checkout/'),
+  getTenderPackDownloadUrl: () => `${API_BASE_URL}/reports/tender-compliance-pack/`
+}
+
 export default api
