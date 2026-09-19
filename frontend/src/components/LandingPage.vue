@@ -86,8 +86,8 @@
       <div class="section-tag">COMMERCIAL EDITIONS &amp; EXECUTIVE ALLOCATIONS</div>
       <h2 class="section-title">Select Your Commercial Allocation</h2>
       <p class="section-subtitle">
-        Empowering modern business operations with bank-grade CRM infrastructure.
-        All prices subject to 15% VAT per South African Revenue Service (SARS) regulations &middot; Fixed ZAR billing &middot; Cancel anytime.
+        Empowering modern business enterprises with bank-grade CRM infrastructure.
+        Fixed transparent billing &middot; Direct corporate debit &middot; Zero exchange rate volatility.
       </p>
 
       <div class="landing-plans-grid">
@@ -100,17 +100,18 @@
           <div class="tier-price">
             <span class="scratched-price"><del>R999</del></span>
             <span class="currency">R</span>0<span class="period">/permanent</span>
-            <span class="vat-tag">(0% VAT &middot; R0.00)</span>
           </div>
           <div class="seat-pill featured">5 Collaborative Seats &middot; Up to 6,000 Verified Contacts</div>
 
           <ul class="tier-features">
             <li><strong>5 Collaborative Team Seats</strong> (CEO, Managers &amp; Reps)</li>
             <li><strong>Up to 6,000 Verified Client Contacts</strong></li>
+            <li><strong>Full 100-Product Catalog &amp; Line Items</strong></li>
             <li>Full deal pipeline &amp; Kanban stage management</li>
             <li>Meta / Facebook Lead Ads Webhook Integration</li>
             <li>Standard Quotation engine &amp; Invoicing</li>
-            <li>Automated Email Workflows &amp; Direct Engagement</li>
+            <li><strong>5 Active Automated Trigger Workflows</strong></li>
+            <li><strong>10 Custom Corporate Email Templates</strong></li>
             <li>POPIA Section 19 Compliance Vault</li>
             <li>Standard Enterprise Network Security Stamp</li>
           </ul>
@@ -127,7 +128,6 @@
           <p class="tier-desc">For mid-size corporations, regional firms &amp; multi-branch groups.</p>
           <div class="tier-price">
             <span class="currency">R</span>1,500<span class="period">/month</span>
-            <span class="vat-tag">+ 15% VAT (R1,725.00 incl. VAT)</span>
           </div>
           <div class="seat-pill">Up to 15 Users &middot; Unlimited Contacts</div>
 
@@ -187,7 +187,7 @@
               <p>Remove the Finisher network watermark from all client-facing quotes, proposals, and automated emails. Upload your custom logo and corporate letterhead.</p>
             </div>
             <div class="addon-bottom">
-              <div class="addon-price"><span class="currency">R</span>199<span class="period">/month</span> <small class="vat-tag">+ 15% VAT (R228.85 incl. VAT)</small></div>
+              <div class="addon-price"><span class="currency">R</span>199<span class="period">/month</span></div>
               <button class="btn-addon" @click="$router.push('/settings')">Manage in Settings &rarr;</button>
             </div>
           </div>
@@ -195,10 +195,10 @@
             <div class="addon-top">
               <span class="addon-badge gold">TENDER CERTIFICATION</span>
               <h4>Official Tender &amp; SEDA Funding Sales Pack</h4>
-              <p>Download a certified, bank-grade 12-Month Audited Sales Ledger with POPIA Section 19 Cryptographic Certification and SHA-256 digital stamp for government tenders.</p>
+              <p>Download a certified, bank-grade 12-Month Audited Sales Ledger with POPIA Section 19 Cryptographic Certification and SHA-256 digital stamp for institutional tenders.</p>
             </div>
             <div class="addon-bottom">
-              <div class="addon-price"><span class="currency">R</span>350<span class="period">/once-off</span> <small class="vat-tag">+ 15% VAT (R402.50 incl. VAT)</small></div>
+              <div class="addon-price"><span class="currency">R</span>350<span class="period">/once-off</span></div>
               <button class="btn-addon gold" @click="$router.push('/reports')">Generate in Reports &rarr;</button>
             </div>
           </div>

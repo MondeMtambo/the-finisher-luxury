@@ -14,10 +14,10 @@ TIER_QUOTAS = {
         'max_companies': None,  # Unlimited
         'max_contacts': 6000,   # Corporate Sovereign allocation
         'max_deals': None,      # Unlimited
-        'max_products': 50,
+        'max_products': 100,
         'max_campaigns': 5,
-        'max_templates': 5,
-        'max_workflows': 3,
+        'max_templates': 10,
+        'max_workflows': 5,
         'max_tickets': None,
         'max_assets': 10,
         'can_export_reports': True,
@@ -75,10 +75,10 @@ TIER_QUOTAS = {
         'max_companies': None,
         'max_contacts': 6000,
         'max_deals': None,
-        'max_products': 50,
+        'max_products': 100,
         'max_campaigns': 5,
-        'max_templates': 5,
-        'max_workflows': 3,
+        'max_templates': 10,
+        'max_workflows': 5,
         'max_tickets': None,
         'max_assets': 10,
         'can_export_reports': True,

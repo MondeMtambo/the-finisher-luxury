@@ -61,6 +61,19 @@
         </div>
         <h1 class="headline">Request Executive Access</h1>
         <p class="subheadline">Step 1: Verify your authorized executive credentials to initiate corporate workspace provisioning.</p>
+
+        <!-- Zero-Trust Geo & Anti-VPN Alert Banner -->
+        <div v-if="geoBlocked" class="geo-blocked-banner" style="background: rgba(239, 68, 68, 0.12); border: 1.5px solid #ef4444; border-radius: 8px; padding: 12px 16px; margin-top: 1rem; color: #fca5a5; display: flex; align-items: flex-start; gap: 12px; text-align: left;">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#ef4444" stroke-width="2" style="flex-shrink: 0; margin-top: 2px;">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="4.93" y1="4.93" x2="19.07" y2="19.07"></line>
+          </svg>
+          <div>
+            <strong style="color: #ef4444; font-size: 0.925rem; display: block; margin-bottom: 2px;">RESTRICTED NETWORK ACCESS</strong>
+            <span style="font-size: 0.825rem; color: #cbd5e1; line-height: 1.4; display: block;">{{ geoBlockReason }}</span>
+            <small style="display: block; margin-top: 4px; color: #94a3b8;">Corporate Zero-Trust Policy forbids registration through masked VPN tunnels or unauthorized foreign networks.</small>
+          </div>
+        </div>
       </div>
 
       <form @submit.prevent="proceedToStep2" class="reg-form">
@@ -575,7 +588,7 @@
 </template>
 
 <script>
-import { accessRequestsAPI } from '../api'
+import { accessRequestsAPI, securityAPI } from '../api'
 import toast from '../utils/toast'
 
 export default {
@@ -607,6 +620,11 @@ export default {
       verificationTimer: null,
       verificationExpired: false,
 
+      // Zero-Trust Geolocation & Anti-VPN Shield State
+      geoChecking: false,
+      geoBlocked: false,
+      geoBlockReason: '',
+
       form: {
         first_name: '',
         last_name: '',
@@ -635,25 +653,25 @@ export default {
       const tierMap = {
         basic: {
           name: 'CORPORATE SOVEREIGN',
-          price: 'R0 / permanent (0% VAT)',
+          price: 'R0 / permanent',
           seats: '5 Collaborative Seats &middot; 6,000 Verified Contacts',
           tag: 'FLAGSHIP ALLOCATION &middot; R0'
         },
         luxury: {
           name: 'CORPORATE SOVEREIGN',
-          price: 'R0 / permanent (0% VAT)',
+          price: 'R0 / permanent',
           seats: '5 Collaborative Seats &middot; 6,000 Verified Contacts',
           tag: 'FLAGSHIP ALLOCATION &middot; R0'
         },
         executive: {
           name: 'EXECUTIVE SUITE',
-          price: 'R1,500/month + 15% VAT (R1,725.00 incl. VAT)',
+          price: 'R1,500/month',
           seats: 'Up to 15 Collaborative Seats &middot; Unlimited Contacts',
           tag: 'ESTABLISHED FIRM'
         },
         enterprise: {
           name: 'ENTERPRISE CUSTOM',
-          price: 'Custom Institutional Retainer (+ 15% VAT)',
+          price: 'Custom Retainer',
           seats: 'Unlimited Fleet Capacity',
           tag: 'INSTITUTIONAL'
         }
@@ -671,6 +689,7 @@ export default {
   },
   mounted() {
     document.documentElement.setAttribute('data-theme', this.currentTheme)
+    this.checkNetworkSecurity()
     const plan = (this.$route.query.plan || 'basic').toLowerCase()
     if (['basic', 'luxury', 'executive', 'enterprise'].includes(plan)) {
       this.form.requested_tier = plan
@@ -743,6 +762,11 @@ export default {
     },
     proceedToStep2() {
       this.step1Error = ''
+      if (this.geoBlocked) {
+        this.step1Error = this.geoBlockReason || 'Registration is restricted to direct South African enterprise networks.'
+        toast.error('Network Security Violation', this.step1Error)
+        return
+      }
       if (!this.form.first_name || !this.form.last_name) {
         this.step1Error = 'Please enter your first and last name.'
         return
@@ -849,8 +873,32 @@ export default {
       this.activeRequestId = null
       this.verificationInput = ''
       this.verificationError = ''
+      this.step1Error = ''
+      this.error = ''
       if (this.verificationTimer) clearInterval(this.verificationTimer)
+      this.checkNetworkSecurity()
       window.scrollTo({ top: 0, behavior: 'smooth' })
+    },
+    async checkNetworkSecurity() {
+      this.geoChecking = true
+      try {
+        const res = await securityAPI.checkNetwork()
+        const data = res?.data || {}
+        if (data.allowed === false) {
+          this.geoBlocked = true
+          this.geoBlockReason = data.reason || 'Access denied: Connection originates from outside South Africa or through a VPN.'
+        } else {
+          this.geoBlocked = false
+          this.geoBlockReason = ''
+        }
+      } catch (err) {
+        if (err.response && err.response.status === 403) {
+          this.geoBlocked = true
+          this.geoBlockReason = err.response.data?.detail || 'Access blocked by Zero-Trust Perimeter Policy.'
+        }
+      } finally {
+        this.geoChecking = false
+      }
     },
     async verifyAndSubmit() {
       if (!this.verificationInput || this.verificationInput.trim().length !== 6) {

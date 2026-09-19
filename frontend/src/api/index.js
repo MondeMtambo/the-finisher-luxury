@@ -522,4 +522,8 @@ export const monetizationAPI = {
   getTenderPackDownloadUrl: () => `${API_BASE_URL}/reports/tender-compliance-pack/`
 }
 
+export const securityAPI = {
+  checkNetwork: () => api.get('/security/network-check/')
+}
+
 export default api

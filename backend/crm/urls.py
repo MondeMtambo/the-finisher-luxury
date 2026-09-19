@@ -7,6 +7,7 @@ from . import access_request_views
 from . import integrations_views
 from . import eula_views
 from . import monetization_views
+from . import geo_views
 
 router = DefaultRouter()
 router.register(r'contacts', views.ContactViewSet, basename='contact')
@@ -53,6 +54,8 @@ urlpatterns = [
     path('api/public/cancel-access-request/<uuid:pk>/', access_request_views.PublicCancelAccessRequestView.as_view(), name='public_cancel_access_request'),
     path('api/public/search-ceo/', access_request_views.PublicCEOSearchView.as_view(), name='public_search_ceo'),
     path('api/public/submit-query/', views.SubmitBugQueryView.as_view(), name='submit_bug_query'),
+    path('api/security/network-check/', geo_views.NetworkSecurityCheckView.as_view(), name='network_security_check'),
+    path('security/network-check/', geo_views.NetworkSecurityCheckView.as_view(), name='network_security_check_alias'),
 
     path('api/', include(router.urls)),
     path('api/prerequisites/', views.prerequisite_status, name='prerequisite_status'),
