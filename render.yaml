@@ -6,7 +6,7 @@ services:
     plan: free
     rootDir: backend
     buildCommand: pip install -r requirements.txt && python manage.py collectstatic --noinput
-    startCommand: python manage.py migrate --noinput && python manage.py fix_trial_accounts && (test -f seed_supabase.py && python seed_supabase.py || true) && gunicorn finisher_api.wsgi:application --workers 2 --threads 4 --worker-class gthread --timeout 120
+    startCommand: python manage.py migrate --noinput && (test -f seed_supabase.py && python seed_supabase.py || true) && gunicorn finisher_api.wsgi:application --workers 2 --threads 4 --worker-class gthread --timeout 120
     autoDeploy: true
     envVars:
       - key: PYTHON_VERSION

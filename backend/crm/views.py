@@ -4397,11 +4397,11 @@ class PrivateSalesLedgerView(APIView):
             admin_email = ceo_profile.user.email if (ceo_profile and ceo_profile.user) else ''
 
             tier_display_map = {
-                'basic': 'Luxury Basic (R349/mo)',
-                'luxury': 'Luxury Team (R999/mo)',
+                'basic': 'Corporate Sovereign (Permanent)',
+                'luxury': 'Corporate Sovereign (Fleet)',
                 'executive': 'Executive Suite (R1,500/mo)',
-                'enterprise': 'Enterprise Custom',
-                'trial': '15-Day VIP Trial'
+                'enterprise': 'Enterprise Sovereign Custom',
+                'trial': 'Corporate Sovereign (Permanent)'
             }
 
             records.append({

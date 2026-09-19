@@ -165,9 +165,9 @@
             <div class="kpi-val text-blue">{{ salesMetrics.paid_clients || 0 }}</div>
             <div class="kpi-lbl">Active Paying Subscriptions</div>
           </div>
-          <div class="kpi-card" style="border-left: 3px solid #f59e0b;">
-            <div class="kpi-val" style="color: #f59e0b;">{{ salesMetrics.active_trials || 0 }}</div>
-            <div class="kpi-lbl">Corporate Sovereign (R0)</div>
+          <div class="kpi-card" style="border-left: 3px solid #d4af37;">
+            <div class="kpi-val text-amber" style="color: #d4af37;">{{ salesMetrics.active_trials || 0 }}</div>
+            <div class="kpi-lbl">Corporate Sovereign Fleets</div>
           </div>
         </div>
 
@@ -259,12 +259,12 @@
                     </button>
                     <button 
                       v-if="item.status === 'trial'"
-                      class="btn btn-sm btn-secondary" 
-                      style="font-size: 0.74rem; padding: 0.25rem 0.55rem; color: #f59e0b; border-color: rgba(245, 158, 11, 0.4);"
-                      @click="extendTrialDays(item.id, 7)"
-                      title="Extend Trial by 7 days"
+                      class="btn btn-sm btn-gold" 
+                      style="font-size: 0.74rem; padding: 0.25rem 0.55rem; background: #10b981; border-color: #10b981; color: #fff;"
+                      @click="updateSaleStatus(item.id, 'active')"
+                      title="Promote to Full Active Sovereign Allocation"
                     >
-                      +7d Trial
+                      ✓ Unlock Sovereign
                     </button>
                     <button 
                       class="btn btn-sm btn-secondary" 
@@ -1138,9 +1138,8 @@
                 <div class="form-group">
                     <label class="form-label">Payment Status</label>
                     <select class="form-input" v-model="newPaymentStatus">
-                        <option value="pending">Pending Payment</option>
-                        <option value="trial">Trial Period (7 days)</option>
-                        <option value="paid">Paid</option>
+                        <option value="pending">Pending Verification</option>
+                        <option value="paid">Paid &amp; Active</option>
                         <option value="overdue">Overdue</option>
                     </select>
                 </div>
@@ -1960,7 +1959,7 @@ export default {
         admin_name: '',
         admin_email: '',
         admin_phone: '',
-        subscription_tier: 'trial',
+        subscription_tier: 'basic',
         password: '',
         is_verified: false
       };
@@ -2106,7 +2105,7 @@ export default {
         monthly_price: 999.00,
         payment_method: 'capitec',
         payment_reference: '',
-        status: 'trial',
+        status: 'active',
         notes: ''
       };
       this.showRecordSaleModal = true;
@@ -2120,7 +2119,7 @@ export default {
         monthly_price: item.monthly_price || 999.00,
         payment_method: item.payment_method || 'capitec',
         payment_reference: item.payment_reference || '',
-        status: item.status || 'trial',
+        status: item.status || 'active',
         notes: item.notes || ''
       };
       this.showRecordSaleModal = true;
