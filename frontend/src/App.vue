@@ -1,5 +1,5 @@
 <template>
-  <div id="app" :class="{ 'has-sidebar': showSidebar }">
+  <div id="app" class="app-layout" :class="{ 'has-sidebar': showSidebar }">
     <LuxurySplash />
     <Navbar @open-query-modal="showQueryModal = true" />
     <main class="main-content">
@@ -23,7 +23,7 @@ import BugQueryModal from './components/BugQueryModal.vue'
 import MascotGuide from './components/MascotGuide.vue'
 import EulaModal from './components/EulaModal.vue'
 import SystemTutorialModal from './components/SystemTutorialModal.vue'
-import authService from './services/auth'
+import authService, { authState } from './services/auth'
 
 export default {
   name: 'App',
@@ -39,13 +39,45 @@ export default {
   },
   data() {
     return {
-      showQueryModal: false
+      showQueryModal: false,
+      isAuth: authService.isAuthenticated()
     }
   },
   computed: {
     showSidebar() {
-      const publicPages = ['/login', '/register', '/forgot-password', '/verify-otp', '/']
-      return authService.isAuthenticated() && !publicPages.includes(this.$route.path)
+      const publicPages = ['/login', '/register', '/forgot-password', '/verify-otp', '/', '/disclaimer', '/privacy-policy', '/terms-of-service', '/popia-compliance']
+      const authenticated = authState.isAuthenticated || this.isAuth || authService.isAuthenticated()
+      return Boolean(authenticated && !publicPages.includes(this.$route.path))
+    }
+  },
+  mounted() {
+    this.syncAuth = () => {
+      this.isAuth = authService.isAuthenticated()
+      this.enforceLayoutOffsets()
+    }
+    window.addEventListener('tfl-auth-changed', this.syncAuth)
+    this.enforceLayoutOffsets()
+  },
+  beforeUnmount() {
+    if (this.syncAuth) {
+      window.removeEventListener('tfl-auth-changed', this.syncAuth)
+    }
+  },
+  watch: {
+    '$route.path'() {
+      this.isAuth = authService.isAuthenticated()
+      this.enforceLayoutOffsets()
+    }
+  },
+  methods: {
+    enforceLayoutOffsets() {
+      if (this.showSidebar) {
+        document.documentElement.style.setProperty('--topbar-height', '56px')
+        const width = window.innerWidth <= 768 ? 0 : 240
+        document.documentElement.style.setProperty('--sidebar-current-width', `${width}px`)
+      } else {
+        document.documentElement.style.setProperty('--sidebar-current-width', '0px')
+      }
     }
   }
 }
@@ -132,26 +164,29 @@ body {
   -webkit-font-smoothing: antialiased;
 }
 
-#app {
+#app,
+.app-layout {
   min-height: 100vh;
 }
 
 /* When sidebar is active, offset for fixed topbar + sidebar */
-#app.has-sidebar {
-  padding-top: var(--topbar-height);
-  padding-left: var(--sidebar-current-width);
+#app.has-sidebar,
+.app-layout.has-sidebar {
+  padding-top: var(--topbar-height, 56px) !important;
+  padding-left: var(--sidebar-current-width, 240px) !important;
+  transition: padding-left 0.2s ease;
 }
 
 /* Main content area */
 .main-content {
   padding: 24px 32px;
-  min-height: calc(100vh - var(--topbar-height));
+  min-height: calc(100vh - var(--topbar-height, 56px));
   background: var(--gray-50);
   overflow-x: hidden;
 }
 
 /* When no sidebar (login/register pages) */
-#app:not(.has-sidebar) .main-content {
+.app-layout:not(.has-sidebar) .main-content {
   padding: 0;
 }
 
@@ -375,8 +410,9 @@ h4 { font-size: 14px; font-weight: 600; color: var(--gray-700); }
   :root {
     --sidebar-current-width: 0px;
   }
-  #app.has-sidebar {
-    padding-left: 0;
+  #app.has-sidebar,
+  .app-layout.has-sidebar {
+    padding-left: 0 !important;
   }
   .main-content {
     padding: 16px 12px;

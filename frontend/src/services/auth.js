@@ -3,6 +3,7 @@
  * Handles JWT token storage, refresh, and auth state
  */
 
+import { reactive } from 'vue'
 import axios from 'axios'
 import API_BASE_URL from '../utils/apiBase'
 
@@ -14,7 +15,36 @@ const LOGIN_TIME_KEY = 'thefinisher_login_time'
 // Maximum session duration (8 hours) — forces re-login for security
 const MAX_SESSION_MS = 8 * 60 * 60 * 1000
 
+function getStoredUser() {
+  try {
+    const raw = typeof window !== 'undefined' ? localStorage.getItem(USER_KEY) : null
+    return raw ? JSON.parse(raw) : null
+  } catch (_) {
+    return null
+  }
+}
+
+function hasValidToken() {
+  if (typeof window === 'undefined') return false
+  const token = localStorage.getItem(TOKEN_KEY)
+  if (!token) return false
+  const loginTime = localStorage.getItem(LOGIN_TIME_KEY)
+  if (loginTime) {
+    const elapsed = Date.now() - parseInt(loginTime, 10)
+    if (elapsed > MAX_SESSION_MS) return false
+  }
+  return true
+}
+
+export const authState = reactive({
+  token: typeof window !== 'undefined' ? localStorage.getItem(TOKEN_KEY) : null,
+  user: getStoredUser(),
+  isAuthenticated: hasValidToken()
+})
+
 export default {
+  authState,
+
   /**
    * Login user and store tokens
    */
@@ -31,12 +61,18 @@ export default {
     localStorage.setItem(REFRESH_KEY, refresh)
     localStorage.setItem(LOGIN_TIME_KEY, Date.now().toString())
     
+    const resolvedUser = user || { username }
     // Store user info if available from login response
-    if (user) {
-      localStorage.setItem(USER_KEY, JSON.stringify(user))
-    } else {
-      // Fallback: store basic user info - will be enriched later by profile call
-      localStorage.setItem(USER_KEY, JSON.stringify({ username }))
+    localStorage.setItem(USER_KEY, JSON.stringify(resolvedUser))
+    localStorage.setItem('user', JSON.stringify(resolvedUser))
+
+    // Update reactive state immediately
+    authState.token = access
+    authState.user = resolvedUser
+    authState.isAuthenticated = true
+    
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('tfl-auth-changed', { detail: resolvedUser }))
     }
     
     return response.data
@@ -47,7 +83,10 @@ export default {
    */
   isAuthenticated() {
     const token = this.getAccessToken()
-    if (!token) return false
+    if (!token) {
+      if (authState.isAuthenticated) authState.isAuthenticated = false
+      return false
+    }
 
     // Check if session has exceeded maximum duration
     const loginTime = localStorage.getItem(LOGIN_TIME_KEY)
@@ -60,9 +99,11 @@ export default {
       }
     }
 
-    // We have a token and session is within limits — consider authenticated.
-    // The API interceptor handles actual JWT expiry + refresh automatically.
-    return true
+    if (!authState.isAuthenticated) {
+      authState.isAuthenticated = true
+      authState.token = token
+    }
+    return authState.isAuthenticated
   },
 
   /**
@@ -105,7 +146,7 @@ export default {
    * Get access token from localStorage
    */
   getAccessToken() {
-    return localStorage.getItem(TOKEN_KEY)
+    return authState.token || localStorage.getItem(TOKEN_KEY)
   },
 
   /**
@@ -119,8 +160,11 @@ export default {
    * Get user data from localStorage
    */
   getUser() {
+    if (authState.user) return authState.user
     const userStr = localStorage.getItem(USER_KEY)
-    return userStr ? JSON.parse(userStr) : null
+    const user = userStr ? JSON.parse(userStr) : null
+    if (user && !authState.user) authState.user = user
+    return user
   },
 
   /**
@@ -135,9 +179,12 @@ export default {
       const serialized = JSON.stringify(user)
       localStorage.setItem(USER_KEY, serialized)
       localStorage.setItem('user', serialized)
+      authState.user = user
+      if (authState.token) authState.isAuthenticated = true
     } else {
       localStorage.removeItem(USER_KEY)
       localStorage.removeItem('user')
+      authState.user = null
     }
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('tfl-auth-changed', { detail: user }))
@@ -150,9 +197,13 @@ export default {
   saveAuth(tokens, user) {
     localStorage.setItem(TOKEN_KEY, tokens.access)
     localStorage.setItem(REFRESH_KEY, tokens.refresh)
+    localStorage.setItem(LOGIN_TIME_KEY, Date.now().toString())
     const serialized = JSON.stringify(user)
     localStorage.setItem(USER_KEY, serialized)
     localStorage.setItem('user', serialized)
+    authState.token = tokens.access
+    authState.user = user
+    authState.isAuthenticated = true
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('tfl-auth-changed', { detail: user }))
     }
@@ -165,8 +216,10 @@ export default {
     localStorage.setItem(TOKEN_KEY, access)
     localStorage.setItem(REFRESH_KEY, refresh)
     localStorage.setItem(LOGIN_TIME_KEY, Date.now().toString())
+    authState.token = access
+    authState.isAuthenticated = true
     if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('tfl-auth-changed'))
+      window.dispatchEvent(new CustomEvent('tfl-auth-changed', { detail: authState.user }))
     }
   },
 
@@ -175,6 +228,8 @@ export default {
    */
   updateAccessToken(token) {
     localStorage.setItem(TOKEN_KEY, token)
+    authState.token = token
+    authState.isAuthenticated = true
   },
 
   /**
@@ -186,6 +241,9 @@ export default {
     localStorage.removeItem(USER_KEY)
     localStorage.removeItem('user')
     localStorage.removeItem(LOGIN_TIME_KEY)
+    authState.token = null
+    authState.user = null
+    authState.isAuthenticated = false
     if (typeof window !== 'undefined') {
       window.dispatchEvent(new CustomEvent('tfl-auth-changed', { detail: null }))
     }

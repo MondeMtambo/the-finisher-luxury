@@ -349,7 +349,7 @@
 </template>
 
 <script>
-import authService from '../services/auth'
+import authService, { authState } from '../services/auth'
 import { authAPI, systemAPI, contactsAPI, companiesAPI, dealsAPI, ticketsAPI, websiteLeadsAPI, notificationsAPI } from '../api'
 import toast from '../utils/toast'
 import modal from '../utils/modal'
@@ -365,6 +365,8 @@ export default {
   emits: ['open-query-modal'],
   data() {
     return {
+      isAuth: authService.isAuthenticated(),
+      authListener: null,
       sidebarCollapsed: false,
       mobileMenuOpen: false,
       searchQuery: '',
@@ -418,7 +420,7 @@ export default {
       return ['/', '/login', '/register', '/forgot-password', '/verify-otp', '/disclaimer', '/privacy-policy', '/terms-of-service', '/popia-compliance'].includes(this.$route.path)
     },
     isAuthenticated() {
-      return authService.isAuthenticated()
+      return Boolean(authState.isAuthenticated || this.isAuth || authService.isAuthenticated())
     },
     isOwnerAdminUser() {
       const user = authService.getUser()
@@ -445,8 +447,12 @@ export default {
     }
   },
   mounted() {
+    this.authListener = () => {
+      this.isAuth = authService.isAuthenticated()
+      this.handleAuthRefresh()
+    }
+    window.addEventListener('tfl-auth-changed', this.authListener)
     this.handleAuthRefresh()
-    window.addEventListener('tfl-auth-changed', this.handleAuthRefresh)
     if (window.innerWidth <= 1024) this.sidebarCollapsed = true
     window.addEventListener('resize', this.handleResize)
     document.addEventListener('click', this.handleClickOutside)
@@ -462,6 +468,7 @@ export default {
   },
   watch: {
     '$route.path'(newPath) {
+      this.isAuth = authService.isAuthenticated()
       if (this.isPublicPage) {
         this.updateLayoutOffsets()
         return
@@ -481,13 +488,19 @@ export default {
     if (this.notificationInterval) clearInterval(this.notificationInterval)
     if (this.clockInterval) clearInterval(this.clockInterval)
     window.removeEventListener('resize', this.handleResize)
-    window.removeEventListener('tfl-auth-changed', this.handleAuthRefresh)
+    if (this.authListener) {
+      window.removeEventListener('tfl-auth-changed', this.authListener)
+    }
     document.removeEventListener('click', this.handleClickOutside)
     document.documentElement.style.setProperty('--sidebar-current-width', '0px')
   },
   methods: {
     handleAuthRefresh() {
-      if (!authService.isAuthenticated()) return
+      this.isAuth = authService.isAuthenticated()
+      if (!this.isAuthenticated) {
+        this.updateLayoutOffsets()
+        return
+      }
       this.loadUserName()
       this.hydrateProfile()
       this.refreshPrerequisites()
@@ -582,7 +595,7 @@ export default {
         return
       }
 
-      let width = 0
+      let width = 240
       if (window.innerWidth <= 768) {
         width = this.mobileMenuOpen ? 240 : 0
       } else {
@@ -590,6 +603,7 @@ export default {
       }
 
       document.documentElement.style.setProperty('--sidebar-current-width', `${width}px`)
+      document.documentElement.style.setProperty('--topbar-height', '56px')
     },
     handleResize() {
       if (window.innerWidth <= 768) {
