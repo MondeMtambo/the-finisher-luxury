@@ -18,18 +18,11 @@
         <span>ULTIMATE: Unlimited Access &middot; All Features &middot; Full Admin Control &middot; System Owner</span>
       </div>
 
-      <div v-if="!isAdminUser" class="info-bar info-bar--vip">
-        <span class="vip-pulse-dot"></span>
-        <span class="vip-text">
-          <template v-if="userTier === 'basic' || userTier === 'classic'">
-            <strong>ACTIVE ALLOCATION:</strong> You are on <strong>Corporate Sovereign</strong> &middot; Permanent Free Tier (5 Collaborative Seats &middot; 6,000 Verified Contacts).
-          </template>
-          <template v-else>
-            <strong>ACTIVE ALLOCATION:</strong> You are on the <strong>{{ tierDisplayName }}</strong>.
-          </template>
-        </span>
-        <button class="btn btn-sm btn-primary" @click="$router.push('/upgrade')">
-          Upgrade &amp; Add-ons
+      <div v-if="!isAdminUser" class="info-bar info-bar--blue">
+        <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm.93-9.412-1 4.705c-.07.34.029.533.304.533.194 0 .487-.07.686-.246l-.088.416c-.287.346-.92.598-1.465.598-.703 0-1.002-.422-.808-1.319l.738-3.468c.064-.293.006-.399-.287-.399l-.244.012.024-.39 1.958-.36h.17l-.818 3.918zM8 5.5a1 1 0 1 1 0-2 1 1 0 0 1 0 2z"/></svg>
+        <span><strong>CORPORATE SOVEREIGN:</strong> Active Fleet Allocation &middot; Permanent Sovereign Tier (5 Collaborative Seats &middot; 6,000 Verified Contacts &middot; All Features Unlocked)</span>
+        <button class="btn btn-sm btn-outline-gold" @click="$router.push('/upgrade')">
+          Add-ons &amp; Scaling
         </button>
       </div>
     </div>
@@ -110,12 +103,48 @@
           </div>
         </div>
 
-        <div v-if="!isAdminUser" class="locked-card card">
-          <div class="locked-body">
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="none" stroke="var(--gray-400)" stroke-width="1.5"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
-            <h4>Advanced Analytics</h4>
-            <p>Unlock revenue trends, activity heatmaps, contact health scoring, custom reports and forecasting tools.</p>
-            <button class="btn btn-primary" @click="$router.push('/upgrade/luxury')">Upgrade Plan</button>
+        <div class="velocity-card card">
+          <div class="velocity-head">
+            <h3 class="card-title mb-0">Executive Pipeline Velocity</h3>
+            <span class="badge badge-gold">Active Fleet Telemetry</span>
+          </div>
+          <div class="velocity-metrics-grid">
+            <div class="v-metric">
+              <span class="v-label">Pipeline Win Rate</span>
+              <div class="v-value-row">
+                <span class="v-value font-gold">{{ winRate }}%</span>
+                <span class="v-sub">Conversion Rate</span>
+              </div>
+              <div class="v-progress-bar">
+                <div class="v-progress-fill" :style="{ width: Math.min(winRate, 100) + '%' }"></div>
+              </div>
+            </div>
+            <div class="v-metric">
+              <span class="v-label">Average Deal Size</span>
+              <div class="v-value-row">
+                <span class="v-value font-mono">R{{ averageDealValue }}</span>
+                <span class="v-sub">Per Opportunity</span>
+              </div>
+            </div>
+            <div class="v-metric">
+              <span class="v-label">Active Opportunities</span>
+              <div class="v-value-row">
+                <span class="v-value">{{ activeDeals.length }}</span>
+                <span class="v-sub">In Pipeline</span>
+              </div>
+            </div>
+            <div class="v-metric">
+              <span class="v-label">Portfolio Health</span>
+              <div class="v-value-row">
+                <span class="v-value text-gold">{{ healthyContacts }}</span>
+                <span class="v-sub">{{ atRiskContacts }} Attention Needed</span>
+              </div>
+            </div>
+          </div>
+          <div class="velocity-footer">
+            <button class="btn btn-sm btn-secondary w-100" @click="$router.push('/reports')">
+              Open Certified Analytics &amp; Reports &rarr;
+            </button>
           </div>
         </div>
       </div>
@@ -485,7 +514,7 @@ export default {
     },
     userTier() {
       const user = this.userObject
-      return user.tier || user.subscription_tier || 'luxury' 
+      return user.tier || user.subscription_tier || 'basic'
     },
     isSportTier() {
       return this.userTier === 'sport'
@@ -509,26 +538,30 @@ export default {
       return icons[this.userTier] || '🏆'
     },
     tierDisplayName() {
+      if (this.isAdminUser) return 'ULTIMATE'
       const names = {
-        classic: 'CLASSIC SOLO',
-        luxury: 'LUXURY TEAM',
+        classic: 'CORPORATE SOVEREIGN',
+        luxury: 'CORPORATE SOVEREIGN',
         executive: 'EXECUTIVE SUITE',
         enterprise: 'ENTERPRISE',
-        free: 'CLASSIC SOLO',
-        sport: 'LUXURY TEAM'
+        free: 'CORPORATE SOVEREIGN',
+        sport: 'CORPORATE SOVEREIGN',
+        basic: 'CORPORATE SOVEREIGN'
       }
-      return names[this.userTier] || 'LUXURY TEAM'
+      return names[this.userTier] || 'CORPORATE SOVEREIGN'
     },
     tierSubtitle() {
+      if (this.isAdminUser) return 'Full System Access'
       const subtitles = {
-        classic: 'R349/month (1 User)',
-        luxury: 'R999/month (Up to 5 Users)',
-        executive: 'R1,500/month (Up to 15 Users)',
-        enterprise: 'Bespoke / Custom',
-        free: 'R349/month (1 User)',
-        sport: 'R999/month'
+        classic: 'Permanent Sovereign Allocation (5 Seats · 6,000 Contacts)',
+        luxury: 'Permanent Sovereign Allocation (5 Seats · 6,000 Contacts)',
+        executive: 'Executive Suite Allocation (15 Seats · Dedicated Cluster)',
+        enterprise: 'Enterprise Sovereign Retainer',
+        free: 'Permanent Sovereign Allocation (5 Seats · 6,000 Contacts)',
+        sport: 'Permanent Sovereign Allocation (5 Seats · 6,000 Contacts)',
+        basic: 'Permanent Sovereign Allocation (5 Seats · 6,000 Contacts)'
       }
-      return subtitles[this.userTier] || 'R999/month'
+      return subtitles[this.userTier] || 'Permanent Sovereign Allocation (5 Seats · 6,000 Contacts)'
     },
     tierFeatureAccess() {
       const features = {
@@ -1391,31 +1424,7 @@ export default {
   color: #D4AF37;
   border: 1px solid rgba(212, 175, 55, 0.2);
 }
-.info-bar--vip {
-  background: linear-gradient(90deg, rgba(217, 119, 6, 0.08) 0%, rgba(15, 23, 42, 0.04) 100%);
-  border: 1px solid rgba(217, 119, 6, 0.35);
-  color: #92400e;
-}
-.vip-pulse-dot {
-  width: 10px;
-  height: 10px;
-  background-color: #d97706;
-  border-radius: 50%;
-  display: inline-block;
-  flex-shrink: 0;
-  box-shadow: 0 0 0 0 rgba(217, 119, 6, 0.7);
-  animation: vipPulse 2s infinite;
-}
-@keyframes vipPulse {
-  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(217, 119, 6, 0.7); }
-  70% { transform: scale(1); box-shadow: 0 0 0 8px rgba(217, 119, 6, 0); }
-  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(217, 119, 6, 0); }
-}
-.vip-text {
-  flex: 1;
-  font-size: 0.875rem;
-  color: #78350f;
-}
+
 
 .top-stats-grid { 
   display: grid;
@@ -1547,32 +1556,89 @@ export default {
   color: #d1d5db;
   font-weight: 600;
 }
-.locked-card {
+.velocity-card {
   display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 1.5rem;
+  background: rgba(15, 15, 15, 0.85);
+  border: 1px solid rgba(212, 175, 55, 0.25);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.4);
+}
+.velocity-head {
+  display: flex;
+  justify-content: space-between;
   align-items: center;
-  justify-content: center;
-  border: 2px dashed rgba(212, 175, 55, 0.4);
-  background: rgba(0, 0, 0, 0.4);
+  margin-bottom: 1.25rem;
 }
-.locked-body {
-  text-align: center;
-  padding: 2rem 1.5rem;
+.velocity-metrics-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
 }
-.locked-body svg { margin-bottom: 0.75rem; }
-.locked-body h4 {
-  font-size: 1.1rem;
-  font-weight: 700;
-  color: #D4AF37;
-  margin: 0 0 0.5rem;
+.v-metric {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 0.875rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
-.locked-body p {
-  font-size: 0.875rem;
+.v-label {
+  font-size: 0.75rem;
   color: #9ca3af;
-  margin: 0 0 1.25rem;
-  max-width: 280px;
-  margin-left: auto;
-  margin-right: auto;
-  line-height: 1.5;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 600;
+}
+.v-value-row {
+  display: flex;
+  align-items: baseline;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+.v-value {
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: #f3f4f6;
+  line-height: 1.2;
+}
+.v-sub {
+  font-size: 0.75rem;
+  color: #6b7280;
+}
+.v-progress-bar {
+  width: 100%;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+  overflow: hidden;
+  margin-top: 0.35rem;
+}
+.v-progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #D4AF37, #F5D77F);
+  border-radius: 3px;
+  transition: width 0.4s ease;
+}
+.velocity-footer {
+  margin-top: auto;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+.btn-outline-gold {
+  background: transparent;
+  border: 1px solid rgba(212, 175, 55, 0.5);
+  color: #D4AF37;
+  font-weight: 600;
+  transition: all 0.2s ease;
+}
+.btn-outline-gold:hover {
+  background: rgba(212, 175, 55, 0.15);
+  border-color: #D4AF37;
+  color: #fff;
 }
 
 /* Quick Actions */
