@@ -3951,6 +3951,25 @@ class BillingWebhookView(APIView):
                     )
                     return Response({'status': 'success', 'message': 'Tender Compliance Pack unlocked.'})
 
+                if 'deal_split' in custom_type:
+                    deal_id = existing_payload.get('deal_id')
+                    if deal_id:
+                        try:
+                            deal = Deal.objects.get(id=deal_id, organization=tx.organization)
+                            deal.stage = 'closed_won'
+                            deal.save(update_fields=['stage'])
+                        except Deal.DoesNotExist:
+                            pass
+                    record_audit_event(
+                        'DEAL_PAYMENT_SETTLED',
+                        f"Commercial deal split payment settled for '{tx.organization.name}' (Deal ID: {deal_id}, Ref: {tx_ref})",
+                        user=None,
+                        organization=tx.organization,
+                        severity='INFO',
+                        metadata={'tx_ref': tx_ref, 'deal_id': deal_id, 'amount_cents': tx.amount_cents}
+                    )
+                    return Response({'status': 'success', 'message': 'Deal payment processed and marked Closed Won.'})
+
                 # Determine purchased plan tier
                 chosen_tier = existing_payload.get('tier', 'luxury').lower()
                 if chosen_tier == 'classic':
