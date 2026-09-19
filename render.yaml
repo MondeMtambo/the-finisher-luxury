@@ -39,3 +39,7 @@ services:
         sync: false
       - key: RESEND_API_KEY
         sync: false
+      - key: PAYFAST_MERCHANT_ID
+        value: "37019297"
+      - key: PAYFAST_MERCHANT_KEY
+        value: "dououppbwqtve"

@@ -29,6 +29,7 @@ logger = logging.getLogger(__name__)
 PAYFAST_PROCESS_URL = "https://www.payfast.co.za/eng/process"
 PAYFAST_SANDBOX_URL = "https://sandbox.payfast.co.za/eng/process"
 DEFAULT_MERCHANT_ID = "37019297"
+DEFAULT_MERCHANT_KEY = "dououppbwqtve"
 
 
 class NumberedCanvas(canvas.Canvas):
@@ -313,7 +314,8 @@ class WhiteLabelCheckoutView(APIView):
             })
 
         tx_ref = f"WL-{org.id.hex[:8]}-{int(timezone.now().timestamp())}"
-        merchant_id = getattr(settings, 'PAYFAST_MERCHANT_ID', DEFAULT_MERCHANT_ID)
+        merchant_id = getattr(settings, 'PAYFAST_MERCHANT_ID', DEFAULT_MERCHANT_ID) or DEFAULT_MERCHANT_ID
+        merchant_key = getattr(settings, 'PAYFAST_MERCHANT_KEY', DEFAULT_MERCHANT_KEY) or DEFAULT_MERCHANT_KEY
         is_sandbox = getattr(settings, 'PAYFAST_SANDBOX', False)
         process_url = PAYFAST_SANDBOX_URL if is_sandbox else PAYFAST_PROCESS_URL
 
@@ -338,6 +340,7 @@ class WhiteLabelCheckoutView(APIView):
         return Response({
             'process_url': process_url,
             'merchant_id': merchant_id,
+            'merchant_key': merchant_key,
             'amount': '199.00',
             'item_name': 'THE FINISHER LUXURY — Corporate White-Label (R199/mo)',
             'item_description': 'Monthly recurring custom branding license removing all watermarks.',
@@ -375,7 +378,8 @@ class TenderPackCheckoutView(APIView):
             return Response({'error': 'Organization profile not found'}, status=status.HTTP_400_BAD_REQUEST)
 
         tx_ref = f"TND-{org.id.hex[:8]}-{int(timezone.now().timestamp())}"
-        merchant_id = getattr(settings, 'PAYFAST_MERCHANT_ID', DEFAULT_MERCHANT_ID)
+        merchant_id = getattr(settings, 'PAYFAST_MERCHANT_ID', DEFAULT_MERCHANT_ID) or DEFAULT_MERCHANT_ID
+        merchant_key = getattr(settings, 'PAYFAST_MERCHANT_KEY', DEFAULT_MERCHANT_KEY) or DEFAULT_MERCHANT_KEY
         is_sandbox = getattr(settings, 'PAYFAST_SANDBOX', False)
         process_url = PAYFAST_SANDBOX_URL if is_sandbox else PAYFAST_PROCESS_URL
 
@@ -399,6 +403,7 @@ class TenderPackCheckoutView(APIView):
         return Response({
             'process_url': process_url,
             'merchant_id': merchant_id,
+            'merchant_key': merchant_key,
             'amount': '350.00',
             'item_name': 'Official Tender & SEDA Funding Compliance Pack (R350)',
             'item_description': '12-Month Audited Sales Ledger & POPIA S19 Certificate for Tenders.',

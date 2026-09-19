@@ -270,7 +270,7 @@ if not DEBUG:
 
 # PayFast Gateway Configuration (Merchant ID: 37019297)
 PAYFAST_MERCHANT_ID = config('PAYFAST_MERCHANT_ID', default='37019297')
-PAYFAST_MERCHANT_KEY = config('PAYFAST_MERCHANT_KEY', default='')
+PAYFAST_MERCHANT_KEY = config('PAYFAST_MERCHANT_KEY', default='dououppbwqtve')
 PAYFAST_PASSPHRASE = config('PAYFAST_PASSPHRASE', default='')
 PAYFAST_SANDBOX = config('PAYFAST_SANDBOX', default=False, cast=bool)
 
