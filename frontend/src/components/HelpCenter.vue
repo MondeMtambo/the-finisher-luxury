@@ -176,7 +176,7 @@
         </div>
         <span class="card-note">Dedicated 24/7 Desk</span>
       </div>
-      <p class="section-intro">Need customized platform assistance, white-label setup, or tender pack compliance certification? Our senior engineering team is standing by.</p>
+      <p class="section-intro">Need customized platform assistance, white-label setup, or custom API integration? Our senior engineering team is standing by.</p>
 
       <div class="support-grid">
         <div class="sc" v-for="s in supportCards" :key="s.title">
@@ -233,11 +233,11 @@ export default {
           ]
         },
         {
-          q: 'How do I download the Certified Tender & SEDA Funding Sales Pack?',
+          q: 'How do I enable White-Label Custom Branding for my organization?',
           a: [
-            'Navigate to "Reports" in the sidebar and look for the "Official Tender & SEDA Funding Pack" card.',
-            'Unlock the certification for R350 once-off via PayFast.',
-            'The system will immediately generate a cryptographically signed, 12-month audited sales ledger PDF compliant with POPIA Section 19.'
+            'Navigate to "Settings" in the main sidebar and locate the "Corporate White-Label Branding" module.',
+            'Activate the white-label license (R199/month) via PayFast.',
+            'Once activated, you can upload your corporate logo and letterhead, removing all standard system watermarks.'
           ]
         },
         {

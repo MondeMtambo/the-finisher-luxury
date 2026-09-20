@@ -244,11 +244,11 @@ def build_pdf():
         "Unlike generic SaaS CRMs that act merely as passive rolodexes, THE FINISHER operates as an <i>autonomous institutional operating system</i> combining high-net-worth sales velocity, legal compliance certification, and autonomous daemon intelligence.",
         body_style
     ))
-    story.append(Paragraph("<b>The Four Core Valuation Pillars:</b>", body_bold))
+    story.append(Paragraph("<b>The Core Valuation Pillars:</b>", body_bold))
     story.append(Paragraph("<b>1. Autonomous Daemon Intelligence:</b> A persistent 24/7 backend guardian engine executing in 10-second heartbeat loops that continuously verifies data integrity, heals transient errors, and enforces security safeguards without human intervention.", body_style))
     story.append(Paragraph("<b>2. The Sovereign Allocation Moat:</b> A zero-churn customer acquisition flywheel granting 5 collaborative seats and 6,000 verified client contacts on a permanent free tier, ensuring massive enterprise data gravity.", body_style))
-    story.append(Paragraph("<b>3. Statutory Regulatory Monopolies:</b> High-margin micro-toll generation via bank-certified 12-month sales ledgers and POPIA Section 19 cryptographic certificates required for National Treasury CSD tenders and SEDA funding.", body_style))
-    story.append(Paragraph("<b>4. Sovereign White-Labeling Engine:</b> Recurring monthly cash flow from corporate agencies seeking unbranded, custom-branded luxury correspondence.", body_style))
+    story.append(Paragraph("<b>3. Sovereign White-Labeling Engine:</b> Recurring monthly cash flow from corporate agencies seeking unbranded, custom-branded luxury correspondence.", body_style))
+    story.append(Paragraph("<b>4. Enterprise Gateway Split Architecture:</b> Automated monetization on won deals and customer payments routed securely via PayFast.", body_style))
 
     story.append(Spacer(1, 10))
 
@@ -266,9 +266,9 @@ def build_pdf():
     biz_table_data = [
         [Paragraph("Business Model", table_header), Paragraph("Architectural Mechanism", table_header), Paragraph("Economic Asymmetry &amp; Profit Yield", table_header)],
         [
-            Paragraph("<b>1. Statutory Regulatory Tolls</b>", table_cell),
-            Paragraph("National Treasury CSD tenders and SEDA funding require verified 12-month sales ledgers and POPIA compliance. The CRM generates certified PDFs on demand for <b>R350.00 once-off</b>.", table_cell),
-            Paragraph("Cost to generate: R0.00. Gross Margin: <b>100%</b>. 10,000 SME tenderers purchasing twice yearly generates <b>R7.0M pure profit</b>.", table_cell)
+            Paragraph("<b>1. Deal Split Facilitation</b>", table_cell),
+            Paragraph("Automated escrow split settlements routed via PayFast upon deal closure. Connects corporate buyers with vendor accounts seamlessly.", table_cell),
+            Paragraph("High gross margins on transactional volume with zero credit risk and automated gateway settlement.", table_cell)
         ],
         [
             Paragraph("<b>2. Negative Working Capital</b>", table_cell),
@@ -303,8 +303,7 @@ def build_pdf():
     ))
     story.append(Paragraph("• <b>POPIA Act 4 of 2013 (Section 19) Compliance:</b> Mandatory digital consent gateway on initial login, cryptographic tenant isolation, audit logging of all sensitive contact access, and automated data purging upon request.", body_style))
     story.append(Paragraph("• <b>Dual-Token JWT Security:</b> 15-minute access tokens with client-side expiry decode and silent background token rotation, eliminating session interruption.", body_style))
-    story.append(Paragraph("• <b>Session Shielding:</b> Hard 8-hour maximum session lifetimes with complete in-memory eviction upon logout.", body_style))
-    story.append(Paragraph("• <b>SHA-256 Audit Seals:</b> All statutory PDF reports, tender packs, and EULA certificates include cryptographic SHA-256 digests and authorized director signature blocks.", body_style))
+    story.append(Paragraph("• <b>SHA-256 Audit Seals:</b> All statutory PDF reports, audit logs, and EULA certificates include cryptographic SHA-256 digests and authorized director signature blocks.", body_style))
 
     story.append(Spacer(1, 10))
     story.append(Paragraph("4. 24/7 AUTONOMOUS GUARDIAN AGENT &amp; 10-SECOND SENTINEL", h1_style))
@@ -362,7 +361,6 @@ def build_pdf():
     story.append(Spacer(1, 10))
     story.append(Paragraph("<b>Enterprise Add-On Suite:</b>", body_bold))
     story.append(Paragraph("• <b>Corporate White-Label &amp; Custom Branding (R199.00 / month recurring):</b> Removes all CRM watermarks from quotes, invoices, and emails. Enables enterprise logo upload with automated PayFast billing.", body_style))
-    story.append(Paragraph("• <b>Official Tender &amp; SEDA Compliance Pack (R350.00 once-off):</b> Generates bank-grade certified 12-month audited sales ledgers and POPIA Section 19 cryptographic certificates for National Treasury tenders and commercial credit facilities.", body_style))
 
     story.append(PageBreak())
 
@@ -464,11 +462,7 @@ def build_pdf():
             Paragraph("Camera pans to Enterprise Add-On Suite: The R199 White-Label Card.", script_text),
             Paragraph("<i>'When presenting to high-end clients, brand prestige is paramount. With our Corporate White-Label license at just R199 per month, all Finisher watermarks are instantly removed. Upload your company logo, and your invoices, quotes, and emails carry your exclusive corporate identity.'</i>", script_text)
         ],
-        [
-            Paragraph("1:00 - 1:30", script_char),
-            Paragraph("Camera moves to Tender & SEDA Compliance Pack Card (R350).", script_text),
-            Paragraph("<i>'When bidding for public sector tenders or applying for funding, compliance paperwork can stall your momentum. Our Tender and SEDA Compliance Pack generates a certified, 12-month audited sales ledger and POPIA Section 19 cryptographic certificate for R350 once-off. Bank-grade, tamper-proof, and immediately downloadable.'</i>", script_text)
-        ],
+
         [
             Paragraph("1:30 - 2:00", script_char),
             Paragraph("Zooming into Executive Suite (R1,500/mo) and Enterprise Bespoke.", script_text),

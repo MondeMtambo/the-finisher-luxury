@@ -36,7 +36,6 @@ class Organization(models.Model):
     max_users = models.PositiveIntegerField(default=5, help_text="Maximum active user seats for organization (5 on Sovereign tier)")
     is_white_labeled = models.BooleanField(default=False, help_text="True if R199/mo white-label is active (removes Finisher watermark)")
     white_label_subscription_id = models.CharField(max_length=120, blank=True, help_text="PayFast recurring subscription ID for white-label")
-    tender_pack_unlocked = models.BooleanField(default=False, help_text="True if R350 once-off tender & funding pack has been unlocked")
     custom_logo = models.ImageField(upload_to='company_logos/', blank=True, null=True, help_text="Custom company logo for white-label quotes/invoices")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

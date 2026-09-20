@@ -177,7 +177,7 @@
         <div class="addons-header">
           <span class="addons-tag">MODULAR ENTERPRISE ADD-ONS</span>
           <h3>Enhance Your Corporate Operations</h3>
-          <p>Activate white-label sovereignty and accredited compliance certification on demand.</p>
+          <p>Activate white-label sovereignty and custom corporate branding on demand.</p>
         </div>
         <div class="addons-grid">
           <div class="addon-card">
@@ -189,17 +189,6 @@
             <div class="addon-bottom">
               <div class="addon-price"><span class="currency">R</span>199<span class="period">/month</span></div>
               <button class="btn-addon" @click="$router.push('/settings')">Manage in Settings &rarr;</button>
-            </div>
-          </div>
-          <div class="addon-card">
-            <div class="addon-top">
-              <span class="addon-badge gold">TENDER CERTIFICATION</span>
-              <h4>Official Tender &amp; SEDA Funding Sales Pack</h4>
-              <p>Download a certified, bank-grade 12-Month Audited Sales Ledger with POPIA Section 19 Cryptographic Certification and SHA-256 digital stamp for institutional tenders.</p>
-            </div>
-            <div class="addon-bottom">
-              <div class="addon-price"><span class="currency">R</span>350<span class="period">/once-off</span></div>
-              <button class="btn-addon gold" @click="$router.push('/reports')">Generate in Reports &rarr;</button>
             </div>
           </div>
         </div>
