@@ -201,7 +201,7 @@
                   class="form-input search-input" 
                   v-model="ceoSearchQuery" 
                   @input="handleCEOSearchInput" 
-                  placeholder="Type CEO Name (e.g. Adrian Gore, Monde Mtambo) or Company Name..."
+                  placeholder="Type CEO Name (e.g. John Doe) or Company Name..."
                 />
                 <span v-if="searchingCEO" class="search-spinner"></span>
               </div>
