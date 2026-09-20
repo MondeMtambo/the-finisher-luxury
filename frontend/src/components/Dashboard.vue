@@ -32,10 +32,6 @@
           <h1>Dashboard</h1>
           <p class="page-subtitle">Welcome back. Here's your CRM overview.</p>
         </div>
-        <div class="tier-chip" :class="'tier-' + (isAdminUser ? 'ultimate' : userTier)">
-          <span class="tier-label">{{ isAdminUser ? 'ULTIMATE' : tierDisplayName }}</span>
-          <span class="tier-price">{{ isAdminUser ? 'Full System Access' : tierSubtitle }}</span>
-        </div>
       </div>
     </div>
 
