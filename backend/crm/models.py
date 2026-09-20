@@ -930,6 +930,8 @@ class Ticket(models.Model):
     due_at = models.DateTimeField(null=True, blank=True)
     completed_at = models.DateTimeField(null=True, blank=True)
     duration_seconds = models.PositiveIntegerField(default=0, help_text="Total duration tracked for this ticket in seconds")
+    last_reminder_sent_at = models.DateTimeField(null=True, blank=True, help_text="Timestamp when last reminder email or alert was dispatched")
+    reminder_count = models.PositiveIntegerField(default=0, help_text="Total number of reminders dispatched for this ticket")
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

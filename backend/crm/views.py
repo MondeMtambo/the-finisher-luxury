@@ -1268,10 +1268,16 @@ class TicketViewSet(viewsets.ModelViewSet):
             meta={'status': ticket.status}
         )
 
+        # Executive Zoho-Style Email Directive to Assignee
+        from .email_service import send_ticket_assignment_email
+        send_ticket_assignment_email(ticket, assigned_by_user=user)
+
     def perform_update(self, serializer):
         user = self.request.user
         if not (user.is_superuser or user.is_staff or getattr(user, 'profile', None) and user.profile.is_admin):
             raise PermissionDenied('Only administrators can update tickets.')
+
+        old_assignee = serializer.instance.assigned_to
 
         product = serializer.validated_data.get('product', serializer.instance.product)
         quantity = serializer.validated_data.get('quantity', serializer.instance.quantity) or 1
@@ -1283,6 +1289,19 @@ class TicketViewSet(viewsets.ModelViewSet):
             serializer.validated_data['sale_value'] = (unit_price or 0) * quantity
 
         ticket = serializer.save()
+
+        # If reassigned to a new user, dispatch reassignment notification and email
+        if ticket.assigned_to and ticket.assigned_to != old_assignee:
+            Notification.objects.create(
+                recipient=ticket.assigned_to,
+                title='Ticket Reassigned to You',
+                message=f"{user.username} reassigned ticket to you: {ticket.title}",
+                entity_type='ticket',
+                entity_id=ticket.id,
+                meta={'status': ticket.status}
+            )
+            from .email_service import send_ticket_assignment_email
+            send_ticket_assignment_email(ticket, assigned_by_user=user)
 
         if ticket.is_sale_initiated and ticket.contact and not ticket.deal:
             deal_title = f"{ticket.product.name if ticket.product else 'Sale'} — {ticket.contact.first_name} {ticket.contact.last_name}"
@@ -1326,7 +1345,7 @@ class TicketViewSet(viewsets.ModelViewSet):
         ticket.start()
         return Response({'message': 'Ticket started', 'started_at': ticket.started_at, 'status': ticket.status})
 
-    @action(detail=True, methods=['post'])
+    @action(detail=True, methods=['stop'], url_path='stop')
     def stop(self, request, pk=None):
         ticket = self.get_object()
         user = request.user
@@ -1352,7 +1371,55 @@ class TicketViewSet(viewsets.ModelViewSet):
             entity_id=ticket.id,
             meta={'status': ticket.status}
         )
+
+        from .email_service import send_ticket_completion_email
+        send_ticket_completion_email(ticket, completed_by_user=user)
+
         return Response({'message': 'Ticket marked as completed', 'completed_at': ticket.completed_at, 'status': ticket.status})
+
+    @action(detail=True, methods=['post'], url_path='send_reminder')
+    def send_reminder(self, request, pk=None):
+        """Dispatches an executive reminder email to the assigned employee/manager."""
+        ticket = self.get_object()
+        user = request.user
+        is_admin = bool(user.is_superuser or user.is_staff or (getattr(user, 'profile', None) and user.profile.is_admin))
+        is_creator = bool(ticket.created_by == user)
+
+        if not (is_admin or is_creator):
+            return Response({'error': 'Only ticket creators or administrators can send reminders.'}, status=403)
+
+        if ticket.status == 'completed':
+            return Response({'error': 'Cannot send a reminder for an already completed ticket.'}, status=400)
+
+        # Update reminder metadata
+        ticket.last_reminder_sent_at = timezone.now()
+        ticket.reminder_count = (ticket.reminder_count or 0) + 1
+        ticket.save(update_fields=['last_reminder_sent_at', 'reminder_count'])
+
+        # In-app notification
+        Notification.objects.create(
+            recipient=ticket.assigned_to,
+            title='Urgent Ticket Reminder',
+            message=f"{user.username} sent a reminder for ticket: {ticket.title}",
+            entity_type='ticket',
+            entity_id=ticket.id,
+            meta={'status': ticket.status, 'reminder_count': ticket.reminder_count}
+        )
+
+        # Luxury Email Dispatch
+        from .email_service import send_ticket_reminder_email
+        dispatched = send_ticket_reminder_email(ticket, triggered_by_user=user, reminder_type='manual')
+
+        assignee_name = ticket.assigned_to.get_full_name() or ticket.assigned_to.username
+        assignee_email = ticket.assigned_to.email or 'N/A'
+
+        return Response({
+            'success': True,
+            'message': f'Executive reminder #{ticket.reminder_count} dispatched to {assignee_name} ({assignee_email}).',
+            'last_reminder_sent_at': ticket.last_reminder_sent_at,
+            'reminder_count': ticket.reminder_count,
+            'email_queued': dispatched
+        })
 
 
 class NotificationViewSet(viewsets.ModelViewSet):

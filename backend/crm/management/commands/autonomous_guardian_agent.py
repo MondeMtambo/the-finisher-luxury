@@ -23,7 +23,7 @@ from django.core.management.base import BaseCommand
 from django.utils import timezone
 from django.db import connection
 from django.conf import settings
-from crm.models import Organization, UserProfile, Contact, Deal, Ticket, SecurityAuditTrail
+from crm.models import Organization, UserProfile, Contact, Deal, Ticket, SecurityAuditTrail, Notification
 from django.contrib.auth.models import User
 
 TELEMETRY_FILE = os.path.join(settings.BASE_DIR, 'agent_telemetry.json')
@@ -100,6 +100,41 @@ def run_agent_cycle(verbose=False):
         if primary_org:
             orphan_contacts.update(organization=primary_org)
             actions_taken.append(f"Re-linked {orphan_count} orphaned contacts to {primary_org.name}")
+
+    # 4b. Autonomous SLA Ticket Monitor (Fortune 500 / Zoho Standard)
+    # Audits open/in-progress tickets approaching due date (within 24h) or overdue where no reminder was sent in the last 24h
+    now = timezone.now()
+    approaching_sla = now + timedelta(hours=24)
+    pending_sla_tickets = Ticket.objects.filter(
+        status__in=['open', 'in_progress'],
+        due_at__isnull=False,
+        due_at__lte=approaching_sla
+    ).exclude(
+        last_reminder_sent_at__gte=now - timedelta(hours=24)
+    )
+
+    sla_reminders_dispatched = 0
+    from crm.email_service import send_ticket_reminder_email
+    for t in pending_sla_tickets[:5]:  # Guarded throughput: max 5 per pulse
+        t.last_reminder_sent_at = now
+        t.reminder_count = (t.reminder_count or 0) + 1
+        t.save(update_fields=['last_reminder_sent_at', 'reminder_count'])
+
+        if t.assigned_to:
+            Notification.objects.create(
+                recipient=t.assigned_to,
+                title='Autonomous SLA Alert',
+                message=f"Sentinel Agent: Ticket #{t.id} '{t.title}' is due {t.due_at.strftime('%d %b %H:%M')}.",
+                entity_type='ticket',
+                entity_id=t.id,
+                meta={'status': t.status, 'is_sla_alert': True}
+            )
+
+        send_ticket_reminder_email(t, reminder_type='sla_automated')
+        sla_reminders_dispatched += 1
+
+    if sla_reminders_dispatched > 0:
+        actions_taken.append(f"Autonomous Sentinel dispatched {sla_reminders_dispatched} SLA reminder directives")
 
     # 5. Billionaire Business Intelligence Metrics
     pipeline_value = sum(float(d.value or 0) for d in Deal.objects.all())

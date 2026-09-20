@@ -330,3 +330,263 @@ def render_luxury_email_html(
   </table>
 </body>
 </html>"""
+
+
+def send_ticket_assignment_email(ticket, assigned_by_user=None):
+    """
+    Dispatches a luxury executive ticket directive email to the assigned employee/manager.
+    Mimics Zoho Desk / Jira enterprise notification standards with The Finisher luxury branding.
+    """
+    try:
+        assignee = getattr(ticket, 'assigned_to', None)
+        if not assignee or not assignee.email:
+            logger.info("[EmailEngine] Cannot dispatch ticket assignment email: Assignee has no email.")
+            return False
+
+        recipient_email = assignee.email
+        recipient_name = assignee.get_full_name() or assignee.username
+        
+        assigner = assigned_by_user or getattr(ticket, 'created_by', None)
+        assigner_name = (assigner.get_full_name() or assigner.username) if assigner else "Executive Directorate"
+        assigner_profile = getattr(assigner, 'profile', None) if assigner else None
+        assigner_role = assigner_profile.get_role_display() if (assigner_profile and hasattr(assigner_profile, 'get_role_display')) else "CEO / Administrator"
+
+        priority_map = {
+            'urgent': '🔴 URGENT (Priority Execution)',
+            'high': '🟠 HIGH (Elevated Attention)',
+            'normal': '🔵 NORMAL (Standard Sprint)',
+            'low': '⚪ LOW (Routine Operations)'
+        }
+        priority_label = priority_map.get(ticket.priority, str(ticket.priority).capitalize())
+
+        due_str = ticket.due_at.strftime('%d %B %Y at %H:%M SAST') if ticket.due_at else 'Immediate / Current Sprint'
+
+        credentials = {
+            "Ticket Reference": f"#TKT-{ticket.id:04d}",
+            "Task Directive": ticket.title,
+            "Priority Level": priority_label,
+            "Department / Domain": f"{ticket.get_department_display()} · {ticket.get_category_display()}",
+            "Delegated By": f"{assigner_name} ({assigner_role})",
+            "Target Deadline": due_str,
+        }
+
+        if ticket.contact:
+            credentials["Client Contact"] = f"{ticket.contact.first_name} {ticket.contact.last_name}"
+        if ticket.company:
+            credentials["Enterprise Account"] = ticket.company.name
+        if ticket.is_sale_initiated and ticket.sale_value:
+            credentials["Commercial Pipeline"] = f"R{float(ticket.sale_value):,.2f} ({ticket.get_sale_status_display()})"
+
+        desc_p = ticket.description.strip() if ticket.description else "No supplementary instructions provided. Please review ticket objectives in the workspace."
+
+        paragraphs = [
+            f"You have been officially assigned an executive ticket directive by <strong>{assigner_name}</strong>.",
+            f"<strong>Directive Overview:</strong> {desc_p}",
+            "Please review the specifications below and take immediate ownership in accordance with company standard operating procedures."
+        ]
+
+        portal_url = f"https://www.thefinishercrm.tech/#/tickets?ticket={ticket.id}"
+
+        html_body = render_luxury_email_html(
+            title="EXECUTIVE TICKET DIRECTIVE",
+            subtitle=f"TASK ALLOCATION &middot; REF #TKT-{ticket.id:04d}",
+            recipient_name=recipient_name,
+            message_paragraphs=paragraphs,
+            credentials=credentials,
+            cta_text="Open & Action Ticket in Workspace",
+            cta_url=portal_url,
+            activation_steps=[
+                "Authenticate into your Finisher Luxury workspace.",
+                "Review commercial documents, requirements, and client attachments.",
+                "Click 'Start' to track working duration or 'Mark Complete' once deliverables are fulfilled."
+            ],
+            security_note="Zero-Trust Workplace Governance: Delegated under company POPIA Section 19 compliance protocol."
+        )
+
+        subject = f"⚡ [DIRECTIVE] New Ticket Assigned: #TKT-{ticket.id:04d} - {ticket.title}"
+        text_body = (
+            f"EXECUTIVE TICKET DIRECTIVE: #TKT-{ticket.id:04d}\n\n"
+            f"Hello {recipient_name},\n\n"
+            f"{assigner_name} ({assigner_role}) has assigned you a ticket: {ticket.title}\n"
+            f"Priority: {priority_label}\n"
+            f"Deadline: {due_str}\n\n"
+            f"Description:\n{desc_p}\n\n"
+            f"Action Ticket Now: {portal_url}\n\n"
+            f"THE FINISHER LUXURY CRM"
+        )
+
+        send_email_async(
+            subject=subject,
+            text_body=text_body,
+            recipient_list=[recipient_email],
+            html_body=html_body
+        )
+        logger.info(f"[EmailEngine] Queued ticket assignment email for #TKT-{ticket.id:04d} to {recipient_email}")
+        return True
+
+    except Exception as e:
+        logger.error(f"[EmailEngine] Failed to dispatch ticket assignment email: {e}")
+        return False
+
+
+def send_ticket_reminder_email(ticket, triggered_by_user=None, reminder_type='manual'):
+    """
+    Dispatches a luxury high-urgency reminder email for a pending ticket.
+    Can be triggered manually by the CEO / Manager or autonomously by the 10-second Sentinel Agent.
+    """
+    try:
+        assignee = getattr(ticket, 'assigned_to', None)
+        if not assignee or not assignee.email:
+            logger.info("[EmailEngine] Cannot dispatch ticket reminder email: Assignee has no email.")
+            return False
+
+        recipient_email = assignee.email
+        recipient_name = assignee.get_full_name() or assignee.username
+
+        if reminder_type == 'sla_automated':
+            sender_headline = "Autonomous SLA Compliance Sentinel"
+            trigger_text = "The 24/7 Autonomous Sentinel Agent detected that this ticket is pending action or approaching deadline."
+        else:
+            nudge_user = triggered_by_user or getattr(ticket, 'created_by', None)
+            sender_name = (nudge_user.get_full_name() or nudge_user.username) if nudge_user else "Executive Leadership"
+            sender_headline = f"{sender_name} (Executive Directorate)"
+            trigger_text = f"<strong>{sender_name}</strong> has dispatched an executive priority reminder requesting an update on this task."
+
+        priority_map = {
+            'urgent': '🔴 URGENT (Priority Execution)',
+            'high': '🟠 HIGH (Elevated Attention)',
+            'normal': '🔵 NORMAL (Standard Sprint)',
+            'low': '⚪ LOW (Routine Operations)'
+        }
+        priority_label = priority_map.get(ticket.priority, str(ticket.priority).capitalize())
+        due_str = ticket.due_at.strftime('%d %B %Y at %H:%M SAST') if ticket.due_at else 'Immediate Attention Required'
+
+        credentials = {
+            "Ticket Reference": f"#TKT-{ticket.id:04d}",
+            "Task Title": ticket.title,
+            "Current Status": ticket.get_status_display().upper(),
+            "Priority": priority_label,
+            "Reminder Notice": f"Reminder #{ticket.reminder_count + 1}",
+            "Deadline / SLA": due_str,
+        }
+
+        paragraphs = [
+            f"This is an urgent operational reminder regarding ticket <strong>#TKT-{ticket.id:04d}</strong>.",
+            trigger_text,
+            "Please update the ticket progress, add notes, or complete the deliverables to maintain enterprise deal velocity."
+        ]
+
+        portal_url = f"https://www.thefinishercrm.tech/#/tickets?ticket={ticket.id}"
+
+        html_body = render_luxury_email_html(
+            title="EXECUTIVE SLA PRIORITY REMINDER",
+            subtitle=f"ATTENTION REQUIRED &middot; REF #TKT-{ticket.id:04d}",
+            recipient_name=recipient_name,
+            message_paragraphs=paragraphs,
+            credentials=credentials,
+            cta_text="Review & Action Pending Ticket",
+            cta_url=portal_url,
+            activation_steps=[
+                "Click the action button to access the ticket directly.",
+                "Review open items and collaborate with team members.",
+                "Mark completed or update status to satisfy SLA compliance."
+            ],
+            security_note="Operational SLA Protocol: Timely ticket resolution directly impacts organizational performance scorecards."
+        )
+
+        subject = f"⏰ [REMINDER #{ticket.reminder_count + 1}] Priority Action Required: #TKT-{ticket.id:04d} - {ticket.title}"
+        text_body = (
+            f"EXECUTIVE TICKET REMINDER: #TKT-{ticket.id:04d}\n\n"
+            f"Hello {recipient_name},\n\n"
+            f"Reminder regarding pending ticket: {ticket.title}\n"
+            f"Status: {ticket.status}\n"
+            f"Deadline: {due_str}\n\n"
+            f"Dispatched by: {sender_headline}\n\n"
+            f"Open Ticket Now: {portal_url}\n\n"
+            f"THE FINISHER LUXURY CRM"
+        )
+
+        send_email_async(
+            subject=subject,
+            text_body=text_body,
+            recipient_list=[recipient_email],
+            html_body=html_body
+        )
+        logger.info(f"[EmailEngine] Dispatched ticket reminder email for #TKT-{ticket.id:04d} to {recipient_email}")
+        return True
+
+    except Exception as e:
+        logger.error(f"[EmailEngine] Failed to dispatch ticket reminder email: {e}")
+        return False
+
+
+def send_ticket_completion_email(ticket, completed_by_user=None):
+    """
+    Dispatches an executive resolution receipt to the ticket creator / CEO.
+    Confirms deliverables have been fulfilled.
+    """
+    try:
+        creator = getattr(ticket, 'created_by', None)
+        if not creator or not creator.email:
+            return False
+
+        recipient_email = creator.email
+        recipient_name = creator.get_full_name() or creator.username
+
+        completer = completed_by_user or getattr(ticket, 'assigned_to', None)
+        completer_name = (completer.get_full_name() or completer.username) if completer else "Assigned Team Member"
+
+        credentials = {
+            "Ticket Reference": f"#TKT-{ticket.id:04d}",
+            "Task Title": ticket.title,
+            "Resolved By": completer_name,
+            "Resolution Time": timezone.now().strftime('%d %B %Y at %H:%M SAST'),
+            "Final Status": "COMPLETED & CLOSED",
+        }
+
+        if ticket.duration_seconds > 0:
+            mins, secs = divmod(ticket.duration_seconds, 60)
+            hours, mins = divmod(mins, 60)
+            time_str = f"{hours}h {mins}m" if hours else f"{mins}m {secs}s"
+            credentials["Time Tracked"] = time_str
+
+        paragraphs = [
+            f"We are pleased to inform you that ticket <strong>#TKT-{ticket.id:04d}</strong> has been successfully completed by <strong>{completer_name}</strong>.",
+            f"All deliverables for <em>'{ticket.title}'</em> have been marked fulfilled in your workspace."
+        ]
+
+        portal_url = f"https://www.thefinishercrm.tech/#/tickets?ticket={ticket.id}"
+
+        html_body = render_luxury_email_html(
+            title="TICKET RESOLUTION RECEIPT",
+            subtitle=f"TASK FULFILLED &middot; REF #TKT-{ticket.id:04d}",
+            recipient_name=recipient_name,
+            message_paragraphs=paragraphs,
+            credentials=credentials,
+            cta_text="View Completed Ticket in Workspace",
+            cta_url=portal_url,
+            security_note="Cryptographic Audit Trail: Completed ticket is permanently sealed in organization audit log."
+        )
+
+        subject = f"✅ [RESOLVED] Ticket #TKT-{ticket.id:04d} Completed: {ticket.title}"
+        text_body = (
+            f"TICKET RESOLUTION RECEIPT: #TKT-{ticket.id:04d}\n\n"
+            f"Hello {recipient_name},\n\n"
+            f"Ticket '{ticket.title}' was completed by {completer_name}.\n"
+            f"View Ticket: {portal_url}\n\n"
+            f"THE FINISHER LUXURY CRM"
+        )
+
+        send_email_async(
+            subject=subject,
+            text_body=text_body,
+            recipient_list=[recipient_email],
+            html_body=html_body
+        )
+        logger.info(f"[EmailEngine] Queued ticket completion email for #TKT-{ticket.id:04d} to creator {recipient_email}")
+        return True
+
+    except Exception as e:
+        logger.error(f"[EmailEngine] Failed to dispatch ticket completion email: {e}")
+        return False
+

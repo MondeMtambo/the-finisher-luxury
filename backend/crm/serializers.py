@@ -356,6 +356,9 @@ class TicketSerializer(serializers.ModelSerializer):
     product_price = serializers.DecimalField(source='product.unit_price', max_digits=12, decimal_places=2, read_only=True)
     created_by_username = serializers.CharField(source='created_by.username', read_only=True)
     assigned_to_username = serializers.CharField(source='assigned_to.username', read_only=True)
+    assigned_to_email = serializers.EmailField(source='assigned_to.email', read_only=True)
+    created_by_name = serializers.SerializerMethodField()
+    assigned_to_name = serializers.SerializerMethodField()
     created_by = serializers.PrimaryKeyRelatedField(read_only=True)
 
     class Meta:
@@ -380,8 +383,11 @@ class TicketSerializer(serializers.ModelSerializer):
             'sale_status',
             'created_by',
             'created_by_username',
+            'created_by_name',
             'assigned_to',
             'assigned_to_username',
+            'assigned_to_name',
+            'assigned_to_email',
             'priority',
             'category',
             'department',
@@ -390,12 +396,26 @@ class TicketSerializer(serializers.ModelSerializer):
             'due_at',
             'completed_at',
             'duration_seconds',
+            'last_reminder_sent_at',
+            'reminder_count',
             'created_at',
             'updated_at',
         ]
         read_only_fields = [
-            'id', 'created_by', 'created_by_username', 'assigned_to_username', 'created_at', 'updated_at',
+            'id', 'created_by', 'created_by_username', 'created_by_name', 'assigned_to_username',
+            'assigned_to_name', 'assigned_to_email', 'last_reminder_sent_at', 'reminder_count',
+            'created_at', 'updated_at',
         ]
+
+    def get_created_by_name(self, obj):
+        if obj.created_by:
+            return obj.created_by.get_full_name() or obj.created_by.username
+        return None
+
+    def get_assigned_to_name(self, obj):
+        if obj.assigned_to:
+            return obj.assigned_to.get_full_name() or obj.assigned_to.username
+        return None
 
     def get_contact_name(self, obj):
         if obj.contact:

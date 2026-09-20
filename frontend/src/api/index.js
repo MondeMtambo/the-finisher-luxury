@@ -288,7 +288,8 @@ export const ticketsAPI = {
   start: (id) => api.post(`/tickets/${id}/start/`),
   stop: (id) => api.post(`/tickets/${id}/stop/`),
   complete: (id) => api.post(`/tickets/${id}/complete/`),
-  completeSale: (id) => api.post(`/tickets/${id}/complete_sale/`)
+  completeSale: (id) => api.post(`/tickets/${id}/complete_sale/`),
+  sendReminder: (id) => api.post(`/tickets/${id}/send_reminder/`)
 }
 
 export const bugQueryAPI = {

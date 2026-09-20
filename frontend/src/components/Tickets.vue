@@ -69,13 +69,17 @@
         </div>
 
         <div class="meta-row">
+          <span class="meta-tag" style="color: #d4af37; font-weight: 700;">#TKT-{{ String(ticket.id).padStart(4, '0') }}</span>
           <span class="meta-tag">Category: {{ (ticket.category || 'general').replace('_',' ') }}</span>
           <span class="meta-tag">Dept: {{ (ticket.department || 'support').replace('_',' ') }}</span>
           <span v-if="ticket.deal" class="meta-tag">Deal: {{ ticket.contact_name || 'N/A' }}</span>
-          <span class="meta-tag">Assigned: {{ ticket.assigned_to_username }}</span>
-          <span v-if="ticket.created_by_username" class="meta-tag">By: {{ ticket.created_by_username }}</span>
+          <span class="meta-tag">Assigned: {{ ticket.assigned_to_name || ticket.assigned_to_username }}</span>
+          <span v-if="ticket.created_by_username" class="meta-tag">By: {{ ticket.created_by_name || ticket.created_by_username }}</span>
           <span v-if="ticket.due_at" class="meta-tag">Due: {{ formatDate(ticket.due_at) }}</span>
           <span v-if="ticket.duration_seconds > 0" class="meta-tag">Time: {{ formatDuration(ticket.duration_seconds) }}</span>
+          <span v-if="ticket.last_reminder_sent_at" class="meta-tag" style="background: rgba(245,158,11,0.12); color: #f59e0b; border: 1px solid rgba(245,158,11,0.3); font-weight: 600;">
+            🔔 Reminded: {{ formatDate(ticket.last_reminder_sent_at) }} ({{ ticket.reminder_count }}x)
+          </span>
         </div>
 
         <div class="ticket-actions">
@@ -86,6 +90,17 @@
             <button v-if="ticket.status === 'open'" @click="startTicket(ticket.id)" class="btn btn-sm btn-primary">Start</button>
             <button v-if="ticket.status === 'in_progress' && !ticket.started_at" @click="stopTicket(ticket.id)" class="btn btn-sm btn-secondary">Pause</button>
             <button v-if="ticket.status !== 'completed'" @click="completeTicket(ticket.id)" class="btn btn-sm btn-success">Complete</button>
+            <button 
+              v-if="ticket.status !== 'completed'" 
+              @click="sendReminder(ticket.id)" 
+              class="btn btn-sm"
+              :disabled="remindingId === ticket.id"
+              title="Dispatches an urgent executive reminder email to the assigned employee"
+              style="background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.45); color: #f59e0b; font-weight: 700; display: inline-flex; align-items: center; gap: 5px;"
+            >
+              <span>🔔</span>
+              {{ remindingId === ticket.id ? 'Sending Nudge...' : 'Send Reminder' }}
+            </button>
             <button @click="openEditModal(ticket)" class="btn btn-sm btn-secondary">Edit</button>
             <button @click="deleteTicket(ticket.id)" class="btn btn-sm btn-danger">Delete</button>
           </template>
@@ -94,6 +109,17 @@
               💎 Mark Paid
             </button>
             <button v-if="ticket.status !== 'completed' && ticket.assigned_to_username === currentUsername" @click="completeTicket(ticket.id)" class="btn btn-sm btn-success">Mark Complete</button>
+            <button 
+              v-if="ticket.status !== 'completed' && ticket.created_by_username === currentUsername" 
+              @click="sendReminder(ticket.id)" 
+              class="btn btn-sm"
+              :disabled="remindingId === ticket.id"
+              title="Dispatches an urgent executive reminder email to the assigned team member"
+              style="background: rgba(245,158,11,0.12); border: 1px solid rgba(245,158,11,0.45); color: #f59e0b; font-weight: 700; display: inline-flex; align-items: center; gap: 5px;"
+            >
+              <span>🔔</span>
+              {{ remindingId === ticket.id ? 'Sending...' : 'Send Reminder' }}
+            </button>
           </template>
         </div>
       </div>
@@ -413,7 +439,8 @@ export default {
         due_at: ''
       },
       isAdmin: false,
-      currentUsername: ''
+      currentUsername: '',
+      remindingId: null
     }
   },
   computed: {
@@ -736,6 +763,20 @@ export default {
       } catch (error) {
         console.error('Failed to delete ticket:', error)
         toast.error('Delete Failed', 'Failed to delete ticket')
+      }
+    },
+    async sendReminder(id) {
+      if (this.remindingId) return
+      this.remindingId = id
+      try {
+        const response = await ticketsAPI.sendReminder(id)
+        toast.success('Reminder Dispatched', response.data?.message || 'Executive email reminder sent to assignee!')
+        await this.loadTickets()
+      } catch (error) {
+        console.error('Failed to send reminder:', error)
+        toast.error('Reminder Failed', error.response?.data?.error || 'Failed to dispatch ticket reminder email')
+      } finally {
+        this.remindingId = null
       }
     },
     closeCreateModal() {
