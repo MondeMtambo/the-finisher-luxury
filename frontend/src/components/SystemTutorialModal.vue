@@ -176,7 +176,7 @@ export default {
     return {
       isOpen: false,
       isPlaying: false,
-      hasPlayableVideo: false,
+      hasPlayableVideo: true,
       activeVideoSource: '/videos/master_tutorial.mp4',
       customVideoUrl: '',
       showUrlInput: false,
@@ -329,15 +329,15 @@ export default {
   },
   methods: {
     async detectPlayableVideo() {
+      if (this.activeVideoSource === '/videos/master_tutorial.mp4') {
+        this.hasPlayableVideo = true
+        return
+      }
       try {
         const res = await fetch(this.activeVideoSource, { method: 'HEAD' })
-        if (res.ok) {
-          this.hasPlayableVideo = true
-        } else {
-          this.hasPlayableVideo = false
-        }
+        this.hasPlayableVideo = res.ok
       } catch (_) {
-        this.hasPlayableVideo = false
+        this.hasPlayableVideo = true
       }
     },
 
