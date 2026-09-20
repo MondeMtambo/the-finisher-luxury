@@ -41,6 +41,17 @@ def main():
                     p.save(update_fields=['organization', 'company_name', 'role', 'tier'])
                     print("[seed_supabase] adminluxury verified as sovereign root admin (organization=NULL, company=NULL).")
 
+        # 2. Ensure test organization Adminluxury Enterprise is removed
+        from django.db.models import Q
+        from crm.models import Organization, UserProfile
+        test_orgs = Organization.objects.filter(
+            Q(name__icontains='adminluxury') | Q(slug__icontains='adminluxury')
+        )
+        for t_org in test_orgs:
+            UserProfile.objects.filter(organization=t_org).update(organization=None, company_name='')
+            t_org.delete()
+            print(f"[seed_supabase] Purged test tenant organization: {t_org.name}")
+
         print("[seed_supabase] System initialized successfully.")
         return 0
     except Exception as e:

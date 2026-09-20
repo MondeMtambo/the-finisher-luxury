@@ -4619,6 +4619,25 @@ class PrivateSalesLedgerView(APIView):
             'tier': org.subscription_tier
         })
 
+    def delete(self, request):
+        if not self._check_owner(request.user):
+            return Response({'error': 'Unauthorized. Private Executive Deck access only.'}, status=403)
+
+        from .models import Organization, UserProfile
+        org_id = request.data.get('org_id') or request.query_params.get('id') or request.query_params.get('org_id')
+        if not org_id:
+            return Response({'error': 'org_id is required.'}, status=400)
+
+        org = Organization.objects.filter(id=org_id).first()
+        if not org:
+            return Response({'error': 'Organization not found.'}, status=404)
+
+        org_name = org.name
+        UserProfile.objects.filter(organization=org).update(organization=None, company_name='')
+        org.delete()
+
+        return Response({'message': f'Tenant organization "{org_name}" permanently removed.'})
+
 
 class SubmitBugQueryView(APIView):
     """

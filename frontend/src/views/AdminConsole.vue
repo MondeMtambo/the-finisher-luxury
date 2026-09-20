@@ -274,6 +274,14 @@
                     >
                       ✏️ Edit
                     </button>
+                    <button 
+                      class="btn btn-sm" 
+                      style="font-size: 0.74rem; padding: 0.25rem 0.55rem; background: rgba(239, 68, 68, 0.2); border: 1px solid rgba(239, 68, 68, 0.4); color: #ef4444;"
+                      @click="deleteTenant(item)"
+                      title="Permanently remove tenant"
+                    >
+                      🗑️ Delete
+                    </button>
                   </div>
                 </td>
               </tr>
@@ -2179,6 +2187,20 @@ export default {
         await this.fetchSalesLedger();
       } catch (e) {
         alert('Failed to extend trial: ' + e.message);
+      }
+    },
+    async deleteTenant(item) {
+      if (!confirm(`Are you sure you want to permanently remove "${item.company_name}"? This will delete the tenant record and unlink its users.`)) {
+        return;
+      }
+      try {
+        await this.fetchApi(`/admin/sales-ledger/?id=${item.id}`, {
+          method: 'DELETE'
+        });
+        this.dispatchEvent('show-toast', { message: `Tenant "${item.company_name}" successfully removed.`, type: 'success' });
+        await this.fetchSalesLedger();
+      } catch (e) {
+        alert('Failed to delete tenant: ' + e.message);
       }
     },
     async fetchSentinelStatus() {
