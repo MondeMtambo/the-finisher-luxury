@@ -519,8 +519,6 @@ export const monetizationAPI = {
   uploadWhiteLabelLogo: (formData) => api.post('/billing/white-label/upload-logo/', formData, {
     headers: { 'Content-Type': 'multipart/form-data' }
   }),
-  checkoutTenderPack: () => api.post('/billing/tender-pack/checkout/'),
-  getTenderPackDownloadUrl: () => `${API_BASE_URL}/reports/tender-compliance-pack/`,
   checkoutDealSplit: (data) => api.post('/billing/deals/checkout/', data)
 }
 

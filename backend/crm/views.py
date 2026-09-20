@@ -3991,7 +3991,7 @@ class BillingWebhookView(APIView):
                 tx.raw_payload = {**existing_payload, **data}
                 tx.save(update_fields=['status', 'raw_payload'])
 
-                # Handle White-Label (R199/mo) and Tender Pack (R350) Add-on activations
+                # Handle White-Label (R199/mo) and Deal Payment Add-on activations
                 custom_type = (data.get('custom_str1') or existing_payload.get('type') or '').lower()
                 if 'white_label' in custom_type:
                     tx.organization.is_white_labeled = True
@@ -4005,18 +4005,6 @@ class BillingWebhookView(APIView):
                         severity='INFO'
                     )
                     return Response({'status': 'success', 'message': 'White-Label license activated.'})
-
-                if 'tender_pack' in custom_type:
-                    tx.organization.tender_pack_unlocked = True
-                    tx.organization.save(update_fields=['tender_pack_unlocked'])
-                    record_audit_event(
-                        'TENDER_PACK_UNLOCKED',
-                        f"Official Tender & SEDA Funding Compliance Pack (R350) unlocked for '{tx.organization.name}' (Ref: {tx_ref})",
-                        user=None,
-                        organization=tx.organization,
-                        severity='INFO'
-                    )
-                    return Response({'status': 'success', 'message': 'Tender Compliance Pack unlocked.'})
 
                 if 'deal_split' in custom_type:
                     deal_id = existing_payload.get('deal_id')

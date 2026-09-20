@@ -241,17 +241,7 @@ export default {
           proTip: 'Speed to lead: Responding to corporate inquiries in under 60 seconds increases deal closure probability by over 300%.',
           route: '/integrations'
         },
-        {
-          id: 'compliance',
-          title: 'Tender Bank Pack',
-          timestamp: '01:55',
-          startSec: 115,
-          poster: '/screenshots/06_tender_compliance_pack.png',
-          headline: 'Statutory Tender & SEDA Funding Bank Pack',
-          description: 'Generate bank-grade compliance packs for National Treasury CSD, SEDA, and commercial banks with SHA-256 cryptographic proof.',
-          proTip: 'Lock-in effect: When a company relies on your platform for government tender compliance, their churn rate drops to virtually zero.',
-          route: '/reports'
-        },
+
         {
           id: 'enablement',
           title: 'Executive SOP',

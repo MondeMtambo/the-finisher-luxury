@@ -95,13 +95,11 @@ urlpatterns = [
     path('api/eula/accept/', eula_views.EulaAcceptView.as_view(), name='eula_accept'),
     path('api/eula/certificate/<uuid:pk>/', eula_views.EulaCertificateDownloadView.as_view(), name='eula_certificate_download'),
 
-    # Corporate White-Label & Tender Compliance Monetization Suite
+    # Corporate White-Label & Deal Monetization Suite
     path('api/billing/white-label/checkout/', monetization_views.WhiteLabelCheckoutView.as_view(), name='white_label_checkout'),
     path('api/billing/white-label/status/', monetization_views.WhiteLabelStatusView.as_view(), name='white_label_status'),
     path('api/billing/white-label/upload-logo/', monetization_views.WhiteLabelLogoUploadView.as_view(), name='white_label_logo_upload'),
-    path('api/billing/tender-pack/checkout/', monetization_views.TenderPackCheckoutView.as_view(), name='tender_pack_checkout'),
     path('api/billing/deals/checkout/', monetization_views.DealSplitPaymentCheckoutView.as_view(), name='deal_split_checkout'),
-    path('api/reports/tender-compliance-pack/', monetization_views.TenderPackDownloadView.as_view(), name='tender_compliance_pack_download'),
 
     # 24/7 Autonomous Sentinel Guardian Agent
     path('api/agent/sentinel/status/', agent_views.SentinelAgentStatusView.as_view(), name='sentinel_agent_status'),

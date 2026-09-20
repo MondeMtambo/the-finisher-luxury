@@ -9,7 +9,7 @@
         </div>
         <h1 class="hero-title">The Finisher Luxury — Executive Operating Manual</h1>
         <p class="hero-sub">
-          The definitive guide to sovereign client data isolation, high-ticket deal velocity, automated PayFast split settlements, and statutory tender compliance.
+          The definitive guide to sovereign client data isolation, high-ticket deal velocity, automated PayFast split settlements, and institutional team governance.
         </p>
         <div class="hero-actions">
           <button type="button" class="btn btn-gold" @click="launchVideoTutorial">
@@ -174,30 +174,9 @@
           </div>
         </section>
 
-        <!-- 07: Tender Pack -->
-        <section id="compliance" class="doc-section card">
-          <div class="section-tag">CHAPTER 07</div>
-          <h2>Statutory Tender &amp; SEDA Funding Bank Pack</h2>
-          <p>
-            When pitching for government tenders or applying for commercial bank expansion loans, credit committees require verifiable past performance. 
-          </p>
-          <p>
-            Under <em>Reports</em>, The Finisher compiles your 12-month deal ledger into an official, bank-ready PDF dossier featuring:
-          </p>
-          <ul class="doc-list">
-            <li><strong>National Treasury CSD Formatting:</strong> Ready for upload to the Central Supplier Database.</li>
-            <li><strong>POPIA Section 19 Compliance Certificate:</strong> Demonstrating certified cryptographic data protection.</li>
-            <li><strong>Tamper-Proof SHA-256 Audit Seal:</strong> Allowing bank adjudicators to verify the integrity of the document via QR code.</li>
-          </ul>
-          <div class="screenshot-preview">
-            <img src="/screenshots/06_tender_compliance_pack.png" alt="Tender Pack" class="doc-img" />
-            <span class="img-caption">Figure 7.1: Statutory Tender & SEDA Funding Compliance Pack</span>
-          </div>
-        </section>
-
-        <!-- 08: Team Governance -->
+        <!-- 07: Team Governance -->
         <section id="governance" class="doc-section card">
-          <div class="section-tag">CHAPTER 08</div>
+          <div class="section-tag">CHAPTER 07</div>
           <h2>Role-Based Access Control (RBAC) &amp; Team Governance</h2>
           <p>
             Enterprise security demands that employees only access data strictly necessary for their function. The Finisher implements zero-trust role-based permissions:
@@ -239,9 +218,9 @@
           </div>
         </section>
 
-        <!-- 09: Standard Operating Protocol -->
+        <!-- 08: Standard Operating Protocol -->
         <section id="sop" class="doc-section card">
-          <div class="section-tag">CHAPTER 09</div>
+          <div class="section-tag">CHAPTER 08</div>
           <h2>Executive 5-Step Operating Protocol (SOP)</h2>
           <p>
             To ensure zero operational error, every member of your commercial team must execute engagements in the following sequence:
@@ -306,9 +285,8 @@ export default {
         { id: 'companies', num: '04', title: 'CIPC Businesses' },
         { id: 'deals', num: '05', title: 'Deals & Pipeline' },
         { id: 'splits', num: '06', title: 'PayFast Splits' },
-        { id: 'compliance', num: '07', title: 'Tender Bank Pack' },
-        { id: 'governance', num: '08', title: 'Team Governance' },
-        { id: 'sop', num: '09', title: '5-Step Protocol' }
+        { id: 'governance', num: '07', title: 'Team Governance' },
+        { id: 'sop', num: '08', title: '5-Step Protocol' }
       ]
     }
   },

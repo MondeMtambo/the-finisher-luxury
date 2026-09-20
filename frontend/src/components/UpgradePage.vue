@@ -117,7 +117,7 @@
         <div>
           <div class="addons-badge">INSTANT PAYFAST INTEGRATION</div>
           <h2>Enterprise Add-On Suite</h2>
-          <p class="subtitle">Deploy white-label custom branding or certified statutory tender dossiers on demand.</p>
+          <p class="subtitle">Deploy executive white-label custom branding and sovereign corporate identity on demand.</p>
         </div>
       </div>
 
@@ -153,36 +153,7 @@
           </button>
         </div>
 
-        <!-- Add-on 2: Tender Pack -->
-        <div class="addon-card">
-          <div class="addon-card-top">
-            <div class="addon-icon blue-icon">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#3b82f6" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/><polyline points="10 9 9 9 8 9"/></svg>
-            </div>
-            <div>
-              <div class="addon-title">Official Tender &amp; SEDA Compliance Pack</div>
-              <div class="addon-price">R350 <span class="addon-period">once-off certified pack</span></div>
-            </div>
-          </div>
-          <p class="addon-desc">
-            Bank-grade certified compliance dossier formatted for National Treasury CSD tenders,
-            SEDA financing applications, and commercial bank credit committee reviews.
-          </p>
-          <ul class="addon-bullets">
-            <li>12-Month Audited Sales &amp; Contract Ledger</li>
-            <li>POPIA Act 4 of 2013 Section 19 Cryptographic Certificate</li>
-            <li>SHA-256 Tamper-Proof Audit Seal &amp; QR verification</li>
-            <li>Instant PDF generation &amp; certified document download</li>
-          </ul>
-          <button 
-            class="btn btn-secondary w-100" 
-            :disabled="processingTenderPack" 
-            @click="checkoutTenderPack"
-          >
-            <span v-if="processingTenderPack">Connecting to PayFast...</span>
-            <span v-else>Unlock Tender Pack (R350)</span>
-          </button>
-        </div>
+
       </div>
     </div>
 
@@ -269,8 +240,7 @@ export default {
       submitting: false,
       companyName: company,
       contactEmail: user.email || '',
-      processingWhiteLabel: false,
-      processingTenderPack: false
+      processingWhiteLabel: false
     }
   },
   computed: {
@@ -351,17 +321,6 @@ export default {
         toast.error(err.response?.data?.error || 'Failed to initiate white-label checkout', 'PayFast Error')
       } finally {
         this.processingWhiteLabel = false
-      }
-    },
-    async checkoutTenderPack() {
-      this.processingTenderPack = true
-      try {
-        const res = await monetizationAPI.checkoutTenderPack()
-        this.submitPayFast(res.data)
-      } catch (err) {
-        toast.error(err.response?.data?.error || 'Failed to initiate tender pack checkout', 'PayFast Error')
-      } finally {
-        this.processingTenderPack = false
       }
     },
     submitPayFast(payfastData) {

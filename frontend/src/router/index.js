@@ -240,12 +240,7 @@ router.beforeEach(async (to, from, next) => {
   // ─── PAYMENT GATEWAY CALLBACK INTERCEPTOR (PayFast Live Routing) ───
   if (typeof window !== 'undefined' && window.location.search) {
     const searchParams = new URLSearchParams(window.location.search)
-    if (searchParams.has('tender_pack')) {
-      const status = searchParams.get('tender_pack')
-      window.history.replaceState({}, document.title, window.location.pathname + window.location.hash)
-      next({ path: '/reports', query: { tender_pack: status } })
-      return
-    }
+
     if (searchParams.has('white_label')) {
       const status = searchParams.get('white_label')
       window.history.replaceState({}, document.title, window.location.pathname + window.location.hash)
