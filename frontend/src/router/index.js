@@ -14,6 +14,7 @@ import ForgotPassword from '../components/ForgotPassword.vue'
 import VerifyOTP from '../components/VerifyOTP.vue'
 import Disclaimer from '../components/Disclaimer.vue'
 import HelpCenter from '../components/HelpCenter.vue'
+import SystemDocumentation from '../views/SystemDocumentation.vue'
 import AdminConsole from '../views/AdminConsole.vue'
 import UpgradePage from '../components/UpgradePage.vue'
 import Reports from '../components/Reports.vue'
@@ -124,6 +125,16 @@ const routes = [
     name: 'Help',
     component: HelpCenter,
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/documentation',
+    name: 'Documentation',
+    component: SystemDocumentation,
+    meta: { requiresAuth: true }
+  },
+  {
+    path: '/docs',
+    redirect: '/documentation'
   },
   {
     path: '/reports',

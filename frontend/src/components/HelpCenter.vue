@@ -33,6 +33,14 @@
 
     <!-- Official Compliance & Documentation Hub Links -->
     <div class="docs-quick-grid">
+      <router-link to="/documentation" class="doc-card featured-doc-card">
+        <div class="doc-icon">📖</div>
+        <div class="doc-info">
+          <h4>Operating Manual &amp; Docs</h4>
+          <p>Complete step-by-step masterclass &amp; visual guide</p>
+        </div>
+        <span class="doc-arrow">&rarr;</span>
+      </router-link>
       <router-link to="/popia-compliance" class="doc-card">
         <div class="doc-icon">⚖️</div>
         <div class="doc-info">

@@ -6,17 +6,35 @@
         <div class="tutorial-header">
           <div class="header-left">
             <div class="tour-badge">
-              <span class="pulse-dot"></span> EXECUTIVE SYSTEM TOUR &bull; 4K MATRIX
+              <span class="pulse-dot"></span> EXECUTIVE MASTERCLASS &bull; 4K MEDIA PLAYER
             </div>
             <h2>Mastering THE FINISHER LUXURY</h2>
-            <p class="tour-sub">Interactive walkthrough of client data isolation, deals, automated lead ads, and workflow engines.</p>
+            <p class="tour-sub">Comprehensive executive onboarding: client data isolation, deals, automated lead ads, and statutory compliance.</p>
           </div>
-          <button class="btn-close" @click="closeModal">&times;</button>
+          <div class="header-right">
+            <button class="btn-source-toggle" @click="showUrlInput = !showUrlInput" title="Switch or embed custom video URL">
+              {{ showUrlInput ? '✕ Close URL' : '🔗 Video Source' }}
+            </button>
+            <button class="btn-close" @click="closeModal">&times;</button>
+          </div>
+        </div>
+
+        <!-- Optional URL input bar for custom stream/CDN/YouTube -->
+        <div v-if="showUrlInput" class="video-url-bar">
+          <input 
+            type="text" 
+            v-model="customVideoUrl" 
+            placeholder="Paste MP4, Loom, or embed link (e.g., https://cdn.example.com/tutorial.mp4)..." 
+            class="url-input"
+            @keyup.enter="applyCustomUrl"
+          />
+          <button class="btn-apply-url" @click="applyCustomUrl">Apply Video</button>
+          <button class="btn-reset-url" @click="resetToDefaultVideo">Reset to Default</button>
         </div>
 
         <!-- Main Body -->
         <div class="tutorial-body">
-          <!-- Video / Simulation Showcase Stage -->
+          <!-- Video Player Showcase Stage -->
           <div class="video-stage-container">
             <div class="screen-frame">
               <!-- Top bar of mock interface -->
@@ -27,109 +45,72 @@
                   <span class="dot green"></span>
                 </div>
                 <div class="mock-title font-mono">
-                  thefinisher.luxury / {{ activeChapter.slug }} [LIVE]
+                  thefinisher.luxury / onboarding-player &bull; Chapter {{ activeChapterIndex + 1 }}: {{ activeChapter.title }}
                 </div>
-                <div class="mock-badge font-mono">POPIA S19 LOCKED</div>
+                <div class="mock-badge font-mono">POPIA S19 &bull; TLS 1.3</div>
               </div>
 
-              <!-- Animated Stage View based on active chapter -->
-              <div class="mock-canvas">
-                <!-- Chapter 1: Dashboard -->
-                <div v-if="activeChapterIndex === 0" class="canvas-slide slide-dashboard">
-                  <div class="mock-kpis">
-                    <div class="mock-kpi gold"><span class="k-label">Pipeline Value</span><span class="k-val">R 2,450,000</span></div>
-                    <div class="mock-kpi blue"><span class="k-label">Verified Clients</span><span class="k-val">128</span></div>
-                    <div class="mock-kpi purple"><span class="k-label">Facebook Ingest</span><span class="k-val">42 Leads</span></div>
-                  </div>
-                  <div class="mock-chart-visual">
-                    <div class="bar h-60"></div>
-                    <div class="bar h-80"></div>
-                    <div class="bar h-40"></div>
-                    <div class="bar h-95 gold"></div>
-                    <div class="bar h-70"></div>
-                  </div>
-                  <div class="stage-overlay-text">
-                    ✦ Executive Dashboard &bull; Live Telemetry Matrix
-                  </div>
+              <!-- Media Player Stage -->
+              <div class="media-stage-viewport">
+                <!-- 1. Real Video Player (If active) -->
+                <div v-if="hasPlayableVideo" class="video-player-box">
+                  <video
+                    ref="masterVideo"
+                    class="embedded-media-element"
+                    :src="activeVideoSource"
+                    controls
+                    playsinline
+                    :poster="activeChapter.poster"
+                    @timeupdate="onVideoTimeUpdate"
+                    @play="isVideoPlaying = true"
+                    @pause="isVideoPlaying = false"
+                    @ended="onVideoEnded"
+                    @error="onVideoError"
+                  >
+                    Your browser does not support the video tag.
+                  </video>
                 </div>
 
-                <!-- Chapter 2: Client & CIPC -->
-                <div v-else-if="activeChapterIndex === 1" class="canvas-slide slide-clients">
-                  <div class="mock-client-card">
-                    <div class="card-avatar">🏢</div>
-                    <div class="card-info">
-                      <h4>Anglo American Platinum Ltd</h4>
-                      <span class="badge-cipc">✓ CIPC Verified Entity &bull; 2024/104928/07</span>
-                      <p>POPIA Section 19 strict tenant boundary &bull; Zero cross-client leakage</p>
+                <!-- 2. Fallback Studio Carousel (Before user uploads MP4) -->
+                <div v-else class="video-fallback-box" :style="{ backgroundImage: `url(${activeChapter.poster})` }">
+                  <div class="fallback-glass-scrim">
+                    <div class="player-ready-badge">
+                      <span class="glow-icon">🎬</span>
+                      <div>
+                        <strong>4K LUXURY MEDIA PLAYER EMBEDDED</strong>
+                        <p>Place your generated video in <code>/public/videos/master_tutorial.mp4</code> or click "🔗 Video Source" above.</p>
+                      </div>
                     </div>
-                  </div>
-                  <div class="stage-overlay-text">
-                    ✦ Multi-Tenant Client Data Isolation &bull; POPIA S19 Protected
-                  </div>
-                </div>
 
-                <!-- Chapter 3: Deals & Pipeline -->
-                <div v-else-if="activeChapterIndex === 2" class="canvas-slide slide-deals">
-                  <div class="mock-kanban">
-                    <div class="mock-col">
-                      <span class="col-title">Lead (3)</span>
-                      <div class="mock-deal-item">Corporate Fleet &bull; R450k</div>
+                    <div class="active-slide-caption">
+                      <span class="caption-tag">CHAPTER {{ activeChapterIndex + 1 }} &bull; {{ activeChapter.timestamp }}</span>
+                      <h4>{{ activeChapter.headline }}</h4>
                     </div>
-                    <div class="mock-col">
-                      <span class="col-title">Proposal (2)</span>
-                      <div class="mock-deal-item gold-border">Sandton VIP Suite &bull; R1.2M</div>
-                    </div>
-                    <div class="mock-col">
-                      <span class="col-title">Closed Won</span>
-                      <div class="mock-deal-item green-border">Annual Retainer &bull; R800k</div>
-                    </div>
-                  </div>
-                  <div class="stage-overlay-text">
-                    ✦ Drag-and-Drop Deal Pipeline &bull; Negative Working Capital System
-                  </div>
-                </div>
-
-                <!-- Chapter 4: Integrations Hub -->
-                <div v-else-if="activeChapterIndex === 3" class="canvas-slide slide-integrations">
-                  <div class="mock-int-grid">
-                    <div class="mock-int-card active"><span class="icon">📘</span> Meta / Facebook Ads <span class="badge-green">Instant Webhook</span></div>
-                    <div class="mock-int-card active"><span class="icon">🔴</span> Google Workspace <span class="badge-green">Connected</span></div>
-                    <div class="mock-int-card active"><span class="icon">🔷</span> Microsoft 365 <span class="badge-green">Connected</span></div>
-                    <div class="mock-int-card active"><span class="icon">💬</span> WhatsApp Cloud <span class="badge-green">Active</span></div>
-                  </div>
-                  <div class="stage-overlay-text">
-                    ✦ Meta Lead Ads Ingestion &bull; Google &amp; Microsoft Email Engines
-                  </div>
-                </div>
-
-                <!-- Chapter 5: Workflows & Campaigns -->
-                <div v-else class="canvas-slide slide-workflows">
-                  <div class="mock-workflow-flow">
-                    <div class="wf-node trigger">⚡ TRIGGER: Meta Lead Submitted</div>
-                    <div class="wf-line">↓</div>
-                    <div class="wf-node action">✉️ ACTION: Send VIP Proposal Template</div>
-                    <div class="wf-line">↓</div>
-                    <div class="wf-node notify">🔔 NOTIFY: Executive WhatsApp &amp; In-App Alert</div>
-                  </div>
-                  <div class="stage-overlay-text">
-                    ✦ Autonomous Multi-Step Workflows &bull; 10-Second Automation Trigger
                   </div>
                 </div>
               </div>
 
-              <!-- Media Player Controls Bar -->
+              <!-- Player Chapter Quick-Seek Controls Bar -->
               <div class="player-controls">
                 <button class="btn-play" @click="togglePlay">
-                  {{ isPlaying ? '⏸ Pause' : '▶ Play Tour' }}
+                  {{ isPlaying ? '⏸ Pause' : '▶ Play Tutorial' }}
                 </button>
                 <div class="progress-track" @click="handleScrub">
                   <div class="progress-fill" :style="{ width: `${progressPercent}%` }"></div>
+                  <!-- Chapter cue points on timeline -->
+                  <div 
+                    v-for="(chap, idx) in chapters" 
+                    :key="chap.id" 
+                    class="chapter-cue-point"
+                    :style="{ left: `${(idx / (chapters.length - 1)) * 100}%` }"
+                    :title="`${chap.title} (${chap.timestamp})`"
+                  ></div>
                 </div>
-                <span class="time-readout font-mono">{{ currentTimeFormatted }} / 02:30</span>
+                <span class="time-readout font-mono">{{ currentTimeFormatted }} / {{ totalDurationFormatted }}</span>
               </div>
             </div>
 
-            <!-- Chapter Selection Tabs -->
+            <!-- Chapter Selection Tabs (All 9 Modules) -->
             <div class="chapter-strip">
               <button 
                 v-for="(chap, idx) in chapters" 
@@ -139,6 +120,7 @@
               >
                 <span class="chap-num">0{{ idx + 1 }}</span>
                 <span class="chap-title">{{ chap.title }}</span>
+                <span class="chap-time font-mono">{{ chap.timestamp }}</span>
               </button>
             </div>
           </div>
@@ -146,12 +128,12 @@
           <!-- Feature Takeaway & Action Deck -->
           <div class="chapter-details-card">
             <div class="details-header">
-              <span class="chapter-counter">CHAPTER {{ activeChapterIndex + 1 }} OF {{ chapters.length }}</span>
+              <span class="chapter-counter">CHAPTER {{ activeChapterIndex + 1 }} OF {{ chapters.length }} &bull; {{ activeChapter.timestamp }}</span>
               <h3>{{ activeChapter.headline }}</h3>
               <p class="chapter-desc">{{ activeChapter.description }}</p>
             </div>
 
-            <!-- Pro-Tip / Business Model Card -->
+            <!-- Pro-Tip / Billionaire Business Model Card -->
             <div class="pro-tip-box">
               <div class="tip-icon">💡</div>
               <div class="tip-body">
@@ -193,56 +175,115 @@ export default {
   data() {
     return {
       isOpen: false,
-      isPlaying: true,
+      isPlaying: false,
+      hasPlayableVideo: false,
+      activeVideoSource: '/videos/master_tutorial.mp4',
+      customVideoUrl: '',
+      showUrlInput: false,
       activeChapterIndex: 0,
-      progressPercent: 20,
+      progressPercent: 0,
       playTimer: null,
+      videoDuration: 180, // Default 3 minutes (180s)
       dontShowAgain: localStorage.getItem('tfl_tutorial_seen') === 'true',
       chapters: [
         {
           id: 'dashboard',
-          slug: 'dashboard',
-          title: 'Dashboard',
-          headline: 'Executive Dashboard & Real-Time Intelligence Matrix',
-          description: 'Unified command center featuring live KPI counters, pipeline valuations, world clock matrix, and customizable analytical widgets.',
-          proTip: 'Keep tabs on customer acquisition costs and average deal velocity. Fast-growing enterprises monitor daily pipeline expansion over raw headcount.',
+          title: 'Command Center',
+          timestamp: '00:00',
+          startSec: 0,
+          poster: '/screenshots/01_executive_dashboard.png',
+          headline: 'Executive Dashboard & R64.5M Pipeline Telemetry',
+          description: 'High-altitude visibility over active opportunities, deal conversion velocity, cashflow projections, and team pipeline distribution.',
+          proTip: 'Billionaire operators monitor pipeline velocity daily. Speed of deal flow is the leading indicator of company valuation.',
           route: '/dashboard'
         },
         {
-          id: 'clients',
-          slug: 'contacts',
-          title: 'Clients & CIPC',
-          headline: 'POPIA Section 19 Client Silos & CIPC Verification',
-          description: 'Complete data protection barrier. Every client and company record is strictly partitioned to your tenant organization with full CIPC registration lookup.',
-          proTip: 'Treat customer data privacy as a premium enterprise moat. Zero data leakage builds trust with corporate partners worth tens of millions.',
+          id: 'contacts',
+          title: 'VIP Contacts',
+          timestamp: '00:20',
+          startSec: 20,
+          poster: '/screenshots/02_clients_contacts.png',
+          headline: 'Corporate B2B Stakeholders & Decision Makers',
+          description: 'Capture key executive sponsors, direct lines, and tax IDs. Every contact is permanently partitioned with zero cross-tenant leakage.',
+          proTip: 'Multi-million Rand deals are closed with people, not logos. Maintain direct communication with the real signing authorities.',
           route: '/contacts'
         },
         {
+          id: 'companies',
+          title: 'CIPC Businesses',
+          timestamp: '00:40',
+          startSec: 40,
+          poster: '/screenshots/03_companies_directory.png',
+          headline: 'Verified Corporate Business Directory',
+          description: 'Official enterprise business records verified against CIPC registration numbers, eliminating duplicate and ghost client records.',
+          proTip: 'Institutional compliance is a competitive moat. Verified enterprise records allow clients to pass institutional vendor audits.',
+          route: '/companies'
+        },
+        {
           id: 'deals',
-          slug: 'deals',
-          title: 'Deal Pipeline',
-          headline: 'Drag-and-Drop Deal Pipeline & Quotation Engine',
-          description: 'Visualize high-value transactions from initial lead to closed won. Generate official commercial quotations and track negative working capital advances.',
-          proTip: 'Billionaire operators collect annual upfront payments before delivering enterprise services, creating negative working capital that self-funds expansion.',
+          title: 'Deals & Splits',
+          timestamp: '01:00',
+          startSec: 60,
+          poster: '/screenshots/04_deals_pipeline.png',
+          headline: 'Deal Pipeline & Instant PayFast Split Settlement',
+          description: 'Kanban pipeline with real-time billable advisory hour timers, instant PDF quote generation, and 1-click PayFast split escrow settlement.',
+          proTip: 'Tollbooth business model: Collecting an automated 2-3% platform slice on high-ticket closed deals creates permanent recurring cashflow.',
           route: '/deals'
         },
         {
           id: 'integrations',
-          slug: 'integrations',
-          title: 'Integrations Hub',
-          headline: 'Meta Facebook Lead Ads, Gmail & Outlook Connectors',
-          description: 'Real-time HTTPS webhook ingestion. Incoming Facebook and Instagram ad inquiries are instantly converted into Website Leads with zero manual entry.',
-          proTip: 'Speed to lead is everything. Responding to social inquiries within 60 seconds increases conversion velocity by over 391%.',
+          title: 'Webhooks & Speed',
+          timestamp: '01:30',
+          startSec: 90,
+          poster: '/screenshots/05_payfast_integrations.png',
+          headline: 'Enterprise Integrations & 10-Second Auto-Outreach',
+          description: 'Zero-latency webhooks ingest Meta lead ads and WhatsApp Business queries, triggering automated executive responses within 10 seconds.',
+          proTip: 'Speed to lead: Responding to corporate inquiries in under 60 seconds increases deal closure probability by over 300%.',
           route: '/integrations'
         },
         {
-          id: 'workflows',
-          slug: 'workflows',
-          title: 'Workflows',
-          headline: 'Autonomous Trigger-Action Workflows & Email Campaigns',
-          description: 'Automate repetitive outreach, send scheduled email newsletters, fire executive WhatsApp alerts, and trigger ticket assignments autonomously.',
-          proTip: 'Scale systems that run without human bottleneck. An automated multi-step outreach pipeline works 24 hours a day with zero human fatigue.',
-          route: '/workflows'
+          id: 'compliance',
+          title: 'Tender Bank Pack',
+          timestamp: '01:55',
+          startSec: 115,
+          poster: '/screenshots/06_tender_compliance_pack.png',
+          headline: 'Statutory Tender & SEDA Funding Bank Pack',
+          description: 'Generate bank-grade compliance packs for National Treasury CSD, SEDA, and commercial banks with SHA-256 cryptographic proof.',
+          proTip: 'Lock-in effect: When a company relies on your platform for government tender compliance, their churn rate drops to virtually zero.',
+          route: '/reports'
+        },
+        {
+          id: 'enablement',
+          title: 'Executive SOP',
+          timestamp: '02:20',
+          startSec: 140,
+          poster: '/screenshots/07_help_and_enablement.png',
+          headline: '5-Step Standard Operating Protocol',
+          description: 'Institutional guidelines training corporate staff in data discipline, contact onboarding, and enterprise deal execution.',
+          proTip: 'Standardization unlocks valuation. Systems that run with documented operational discipline command 10x higher enterprise multiples.',
+          route: '/help'
+        },
+        {
+          id: 'onboarding',
+          title: 'Workspace Access',
+          timestamp: '02:40',
+          startSec: 160,
+          poster: '/screenshots/08_registration_onboarding.png',
+          headline: 'Rapid 3-Step Workspace Provisioning',
+          description: 'Frictionless executive onboarding with dual navigation buttons and automated tenant cryptographic isolation.',
+          proTip: 'Eliminate registration dead-ends. Smooth enterprise onboarding converts curious executives into lifetime corporate advocates.',
+          route: '/register'
+        },
+        {
+          id: 'governance',
+          title: 'Team Security',
+          timestamp: '02:55',
+          startSec: 175,
+          poster: '/screenshots/09_employee_directory.png',
+          headline: 'Zero-Trust Role-Based Access Control',
+          description: 'Strict security boundaries ensuring staff access only authorized modules, protecting proprietary corporate IP.',
+          proTip: 'Security is currency. Enterprise enterprise customers will pay 5x premiums for systems that guarantee absolute employee data isolation.',
+          route: '/employees'
         }
       ]
     }
@@ -252,21 +293,31 @@ export default {
       return this.chapters[this.activeChapterIndex]
     },
     currentTimeFormatted() {
-      const totalSecs = 150
-      const currentSecs = Math.floor((this.progressPercent / 100) * totalSecs)
+      const currentSecs = Math.floor((this.progressPercent / 100) * this.videoDuration)
       const mins = String(Math.floor(currentSecs / 60)).padStart(2, '0')
       const secs = String(currentSecs % 60).padStart(2, '0')
+      return `${mins}:${secs}`
+    },
+    totalDurationFormatted() {
+      const mins = String(Math.floor(this.videoDuration / 60)).padStart(2, '0')
+      const secs = String(this.videoDuration % 60).padStart(2, '0')
       return `${mins}:${secs}`
     }
   },
   mounted() {
-    // Check if auto-launch is required
+    // Check if video file exists via silent HEAD request
+    this.detectPlayableVideo()
+
+    // Check if auto-launch is required for new users
     const seen = localStorage.getItem('tfl_tutorial_seen')
     const hasToken = localStorage.getItem('thefinisher_access_token')
     const publicPaths = ['/login', '/register', '/forgot-password', '/verify-otp', '/']
 
+    // Strict Once-Only Policy: only launch automatically for a fresh user ONCE, and NEVER again
     if (hasToken && !seen && !publicPaths.includes(this.$route?.path)) {
       this.isOpen = true
+      localStorage.setItem('tfl_tutorial_seen', 'true')
+      localStorage.setItem('thefinisher_tutorial_state', 'completed')
       this.startPlayback()
     }
 
@@ -277,40 +328,166 @@ export default {
     window.removeEventListener('open-system-tutorial', this.openModal)
   },
   methods: {
+    async detectPlayableVideo() {
+      try {
+        const res = await fetch(this.activeVideoSource, { method: 'HEAD' })
+        if (res.ok) {
+          this.hasPlayableVideo = true
+        } else {
+          this.hasPlayableVideo = false
+        }
+      } catch (_) {
+        this.hasPlayableVideo = false
+      }
+    },
+
     openModal() {
       this.isOpen = true
-      this.startPlayback()
+      this.detectPlayableVideo()
     },
 
     closeModal() {
       this.isOpen = false
+      localStorage.setItem('tfl_tutorial_seen', 'true')
+      localStorage.setItem('thefinisher_tutorial_state', 'completed')
+      this.pauseVideo()
       this.stopPlayback()
     },
 
     togglePlay() {
       this.isPlaying = !this.isPlaying
-      if (this.isPlaying) {
-        this.startPlayback()
+      if (this.hasPlayableVideo && this.$refs.masterVideo) {
+        if (this.isPlaying) {
+          this.$refs.masterVideo.play().catch(() => {})
+        } else {
+          this.$refs.masterVideo.pause()
+        }
       } else {
-        this.stopPlayback()
+        if (this.isPlaying) {
+          this.startSimulationTimer()
+        } else {
+          this.stopPlayback()
+        }
       }
     },
 
+    pauseVideo() {
+      this.isPlaying = false
+      if (this.$refs.masterVideo) {
+        this.$refs.masterVideo.pause()
+      }
+    },
+
+    selectChapter(index) {
+      this.activeChapterIndex = index
+      const chapter = this.chapters[index]
+      this.progressPercent = (chapter.startSec / this.videoDuration) * 100
+
+      if (this.hasPlayableVideo && this.$refs.masterVideo) {
+        this.$refs.masterVideo.currentTime = chapter.startSec
+        this.$refs.masterVideo.play().catch(() => {})
+        this.isPlaying = true
+      }
+    },
+
+    nextChapter() {
+      const nextIdx = (this.activeChapterIndex + 1) % this.chapters.length
+      this.selectChapter(nextIdx)
+    },
+
+    handleScrub(event) {
+      const rect = event.currentTarget.getBoundingClientRect()
+      const clickX = event.clientX - rect.left
+      const percent = Math.max(0, Math.min(100, (clickX / rect.width) * 100))
+      this.progressPercent = percent
+      const targetSec = (percent / 100) * this.videoDuration
+
+      if (this.hasPlayableVideo && this.$refs.masterVideo) {
+        this.$refs.masterVideo.currentTime = targetSec
+      }
+
+      // Sync active chapter based on timestamp
+      for (let i = this.chapters.length - 1; i >= 0; i--) {
+        if (targetSec >= this.chapters[i].startSec) {
+          this.activeChapterIndex = i
+          break
+        }
+      }
+    },
+
+    onVideoTimeUpdate(e) {
+      const video = e.target
+      if (!video || !video.duration) return
+      this.videoDuration = Math.round(video.duration)
+      const current = video.currentTime
+      this.progressPercent = (current / video.duration) * 100
+
+      for (let i = this.chapters.length - 1; i >= 0; i--) {
+        if (current >= this.chapters[i].startSec) {
+          this.activeChapterIndex = i
+          break
+        }
+      }
+    },
+
+    onVideoEnded() {
+      this.isPlaying = false
+      this.progressPercent = 100
+    },
+
+    onVideoError() {
+      this.hasPlayableVideo = false
+    },
+
+    applyCustomUrl() {
+      if (this.customVideoUrl.trim()) {
+        this.activeVideoSource = this.customVideoUrl.trim()
+        this.hasPlayableVideo = true
+        this.showUrlInput = false
+        this.$nextTick(() => {
+          if (this.$refs.masterVideo) {
+            this.$refs.masterVideo.load()
+            this.$refs.masterVideo.play().catch(() => {})
+            this.isPlaying = true
+          }
+        })
+      }
+    },
+
+    resetToDefaultVideo() {
+      this.customVideoUrl = ''
+      this.activeVideoSource = '/videos/master_tutorial.mp4'
+      this.detectPlayableVideo()
+      this.showUrlInput = false
+    },
+
     startPlayback() {
+      this.isPlaying = true
+      if (this.hasPlayableVideo && this.$refs.masterVideo) {
+        this.$refs.masterVideo.play().catch(() => {})
+      } else {
+        this.startSimulationTimer()
+      }
+    },
+
+    startSimulationTimer() {
       this.stopPlayback()
       this.playTimer = setInterval(() => {
         if (!this.isPlaying) return
-        this.progressPercent += 1.5
+        this.progressPercent += 1.0
         if (this.progressPercent >= 100) {
           this.progressPercent = 0
-          this.activeChapterIndex = (this.activeChapterIndex + 1) % this.chapters.length
+          this.activeChapterIndex = 0
         } else {
-          const targetIndex = Math.floor((this.progressPercent / 100) * this.chapters.length)
-          if (targetIndex !== this.activeChapterIndex && targetIndex < this.chapters.length) {
-            this.activeChapterIndex = targetIndex
+          const currentSec = (this.progressPercent / 100) * this.videoDuration
+          for (let i = this.chapters.length - 1; i >= 0; i--) {
+            if (currentSec >= this.chapters[i].startSec) {
+              this.activeChapterIndex = i
+              break
+            }
           }
         }
-      }, 500)
+      }, 1000)
     },
 
     stopPlayback() {
@@ -320,23 +497,11 @@ export default {
       }
     },
 
-    selectChapter(index) {
-      this.activeChapterIndex = index
-      this.progressPercent = (index / this.chapters.length) * 100
-    },
-
-    nextChapter() {
-      const next = (this.activeChapterIndex + 1) % this.chapters.length
-      this.selectChapter(next)
-    },
-
-    handleScrub(e) {
-      const rect = e.currentTarget.getBoundingClientRect()
-      const clickX = e.clientX - rect.left
-      const pct = Math.max(0, Math.min(100, (clickX / rect.width) * 100))
-      this.progressPercent = pct
-      const idx = Math.min(this.chapters.length - 1, Math.floor((pct / 100) * this.chapters.length))
-      this.activeChapterIndex = idx
+    jumpToModule(route) {
+      this.closeModal()
+      if (this.$route?.path !== route) {
+        this.$router.push(route)
+      }
     },
 
     savePreference() {
@@ -345,11 +510,6 @@ export default {
       } else {
         localStorage.removeItem('tfl_tutorial_seen')
       }
-    },
-
-    jumpToModule(route) {
-      this.closeModal()
-      this.$router.push(route)
     }
   }
 }
@@ -359,9 +519,9 @@ export default {
 .tutorial-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(5, 7, 14, 0.9);
-  backdrop-filter: blur(14px);
-  z-index: 100001;
+  background: rgba(4, 6, 12, 0.88);
+  backdrop-filter: blur(12px);
+  z-index: 99999;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -369,59 +529,87 @@ export default {
 }
 
 .tutorial-modal {
-  background: #0f121d;
-  border: 1px solid rgba(212, 175, 55, 0.4);
-  border-radius: 20px;
   width: 100%;
-  max-width: 980px;
-  max-height: 92vh;
+  max-width: 1100px;
+  max-height: 94vh;
+  background: #0d111d;
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  border-radius: 18px;
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.8), 0 0 35px rgba(212, 175, 55, 0.15);
   display: flex;
   flex-direction: column;
-  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.9), 0 0 35px rgba(212, 175, 55, 0.2);
-  color: #e2e8f0;
   overflow: hidden;
 }
 
-/* Header */
 .tutorial-header {
+  padding: 1.25rem 2rem;
   display: flex;
+  align-items: center;
   justify-content: space-between;
-  align-items: flex-start;
-  padding: 1.5rem 2rem;
   border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  background: linear-gradient(180deg, rgba(212, 175, 55, 0.08) 0%, transparent 100%);
+  background: linear-gradient(180deg, #131826 0%, #0d111d 100%);
+}
+
+.header-right {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.btn-source-toggle {
+  background: rgba(212, 175, 55, 0.12);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  color: #d4af37;
+  padding: 6px 14px;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-source-toggle:hover {
+  background: rgba(212, 175, 55, 0.25);
 }
 
 .tour-badge {
   display: inline-flex;
   align-items: center;
-  gap: 6px;
-  font-size: 0.7rem;
+  gap: 8px;
+  font-size: 0.72rem;
   font-weight: 800;
+  letter-spacing: 1.2px;
   color: #d4af37;
-  letter-spacing: 1px;
   margin-bottom: 4px;
 }
 
 .pulse-dot {
-  width: 6px;
-  height: 6px;
-  background: #10b981;
+  width: 8px;
+  height: 8px;
   border-radius: 50%;
-  box-shadow: 0 0 8px #10b981;
+  background: #d4af37;
+  box-shadow: 0 0 10px #d4af37;
+  animation: pulse 1.8s infinite;
+}
+
+@keyframes pulse {
+  0% { transform: scale(0.95); opacity: 0.6; }
+  50% { transform: scale(1.25); opacity: 1; }
+  100% { transform: scale(0.95); opacity: 0.6; }
 }
 
 .tutorial-header h2 {
   margin: 0;
-  font-size: 1.6rem;
+  font-size: 1.4rem;
   font-weight: 800;
   color: #ffffff;
+  letter-spacing: -0.3px;
 }
 
 .tour-sub {
+  margin: 3px 0 0;
   font-size: 0.85rem;
   color: #94a3b8;
-  margin: 4px 0 0;
 }
 
 .btn-close {
@@ -433,19 +621,56 @@ export default {
   line-height: 1;
 }
 
+.video-url-bar {
+  display: flex;
+  gap: 8px;
+  padding: 10px 2rem;
+  background: #151926;
+  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+}
+
+.url-input {
+  flex: 1;
+  background: #090c14;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  padding: 8px 14px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+}
+
+.btn-apply-url {
+  background: #d4af37;
+  color: #0b0f19;
+  border: none;
+  font-weight: 700;
+  padding: 8px 16px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.btn-reset-url {
+  background: transparent;
+  color: #94a3b8;
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
 /* Body */
 .tutorial-body {
-  padding: 1.75rem 2rem;
+  padding: 1.5rem 2rem;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 
-/* Video / Simulator Container */
+/* Video Stage Container */
 .video-stage-container {
   background: #080a10;
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.12);
   border-radius: 14px;
   overflow: hidden;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
@@ -475,237 +700,231 @@ export default {
 .dot.green { background: #10b981; }
 
 .mock-title {
-  font-size: 0.72rem;
+  font-size: 0.75rem;
   color: #94a3b8;
 }
 
 .mock-badge {
-  font-size: 0.65rem;
-  font-weight: 700;
-  color: #10b981;
-  background: rgba(16, 185, 129, 0.15);
-  padding: 2px 6px;
+  font-size: 0.7rem;
+  background: rgba(212, 175, 55, 0.15);
+  color: #d4af37;
+  padding: 2px 8px;
   border-radius: 4px;
+  border: 1px solid rgba(212, 175, 55, 0.3);
 }
 
-/* Canvas Slide */
-.mock-canvas {
-  height: 220px;
+/* Viewport Area */
+.media-stage-viewport {
   position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: radial-gradient(circle at center, #161a29 0%, #080a11 100%);
-  padding: 1.5rem;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #000000;
   overflow: hidden;
 }
 
-.stage-overlay-text {
-  position: absolute;
-  bottom: 12px;
-  left: 16px;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: #d4af37;
-  letter-spacing: 0.5px;
-  background: rgba(0, 0, 0, 0.6);
-  padding: 4px 10px;
-  border-radius: 6px;
-  border: 1px solid rgba(212, 175, 55, 0.2);
-}
-
-/* Slide 1: Dashboard */
-.slide-dashboard {
+.video-player-box {
   width: 100%;
-  display: flex;
-  justify-content: space-around;
-  align-items: center;
+  height: 100%;
 }
-.mock-kpis {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-.mock-kpi {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  padding: 6px 12px;
-  border-radius: 6px;
-  display: flex;
-  flex-direction: column;
-}
-.k-label { font-size: 0.65rem; color: #94a3b8; }
-.k-val { font-size: 1rem; font-weight: 700; color: #ffffff; }
-.mock-kpi.gold { border-left: 3px solid #d4af37; }
-.mock-kpi.blue { border-left: 3px solid #3b82f6; }
-.mock-kpi.purple { border-left: 3px solid #a855f7; }
 
-.mock-chart-visual {
+.embedded-media-element {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000000;
+}
+
+/* Fallback Stage Box */
+.video-fallback-box {
+  width: 100%;
+  height: 100%;
+  background-size: cover;
+  background-position: center;
+  position: relative;
   display: flex;
   align-items: flex-end;
-  gap: 12px;
-  height: 120px;
+  transition: background-image 0.5s ease-in-out;
 }
-.mock-chart-visual .bar {
-  width: 20px;
-  background: rgba(255, 255, 255, 0.15);
-  border-radius: 4px 4px 0 0;
-  transition: height 0.5s ease;
-}
-.bar.h-60 { height: 60px; }
-.bar.h-80 { height: 80px; }
-.bar.h-40 { height: 40px; }
-.bar.h-95 { height: 95px; background: #d4af37 !important; box-shadow: 0 0 10px #d4af37; }
-.bar.h-70 { height: 70px; }
 
-/* Slide 2: Clients */
-.slide-clients {
+.fallback-glass-scrim {
   width: 100%;
+  padding: 1.5rem 2rem;
+  background: linear-gradient(180deg, transparent 0%, rgba(8, 10, 16, 0.85) 40%, rgba(8, 10, 16, 0.98) 100%);
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
+  align-items: flex-end;
 }
-.mock-client-card {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(212, 175, 55, 0.3);
-  padding: 1.25rem;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  gap: 1.25rem;
-  max-width: 480px;
-}
-.card-avatar {
-  font-size: 2.2rem;
-  width: 56px;
-  height: 56px;
-  background: rgba(212, 175, 55, 0.15);
-  border-radius: 10px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-.card-info h4 { margin: 0 0 4px; font-size: 1.05rem; color: #fff; }
-.badge-cipc { font-size: 0.72rem; color: #10b981; font-weight: 700; display: block; margin-bottom: 4px; }
-.card-info p { font-size: 0.78rem; color: #94a3b8; margin: 0; }
 
-/* Slide 3: Deals */
-.slide-deals { width: 100%; }
-.mock-kanban { display: flex; gap: 1rem; width: 100%; justify-content: center; }
-.mock-col { background: rgba(0, 0, 0, 0.4); border-radius: 8px; padding: 10px; width: 160px; }
-.col-title { font-size: 0.7rem; color: #94a3b8; font-weight: 700; text-transform: uppercase; margin-bottom: 8px; display: block; }
-.mock-deal-item { background: rgba(255, 255, 255, 0.06); padding: 8px; border-radius: 6px; font-size: 0.75rem; color: #fff; margin-bottom: 6px; }
-.gold-border { border-left: 3px solid #d4af37; }
-.green-border { border-left: 3px solid #10b981; }
-
-/* Slide 4: Integrations */
-.slide-integrations { width: 100%; }
-.mock-int-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; max-width: 500px; margin: 0 auto; }
-.mock-int-card { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.08); padding: 10px 14px; border-radius: 8px; font-size: 0.8rem; font-weight: 600; display: flex; justify-content: space-between; align-items: center; }
-.badge-green { font-size: 0.65rem; color: #10b981; background: rgba(16, 185, 129, 0.15); padding: 2px 6px; border-radius: 4px; }
-
-/* Slide 5: Workflows */
-.slide-workflows { width: 100%; }
-.mock-workflow-flow { display: flex; flex-direction: column; align-items: center; gap: 4px; }
-.wf-node { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); padding: 6px 14px; border-radius: 6px; font-size: 0.78rem; font-weight: 600; color: #fff; }
-.wf-node.trigger { border-color: #d4af37; color: #d4af37; }
-.wf-line { font-size: 0.7rem; color: #64748b; }
-
-/* Player Controls */
-.player-controls {
-  background: #111420;
-  padding: 8px 14px;
+.player-ready-badge {
   display: flex;
   align-items: center;
   gap: 12px;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(13, 17, 29, 0.85);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(212, 175, 55, 0.3);
+  padding: 10px 16px;
+  border-radius: 10px;
+}
+
+.glow-icon {
+  font-size: 1.8rem;
+}
+
+.player-ready-badge strong {
+  display: block;
+  font-size: 0.82rem;
+  color: #d4af37;
+  letter-spacing: 0.8px;
+}
+
+.player-ready-badge p {
+  margin: 2px 0 0;
+  font-size: 0.74rem;
+  color: #cbd5e1;
+}
+
+.player-ready-badge code {
+  color: #fcd34d;
+  background: rgba(0, 0, 0, 0.4);
+  padding: 1px 4px;
+  border-radius: 3px;
+}
+
+.active-slide-caption {
+  text-align: right;
+}
+
+.caption-tag {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: #d4af37;
+  letter-spacing: 1px;
+}
+
+.active-slide-caption h4 {
+  margin: 4px 0 0;
+  font-size: 1.15rem;
+  color: #ffffff;
+}
+
+/* Controls */
+.player-controls {
+  background: #11141f;
+  padding: 10px 16px;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
 }
 
 .btn-play {
-  background: rgba(212, 175, 55, 0.15);
-  border: 1px solid rgba(212, 175, 55, 0.4);
-  color: #d4af37;
-  padding: 4px 10px;
+  background: #d4af37;
+  color: #0b0f19;
+  font-weight: 800;
+  border: none;
   border-radius: 6px;
-  font-size: 0.75rem;
-  font-weight: 700;
+  padding: 6px 14px;
+  font-size: 0.82rem;
   cursor: pointer;
+  transition: all 0.2s;
   white-space: nowrap;
+}
+
+.btn-play:hover {
+  background: #e6c253;
 }
 
 .progress-track {
   flex: 1;
-  height: 6px;
+  height: 8px;
   background: rgba(255, 255, 255, 0.1);
   border-radius: 4px;
   cursor: pointer;
   position: relative;
-  overflow: hidden;
 }
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #d4af37 0%, #10b981 100%);
+  background: linear-gradient(90deg, #d4af37, #fcd34d);
   border-radius: 4px;
-  transition: width 0.3s ease;
+  transition: width 0.2s ease-out;
+}
+
+.chapter-cue-point {
+  position: absolute;
+  top: -2px;
+  width: 4px;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.4);
+  border-radius: 1px;
+  pointer-events: none;
 }
 
 .time-readout {
-  font-size: 0.75rem;
+  font-size: 0.8rem;
   color: #94a3b8;
+  white-space: nowrap;
 }
 
-/* Chapter Selection Strip */
+/* Chapter Tabs (9 Modules) */
 .chapter-strip {
-  display: grid;
-  grid-template-columns: repeat(5, 1fr);
-  background: #0d101a;
+  display: flex;
+  background: #0a0d16;
   border-top: 1px solid rgba(255, 255, 255, 0.06);
+  overflow-x: auto;
+  scrollbar-width: thin;
 }
 
 .chap-btn {
-  background: none;
+  flex: 1;
+  min-width: 110px;
+  background: transparent;
   border: none;
-  border-bottom: 2px solid transparent;
+  border-right: 1px solid rgba(255, 255, 255, 0.05);
   padding: 10px 8px;
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   cursor: pointer;
-  transition: all 0.2s ease;
+  transition: all 0.2s;
 }
 
 .chap-btn:hover {
-  background: rgba(255, 255, 255, 0.03);
+  background: rgba(255, 255, 255, 0.04);
 }
 
 .chap-btn.active {
-  background: rgba(212, 175, 55, 0.08);
-  border-bottom-color: #d4af37;
+  background: rgba(212, 175, 55, 0.1);
+  border-bottom: 2px solid #d4af37;
 }
 
 .chap-num {
-  display: block;
-  font-size: 0.65rem;
-  color: #64748b;
-  font-family: monospace;
-}
-
-.chap-btn.active .chap-num {
+  font-size: 0.68rem;
+  font-weight: 800;
   color: #d4af37;
 }
 
 .chap-title {
   font-size: 0.75rem;
-  font-weight: 700;
   color: #cbd5e1;
+  white-space: nowrap;
+  margin: 2px 0;
 }
 
 .chap-btn.active .chap-title {
   color: #ffffff;
+  font-weight: 700;
+}
+
+.chap-time {
+  font-size: 0.65rem;
+  color: #64748b;
 }
 
 /* Chapter Details Card */
 .chapter-details-card {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: #111522;
+  border: 1px solid rgba(255, 255, 255, 0.08);
   border-radius: 12px;
   padding: 1.25rem 1.5rem;
   display: flex;
@@ -714,7 +933,7 @@ export default {
 }
 
 .chapter-counter {
-  font-size: 0.68rem;
+  font-size: 0.72rem;
   font-weight: 800;
   color: #d4af37;
   letter-spacing: 1px;
@@ -737,7 +956,7 @@ export default {
   background: rgba(212, 175, 55, 0.06);
   border: 1px dashed rgba(212, 175, 55, 0.3);
   border-radius: 8px;
-  padding: 0.9rem 1.1rem;
+  padding: 0.8rem 1.1rem;
   display: flex;
   align-items: flex-start;
   gap: 12px;
@@ -796,12 +1015,18 @@ export default {
   color: #0b0f19;
   border: none;
   font-weight: 700;
+  padding: 8px 18px;
+  border-radius: 6px;
+  cursor: pointer;
 }
 
 .btn-secondary {
   background: rgba(255, 255, 255, 0.05);
   border: 1px solid rgba(255, 255, 255, 0.1);
   color: #e2e8f0;
+  padding: 8px 18px;
+  border-radius: 6px;
+  cursor: pointer;
 }
 
 .font-mono {

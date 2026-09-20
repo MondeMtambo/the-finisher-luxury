@@ -1,6 +1,31 @@
 <template>
   <div class="dashboard">
 
+    <!-- Executive First-Time Welcome Splash Banner -->
+    <div v-if="showWelcomeSplash" class="welcome-splash-banner">
+      <div class="splash-left">
+        <div class="splash-badge-wrap">
+          <span class="splash-sparkle">✨</span>
+          <span class="splash-badge">SOVEREIGN ENTERPRISE WORKSPACE ACTIVE</span>
+        </div>
+        <div class="splash-text">
+          <h3>Welcome to THE FINISHER LUXURY</h3>
+          <p>Your enterprise environment is provisioned with bank-grade isolation. For your complete step-by-step masterclass and operational guidelines, please refer to the documentation and video tutorial.</p>
+        </div>
+      </div>
+      <div class="splash-actions">
+        <router-link to="/documentation" class="btn btn-gold btn-sm" @click="dismissWelcomeSplash">
+          📖 Open Documentation
+        </router-link>
+        <button type="button" class="btn btn-outline-gold btn-sm" @click="openTutorialFromSplash">
+          🎬 Watch Video Masterclass
+        </button>
+        <button type="button" class="btn-splash-close" @click="dismissWelcomeSplash" title="Dismiss">
+          &times;
+        </button>
+      </div>
+    </div>
+
     <div v-if="!isEmployeeOnly" class="page-header">
       <div class="header-row">
         <div>
@@ -421,6 +446,7 @@ export default {
   },
   data() {
     return {
+      showWelcomeSplash: !localStorage.getItem('tfl_welcome_splash_dismissed'),
       statCards: [],
       charts: {},
       
@@ -914,6 +940,14 @@ export default {
       this.exampleType = type
       if (type === 'deals') this.selectedDeal = null
       this.showExampleModal = true
+    },
+    dismissWelcomeSplash() {
+      this.showWelcomeSplash = false
+      localStorage.setItem('tfl_welcome_splash_dismissed', 'true')
+    },
+    openTutorialFromSplash() {
+      this.dismissWelcomeSplash()
+      window.dispatchEvent(new CustomEvent('open-system-tutorial'))
     },
     async loadDeals() {
       try {
@@ -1783,16 +1817,105 @@ export default {
   margin-top: 1.5rem;
 }
 
-/* ═══ Responsive ═══ */
-@media (max-width: 768px) {
-  .dashboard { padding: 1rem; }
-  .header-row { flex-direction: column; gap: 0.75rem; }
-  .tier-chip { align-items: flex-start; }
-  .analytics-grid { grid-template-columns: 1fr; }
-  .qa-buttons { flex-direction: column; }
-  .qa-buttons .btn { width: 100%; justify-content: center; }
-  .form-row-2col { grid-template-columns: 1fr; }
+/* ═══ Welcome Splash Banner ═══ */
+.welcome-splash-banner {
+  background: linear-gradient(135deg, rgba(212, 175, 55, 0.12) 0%, rgba(13, 17, 29, 0.95) 50%, rgba(21, 26, 40, 0.95) 100%);
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  border-radius: 14px;
+  padding: 1.25rem 1.75rem;
+  margin-bottom: 1.75rem;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.45), 0 0 20px rgba(212, 175, 55, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+  animation: slideDown 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
-@media (max-width: 480px) {
+
+.splash-left {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.splash-badge-wrap {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.splash-sparkle {
+  font-size: 0.95rem;
+}
+
+.splash-badge {
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  color: #d4af37;
+}
+
+.splash-text h3 {
+  margin: 0;
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: #ffffff;
+}
+
+.splash-text p {
+  margin: 4px 0 0;
+  font-size: 0.84rem;
+  color: #94a3b8;
+  max-width: 650px;
+  line-height: 1.45;
+}
+
+.splash-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-shrink: 0;
+}
+
+.btn-outline-gold {
+  background: transparent;
+  color: #d4af37;
+  border: 1px solid rgba(212, 175, 55, 0.4);
+  font-weight: 700;
+  padding: 6px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-outline-gold:hover {
+  background: rgba(212, 175, 55, 0.15);
+  border-color: #d4af37;
+}
+
+.btn-splash-close {
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 1.4rem;
+  cursor: pointer;
+  padding: 4px 8px;
+  line-height: 1;
+  transition: color 0.2s;
+}
+
+.btn-splash-close:hover {
+  color: #ffffff;
+}
+
+@media (max-width: 900px) {
+  .welcome-splash-banner {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  .splash-actions {
+    width: 100%;
+    justify-content: flex-start;
+  }
 }
 </style>
