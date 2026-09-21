@@ -20,6 +20,12 @@
       try {
         var savedTheme = localStorage.getItem('finisher_theme') || 'dark';
         document.documentElement.setAttribute('data-theme', savedTheme);
+        var savedFontSize = localStorage.getItem('finisher_font_size') || 'normal';
+        document.documentElement.setAttribute('data-font-size', savedFontSize);
+        var scaleMap = { small: '0.88', normal: '1.0', large: '1.12', xlarge: '1.25' };
+        var basePxMap = { small: '12.5px', normal: '14px', large: '15.5px', xlarge: '17px' };
+        document.documentElement.style.setProperty('--app-font-scale', scaleMap[savedFontSize] || '1.0');
+        document.documentElement.style.setProperty('--app-base-font-size', basePxMap[savedFontSize] || '14px');
       } catch (e) {}
       
       try {

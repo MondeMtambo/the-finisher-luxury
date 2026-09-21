@@ -181,11 +181,12 @@
             <p style="margin-bottom: 0.5rem; font-size: 0.95rem;">No client subscriptions or corporate contracts recorded yet.</p>
             <button class="btn btn-sm btn-gold" @click="openRecordSaleModal">Record First Direct Sale</button>
           </div>
-          <table v-else class="luxury-table">
-            <thead>
-              <tr>
-                <th>Company / Tenant</th>
-                <th>Selected Plan &amp; Rate</th>
+          <div v-else class="table-responsive">
+            <table class="luxury-table">
+              <thead>
+                <tr>
+                  <th>Company / Tenant</th>
+                  <th>Selected Plan &amp; Rate</th>
                 <th>Seat Capacity</th>
                 <th>Billing Status</th>
                 <th>Billing Cycle / Expiry</th>
@@ -287,6 +288,7 @@
               </tr>
             </tbody>
           </table>
+          </div>
         </div>
       </div>
 

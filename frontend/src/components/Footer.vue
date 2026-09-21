@@ -32,7 +32,7 @@
             <div class="fn-title">Contact &amp; Legal Domicile</div>
             <a href="mailto:support@thefinishercrm.tech">support@thefinishercrm.tech</a>
             <a href="mailto:legal@thefinishercrm.tech">legal@thefinishercrm.tech</a>
-            <span style="color: #9ca3af; font-size: 0.75rem; margin-top: 4px; line-height: 1.35;">📍 Sandton City<br>Johannesburg, South Africa</span>
+            <span style="color: #9ca3af; font-size: 0.75rem; margin-top: 4px; line-height: 1.35;">📍 Sandton City<br>Johannesburg, Gauteng, South Africa</span>
           </div>
         </nav>
       </div>

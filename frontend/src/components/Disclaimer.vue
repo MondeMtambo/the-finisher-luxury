@@ -86,7 +86,7 @@
       <section>
         <h2>Contact &amp; Legal Inquiries</h2>
         <p>For executive privacy, legal queries, or licensing inquiries, contact THE FINISHER at <strong>support@thefinishercrm.tech</strong> or <strong>legal@thefinishercrm.tech</strong><br>
-        <strong>Registered Physical Domicile:</strong> Sandton City, Johannesburg, South Africa<br>
+        <strong>Registered Physical Domicile:</strong> Sandton City, Johannesburg, Gauteng, South Africa<br>
         <strong>Product &amp; Executive Support:</strong> support@thefinishercrm.tech</p>
       </section>
 

@@ -3,15 +3,18 @@ import App from './App.vue'
 import router from './router'
 import './assets/animations.css'
 import './assets/theme.css'
+import './assets/mobile.css'
 import animationsPreference from './utils/animations'
+import fontSizeService from './utils/fontSize'
 import { warmUpBackend } from './utils/apiBase'
 import { initChunkErrorSelfHealing } from './utils/cacheManager'
 
 // Initialize autonomous chunk error recovery (immune to post-deployment stale crashes)
 initChunkErrorSelfHealing()
 
-// Apply saved animation preference on startup
+// Apply saved animation & font size preference on startup
 animationsPreference.init()
+fontSizeService.init()
 
 // ─── BACKEND WARM-UP ───
 // Immediately wake the Render backend on app load (prevents cold-start errors)

@@ -411,7 +411,7 @@
               v-model="form.postal_address" 
               type="text" 
               class="form-input" 
-              placeholder="e.g. P.O. Box 78123, Sandton, 2146" 
+              placeholder="e.g. P.O. Box 12345, Sandton, 2196" 
             />
           </div>
           <div v-else class="synced-badge">

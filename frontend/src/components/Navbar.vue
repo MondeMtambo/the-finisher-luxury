@@ -115,6 +115,16 @@
           </svg>
         </button>
 
+        <!-- Dynamic Font Size Controller (Small / Normal / Large / XL) -->
+        <button 
+          class="font-size-btn" 
+          @click="cycleFontSize" 
+          :title="`Text Density Scale: ${activeFontSizeObj.label} • Click to cycle`"
+        >
+          <span class="font-size-glyph">Aa</span>
+          <span class="font-size-tag">{{ activeFontSizeObj.icon }}</span>
+        </button>
+
         <!-- Interactive System Tour & Intro Video Trigger -->
         <button 
           class="topbar-query-btn tour-topbar-btn" 
@@ -217,6 +227,45 @@
       </div>
 
       <nav class="sidebar-nav">
+        <!-- Mobile Drawer Executive Controls (Font Scale, Theme, Languages, Clock) -->
+        <div v-if="!sidebarCollapsed" class="mobile-drawer-controls">
+          <div class="mobile-ctrl-section">
+            <span class="ctrl-section-label">DISPLAY FONT SCALE</span>
+            <div class="font-scale-pills">
+              <button 
+                v-for="s in fontSizes" 
+                :key="s.key" 
+                class="font-pill-btn" 
+                :class="{ active: currentFontSize === s.key }"
+                @click="setFontSize(s.key)"
+                type="button"
+              >
+                <span class="font-pill-icon">{{ s.icon }}</span>
+                <span class="font-pill-label">{{ s.label.split(' ')[0] }}</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="mobile-ctrl-grid">
+            <button class="mobile-quick-btn" @click="toggleTheme" type="button">
+              <span class="quick-btn-icon">{{ currentTheme === 'dark' ? '☀️' : '🌙' }}</span>
+              <span>{{ currentTheme === 'dark' ? 'Light Theme' : 'Dark Theme' }}</span>
+            </button>
+            <button class="mobile-quick-btn" @click="showWorldClock = true" type="button">
+              <span class="quick-btn-icon">🌐</span>
+              <span>{{ pinnedCityCode || 'JHB' }} {{ currentTime }}</span>
+            </button>
+            <button class="mobile-quick-btn" @click="toggleLangMenu" type="button">
+              <span class="quick-btn-icon">{{ currentLangObj.flag }}</span>
+              <span>{{ currentLangObj.label }}</span>
+            </button>
+            <button class="mobile-quick-btn" @click="openTutorial" type="button">
+              <span class="quick-btn-icon">🎬</span>
+              <span>System Tour</span>
+            </button>
+          </div>
+        </div>
+
         <div class="nav-section">
           <span v-if="!sidebarCollapsed" class="nav-section-label">{{ $t('nav.main') }}</span>
           <router-link to="/dashboard" class="nav-item" active-class="active" exact>
@@ -339,6 +388,39 @@
 
     <div v-if="mobileMenuOpen" class="mobile-overlay" @click="mobileMenuOpen = false"></div>
 
+    <!-- ═══ NATIVE MOBILE BOTTOM NAVIGATION DOCK (App Bar) ═══ -->
+    <nav v-if="isAuthenticated && !isPublicPage" class="mobile-bottom-dock" aria-label="Mobile Navigation">
+      <router-link to="/dashboard" class="mobile-dock-item" active-class="active" exact>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        <span>Home</span>
+      </router-link>
+
+      <router-link v-if="!isEmployeeOnly" to="/contacts" class="mobile-dock-item" active-class="active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/></svg>
+        <span>Clients</span>
+      </router-link>
+
+      <router-link v-if="!isEmployeeOnly" to="/deals" class="mobile-dock-item" active-class="active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>
+        <span>Deals</span>
+      </router-link>
+
+      <router-link v-if="isAdmin" to="/admin/console" class="mobile-dock-item" active-class="active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+        <span>Console</span>
+      </router-link>
+
+      <router-link v-else to="/tickets" class="mobile-dock-item" active-class="active">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"/><path d="M13 5v2"/><path d="M13 17v2"/></svg>
+        <span>Tickets</span>
+      </router-link>
+
+      <button type="button" class="mobile-dock-item" :class="{ active: mobileMenuOpen }" @click="toggleSidebar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+        <span>More</span>
+      </button>
+    </nav>
+
     <!-- World Clock Matrix Modal -->
     <WorldClockModal 
       :isOpen="showWorldClock" 
@@ -356,6 +438,7 @@ import modal from '../utils/modal'
 import { getRandomAvatar, getAvatarById } from '../utils/avatars.js'
 import WorldClockModal from './WorldClockModal.vue'
 import { languages, setLanguage, getActiveLanguage, i18nState } from '../i18n'
+import fontSizeService from '../utils/fontSize'
 
 export default {
   name: 'Navbar',
@@ -367,6 +450,9 @@ export default {
     return {
       isAuth: authService.isAuthenticated(),
       authListener: null,
+      fontSizeListener: null,
+      currentFontSize: fontSizeService.getCurrentSize(),
+      fontSizes: fontSizeService.getAvailableSizes(),
       sidebarCollapsed: false,
       mobileMenuOpen: false,
       searchQuery: '',
@@ -444,6 +530,9 @@ export default {
         ''
       ).toLowerCase()
       return !['admin', 'executive', 'manager', 'supervisor', 'sales'].includes(roleStr)
+    },
+    activeFontSizeObj() {
+      return this.fontSizes.find(s => s.key === this.currentFontSize) || this.fontSizes[1]
     }
   },
   mounted() {
@@ -465,6 +554,12 @@ export default {
     const savedTheme = localStorage.getItem('finisher_theme') || 'dark'
     this.currentTheme = savedTheme
     document.documentElement.setAttribute('data-theme', savedTheme)
+
+    // Sync font size
+    this.fontSizeListener = (e) => {
+      this.currentFontSize = e.detail?.key || fontSizeService.getCurrentSize()
+    }
+    window.addEventListener('tfl-font-size-changed', this.fontSizeListener)
   },
   watch: {
     '$route.path'(newPath) {
@@ -487,6 +582,7 @@ export default {
   beforeUnmount() {
     if (this.notificationInterval) clearInterval(this.notificationInterval)
     if (this.clockInterval) clearInterval(this.clockInterval)
+    if (this.fontSizeListener) window.removeEventListener('tfl-font-size-changed', this.fontSizeListener)
     window.removeEventListener('resize', this.handleResize)
     if (this.authListener) {
       window.removeEventListener('tfl-auth-changed', this.authListener)
@@ -562,6 +658,16 @@ export default {
       localStorage.setItem('finisher_theme', nextTheme)
       document.documentElement.setAttribute('data-theme', nextTheme)
       toast.info(`Switched to ${nextTheme === 'dark' ? 'Luxury Obsidian (Dark)' : 'Executive Platinum (Light)'}`)
+    },
+    cycleFontSize() {
+      const next = fontSizeService.cycleNext()
+      this.currentFontSize = next.key
+      toast.info(`Font Scale: ${next.label}`)
+    },
+    setFontSize(key) {
+      const selected = fontSizeService.setSize(key)
+      this.currentFontSize = selected.key
+      toast.info(`Font Scale: ${selected.label}`)
     },
     toggleFooterCompact() {
       this.footerCompact = !this.footerCompact
@@ -1865,5 +1971,116 @@ export default {
   .topbar.menu-open .global-search { display: none; }
   .global-search { max-width: 200px; }
   .user-info-sm { display: none; }
+}
+/* Topbar Font Size Button */
+.font-size-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid var(--border-gold, rgba(212, 175, 55, 0.25));
+  color: var(--text-primary, #ffffff);
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+.font-size-btn:hover {
+  background: rgba(212, 175, 55, 0.15);
+  border-color: #D4AF37;
+  color: #D4AF37;
+  transform: translateY(-1px);
+}
+.font-size-glyph {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+.font-size-tag {
+  font-size: 10px;
+  font-weight: 800;
+  color: #D4AF37;
+  background: rgba(212, 175, 55, 0.15);
+  padding: 1px 4px;
+  border-radius: 4px;
+}
+
+/* Mobile Drawer Controls */
+.mobile-drawer-controls {
+  padding: 10px 12px 14px 12px;
+  margin: 6px 10px 12px 10px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  border-radius: 10px;
+}
+.ctrl-section-label {
+  display: block;
+  font-size: 9.5px;
+  font-weight: 700;
+  color: #94a3b8;
+  letter-spacing: 0.05em;
+  margin-bottom: 6px;
+  text-transform: uppercase;
+}
+.font-scale-pills {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 4px;
+  margin-bottom: 10px;
+}
+.font-pill-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 5px 2px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 6px;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+.font-pill-btn.active {
+  background: rgba(212, 175, 55, 0.22);
+  border-color: #D4AF37;
+  color: #D4AF37;
+  font-weight: 700;
+}
+.font-pill-icon {
+  font-size: 11px;
+  font-weight: 900;
+}
+.font-pill-label {
+  font-size: 8.5px;
+  margin-top: 2px;
+}
+.mobile-ctrl-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 6px;
+}
+.mobile-quick-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 8px;
+  background: rgba(0, 0, 0, 0.3);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 6px;
+  color: #cbd5e1;
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  text-align: left;
+}
+.mobile-quick-btn:hover, .mobile-quick-btn:active {
+  background: rgba(212, 175, 55, 0.15);
+  border-color: rgba(212, 175, 55, 0.4);
+  color: #D4AF37;
+}
+.quick-btn-icon {
+  font-size: 13px;
 }
 </style>

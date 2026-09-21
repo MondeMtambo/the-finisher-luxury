@@ -1,0 +1,320 @@
+/* ==============================================================================
+   THE FINISHER LUXURY CRM — NATIVE MOBILE & TYPOGRAPHY DENSITY STYLESHEET
+   Turns the web CRM into a responsive, app-like experience on iOS and Android.
+   Includes global font-size scaling controls (Compact, Default, Large, Max).
+   ============================================================================== */
+
+/* ─── DYNAMIC FONT SIZE SCALING ─── */
+:root {
+  --app-font-scale: 1.0;
+  --app-base-font-size: 14px;
+}
+
+html[data-font-size="small"] {
+  --app-font-scale: 0.88;
+  --app-base-font-size: 12.5px;
+  font-size: 13px !important;
+}
+
+html[data-font-size="normal"] {
+  --app-font-scale: 1.0;
+  --app-base-font-size: 14px;
+  font-size: 14px !important;
+}
+
+html[data-font-size="large"] {
+  --app-font-scale: 1.12;
+  --app-base-font-size: 15.5px;
+  font-size: 15.5px !important;
+}
+
+html[data-font-size="xlarge"] {
+  --app-font-scale: 1.25;
+  --app-base-font-size: 17px;
+  font-size: 17px !important;
+}
+
+body {
+  font-size: var(--app-base-font-size, 14px);
+  -webkit-text-size-adjust: 100%;
+}
+
+/* ─── MOBILE TOUCH ERGONOMICS & SAFE AREAS ─── */
+@media (max-width: 768px) {
+  /* Prevent iOS horizontal rubber-banding while allowing vertical flow */
+  html, body {
+    overflow-x: hidden !important;
+    position: relative;
+    width: 100%;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  #app, .app-layout {
+    width: 100%;
+    max-width: 100vw;
+    overflow-x: hidden;
+  }
+
+  /* Main content padding accounts for topbar and bottom mobile app dock */
+  .main-content {
+    padding: 12px 10px calc(76px + env(safe-area-inset-bottom, 16px)) 10px !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    box-sizing: border-box !important;
+    overflow-x: hidden !important;
+  }
+
+  /* Prevent iOS Safari input zoom by enforcing min 16px font-size on focusable form controls */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="number"],
+  input[type="search"],
+  input[type="tel"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+
+  /* Minimum 44px touch targets for mobile accessibility */
+  .btn,
+  .topbar-icon-btn,
+  .mobile-dock-item,
+  .nav-item {
+    min-height: 44px;
+    touch-action: manipulation;
+  }
+
+  /* ─── MOBILE TABLE RESPONSIVENESS (NO PAGE STRETCHING) ─── */
+  .table-responsive,
+  .table-container,
+  .audit-table-wrap,
+  .data-table-wrap,
+  .table-card,
+  .contacts-table-container,
+  .deals-table-container {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    display: block !important;
+    margin-bottom: 1rem;
+    border-radius: 8px;
+    scrollbar-width: thin;
+  }
+
+  /* Thin scrollbar indicator so mobile users know they can swipe */
+  .table-responsive::-webkit-scrollbar,
+  .audit-table-wrap::-webkit-scrollbar,
+  .table-container::-webkit-scrollbar {
+    height: 4px;
+  }
+  .table-responsive::-webkit-scrollbar-thumb,
+  .audit-table-wrap::-webkit-scrollbar-thumb,
+  .table-container::-webkit-scrollbar-thumb {
+    background: rgba(212, 175, 55, 0.4);
+    border-radius: 4px;
+  }
+
+  /* Ensure tables don't squash their cells to illegibility */
+  table {
+    min-width: 600px;
+    width: 100%;
+  }
+
+  /* ─── AUTO-STACKING METRICS & FORMS ─── */
+  .stats-grid,
+  .kpi-grid,
+  .metric-cards,
+  .overview-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .form-row,
+  .form-row-2,
+  .form-row-3,
+  .grid-2,
+  .grid-3,
+  .grid-4 {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+
+  .page-header {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 12px !important;
+    width: 100% !important;
+  }
+
+  .page-header .page-actions,
+  .page-actions,
+  .action-bar,
+  .filter-bar {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  .filter-bar input,
+  .filter-bar select,
+  .search-input {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* ─── MOBILE APP MODALS (BOTTOM SHEET BEHAVIOR) ─── */
+  .modal-overlay,
+  .query-modal-overlay {
+    padding: 0 !important;
+    align-items: flex-end !important;
+  }
+
+  .modal-card,
+  .query-modal-card,
+  .modal-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-bottom-left-radius: 0 !important;
+    border-bottom-right-radius: 0 !important;
+    border-top-left-radius: 18px !important;
+    border-top-right-radius: 18px !important;
+    max-height: 88vh !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    padding: 1.25rem 1rem calc(1.5rem + env(safe-area-inset-bottom, 16px)) 1rem !important;
+    animation: slideUpModal 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
+  }
+
+  @keyframes slideUpModal {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+
+  /* ─── MOBILE BOTTOM NAVIGATION DOCK ─── */
+  .mobile-bottom-dock {
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: calc(58px + env(safe-area-inset-bottom, 12px));
+    padding-bottom: env(safe-area-inset-bottom, 12px);
+    background: rgba(10, 12, 16, 0.92);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid rgba(212, 175, 55, 0.25);
+    display: flex;
+    align-items: center;
+    justify-content: space-around;
+    z-index: 1000;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.4);
+  }
+
+  [data-theme="light"] .mobile-bottom-dock {
+    background: rgba(255, 255, 255, 0.95);
+    border-top: 1px solid rgba(180, 83, 9, 0.2);
+    box-shadow: 0 -4px 15px rgba(0, 0, 0, 0.08);
+  }
+
+  .mobile-dock-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 3px;
+    color: #94a3b8;
+    text-decoration: none;
+    font-size: 10.5px;
+    font-weight: 600;
+    padding: 6px 12px;
+    border-radius: 8px;
+    transition: all 0.15s ease;
+    position: relative;
+    border: none;
+    background: transparent;
+    cursor: pointer;
+  }
+
+  .mobile-dock-item svg {
+    width: 20px;
+    height: 20px;
+    stroke-width: 2;
+    transition: transform 0.15s ease;
+  }
+
+  .mobile-dock-item.active,
+  .mobile-dock-item.router-link-active {
+    color: #D4AF37;
+  }
+
+  [data-theme="light"] .mobile-dock-item.active,
+  [data-theme="light"] .mobile-dock-item.router-link-active {
+    color: #b45309;
+  }
+
+  .mobile-dock-item.active svg,
+  .mobile-dock-item.router-link-active svg {
+    transform: translateY(-2px) scale(1.1);
+    stroke: #D4AF37;
+  }
+
+  [data-theme="light"] .mobile-dock-item.active svg {
+    stroke: #b45309;
+  }
+
+  /* Badge counter on bottom bar */
+  .dock-badge {
+    position: absolute;
+    top: 2px;
+    right: 12px;
+    background: #ef4444;
+    color: #ffffff;
+    font-size: 9px;
+    font-weight: 800;
+    padding: 1px 4px;
+    border-radius: 10px;
+    min-width: 14px;
+    text-align: center;
+    border: 1px solid rgba(0,0,0,0.5);
+  }
+
+  /* Topbar on mobile: hide crowded desktop widgets */
+  .live-clock-btn,
+  .lang-selector-wrapper,
+  .topbar-tour-btn,
+  .topbar-query-btn,
+  .user-name-sm,
+  .user-role-sm {
+    display: none !important;
+  }
+
+  .topbar {
+    padding: 0 12px !important;
+  }
+
+  .global-search {
+    max-width: 140px !important;
+  }
+}
+
+/* Extra small screens (< 380px) */
+@media (max-width: 380px) {
+  .stats-grid,
+  .kpi-grid {
+    grid-template-columns: 1fr !important;
+  }
+  .mobile-dock-item {
+    padding: 4px 6px;
+    font-size: 9.5px;
+  }
+  .mobile-dock-item svg {
+    width: 18px;
+    height: 18px;
+  }
+}

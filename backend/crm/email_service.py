@@ -317,9 +317,9 @@ def render_luxury_email_html(
           <tr>
             <td style="background:rgba(0,0,0,0.4);padding:24px 36px;border-top:1px solid rgba(255,255,255,0.07);text-align:center;">
               <div style="font-size:11.5px;font-weight:700;color:#d4af37;letter-spacing:0.5px;">MTAMBO HOLDINGS (PTY) LTD &middot; EXECUTIVE DIRECTORATE</div>
-              <div style="font-size:10.5px;color:#64748b;margin-top:4px;">POPIA Section 19 Cryptographic Dispatch &middot; 7682 Isikova Crescent, Gauteng, Boksburg, 1459</div>
+              <div style="font-size:10.5px;color:#64748b;margin-top:4px;">POPIA Section 19 Cryptographic Dispatch &middot; Sandton City, Johannesburg, South Africa</div>
               <div style="font-size:10px;color:#475569;margin-top:8px;">
-                Direct concierge support: <a href="mailto:mtamboholdings@outlook.com" style="color:#94a3b8;text-decoration:none;">mtamboholdings@outlook.com</a>
+                Direct concierge support: <a href="mailto:support@thefinishercrm.tech" style="color:#94a3b8;text-decoration:none;">support@thefinishercrm.tech</a>
               </div>
             </td>
           </tr>

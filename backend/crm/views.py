@@ -4504,7 +4504,7 @@ class PrivateSalesLedgerView(APIView):
             return Response({'error': 'Unauthorized. Private Executive Deck access only.'}, status=403)
 
         from .models import Organization, OrganizationSubscription, UserProfile
-        orgs = Organization.objects.all().order_by('-created_at')
+        orgs = Organization.objects.exclude(name__icontains='adminluxury').order_by('-created_at')
         records = []
         total_mrr = 0
         active_trials_count = 0
@@ -4512,17 +4512,14 @@ class PrivateSalesLedgerView(APIView):
 
         for org in orgs:
             sub = getattr(org, 'subscription', None)
-            tier = org.subscription_tier or 'luxury'
-            status_val = sub.status if sub else ('trial' if tier == 'trial' else 'active')
+            tier = org.subscription_tier or 'basic'
+            status_val = sub.status if sub else ('trial' if tier in ['trial', 'basic', 'classic'] else 'active')
             monthly_rate = float(getattr(sub, 'monthly_price', 0) or 0)
-            if not monthly_rate:
-                tier_rates = {'basic': 349.00, 'luxury': 999.00, 'trial': 999.00, 'executive': 1500.00, 'enterprise': 0.00}
-                monthly_rate = tier_rates.get(tier.lower(), 999.00)
-
-            if status_val == 'active':
+            # Truthful metrics: No hardcoded mock inflation for Sovereign tiers
+            if status_val == 'active' and monthly_rate > 0:
                 paid_clients_count += 1
                 total_mrr += monthly_rate
-            elif status_val == 'trial':
+            else:
                 active_trials_count += 1
 
             # User count
@@ -4743,7 +4740,7 @@ class SubmitBugQueryView(APIView):
                 f"<strong>Category:</strong> {category.upper()}",
                 f"<strong>Message:</strong><br/>{message}"
             ],
-            security_note="Direct dispatch to Mtambo Holdings Engineering & Executive Concierge (7682 Isikova Crescent, Gauteng, Boksburg, 1459)."
+            security_note="Direct dispatch to Mtambo Holdings Engineering & Executive Concierge (Sandton City, Johannesburg, South Africa)."
         )
 
         send_email_async(

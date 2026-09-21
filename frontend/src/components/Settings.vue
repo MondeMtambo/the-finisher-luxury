@@ -47,6 +47,53 @@
 
       <div class="card settings-card">
         <div class="sc-header">
+          <div class="sc-icon purple">
+            <span style="font-weight: 900; font-size: 15px; font-family: serif; color: #a855f7;">Aa</span>
+          </div>
+          <div>
+            <h3 class="sc-title">Display &amp; Font Size</h3>
+            <p class="sc-desc">Control viewport typography scale and text density</p>
+          </div>
+        </div>
+        <div class="sc-body">
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-name">Text Density Scale</span>
+              <span class="setting-hint">Adjust text size across the entire application for optimal reading comfort.</span>
+            </div>
+            <div class="font-scale-selector">
+              <button 
+                v-for="s in fontSizes" 
+                :key="s.key" 
+                type="button"
+                class="scale-btn" 
+                :class="{ active: currentFontSize === s.key }"
+                @click="changeFontSize(s.key)"
+              >
+                <span class="scale-icon">{{ s.icon }}</span>
+                <span class="scale-label">{{ s.label }}</span>
+              </button>
+            </div>
+          </div>
+          <div class="setting-row preview-row">
+            <div class="setting-info">
+              <span class="setting-name">Live Typography Preview</span>
+              <span class="setting-hint">Rendering at {{ activeFontSizeScale }} scale ({{ activeBasePx }})</span>
+            </div>
+            <div class="preview-area">
+              <div class="preview-card" style="padding: 12px; width: 100%;">
+                <div style="font-weight: 700; color: #D4AF37; margin-bottom: 4px;">THE FINISHER LUXURY CRM</div>
+                <div style="font-size: 1em; color: var(--text-primary, #fff); line-height: 1.4;">
+                  Ultra-fast sovereign CRM workflows with customized visual comfort and responsive density.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card settings-card">
+        <div class="sc-header">
           <div class="sc-icon green">
             <svg width="18" height="18" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="6" r="4"/><path d="M2 17c0-3.3 2.7-6 7-6s7 2.7 7 6"/></svg>
           </div>
@@ -249,12 +296,16 @@ import toast from '../utils/toast'
 import { avatars } from '../utils/avatars.js'
 import { authAPI, monetizationAPI } from '../api'
 import { getStorageEstimate, clearAppCache } from '../utils/cacheManager'
+import fontSizeService from '../utils/fontSize'
 
 export default {
   name: 'Settings',
   data() {
     return {
       animationsEnabled: true,
+      currentFontSize: fontSizeService.getCurrentSize(),
+      fontSizes: fontSizeService.getAvailableSizes(),
+      fontSizeListener: null,
       username: '',
       fullName: '',
       email: '',
@@ -300,6 +351,14 @@ export default {
         enterprise: 'ENTERPRISE'
       }
       return map[this.tier] || this.tier || 'CORPORATE SOVEREIGN'
+    },
+    activeFontSizeScale() {
+      const s = this.fontSizes.find(x => x.key === this.currentFontSize)
+      return s ? `${Math.round(parseFloat(s.scale) * 100)}%` : '100%'
+    },
+    activeBasePx() {
+      const s = this.fontSizes.find(x => x.key === this.currentFontSize)
+      return s ? s.basePx : '14px'
     }
   },
   mounted() {
@@ -307,13 +366,27 @@ export default {
     this.loadProfile()
     this.loadStorageInfo()
     this.loadWhiteLabelStatus()
+    this.fontSizeListener = (e) => {
+      this.currentFontSize = e.detail?.key || fontSizeService.getCurrentSize()
+    }
+    window.addEventListener('tfl-font-size-changed', this.fontSizeListener)
     if (this.$route.query.white_label === 'success') {
       toast.success('Your Corporate White-Label subscription has been activated!', 'White-Label Active')
     } else if (this.$route.query.white_label === 'cancel') {
       toast.info('White-label subscription checkout was cancelled. No charges were made.', 'Checkout Cancelled')
     }
   },
+  beforeUnmount() {
+    if (this.fontSizeListener) {
+      window.removeEventListener('tfl-font-size-changed', this.fontSizeListener)
+    }
+  },
   methods: {
+    changeFontSize(key) {
+      const s = fontSizeService.setSize(key)
+      this.currentFontSize = s.key
+      toast.info(`Text scale set to ${s.label}`)
+    },
     onAnimationsToggle() {
       animationsPreference.setEnabled(this.animationsEnabled)
     },
@@ -448,11 +521,41 @@ export default {
 
 .sc-header { display: flex; align-items: center; gap: .75rem; padding: 1rem 1.25rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05); }
 .sc-icon { width: 36px; height: 36px; border-radius: var(--radius-md); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.sc-icon.blue  { background: rgba(212, 175, 55, 0.1); color: #D4AF37; }
-.sc-icon.green { background: rgba(34, 197, 94, 0.1); color: #22c55e; }
-.sc-icon.gray  { background: rgba(255, 255, 255, 0.05); color: #9ca3af; }
+.sc-icon.blue   { background: rgba(212, 175, 55, 0.1); color: #D4AF37; }
+.sc-icon.purple { background: rgba(168, 85, 247, 0.1); color: #a855f7; }
+.sc-icon.green  { background: rgba(34, 197, 94, 0.1); color: #22c55e; }
+.sc-icon.gray   { background: rgba(255, 255, 255, 0.05); color: #9ca3af; }
 .sc-title { font-size: .9375rem; font-weight: 600; color: #ffffff; margin: 0; }
 .sc-desc  { font-size: .8125rem; color: #9ca3af; margin: .125rem 0 0; }
+
+/* Font Scale Controls */
+.font-scale-selector { display: flex; gap: 6px; flex-wrap: wrap; }
+.scale-btn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #9ca3af;
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+.scale-btn:hover {
+  background: rgba(212, 175, 55, 0.1);
+  color: #D4AF37;
+  border-color: rgba(212, 175, 55, 0.3);
+}
+.scale-btn.active {
+  background: rgba(212, 175, 55, 0.2);
+  border-color: #D4AF37;
+  color: #D4AF37;
+}
+.scale-icon { font-weight: 800; font-size: 12px; }
+.scale-label { font-size: 11px; }
 
 .sc-body { padding: 0; }
 
