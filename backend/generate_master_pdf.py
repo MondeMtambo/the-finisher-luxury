@@ -433,7 +433,7 @@ def build_pdf():
         ],
         [
             Paragraph("1:15 - 1:30", script_char),
-            Paragraph("A certified official document sliding onto an executive desk with a glowing gold stamp: 'SHA-256 Validated • National Treasury & SEDA Ready'.", script_text),
+            Paragraph("A certified official document sliding onto an executive desk with a glowing gold stamp: 'SHA-256 Validated • POPIA Section 19 Certified'.", script_text),
             Paragraph("<i>'Your enterprise is sovereign. Your pipeline is protected. Welcome to the peak of corporate execution. Welcome to The Finisher.'</i>", script_text)
         ]
     ]
@@ -462,7 +462,11 @@ def build_pdf():
             Paragraph("Camera pans to Enterprise Add-On Suite: The R199 White-Label Card.", script_text),
             Paragraph("<i>'When presenting to high-end clients, brand prestige is paramount. With our Corporate White-Label license at just R199 per month, all Finisher watermarks are instantly removed. Upload your company logo, and your invoices, quotes, and emails carry your exclusive corporate identity.'</i>", script_text)
         ],
-
+        [
+            Paragraph("1:00 - 1:30", script_char),
+            Paragraph("Pan across Deal pipeline showing PayFast Instant EFT, Capitec Pay & Card settlement options with client payment links.", script_text),
+            Paragraph("<i>'Furthermore, our integrated PayFast gateway facilitates instant deal settlements, milestone payment plans, and direct client invoice clearing directly into your corporate bank account with bank-grade security.'</i>", script_text)
+        ],
         [
             Paragraph("1:30 - 2:00", script_char),
             Paragraph("Zooming into Executive Suite (R1,500/mo) and Enterprise Bespoke.", script_text),
