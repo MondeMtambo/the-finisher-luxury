@@ -19,15 +19,20 @@ export const i18nState = reactive({
   languages: languages
 })
 
+import interpreter from './interpreter'
+export { interpreter }
+
 /**
- * Switch active language and persist to localStorage
+ * Switch active language, persist to localStorage, and trigger Realtime Interpreter
  * @param {string} langCode - e.g. 'zu', 'xh', 'af', 'en'
  */
 export function setLanguage(langCode) {
-  if (translations[langCode]) {
+  if (translations[langCode] || langCode === 'en') {
     i18nState.currentLang = langCode
     localStorage.setItem(SAVED_LANG_KEY, langCode)
     document.documentElement.setAttribute('lang', langCode)
+    interpreter.setLanguage(langCode)
+    window.dispatchEvent(new CustomEvent('tfl-language-changed', { detail: { lang: langCode } }))
   } else {
     console.warn(`[i18n] Language code '${langCode}' not recognized.`)
   }
@@ -91,6 +96,10 @@ export const i18nPlugin = {
     app.config.globalProperties.$i18n = i18nState
     app.config.globalProperties.$setLanguage = setLanguage
     app.config.globalProperties.$getActiveLanguage = getActiveLanguage
+    app.config.globalProperties.$interpreter = interpreter
+
+    // Initialize the autonomous real-time interpreter
+    interpreter.init(safeInitialLang)
   }
 }
 

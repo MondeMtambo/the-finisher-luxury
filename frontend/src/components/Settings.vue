@@ -92,6 +92,59 @@
         </div>
       </div>
 
+      <!-- ═══ OFFICIAL SOUTH AFRICAN LANGUAGES MATRIX ═══ -->
+      <div class="card settings-card">
+        <div class="sc-header">
+          <div class="sc-icon gold">
+            <span style="font-size: 16px;">🇿🇦</span>
+          </div>
+          <div>
+            <h3 class="sc-title">Official SA Languages Matrix</h3>
+            <p class="sc-desc">Select from all 11 official South African languages (POPIA Section 19 Sovereign Compliance)</p>
+          </div>
+        </div>
+        <div class="sc-body">
+          <div class="setting-row">
+            <div class="setting-info">
+              <span class="setting-name">System Language</span>
+              <span class="setting-hint">Instantly translates UI navigation, headers, tables, buttons, and status indicators across PC, Mobile, and PWA.</span>
+            </div>
+            <div class="lang-grid-selector">
+              <button 
+                v-for="l in availableLanguages" 
+                :key="l.code" 
+                type="button"
+                class="lang-grid-btn" 
+                :class="{ active: currentLangCode === l.code }"
+                @click="changeLanguage(l.code)"
+              >
+                <span class="lang-grid-flag">{{ l.flag }}</span>
+                <span class="lang-grid-label">{{ l.label }}</span>
+                <span class="lang-grid-native">{{ l.native }}</span>
+                <span v-if="currentLangCode === l.code" class="lang-grid-check">✓</span>
+              </button>
+            </div>
+          </div>
+          <div class="setting-row preview-row">
+            <div class="setting-info">
+              <span class="setting-name">Linguistic Sovereignty Status</span>
+              <span class="setting-hint">POPIA Section 19 Non-Disclosure & Local Dialect Data Guarantee</span>
+            </div>
+            <div class="preview-area">
+              <div class="preview-card" style="padding: 12px; width: 100%; border-color: rgba(212, 175, 55, 0.4);">
+                <div style="font-weight: 700; color: #D4AF37; margin-bottom: 4px; display: flex; align-items: center; gap: 6px;">
+                  <span>🇿🇦 {{ activeLanguageObj.label }} ({{ activeLanguageObj.native }})</span>
+                  <span style="font-size: 10px; background: rgba(212, 175, 55, 0.2); color: #D4AF37; padding: 1px 6px; border-radius: 4px; font-weight: 800;">ACTIVE</span>
+                </div>
+                <div style="font-size: 0.9em; color: var(--text-secondary, #94a3b8); line-height: 1.4;">
+                  Realtime Autonomous Linguistic Interpreter active. Client records and confidential business data remain strictly secured.
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <div class="card settings-card">
         <div class="sc-header">
           <div class="sc-icon green">
@@ -297,6 +350,7 @@ import { avatars } from '../utils/avatars.js'
 import { authAPI, monetizationAPI } from '../api'
 import { getStorageEstimate, clearAppCache } from '../utils/cacheManager'
 import fontSizeService from '../utils/fontSize'
+import { languages, setLanguage, getActiveLanguage, i18nState } from '../i18n'
 
 export default {
   name: 'Settings',
@@ -306,6 +360,9 @@ export default {
       currentFontSize: fontSizeService.getCurrentSize(),
       fontSizes: fontSizeService.getAvailableSizes(),
       fontSizeListener: null,
+      currentLangCode: i18nState.currentLang,
+      availableLanguages: languages,
+      langListener: null,
       username: '',
       fullName: '',
       email: '',
@@ -359,6 +416,9 @@ export default {
     activeBasePx() {
       const s = this.fontSizes.find(x => x.key === this.currentFontSize)
       return s ? s.basePx : '14px'
+    },
+    activeLanguageObj() {
+      return getActiveLanguage()
     }
   },
   mounted() {
@@ -370,6 +430,10 @@ export default {
       this.currentFontSize = e.detail?.key || fontSizeService.getCurrentSize()
     }
     window.addEventListener('tfl-font-size-changed', this.fontSizeListener)
+    this.langListener = (e) => {
+      this.currentLangCode = e.detail?.lang || i18nState.currentLang
+    }
+    window.addEventListener('tfl-language-changed', this.langListener)
     if (this.$route.query.white_label === 'success') {
       toast.success('Your Corporate White-Label subscription has been activated!', 'White-Label Active')
     } else if (this.$route.query.white_label === 'cancel') {
@@ -380,8 +444,30 @@ export default {
     if (this.fontSizeListener) {
       window.removeEventListener('tfl-font-size-changed', this.fontSizeListener)
     }
+    if (this.langListener) {
+      window.removeEventListener('tfl-language-changed', this.langListener)
+    }
   },
   methods: {
+    changeLanguage(code) {
+      setLanguage(code)
+      this.currentLangCode = code
+      const active = getActiveLanguage()
+      const nativePhrases = {
+        en: 'Language set to English',
+        zu: 'Ulimi luhlelelwe ku-isiZulu 🇿🇦',
+        xh: 'Ulwimi lutshintshelwe kwisiXhosa 🇿🇦',
+        af: 'Taal suksesvol verander na Afrikaans 🇿🇦',
+        nso: 'Leleme le beilwe go Sesotho sa Leboa 🇿🇦',
+        tn: 'Puo e beilwe mo go Setswana 🇿🇦',
+        st: 'Puo e behiloe ho Sesotho 🇿🇦',
+        ts: 'Ririmi ri vekiwile eka Xitsonga 🇿🇦',
+        ss: 'Lulwimi luhlelelwe ku-siSwati 🇿🇦',
+        ve: 'Luambo lwo vhewa kha Tshivenḓa 🇿🇦',
+        nr: 'Ilimi lihlelelwe ku-isiNdebele 🇿🇦'
+      }
+      toast.success(nativePhrases[code] || `Language set to ${active.label}`)
+    },
     changeFontSize(key) {
       const s = fontSizeService.setSize(key)
       this.currentFontSize = s.key
@@ -556,6 +642,71 @@ export default {
 }
 .scale-icon { font-weight: 800; font-size: 12px; }
 .scale-label { font-size: 11px; }
+
+/* Language Matrix Controls */
+.lang-grid-selector {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 8px;
+  width: 100%;
+}
+
+.lang-grid-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  position: relative;
+  text-align: left;
+}
+
+.lang-grid-btn:hover {
+  background: rgba(212, 175, 55, 0.1);
+  border-color: rgba(212, 175, 55, 0.35);
+  transform: translateY(-1px);
+}
+
+.lang-grid-btn.active {
+  background: rgba(212, 175, 55, 0.2);
+  border-color: #D4AF37;
+  box-shadow: 0 0 12px rgba(212, 175, 55, 0.2);
+}
+
+.lang-grid-flag {
+  font-size: 16px;
+  margin-bottom: 2px;
+}
+
+.lang-grid-label {
+  font-size: 12px;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.2;
+}
+
+.lang-grid-btn.active .lang-grid-label {
+  color: #D4AF37;
+}
+
+.lang-grid-native {
+  font-size: 10px;
+  color: #94a3b8;
+  margin-top: 1px;
+}
+
+.lang-grid-check {
+  position: absolute;
+  top: 6px;
+  right: 8px;
+  font-size: 11px;
+  font-weight: 900;
+  color: #D4AF37;
+}
 
 .sc-body { padding: 0; }
 

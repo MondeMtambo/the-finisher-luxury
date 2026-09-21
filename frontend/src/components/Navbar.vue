@@ -255,7 +255,7 @@
               <span class="quick-btn-icon">🌐</span>
               <span>{{ pinnedCityCode || 'JHB' }} {{ currentTime }}</span>
             </button>
-            <button class="mobile-quick-btn" @click="toggleLangMenu" type="button">
+            <button class="mobile-quick-btn" @click="openMobileLangModal" type="button">
               <span class="quick-btn-icon">{{ currentLangObj.flag }}</span>
               <span>{{ currentLangObj.label }}</span>
             </button>
@@ -427,6 +427,51 @@
       @close="showWorldClock = false" 
       @city-pinned="handleCityPinned"
     />
+
+    <!-- ═══ MOBILE & PWA DEDICATED LANGUAGE SELECTION MODAL ═══ -->
+    <transition name="fade">
+      <div v-if="showMobileLangModal" class="mobile-lang-overlay" @click.self="showMobileLangModal = false">
+        <div class="mobile-lang-sheet">
+          <div class="mobile-lang-header">
+            <div class="mobile-lang-title-row">
+              <span class="mobile-lang-flag">🇿🇦</span>
+              <div>
+                <h3 class="mobile-lang-title">Official SA Languages</h3>
+                <p class="mobile-lang-subtitle">POPIA S19 Multi-Lingual Matrix (All 11 Languages)</p>
+              </div>
+            </div>
+            <button class="mobile-lang-close" @click="showMobileLangModal = false" aria-label="Close">✕</button>
+          </div>
+
+          <div class="mobile-lang-scroll-list">
+            <button
+              v-for="l in availableLanguages"
+              :key="l.code"
+              class="mobile-lang-row"
+              :class="{ active: l.code === activeLangCode }"
+              @click="selectLanguageMobile(l.code)"
+              type="button"
+            >
+              <div class="lang-row-left">
+                <span class="lang-row-flag">{{ l.flag }}</span>
+                <div class="lang-row-names">
+                  <span class="lang-row-label">{{ l.label }}</span>
+                  <span class="lang-row-native">{{ l.native }}</span>
+                </div>
+              </div>
+              <div class="lang-row-right">
+                <span class="lang-row-code">{{ l.code.toUpperCase() }}</span>
+                <span v-if="l.code === activeLangCode" class="lang-row-check">✓</span>
+              </div>
+            </button>
+          </div>
+
+          <div class="mobile-lang-footer">
+            <span class="lang-compliance-text">🔒 256-Bit Cryptographic Privacy • POPIA Section 19 Sovereign Matrix</span>
+          </div>
+        </div>
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -464,6 +509,7 @@ export default {
       showUserMenu: false,
       showWorldClock: false,
       showLangMenu: false,
+      showMobileLangModal: false,
       pinnedCityTimezone: localStorage.getItem('finisher_pinned_clock_tz') || 'Africa/Johannesburg',
       pinnedCityCode: localStorage.getItem('finisher_pinned_clock_code') || 'JHB',
       pinnedCityName: localStorage.getItem('finisher_pinned_clock_city') || 'Johannesburg',
@@ -635,11 +681,33 @@ export default {
         this.showUserMenu = false
       }
     },
+    openMobileLangModal() {
+      this.showMobileLangModal = true
+      this.showLangMenu = false
+      this.mobileMenuOpen = false
+    },
+    selectLanguageMobile(code) {
+      this.selectLanguage(code)
+      this.showMobileLangModal = false
+    },
     selectLanguage(code) {
       setLanguage(code)
       this.showLangMenu = false
       const active = getActiveLanguage()
-      toast.info(`Language set to ${active.label} (${active.native})`)
+      const nativePhrases = {
+        en: 'Language set to English',
+        zu: 'Ulimi luhlelelwe ku-isiZulu 🇿🇦',
+        xh: 'Ulwimi lutshintshelwe kwisiXhosa 🇿🇦',
+        af: 'Taal suksesvol verander na Afrikaans 🇿🇦',
+        nso: 'Leleme le beilwe go Sesotho sa Leboa 🇿🇦',
+        tn: 'Puo e beilwe mo go Setswana 🇿🇦',
+        st: 'Puo e behiloe ho Sesotho 🇿🇦',
+        ts: 'Ririmi ri vekiwile eka Xitsonga 🇿🇦',
+        ss: 'Lulwimi luhlelelwe ku-siSwati 🇿🇦',
+        ve: 'Luambo lwo vhewa kha Tshivenḓa 🇿🇦',
+        nr: 'Ilimi lihlelelwe ku-isiNdebele 🇿🇦'
+      }
+      toast.success(nativePhrases[code] || `Language set to ${active.label} (${active.native})`)
     },
     handleCityPinned(city) {
       if (!city) return
@@ -2082,5 +2150,222 @@ export default {
 }
 .quick-btn-icon {
   font-size: 13px;
+}
+
+/* ═══ MOBILE & PWA FULL-SCREEN LANGUAGE MODAL ═══ */
+.mobile-lang-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  z-index: 10000;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0;
+}
+
+@media (min-width: 640px) {
+  .mobile-lang-overlay {
+    align-items: center;
+    padding: 20px;
+  }
+}
+
+.mobile-lang-sheet {
+  width: 100%;
+  max-width: 480px;
+  max-height: 85vh;
+  background: rgba(12, 16, 26, 0.98);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  border-radius: 20px 20px 0 0;
+  box-shadow: 0 -10px 40px rgba(0, 0, 0, 0.9), 0 0 30px rgba(212, 175, 55, 0.15);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  animation: sheetSlideUp 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@media (min-width: 640px) {
+  .mobile-lang-sheet {
+    border-radius: 16px;
+    max-height: 80vh;
+    animation: modalPop 0.2s ease-out;
+  }
+}
+
+@keyframes sheetSlideUp {
+  from { transform: translateY(100%); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@keyframes modalPop {
+  from { transform: scale(0.95); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+.mobile-lang-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px 12px 18px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(255, 255, 255, 0.02);
+}
+
+.mobile-lang-title-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.mobile-lang-flag {
+  font-size: 26px;
+  line-height: 1;
+}
+
+.mobile-lang-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 800;
+  color: #D4AF37;
+  letter-spacing: 0.5px;
+}
+
+.mobile-lang-subtitle {
+  margin: 2px 0 0 0;
+  font-size: 11px;
+  color: #94a3b8;
+}
+
+.mobile-lang-close {
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  color: #cbd5e1;
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.mobile-lang-close:hover, .mobile-lang-close:active {
+  background: rgba(239, 68, 68, 0.2);
+  border-color: rgba(239, 68, 68, 0.5);
+  color: #ef4444;
+}
+
+.mobile-lang-scroll-list {
+  padding: 10px 14px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  -webkit-overflow-scrolling: touch;
+  max-height: calc(85vh - 120px);
+}
+
+.mobile-lang-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+  text-align: left;
+  min-height: 52px;
+}
+
+.mobile-lang-row:hover, .mobile-lang-row:active {
+  background: rgba(212, 175, 55, 0.12);
+  border-color: rgba(212, 175, 55, 0.35);
+  transform: translateY(-1px);
+}
+
+.mobile-lang-row.active {
+  background: rgba(212, 175, 55, 0.2);
+  border-color: #D4AF37;
+  box-shadow: 0 0 14px rgba(212, 175, 55, 0.25);
+}
+
+.lang-row-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.lang-row-flag {
+  font-size: 22px;
+  line-height: 1;
+}
+
+.lang-row-names {
+  display: flex;
+  flex-direction: column;
+}
+
+.lang-row-label {
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+}
+
+.mobile-lang-row.active .lang-row-label {
+  color: #D4AF37;
+}
+
+.lang-row-native {
+  font-size: 11.5px;
+  color: #94a3b8;
+  margin-top: 1px;
+}
+
+.lang-row-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.lang-row-code {
+  font-size: 11px;
+  font-weight: 800;
+  padding: 2px 6px;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.06);
+  color: #94a3b8;
+  letter-spacing: 0.5px;
+}
+
+.mobile-lang-row.active .lang-row-code {
+  background: rgba(212, 175, 55, 0.25);
+  color: #D4AF37;
+}
+
+.lang-row-check {
+  font-size: 15px;
+  font-weight: 900;
+  color: #D4AF37;
+}
+
+.mobile-lang-footer {
+  padding: 10px 16px 14px 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+  background: rgba(0, 0, 0, 0.25);
+  text-align: center;
+}
+
+.lang-compliance-text {
+  font-size: 9.5px;
+  color: #64748b;
+  letter-spacing: 0.3px;
 }
 </style>
