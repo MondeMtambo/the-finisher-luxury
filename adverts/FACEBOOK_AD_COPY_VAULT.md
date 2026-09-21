@@ -78,6 +78,45 @@ Claim your 5-user corporate workspace and automate your deal pipeline today.
 
 ---
 
+## 🎯 CAMPAIGN 3: THE AUTHENTIC "MADE FOR THE PEOPLE" FOUNDER CAMPAIGN
+* **Target Audience**: South African Entrepreneurs, Small Business Owners, Growing Teams, Startups
+* **Goal**: High-Trust Community Registrations, Feedback & Long-Term Loyalty
+* **Recommended Visual**: `05_authentic_people_first_ad.jpg` (Saved in `adverts/` folder)
+
+### 📝 Primary Text (Copy & Paste):
+A quick, honest update from me on something I’ve been building... 🇿🇦
+
+Running a business is tough, and let’s be honest: in times like these, heavy monthly software fees are the last thing a growing team needs right now. We know how hard it is to get started, because we are starting small ourselves.
+
+That’s why we decided to do things differently.
+
+**THE FINISHER is made for the people.**  
+We wanted to create a simple, clean CRM workspace where you can manage your clients, track your deals, and keep your business organized—completely free (R0).
+
+We are brand new, and we are learning every single day. We don't have all the answers yet, but we have a lot of heart:
+
+🛠️ **Come in and test it with us**  
+🐞 **Let’s find bugs and debug together**  
+💡 **Tell us what your business needs, and we’ll build it for you**  
+
+No subscriptions, no fees, no pressure. Just a homegrown platform built to help each other grow.
+
+If you have a business and want to test it out with 5 free team seats, I would be honored to have you as one of our first founding members. Let’s build together! 🇿🇦
+
+👉 Claim your free workspace today:
+
+### 🏷️ Headline:
+**Made for the People. Free Founding CRM Workspace (R0).**
+
+### 📄 Description:
+**🇿🇦 Homegrown in South Africa · 5 Free Team Seats · Let's Grow Together**
+
+### 🔘 Call To Action Button:
+**Sign Up**  
+**Link**: `https://www.thefinishercrm.tech/#/register`
+
+---
+
 ## 📱 SHORT PUNCHY COPY (FOR INSTAGRAM / FACEBOOK STORIES & REELS)
 
 **Text Overlay / Caption:**
