@@ -66,3 +66,7 @@ backend/db.sqlite3
 purge_test_users.py
 backend/purge_test_users.py
 
+# Local Adverts & Marketing Assets (Local only, not on Git)
+adverts/
+
+
