@@ -44,7 +44,8 @@ def record_audit_event(
     request=None,
     severity: str = 'INFO',
     metadata: dict = None,
-    organization=None
+    organization=None,
+    ip_address: str = None
 ):
     """
     Record an immutable event into the SecurityAuditTrail.
@@ -68,7 +69,7 @@ def record_audit_event(
             elif request and hasattr(request, 'data') and isinstance(request.data, dict):
                 username_attempted = request.data.get('username', '')
 
-        ip = get_client_ip(request)
+        ip = ip_address or get_client_ip(request)
         ua = get_client_user_agent(request)
 
         entry = SecurityAuditTrail.objects.create(

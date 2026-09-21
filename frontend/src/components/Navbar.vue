@@ -129,7 +129,7 @@
         <button 
           class="topbar-query-btn" 
           @click="$emit('open-query-modal')" 
-          title="Submit a Query or Report a Bug directly to mtamboholdings@outlook.com"
+          title="Submit a Query or Report a Bug directly to the Executive Support Desk"
         >
           <span class="query-btn-icon">🛡️</span>
           <span class="query-btn-text">Report Bug / Query</span>

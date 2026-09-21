@@ -85,9 +85,9 @@
 
       <section>
         <h2>Contact &amp; Legal Inquiries</h2>
-        <p>For executive privacy, legal queries, or licensing inquiries, contact MTAMBO HOLDINGS at <strong>mtamboholdings@outlook.com</strong> or <strong>legal@mtamboholdings.co.za</strong><br>
-        <strong>Registered Physical Domicile:</strong> 7682 Isikova Crescent, Gauteng, Boksburg, 1459<br>
-        <strong>Product &amp; Executive Support:</strong> mtamboholdings@outlook.com</p>
+        <p>For executive privacy, legal queries, or licensing inquiries, contact THE FINISHER at <strong>support@thefinishercrm.tech</strong> or <strong>legal@thefinishercrm.tech</strong><br>
+        <strong>Registered Physical Domicile:</strong> Sandton City, Johannesburg, South Africa<br>
+        <strong>Product &amp; Executive Support:</strong> support@thefinishercrm.tech</p>
       </section>
 
       <div class="legal-footer">

@@ -475,6 +475,7 @@ export const accessRequestsAPI = {
   submitPublic: (data) => api.post('/public/request-access/', data),
   verifyPublic: (data) => api.post('/public/verify-access-request/', data),
   cancelPublic: (id) => api.delete(`/public/cancel-access-request/${id}/`),
+  trackIntent: (data) => api.post('/public/track-registration-intent/', data),
   searchCEO: (query) => api.get('/public/search-ceo/', { params: { q: query } }),
   adminGetAll: () => api.get('/admin/access-requests/'),
   adminAction: (id, action, notes = '', rejectionReason = '') =>

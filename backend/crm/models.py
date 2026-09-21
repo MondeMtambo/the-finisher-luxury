@@ -1637,6 +1637,7 @@ class SecurityAuditTrail(models.Model):
         ('DATA_EXPORT', 'POPIA Data Export (CSV/PDF)'),
         ('DATA_DELETE', 'Record Deletion / Purge'),
         ('PRIVILEGE_CHANGE', 'User Role / Plan Mutation'),
+        ('REGISTRATION_INCOMPLETE', 'Incomplete / Abandoned Registration'),
         ('SECURITY_POLICY_VIOLATION', 'Security Policy Violation'),
     ]
 

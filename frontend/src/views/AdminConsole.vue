@@ -966,6 +966,10 @@
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
               Export POPIA Audit Log (CSV)
             </button>
+            <button class="btn btn-secondary btn-sm" @click="downloadJsonArchive" style="background: rgba(212, 175, 55, 0.1); border: 1px solid #d4af37; color: #d4af37;">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+              📥 Download Log Archive (.JSON)
+            </button>
           </div>
         </div>
 
@@ -975,6 +979,7 @@
             <label>Event Type:</label>
             <select v-model="auditFilterEvent" @change="fetchAuditLogs" class="form-input form-input-sm">
               <option value="">All Security Events</option>
+              <option value="REGISTRATION_INCOMPLETE">⚠️ Abandoned / Incomplete Registrations</option>
               <option value="AUTH_LOGIN_SUCCESS">Login Success (Direct & MFA)</option>
               <option value="AUTH_LOGIN_FAILED">Login Failed (Unknown / Wrong Pwd)</option>
               <option value="MFA_VERIFIED">MFA Verified</option>
@@ -1047,7 +1052,18 @@
                   <span class="ip-pill">{{ log.ip_address || 'Internal' }}</span>
                 </td>
                 <td class="text-sm audit-desc">
-                  {{ log.description }}
+                  <div>{{ log.description }}</div>
+                  <div v-if="log.metadata && (log.metadata.phone || log.metadata.step || log.metadata.stage)" style="margin-top: 4px; font-size: 0.78rem; color: #f59e0b; display: flex; gap: 8px; flex-wrap: wrap; align-items: center;">
+                    <span v-if="log.metadata.phone" style="background: rgba(245, 158, 11, 0.15); padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(245, 158, 11, 0.3);">
+                      📞 {{ log.metadata.phone }}
+                    </span>
+                    <span v-if="log.metadata.step" style="background: rgba(59, 130, 246, 0.15); color: #93c5fd; padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(59, 130, 246, 0.3);">
+                      Progress: Step {{ log.metadata.step }}/3
+                    </span>
+                    <span v-if="log.metadata.abandoned" style="background: rgba(239, 68, 68, 0.15); color: #fca5a5; padding: 2px 6px; border-radius: 4px; border: 1px solid rgba(239, 68, 68, 0.3);">
+                      ⚠️ Abandoned Drop-Off
+                    </span>
+                  </div>
                 </td>
               </tr>
             </tbody>
@@ -1874,6 +1890,31 @@ export default {
       })
       .catch(err => {
         alert('Could not export POPIA Audit log: ' + err.message);
+      });
+    },
+    downloadJsonArchive() {
+      const url = `${this.apiBase}/audit-trail/download-json-archive/`;
+      const token = this.token;
+      fetch(url, {
+        headers: { 'Authorization': `Bearer ${token}` }
+      })
+      .then(res => {
+        if (!res.ok) throw new Error('Archive download failed');
+        return res.blob();
+      })
+      .then(blob => {
+        const downloadUrl = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = downloadUrl;
+        a.download = `the_finisher_security_audit_archive_${new Date().toISOString().substring(0,10)}.json`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(downloadUrl);
+        setTimeout(() => this.fetchAuditLogs(), 500);
+      })
+      .catch(err => {
+        alert('Could not download Audit JSON archive: ' + err.message);
       });
     },
     // Formatting Helpers

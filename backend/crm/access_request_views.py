@@ -44,16 +44,41 @@ def purge_expired_access_requests():
     """
     Ephemeral retention policy (5-Minute TTL):
     Permanently purges unverified corporate access requests older than 5 minutes.
-    Keeps the database secure, zero-zombie, and POPIA Section 19 compliant.
+    Keeps the database secure, zero-zombie, and POPIA Section 19 compliant,
+    while recording an immutable drop-off audit entry for executive tracking.
     """
     try:
         now = timezone.now()
         cutoff = now - timezone.timedelta(minutes=5)
-        purged_count, _ = CorporateAccessRequest.objects.filter(
+        expired_qs = CorporateAccessRequest.objects.filter(
             is_verified=False
         ).filter(
             Q(expires_at__lte=now) | Q(created_at__lte=cutoff)
-        ).delete()
+        )
+
+        for req in expired_qs:
+            record_audit_event(
+                event_type='REGISTRATION_INCOMPLETE',
+                severity='WARNING',
+                description=f"Abandoned Registration Expired (5-Min TTL): {req.first_name} {req.last_name} ({req.email}) for company '{req.company_name}' abandoned registration before 5-minute OTP verification window.",
+                username_attempted=req.email,
+                metadata={
+                    'reason': '5_MINUTE_OTP_EXPIRED_UNVERIFIED',
+                    'first_name': req.first_name,
+                    'last_name': req.last_name,
+                    'email': req.email,
+                    'phone': req.phone,
+                    'company_name': req.company_name,
+                    'cipc_number': req.cipc_number,
+                    'physical_address': req.physical_address,
+                    'city': req.city,
+                    'province': req.province,
+                    'requested_tier': req.requested_tier,
+                    'status': 'ABANDONED_UNVERIFIED'
+                }
+            )
+
+        purged_count, _ = expired_qs.delete()
         if purged_count > 0:
             logger.info(f"Purged {purged_count} expired unverified access requests from database.")
     except Exception as e:
@@ -523,7 +548,7 @@ class PublicVerifyAccessRequestView(APIView):
                 "Upon executive authorization, your dedicated private cloud workspace is provisioned.",
                 f"Your auto-generated, high-entropy master credentials will be securely delivered to {req_obj.email}."
             ],
-            security_note="Direct executive inquiries or custom enterprise configuration requests: mtamboholdings@outlook.com"
+            security_note="Direct executive inquiries or custom enterprise configuration requests: support@thefinishercrm.tech"
         )
 
         send_email_async(
@@ -584,16 +609,94 @@ class PublicVerifyAccessRequestView(APIView):
 class PublicCancelAccessRequestView(APIView):
     """
     Public Endpoint: Cancels/deletes an unverified corporate access request (e.g. when 5-minute timer expires).
+    Records an abandoned registration event into SecurityAuditTrail before wiping the temporary table row.
     """
     permission_classes = [permissions.AllowAny]
 
     def delete(self, request, pk):
-        deleted_count, _ = CorporateAccessRequest.objects.filter(pk=pk, is_verified=False).delete()
+        req_obj = CorporateAccessRequest.objects.filter(pk=pk, is_verified=False).first()
+        if req_obj:
+            record_audit_event(
+                event_type='REGISTRATION_INCOMPLETE',
+                severity='WARNING',
+                request=request,
+                description=f"Abandoned Registration Expired (Timer Cancelled): {req_obj.first_name} {req_obj.last_name} ({req_obj.email}) for company '{req_obj.company_name}' timed out before 5-minute OTP verification.",
+                username_attempted=req_obj.email,
+                metadata={
+                    'reason': 'USER_TIMED_OUT_OR_CANCELLED',
+                    'first_name': req_obj.first_name,
+                    'last_name': req_obj.last_name,
+                    'email': req_obj.email,
+                    'phone': req_obj.phone,
+                    'company_name': req_obj.company_name,
+                    'cipc_number': req_obj.cipc_number,
+                    'requested_tier': req_obj.requested_tier,
+                    'status': 'ABANDONED_UNVERIFIED'
+                }
+            )
+            req_obj.delete()
+            return Response({
+                'success': True,
+                'purged': True,
+                'message': 'Temporary unverified record permanently purged from database.'
+            })
         return Response({
             'success': True,
-            'purged': bool(deleted_count),
-            'message': 'Temporary unverified record permanently purged from database.'
+            'purged': False,
+            'message': 'No matching unverified record found.'
         })
+
+
+class TrackRegistrationIntentView(APIView):
+    """
+    Public Endpoint: Real-time Radar for monitoring who is attempting to register but not finishing.
+    Captures applicant progress across Step 1 and Step 2 in real time with client IP and exact timestamp.
+    """
+    permission_classes = [permissions.AllowAny]
+
+    def post(self, request):
+        data = request.data or {}
+        email = (data.get('email') or '').strip().lower()
+        if not email or '@' not in email:
+            return Response({'status': 'ignored'}, status=200)
+
+        step = data.get('step', 1)
+        stage = data.get('stage', f'STEP_{step}_ENTERED')
+        first_name = (data.get('first_name') or '').strip()
+        last_name = (data.get('last_name') or '').strip()
+        phone = (data.get('phone') or '').strip()
+        company_name = (data.get('company_name') or '').strip() or 'Pending Corporate Workspace'
+        job_title = (data.get('job_title') or '').strip()
+
+        event_type = 'REGISTRATION_INCOMPLETE' if data.get('abandoned') or step < 4 else 'AUTH_REGISTRATION'
+        severity = 'WARNING' if data.get('abandoned') else 'INFO'
+
+        stage_label = "Step 1 Applicant Auth" if step == 1 else ("Step 2 Corporate Dossier" if step == 2 else f"Step {step}")
+        description = (
+            f"Registration Radar: {first_name} {last_name} ({email}) entered {stage_label} "
+            f"for '{company_name}' [In-Progress / Drop-off Tracking]."
+        )
+
+        record_audit_event(
+            event_type=event_type,
+            severity=severity,
+            request=request,
+            description=description,
+            username_attempted=email,
+            metadata={
+                'first_name': first_name,
+                'last_name': last_name,
+                'email': email,
+                'phone': phone,
+                'company_name': company_name,
+                'job_title': job_title,
+                'step': step,
+                'stage': stage,
+                'abandoned': bool(data.get('abandoned', False)),
+                'in_progress': True
+            }
+        )
+        return Response({'status': 'recorded', 'step': step})
 
 
 class AdminAccessRequestListView(APIView):

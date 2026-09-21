@@ -732,6 +732,20 @@ export default {
       const genericDomains = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'icloud.com', 'mail.com']
       const domain = email.split('@')[1]
       this.isGenericEmail = !!(domain && genericDomains.includes(domain))
+
+      if (email.includes('@') && email.includes('.')) {
+        try {
+          accessRequestsAPI.trackIntent({
+            step: 1,
+            email: email,
+            first_name: this.form.first_name,
+            last_name: this.form.last_name,
+            phone: this.form.phone,
+            is_ceo: this.form.is_ceo,
+            stage: 'STEP_1_EMAIL_ENTERED'
+          }).catch(() => {})
+        } catch (e) {}
+      }
     },
     onCEOToggleChange() {
       if (this.form.is_ceo) {
@@ -806,6 +820,19 @@ export default {
         return
       }
 
+      // Real-time Drop-off Radar: Track applicant intent at Step 1
+      try {
+        accessRequestsAPI.trackIntent({
+          step: 1,
+          email: this.form.email,
+          first_name: this.form.first_name,
+          last_name: this.form.last_name,
+          phone: this.form.phone,
+          is_ceo: this.form.is_ceo,
+          stage: 'STEP_1_COMPLETED_PROCEEDING_TO_DOSSIER'
+        }).catch(() => {})
+      } catch (e) {}
+
       this.currentStep = 2
       window.scrollTo({ top: 0, behavior: 'smooth' })
     },
@@ -853,6 +880,20 @@ export default {
 
         const res = await accessRequestsAPI.submitPublic(payload)
 
+        // Drop-off radar: record Step 2 completed & awaiting OTP
+        try {
+          accessRequestsAPI.trackIntent({
+            step: 2,
+            email: this.form.email,
+            first_name: this.form.first_name,
+            last_name: this.form.last_name,
+            phone: this.form.phone,
+            company_name: this.form.company_name,
+            cipc_number: this.form.cipc_number,
+            stage: 'STEP_2_COMPLETED_AWAITING_OTP'
+          }).catch(() => {})
+        } catch (e) {}
+
         this.activeRequestId = res.data?.request_id
         this.verificationInput = ''
         this.verificationError = ''
@@ -885,6 +926,17 @@ export default {
       }, 1000)
     },
     async handleTimerExpired() {
+      // Drop-off radar: record 5-minute timeout abandonment
+      try {
+        accessRequestsAPI.trackIntent({
+          step: 3,
+          email: this.form.email,
+          company_name: this.form.company_name,
+          abandoned: true,
+          stage: 'EXPIRED_5_MIN_OTP_WINDOW'
+        }).catch(() => {})
+      } catch (e) {}
+
       if (this.activeRequestId) {
         try {
           await accessRequestsAPI.cancelPublic(this.activeRequestId)
@@ -940,6 +992,17 @@ export default {
           request_id: this.activeRequestId,
           verification_code: this.verificationInput.trim()
         })
+
+        // Drop-off radar: record verified success
+        try {
+          accessRequestsAPI.trackIntent({
+            step: 4,
+            email: this.form.email,
+            company_name: this.form.company_name,
+            abandoned: false,
+            stage: 'APPLICATION_VERIFIED_PENDING_APPROVAL'
+          }).catch(() => {})
+        } catch (e) {}
 
         if (this.verificationTimer) clearInterval(this.verificationTimer)
         this.currentStep = 4

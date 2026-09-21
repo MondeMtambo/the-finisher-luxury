@@ -14,7 +14,7 @@
 
       <div class="modal-title-wrap">
         <h2>Submit a Query / Report an Issue</h2>
-        <p>Direct communication pipeline to Mtambo Holdings Executive Desk &amp; Engineering Team (<code>mtamboholdings@outlook.com</code>).</p>
+        <p>Direct communication pipeline to Executive Desk &amp; Engineering Team (<code>support@thefinishercrm.tech</code>).</p>
       </div>
 
       <form @submit.prevent="handleSubmit" class="query-form">
@@ -87,7 +87,7 @@
 
         <div class="compliance-hint">
           <span class="lock-icon">🔒</span>
-          <span>Dispatched with 256-bit TLS encryption. Copy sent to Executive Audit Desk. Registered Office: <strong>7682 Isikova Crescent, Gauteng, Boksburg, 1459</strong>.</span>
+          <span>Dispatched with 256-bit TLS encryption. Copy sent to Executive Audit Desk. Registered Office: <strong>Sandton City, Johannesburg, South Africa</strong>.</span>
         </div>
 
         <div class="modal-actions">
@@ -166,7 +166,7 @@ export default {
 
         toast.success(
           'Query Dispatched',
-          'Your communication has been forwarded directly to Executive Support (mtamboholdings@outlook.com).'
+          'Your communication has been forwarded directly to Executive Support (support@thefinishercrm.tech).'
         )
 
         this.form.subject = ''
@@ -176,7 +176,7 @@ export default {
         console.error('Failed to dispatch query:', error)
         toast.error(
           'Dispatch Failed',
-          error.response?.data?.error || 'Unable to submit your query. Please try again or email mtamboholdings@outlook.com directly.'
+          error.response?.data?.error || 'Unable to submit your query. Please try again or email support@thefinishercrm.tech directly.'
         )
       } finally {
         this.submitting = false

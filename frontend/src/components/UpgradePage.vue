@@ -168,7 +168,7 @@
           </p>
         </div>
         <div class="enterprise-desk-actions">
-          <a href="mailto:mtamboholdings@outlook.com?subject=Enterprise%20Edition%20Fleet%20Consultation" class="btn btn-primary">
+          <a href="mailto:sales@thefinishercrm.tech?subject=Enterprise%20Edition%20Fleet%20Consultation" class="btn btn-primary">
             Contact Corporate Sales &rarr;
           </a>
           <button class="btn btn-ghost" @click="goBack">Back to Dashboard</button>
@@ -180,11 +180,11 @@
     <div v-if="notifyPaymentModal" class="modal-overlay" @click.self="notifyPaymentModal = false">
       <div class="modal-content card">
         <h3>Submit Proof of Payment (POP)</h3>
-        <p class="text-muted">Send your payment notification directly to Mtambo Holdings executive concierge for instant account activation.</p>
+        <p class="text-muted">Send your payment notification directly to executive concierge for instant account activation.</p>
         
         <div class="form-group">
           <label>Organization / Company Name</label>
-          <input type="text" v-model="companyName" class="form-control" placeholder="Mtambo Holdings (Pty) Ltd" />
+          <input type="text" v-model="companyName" class="form-control" placeholder="Company (Pty) Ltd" />
         </div>
         <div class="form-group">
           <label>Payment Reference Used</label>
@@ -209,7 +209,7 @@
       <div class="modal-content card">
         <h3>Enterprise Custom Architecture</h3>
         <p class="text-muted">Bespoke SLA, dedicated database clusters, and custom Sage/Xero integrations for large operations.</p>
-        <p><strong>Executive Concierge:</strong> <a href="mailto:mtamboholdings@outlook.com?subject=Enterprise%20Edition%20Consultation">mtamboholdings@outlook.com</a></p>
+        <p><strong>Executive Concierge:</strong> <a href="mailto:sales@thefinishercrm.tech?subject=Enterprise%20Edition%20Consultation">sales@thefinishercrm.tech</a></p>
         <div class="modal-actions">
           <button class="btn btn-primary" @click="contactSalesModal = false">Close</button>
         </div>

@@ -4140,6 +4140,9 @@ class SecurityAuditTrailViewSet(viewsets.ReadOnlyModelViewSet):
             elif event_type == 'AUTH_LOGIN_FAILED':
                 # Group all failed authentication attempts
                 qs = qs.filter(Q(event_type='AUTH_LOGIN_FAILED') | Q(event_type='SECURITY_POLICY_VIOLATION'))
+            elif event_type == 'REGISTRATION_INCOMPLETE':
+                # Group all incomplete or dropped registration attempts
+                qs = qs.filter(Q(event_type='REGISTRATION_INCOMPLETE') | Q(metadata__in_progress=True) | Q(metadata__abandoned=True))
             else:
                 qs = qs.filter(event_type=event_type)
 
@@ -4209,6 +4212,49 @@ class SecurityAuditTrailViewSet(viewsets.ReadOnlyModelViewSet):
             request=request,
             severity='INFO',
             metadata={'export_type': 'POPIA_AUDIT_CSV', 'record_count': logs.count()}
+        )
+
+        return response
+
+    @action(detail=False, methods=['get'], url_path='download-json-archive')
+    def download_json_archive(self, request):
+        """
+        Download compressed compact JSON archive of security audit logs.
+        Stored on Supabase database in high-efficiency JSONB format.
+        """
+        user = request.user
+        if not (user.is_superuser or is_owner_admin_user(user)):
+            raise PermissionDenied("Only System Owner can export POPIA compliance logs.")
+
+        logs = self.get_queryset()
+        data = []
+        for log in logs:
+            actor = log.user.username if log.user else (log.username_attempted or 'Anonymous')
+            data.append({
+                'id': str(log.id),
+                'timestamp': log.timestamp.isoformat(),
+                'severity': log.severity,
+                'event_type': log.event_type,
+                'actor': actor,
+                'ip_address': log.ip_address,
+                'company': getattr(log.organization, 'name', '') or log.metadata.get('company_name', ''),
+                'description': log.description,
+                'metadata': log.metadata or {}
+            })
+
+        import json
+        from django.http import HttpResponse
+        response = HttpResponse(json.dumps(data, indent=2), content_type='application/json')
+        filename = f"the_finisher_audit_archive_{timezone.now().strftime('%Y%m%d_%H%M%S')}.json"
+        response['Content-Disposition'] = f'attachment; filename="{filename}"'
+
+        record_audit_event(
+            'DATA_EXPORT',
+            f"POPIA Security Audit Archive JSON downloaded by {user.username} ({len(data)} records)",
+            user=user,
+            request=request,
+            severity='INFO',
+            metadata={'export_type': 'POPIA_AUDIT_JSON', 'record_count': len(data)}
         )
 
         return response
