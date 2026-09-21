@@ -975,13 +975,17 @@
             <label>Event Type:</label>
             <select v-model="auditFilterEvent" @change="fetchAuditLogs" class="form-input form-input-sm">
               <option value="">All Security Events</option>
-              <option value="AUTH_LOGIN_SUCCESS">Login Success</option>
-              <option value="AUTH_LOGIN_FAILED">Login Failed</option>
-              <option value="AUTH_LOGOUT">Logout</option>
+              <option value="AUTH_LOGIN_SUCCESS">Login Success (Direct & MFA)</option>
+              <option value="AUTH_LOGIN_FAILED">Login Failed (Unknown / Wrong Pwd)</option>
               <option value="MFA_VERIFIED">MFA Verified</option>
+              <option value="AUTH_REGISTRATION">Registrations & Access Requests</option>
+              <option value="AUTH_APPROVAL">Approvals & Onboarding Decisions</option>
+              <option value="EMPLOYEE_ONBOARDED">Employee Onboarded</option>
+              <option value="SECURITY_WARNING">Warnings & Security Challenges</option>
+              <option value="SECURITY_POLICY_VIOLATION">Policy Violations</option>
               <option value="DATA_EXPORT">POPIA Data Export</option>
               <option value="PRIVILEGE_CHANGE">Privilege / Plan Change</option>
-              <option value="SECURITY_POLICY_VIOLATION">Policy Violation</option>
+              <option value="AUTH_LOGOUT">Logout</option>
             </select>
           </div>
           <div class="filter-group">
@@ -1028,7 +1032,7 @@
               <tr v-for="log in auditLogs" :key="log.id">
                 <td class="text-sm font-mono whitespace-nowrap">{{ formatAuditTimestamp(log.timestamp) }}</td>
                 <td>
-                  <span class="badge badge-gray" style="font-weight: 700; color: #D4AF37;">{{ log.organization_name || 'MTAMBO HOLDINGS' }}</span>
+                  <span class="badge badge-gray" style="font-weight: 700; color: #D4AF37;">{{ log.organization_name || log.metadata?.company_name || 'Individual / Sovereign' }}</span>
                 </td>
                 <td>
                   <span :class="`badge-audit badge-${(log.severity || 'info').toLowerCase()}`">{{ log.severity }}</span>

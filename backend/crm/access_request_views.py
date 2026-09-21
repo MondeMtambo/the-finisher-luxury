@@ -15,6 +15,7 @@ from rest_framework.response import Response
 
 from .utils import is_owner_admin_user
 from .models import CorporateAccessRequest, Organization, UserProfile, TenantVerification, WebsiteLead, Notification, Company
+from .audit_utils import record_audit_event
 
 logger = logging.getLogger(__name__)
 
@@ -343,6 +344,15 @@ class PublicAccessRequestView(APIView):
 
         logger.info(f"Corporate Access Request created (5-Min TTL): {company_name} ({email}) - Code: {verification_code}")
 
+        record_audit_event(
+            'AUTH_REGISTRATION',
+            f"Corporate access application submitted by {first_name} {last_name} ({email}) for company '{company_name}' ({job_title})",
+            username_attempted=email,
+            request=request,
+            severity='INFO',
+            metadata={'company_name': company_name, 'email': email, 'phone': phone, 'job_title': job_title}
+        )
+
         # Dispatch 5-Minute Verification Code to Applicant Email
         verify_subject = f"Verify Corporate Application: {verification_code} (Expires in 5 Minutes)"
         verify_body = (
@@ -438,9 +448,17 @@ class PublicVerifyAccessRequestView(APIView):
         if submitted_code != req_obj.verification_code:
             return Response({'error': 'Invalid verification code. Please check and try again.'}, status=status.HTTP_400_BAD_REQUEST)
 
-        # Mark Verified
         req_obj.is_verified = True
         req_obj.save(update_fields=['is_verified'])
+
+        record_audit_event(
+            'AUTH_REGISTRATION',
+            f"Corporate applicant email OTP verified for {req_obj.first_name} {req_obj.last_name} ({req_obj.email}) - {req_obj.company_name}",
+            username_attempted=req_obj.email,
+            request=request,
+            severity='INFO',
+            metadata={'email': req_obj.email, 'company_name': req_obj.company_name}
+        )
 
         # 1. Dispatch Email Alert to noreply@mtamboholdings.dev shared mailbox
         sales_email = getattr(settings, 'SALES_EMAIL', 'noreply@mtamboholdings.dev')
@@ -669,6 +687,15 @@ class AdminAccessRequestActionView(APIView):
             req_obj.reviewed_at = timezone.now()
             req_obj.save()
 
+            record_audit_event(
+                'AUTH_APPROVAL',
+                f"Corporate access application REJECTED for {req_obj.first_name} {req_obj.last_name} ({req_obj.email}) - {req_obj.company_name} by {request.user.username} (Reason: {req_obj.rejection_reason})",
+                user=request.user,
+                request=request,
+                severity='WARNING',
+                metadata={'action': 'reject', 'applicant_email': req_obj.email, 'company_name': req_obj.company_name, 'reason': req_obj.rejection_reason}
+            )
+
             return Response({
                 'success': True,
                 'status': 'rejected',
@@ -788,6 +815,16 @@ class AdminAccessRequestActionView(APIView):
         req_obj.reviewed_at = timezone.now()
         req_obj.notes = notes
         req_obj.save()
+
+        record_audit_event(
+            'AUTH_APPROVAL',
+            f"Corporate access APPROVED for {req_obj.first_name} {req_obj.last_name} ({req_obj.email}) - Workspace: {req_obj.company_name} (Tier: {chosen_tier}) by {request.user.username}",
+            user=request.user,
+            organization=org,
+            request=request,
+            severity='INFO',
+            metadata={'action': 'approve', 'applicant_email': req_obj.email, 'company_name': req_obj.company_name, 'tier': chosen_tier}
+        )
 
         # 6. Welcome / Activation Dispatch containing the AUTO-GENERATED credentials
         login_url = "https://www.thefinishercrm.tech/#/login"

@@ -13,7 +13,7 @@ from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 from django.contrib.auth.models import User
 from django.core.mail import send_mail
 from .email_service import send_email_async, render_luxury_email_html
-from django.conf import settings
+from django.db.models import Q
 from .models import PasswordResetOTP, UserProfile
 from .mfa_utils import create_mfa_code, verify_mfa_code, is_mfa_required, generate_pre_auth_token, validate_pre_auth_token
 from .auth_serializers import (
@@ -113,7 +113,8 @@ class EmailOnlyLoginTokenSerializer(TokenObtainPairSerializer):
 
 class LoginView(TokenObtainPairView):
     """
-    JWT login endpoint with IP tracking.
+    JWT login endpoint with comprehensive POPIA Section 19 audit logging.
+    Records ALL login attempts (known employees, unknown usernames, failed credentials, and MFA).
     POST /api/auth/login/
     Body: {username, password}
     """
@@ -121,64 +122,107 @@ class LoginView(TokenObtainPairView):
     serializer_class = EmailOnlyLoginTokenSerializer
     
     def post(self, request, *args, **kwargs):
-        response = super().post(request, *args, **kwargs)
+        identifier = (request.data.get('username') or '').strip()
+        
+        # 1. Attempt authentication and intercept any authentication failure/exception
+        try:
+            response = super().post(request, *args, **kwargs)
+        except Exception as exc:
+            user_found = User.objects.filter(Q(username__iexact=identifier) | Q(email__iexact=identifier)).first()
+            org = None
+            company_label = 'Unknown / Unaffiliated'
+            if user_found and hasattr(user_found, 'profile'):
+                org = getattr(user_found.profile, 'organization', None)
+                company_label = getattr(user_found.profile, 'company_name', None) or (org.name if org else 'Individual')
+            
+            err_detail = getattr(exc, 'detail', str(exc))
+            if isinstance(err_detail, (list, dict)):
+                err_detail = str(err_detail)
+            
+            record_audit_event(
+                'AUTH_LOGIN_FAILED',
+                f"Failed authentication attempt for '{identifier}' ({company_label}) - Reason: {err_detail}",
+                user=user_found,
+                username_attempted=identifier,
+                organization=org,
+                request=request,
+                severity='WARNING',
+                metadata={'identifier': identifier, 'company_name': company_label, 'error': str(err_detail)}
+            )
+            raise exc
 
+        # 2. Process HTTP response
         if response.status_code == 200:
-            identifier = (request.data.get('username') or '').strip()
             try:
-                user = User.objects.filter(username__iexact=identifier).first() or User.objects.filter(email__iexact=identifier).first()
+                user = User.objects.filter(Q(username__iexact=identifier) | Q(email__iexact=identifier)).first()
                 if not user:
                     raise User.DoesNotExist
 
-                if hasattr(user, 'profile'):
-                    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-                    if x_forwarded_for:
-                        ip = x_forwarded_for.split(',')[0].strip()
-                    else:
-                        ip = request.META.get('REMOTE_ADDR')
+                profile = getattr(user, 'profile', None)
+                org = getattr(profile, 'organization', None) if profile else None
+                company_label = (getattr(profile, 'company_name', None) or (org.name if org else 'Independent Enterprise')).strip()
 
-                    profile = user.profile
+                x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+                ip = x_forwarded_for.split(',')[0].strip() if x_forwarded_for else request.META.get('REMOTE_ADDR')
+
+                if profile:
                     # If admin forced a password reset, don't return tokens — require change first
                     if getattr(profile, 'requires_password_reset', False):
-                        # Remove tokens from response if present
                         response.data.pop('access', None)
                         response.data.pop('refresh', None)
                         response.data['requires_password_reset'] = True
                         response.data['user_id'] = user.id
                         response.data['email'] = user.email
+                        record_audit_event(
+                            'SECURITY_WARNING',
+                            f"Mandatory password reset challenge triggered on login for {user.username} ({user.email})",
+                            user=user,
+                            organization=org,
+                            request=request,
+                            severity='WARNING'
+                        )
                         return response
+
                     if not profile.registration_ip and ip:
                         profile.registration_ip = ip
                     profile.last_login_ip = ip
-                    profile.save()
+                    profile.save(update_fields=['last_login_ip'] if profile.registration_ip else ['registration_ip', 'last_login_ip'])
 
-                    if user.profile.is_banned:
+                    if profile.is_banned:
                         record_audit_event(
                             'SECURITY_POLICY_VIOLATION',
-                            f"Blocked authentication attempt for banned user: {user.username}",
+                            f"Blocked authentication attempt for banned user: {user.username} ({user.email})",
                             user=user,
+                            organization=org,
+                            request=request,
+                            severity='CRITICAL'
+                        )
+                        return Response({
+                            'error': 'Account banned',
+                            'message': f'Your account has been banned. Reason: {profile.ban_reason}',
+                            'contact': 'security@thefinishercrm.tech'
+                        }, status=status.HTTP_403_FORBIDDEN)
+
+                    if not profile.can_access:
+                        record_audit_event(
+                            'SECURITY_WARNING',
+                            f"Login restricted due to inactive license/payment requirement for {user.username} ({user.email})",
+                            user=user,
+                            organization=org,
                             request=request,
                             severity='WARNING'
                         )
                         return Response({
-                            'error': 'Account banned',
-                            'message': f'Your account has been banned. Reason: {user.profile.ban_reason}',
-                            'contact': 'security@thefinisher.tech'
-                        }, status=status.HTTP_403_FORBIDDEN)
-
-                    if not user.profile.can_access:
-                        return Response({
                             'error': 'Payment required',
                             'message': 'Your account requires payment or active trial to continue. Please contact concierge support.',
-                            'payment_status': user.profile.payment_status,
-                            'contact': 'concierge@thefinisher.tech'
+                            'payment_status': profile.payment_status,
+                            'contact': 'concierge@thefinishercrm.tech'
                         }, status=status.HTTP_402_PAYMENT_REQUIRED)
 
                     if is_mfa_required(user):
                         code, success, msg = create_mfa_code(user)
                         pre_auth_token = generate_pre_auth_token(user)
 
-                        # Strip full JWT tokens from response until MFA completes
                         response.data.pop('access', None)
                         response.data.pop('refresh', None)
 
@@ -187,6 +231,7 @@ class LoginView(TokenObtainPairView):
                             'MFA_CHALLENGE',
                             f"MFA verification challenge dispatched to {user.email} (Delivery: {email_status})",
                             user=user,
+                            organization=org,
                             request=request,
                             severity='INFO'
                         )
@@ -209,28 +254,37 @@ class LoginView(TokenObtainPairView):
                                 message='Your workspace is ready. Explore Dashboard, Employees and Tickets to get started!',
                                 entity_type='welcome',
                                 entity_id=None,
-                                meta={'company_name': getattr(user.profile, 'company_name', '')}
+                                meta={'company_name': company_label}
                             )
                     except Exception:
                         pass
 
-                    response.data['user'] = UserSerializer(user).data
-                    record_audit_event(
-                        'AUTH_LOGIN_SUCCESS',
-                        f"Executive VIP login verified for {user.username} ({getattr(user.profile, 'company_name', 'No Company')})",
-                        user=user,
-                        request=request,
-                        severity='INFO'
-                    )
+                response.data['user'] = UserSerializer(user).data
+                # Always record successful login in audit trail for full accountability
+                actor_display = f"{user.first_name} {user.last_name}".strip() or user.username
+                record_audit_event(
+                    'AUTH_LOGIN_SUCCESS',
+                    f"Login verified for {actor_display} ({user.email or user.username}) - Company: {company_label}",
+                    user=user,
+                    organization=org,
+                    request=request,
+                    severity='INFO',
+                    metadata={'role': getattr(profile, 'role', 'user'), 'company_name': company_label}
+                )
                 
             except User.DoesNotExist:
-                pass
+                record_audit_event(
+                    'AUTH_LOGIN_FAILED',
+                    f"Authentication token issued but User object could not be resolved for identifier '{identifier}'",
+                    username_attempted=identifier,
+                    request=request,
+                    severity='WARNING'
+                )
         else:
-            attempted_user = (request.data.get('username') or '').strip()
             record_audit_event(
                 'AUTH_LOGIN_FAILED',
-                f"Failed authentication attempt for username '{attempted_user}'",
-                username_attempted=attempted_user,
+                f"Failed authentication attempt for identifier '{identifier}' (Status: {response.status_code})",
+                username_attempted=identifier,
                 request=request,
                 severity='WARNING'
             )
@@ -287,15 +341,21 @@ class VerifyMFAView(APIView):
                     'message': 'User not found'
                 }, status=status.HTTP_404_NOT_FOUND)
 
+        profile = getattr(user, 'profile', None)
+        org = getattr(profile, 'organization', None) if profile else None
+        company_label = (getattr(profile, 'company_name', None) or (org.name if org else 'Independent Enterprise')).strip()
+
         success, message = verify_mfa_code(user, mfa_code)
         
         if not success:
             record_audit_event(
                 'AUTH_LOGIN_FAILED',
-                f"MFA verification code failed for {getattr(user, 'username', 'Unknown')}: {message}",
+                f"MFA verification code failed for {getattr(user, 'username', 'Unknown')} ({getattr(user, 'email', '')}): {message}",
                 user=user,
+                organization=org,
                 request=request,
-                severity='WARNING'
+                severity='WARNING',
+                metadata={'company_name': company_label, 'error': message}
             )
             return Response({
                 'error': 'MFA verification failed',
@@ -303,12 +363,28 @@ class VerifyMFAView(APIView):
             }, status=status.HTTP_401_UNAUTHORIZED)
 
         refresh = RefreshToken.for_user(user)
+        actor_display = f"{user.first_name} {user.last_name}".strip() or user.username
+
+        # 1. Record MFA_VERIFIED event
         record_audit_event(
             'MFA_VERIFIED',
-            f"MFA verification successful for {user.username}",
+            f"MFA verification successful for {user.username} ({user.email})",
             user=user,
+            organization=org,
             request=request,
-            severity='INFO'
+            severity='INFO',
+            metadata={'company_name': company_label}
+        )
+
+        # 2. ALSO record AUTH_LOGIN_SUCCESS so filtering by 'Login Success' immediately captures this login!
+        record_audit_event(
+            'AUTH_LOGIN_SUCCESS',
+            f"Login verified via MFA for {actor_display} ({user.email or user.username}) - Company: {company_label}",
+            user=user,
+            organization=org,
+            request=request,
+            severity='INFO',
+            metadata={'role': getattr(profile, 'role', 'user'), 'company_name': company_label, 'method': 'MFA'}
         )
         
         return Response({
@@ -326,6 +402,21 @@ class RegisterView(APIView):
         serializer = RegisterSerializer(data=request.data, context={'request': request})
         if serializer.is_valid():
             user = serializer.save()
+            profile = getattr(user, 'profile', None)
+            org = getattr(profile, 'organization', None) if profile else None
+            company_label = (getattr(profile, 'company_name', None) or (org.name if org else '')).strip()
+
+            actor_display = f"{user.first_name} {user.last_name}".strip() or user.username
+            record_audit_event(
+                'AUTH_REGISTRATION',
+                f"New user registered: {actor_display} ({user.email or user.username}) - Company: {company_label or 'Individual'}",
+                user=user,
+                organization=org,
+                request=request,
+                severity='INFO',
+                metadata={'email': user.email, 'company_name': company_label}
+            )
+
             return Response({
                 'user': {
                     'id': user.id,
@@ -337,6 +428,16 @@ class RegisterView(APIView):
                 },
                 'message': 'Registration successful! Welcome to THE FINISHER LUXURY.',
             }, status=status.HTTP_201_CREATED)
+
+        attempted_identifier = (request.data.get('email') or request.data.get('username') or '').strip()
+        record_audit_event(
+            'AUTH_REGISTRATION',
+            f"Registration attempt failed for '{attempted_identifier}': {serializer.errors}",
+            username_attempted=attempted_identifier,
+            request=request,
+            severity='WARNING',
+            metadata={'errors': str(serializer.errors)}
+        )
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 

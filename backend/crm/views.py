@@ -2218,6 +2218,16 @@ class EmployeeViewSet(viewsets.ModelViewSet):
                     department=new_profile.department,
                 )
 
+                record_audit_event(
+                    'EMPLOYEE_ONBOARDED',
+                    f"Employee onboarded: {new_user.first_name} {new_user.last_name} ({new_user.email}) under {company_name} (Role: {new_profile.role}) by {user.username}",
+                    user=user,
+                    organization=getattr(new_profile, 'organization', None),
+                    request=request,
+                    severity='INFO',
+                    metadata={'employee_email': new_user.email, 'role': new_profile.role, 'company_name': company_name, 'onboarded_by': user.username}
+                )
+
                 try:
                     from .email_service import send_email_async, render_luxury_email_html
                     sender_email = getattr(settings, 'DEFAULT_FROM_EMAIL', 'The Finisher Luxury Registrations <noreply@mtamboholdings.dev>')
@@ -4124,7 +4134,14 @@ class SecurityAuditTrailViewSet(viewsets.ReadOnlyModelViewSet):
 
         event_type = self.request.query_params.get('event_type')
         if event_type:
-            qs = qs.filter(event_type=event_type)
+            if event_type == 'AUTH_LOGIN_SUCCESS':
+                # Group all successful logins (both direct and MFA verified)
+                qs = qs.filter(Q(event_type='AUTH_LOGIN_SUCCESS') | Q(event_type='MFA_VERIFIED'))
+            elif event_type == 'AUTH_LOGIN_FAILED':
+                # Group all failed authentication attempts
+                qs = qs.filter(Q(event_type='AUTH_LOGIN_FAILED') | Q(event_type='SECURITY_POLICY_VIOLATION'))
+            else:
+                qs = qs.filter(event_type=event_type)
 
         severity = self.request.query_params.get('severity')
         if severity:
@@ -4132,14 +4149,22 @@ class SecurityAuditTrailViewSet(viewsets.ReadOnlyModelViewSet):
 
         company_name = self.request.query_params.get('company_name') or self.request.query_params.get('company')
         if company_name:
-            qs = qs.filter(organization__name__icontains=company_name)
+            qs = qs.filter(
+                Q(organization__name__icontains=company_name) |
+                Q(metadata__company_name__icontains=company_name) |
+                Q(user__profile__company_name__icontains=company_name)
+            )
 
         search = self.request.query_params.get('search')
         if search:
             qs = qs.filter(
                 Q(description__icontains=search) |
                 Q(username_attempted__icontains=search) |
-                Q(ip_address__icontains=search)
+                Q(ip_address__icontains=search) |
+                Q(user__email__icontains=search) |
+                Q(user__username__icontains=search) |
+                Q(user__first_name__icontains=search) |
+                Q(user__last_name__icontains=search)
             )
 
         return qs[:250]
