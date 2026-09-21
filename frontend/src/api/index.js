@@ -346,6 +346,10 @@ export const employeesAPI = {
   getOrgChart: () => api.get('/employees/org_chart/'),
 }
 
+export const auditTrailAPI = {
+  getAll: (params = {}) => api.get('/audit-trail/', { params }),
+}
+
 // ============================================================================
 // ADMP (Asset & Data Management Platform) API
 // ============================================================================

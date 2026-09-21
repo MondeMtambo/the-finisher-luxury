@@ -116,10 +116,87 @@ body {
     border-radius: 4px;
   }
 
-  /* Ensure tables don't squash their cells to illegibility */
-  table {
+  /* Ensure tables don't squash their cells to illegibility unless converted to cards */
+  table:not(.mobile-card-deck) {
     min-width: 600px;
     width: 100%;
+  }
+
+  /* ─── NATIVE MOBILE CARD DECK ENGINE (Transforms Tables into Luxury Touch Cards) ─── */
+  table.mobile-card-deck,
+  .mobile-card-deck table {
+    min-width: 0 !important;
+    width: 100% !important;
+    display: block !important;
+    border: none !important;
+  }
+
+  table.mobile-card-deck thead,
+  .mobile-card-deck thead {
+    display: none !important; /* Hide desktop multi-column header on phones */
+  }
+
+  table.mobile-card-deck tbody,
+  .mobile-card-deck tbody {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 12px !important;
+    width: 100% !important;
+  }
+
+  table.mobile-card-deck tr,
+  .mobile-card-deck tbody tr {
+    display: flex !important;
+    flex-direction: column !important;
+    background: rgba(18, 22, 30, 0.85) !important;
+    border: 1px solid rgba(212, 175, 55, 0.25) !important;
+    border-radius: 12px !important;
+    padding: 14px !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35) !important;
+    gap: 6px !important;
+  }
+
+  [data-theme="light"] table.mobile-card-deck tr,
+  [data-theme="light"] .mobile-card-deck tbody tr {
+    background: #ffffff !important;
+    border: 1px solid rgba(180, 83, 9, 0.2) !important;
+    box-shadow: 0 2px 10px rgba(0, 0, 0, 0.06) !important;
+  }
+
+  table.mobile-card-deck td,
+  .mobile-card-deck tbody td {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 6px 0 !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.06) !important;
+    font-size: 0.85rem !important;
+    white-space: normal !important;
+  }
+
+  [data-theme="light"] table.mobile-card-deck td,
+  [data-theme="light"] .mobile-card-deck tbody td {
+    border-bottom: 1px solid rgba(0, 0, 0, 0.06) !important;
+  }
+
+  table.mobile-card-deck td:last-child,
+  .mobile-card-deck tbody td:last-child {
+    border-bottom: none !important;
+    padding-top: 10px !important;
+    justify-content: flex-start !important;
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+  }
+
+  /* Universal 44px touch targets on mobile (Apple HIG Standard) */
+  button.btn, .btn {
+    min-height: 42px !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  .btn-sm {
+    min-height: 36px !important;
   }
 
   /* ─── AUTO-STACKING METRICS & FORMS ─── */

@@ -28,12 +28,27 @@
       </div>
     </div>
 
+    <!-- Mobile Kanban Column Navigator (Only visible <= 768px) -->
+    <div class="mobile-kanban-tabs">
+      <button 
+        v-for="st in statuses" 
+        :key="st.key"
+        class="mobile-tab-btn"
+        :class="{ active: activeMobileStatus === st.key }"
+        @click="activeMobileStatus = st.key"
+      >
+        <span>{{ st.title }}</span>
+        <span class="mobile-tab-badge">{{ getLeadsByStatus(st.key).length }}</span>
+      </button>
+    </div>
+
     <!-- Kanban Board -->
     <div class="kanban-board">
       <div 
         v-for="status in statuses" 
         :key="status.key"
         class="kanban-column"
+        :class="{ 'mobile-visible': activeMobileStatus === status.key }"
         @dragover.prevent
         @drop="handleDrop($event, status.key)"
       >
@@ -159,6 +174,7 @@ export default {
       showReplyModal: false,
       submitting: false,
       draggingLeadId: null,
+      activeMobileStatus: 'new',
       replyForm: {
         subject: '',
         message: ''
@@ -209,6 +225,9 @@ export default {
     },
     setFilter(status) {
       this.filter = status;
+      if (status !== 'all') {
+        this.activeMobileStatus = status;
+      }
       this.loadInbox();
     },
     async loadInbox(silent = false) {
@@ -351,7 +370,7 @@ export default {
 
 <style scoped>
 .luxury-theme {
-  color: #fff;
+  color: var(--text-primary, #fff);
 }
 
 .leads-master-page {
@@ -540,4 +559,142 @@ export default {
 .flag-green { background: #d1fae5; color: #065f46; }
 .flag-red { background: #fee2e2; color: #991b1b; }
 .flag-yellow { background: #fef3c7; color: #92400e; }
+
+/* Desktop: hide mobile tab switcher */
+.mobile-kanban-tabs {
+  display: none;
+}
+
+/* ─── NATIVE MOBILE ERGONOMICS (ONLY ON SCREENS <= 768px) ─── */
+@media (max-width: 768px) {
+  .leads-master-page {
+    padding: 0.75rem 0.5rem calc(76px + env(safe-area-inset-bottom, 16px)) 0.5rem !important;
+  }
+  .page-header h1 {
+    font-size: 1.35rem;
+  }
+  .page-subtitle {
+    font-size: 0.82rem;
+    margin-bottom: 1.25rem;
+  }
+
+  /* 2x2 Metric Grid on Phone */
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+    margin-bottom: 1.25rem !important;
+  }
+  .kpi-card {
+    padding: 0.85rem !important;
+    border-radius: 10px !important;
+  }
+  .kpi-val {
+    font-size: 1.45rem !important;
+    margin-bottom: 0.25rem !important;
+  }
+  .kpi-lbl {
+    font-size: 0.72rem !important;
+  }
+
+  /* Mobile Tabbed Column Switcher */
+  .mobile-kanban-tabs {
+    display: flex !important;
+    gap: 6px;
+    overflow-x: auto;
+    padding-bottom: 8px;
+    margin-bottom: 12px;
+    scrollbar-width: none;
+    -webkit-overflow-scrolling: touch;
+  }
+  .mobile-kanban-tabs::-webkit-scrollbar {
+    display: none;
+  }
+  .mobile-tab-btn {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 14px;
+    border-radius: 20px;
+    border: 1px solid rgba(212, 175, 55, 0.25);
+    background: rgba(18, 22, 30, 0.85);
+    color: #94a3b8;
+    font-size: 0.78rem;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    min-height: 40px;
+  }
+  .mobile-tab-btn.active {
+    background: linear-gradient(135deg, rgba(212, 175, 55, 0.25) 0%, rgba(180, 83, 9, 0.2) 100%);
+    border-color: #D4AF37;
+    color: #fff;
+    box-shadow: 0 2px 10px rgba(212, 175, 55, 0.2);
+  }
+  .mobile-tab-badge {
+    background: rgba(212, 175, 55, 0.2);
+    color: #D4AF37;
+    padding: 1px 6px;
+    border-radius: 10px;
+    font-size: 0.68rem;
+    font-weight: 700;
+  }
+  .mobile-tab-btn.active .mobile-tab-badge {
+    background: #D4AF37;
+    color: #000;
+  }
+
+  /* Expand the selected column to 100% width on mobile */
+  .kanban-board {
+    display: block !important;
+  }
+  .kanban-column {
+    display: none !important;
+  }
+  .kanban-column.mobile-visible {
+    display: flex !important;
+    width: 100% !important;
+    min-height: auto !important;
+  }
+  .column-body {
+    min-height: 40vh !important;
+    padding: 0.75rem !important;
+  }
+
+  /* Touch-optimized Card */
+  .lead-kanban-card {
+    padding: 1rem !important;
+    margin-bottom: 8px !important;
+    border-radius: 10px !important;
+  }
+  .card-title {
+    font-size: 0.95rem !important;
+  }
+  .card-subtitle {
+    font-size: 0.8rem !important;
+  }
+  .card-message {
+    font-size: 0.85rem !important;
+  }
+
+  /* Bottom sheet modal on phones */
+  .modal-overlay {
+    padding: 0 !important;
+    align-items: flex-end !important;
+  }
+  .modal-panel {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 20px 20px 0 0 !important;
+    max-height: 90vh !important;
+    padding: 1.25rem 1rem calc(1.5rem + env(safe-area-inset-bottom, 16px)) 1rem !important;
+  }
+  .modal-footer {
+    flex-direction: column-reverse !important;
+    gap: 8px !important;
+  }
+  .modal-footer button {
+    width: 100% !important;
+    min-height: 44px !important;
+  }
+}
 </style>

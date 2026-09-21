@@ -4120,17 +4120,12 @@ class SecurityAuditTrailViewSet(viewsets.ReadOnlyModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        if not (user.is_superuser or is_owner_admin_user(user) or (getattr(user, 'profile', None) and user.profile.is_admin)):
-            raise PermissionDenied("Access restricted to verified Security Administrators under POPIA regulations.")
-
-        qs = SecurityAuditTrail.objects.select_related('user', 'organization').all()
-
+        # SOVEREIGN ENCLAVE LOCK: Strictly restricted to adminluxury (the programmer) or superuser
         if not (user.is_superuser or is_owner_admin_user(user)):
-            profile = getattr(user, 'profile', None)
-            if profile and profile.organization:
-                qs = qs.filter(organization=profile.organization)
-            else:
-                qs = qs.filter(user=user)
+            raise PermissionDenied("Classified Intelligence: Access restricted exclusively to System Programmer (adminluxury).")
+
+        # As Sovereign Owner (adminluxury), view ALL employee trails across the entire platform
+        qs = SecurityAuditTrail.objects.select_related('user', 'organization').all()
 
         event_type = self.request.query_params.get('event_type')
         if event_type:

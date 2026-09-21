@@ -387,9 +387,11 @@
       <div class="logs-container">
         <div class="logs-header">
           <h2>Activity Log</h2>
-          <p class="text-muted">Complete onboarding and offboarding audit trail.</p>
+          <p class="text-muted">Complete audit trail — onboarding, offboarding, and security events.</p>
         </div>
 
+        <!-- ─── Onboarding / Offboarding Logs ─── -->
+        <h3 style="margin:1.5rem 0 0.75rem;font-size:1rem;color:var(--text-gold)">📋 Onboarding & Offboarding</h3>
         <div class="filter-bar" style="margin-bottom:1rem">
           <select v-model="logActionFilter" class="form-input filter-select" @change="loadOnboardingLogs">
             <option value="">All Actions</option>
@@ -401,7 +403,7 @@
         <div v-if="logsLoading" style="text-align:center;padding:2rem"><span class="spinner"></span></div>
         <div v-else-if="onboardingLogs.length === 0" class="empty-state">
           <svg width="40" height="40" fill="none" stroke="var(--gray-400)" stroke-width="1.5"><path d="M6 6h28v28H6z"/><path d="M12 14h16M12 20h10"/></svg>
-          <h3>No Activity Logs</h3>
+          <h3>No Onboarding Logs</h3>
           <p>Onboarding and offboarding events will appear here.</p>
         </div>
         <div v-else class="logs-table-wrap">
@@ -431,6 +433,57 @@
               </tr>
             </tbody>
           </table>
+        </div>
+
+        <!-- ─── Sovereign Security Audit Trail (Restricted Exclusively to adminluxury) ─── -->
+        <div v-if="isOwnerAdmin" class="sovereign-audit-section">
+          <h3 style="margin:2.5rem 0 0.75rem;font-size:1rem;color:var(--text-gold)">🔒 Sovereign Security & Login Events (Programmer Access Only)</h3>
+          <div class="filter-bar" style="margin-bottom:1rem">
+            <select v-model="securityEventFilter" class="form-input filter-select" @change="loadSecurityLogs">
+              <option value="">All Events</option>
+              <option value="AUTH_LOGIN_SUCCESS">Login Success</option>
+              <option value="AUTH_LOGIN_FAILED">Failed Login</option>
+              <option value="AUTH_LOGOUT">Logout</option>
+              <option value="PASSWORD_CHANGE">Password Change</option>
+              <option value="MFA_VERIFIED">MFA Verified</option>
+              <option value="REGISTRATION_INCOMPLETE">Incomplete Registration</option>
+            </select>
+          </div>
+
+          <div v-if="securityLogsLoading" style="text-align:center;padding:2rem"><span class="spinner"></span></div>
+          <div v-else-if="securityLogs.length === 0" class="empty-state">
+            <svg width="40" height="40" fill="none" stroke="var(--gray-400)" stroke-width="1.5"><path d="M12 2a5 5 0 0 1 5 5v3H7V7a5 5 0 0 1 5-5z"/><rect x="3" y="10" width="18" height="12" rx="2"/></svg>
+            <h3>No Security Events</h3>
+            <p>Login, logout, and security events will appear here.</p>
+          </div>
+          <div v-else class="logs-table-wrap">
+            <table class="logs-table">
+              <thead>
+                <tr>
+                  <th>Event</th>
+                  <th>User</th>
+                  <th>Email</th>
+                  <th>IP Address</th>
+                  <th>Details</th>
+                  <th>Timestamp</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr v-for="evt in securityLogs" :key="evt.id" :class="{ 'log-offboard': evt.event_type === 'AUTH_LOGIN_FAILED' || evt.event_type === 'SECURITY_POLICY_VIOLATION' }">
+                  <td>
+                    <span class="badge" :class="getSecurityBadgeClass(evt.event_type)">
+                      {{ evt.event_type_display || evt.event_type }}
+                    </span>
+                  </td>
+                  <td>{{ evt.actor || evt.username_attempted || '—' }}</td>
+                  <td>{{ evt.username_attempted || '—' }}</td>
+                  <td><code style="font-size:0.75rem">{{ evt.ip_address || '—' }}</code></td>
+                  <td style="max-width:200px;overflow:hidden;text-overflow:ellipsis">{{ evt.description || '—' }}</td>
+                  <td>{{ formatDateTime(evt.timestamp) }}</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
     </div>
@@ -531,7 +584,7 @@
 </template>
 
 <script>
-import { employeesAPI, authAPI, divisionsAPI, billingAPI } from '../api'
+import { employeesAPI, authAPI, divisionsAPI, billingAPI, auditTrailAPI } from '../api'
 import authService from '../services/auth'
 import toast from '../utils/toast'
 
@@ -592,9 +645,17 @@ export default {
       onboardingLogs: [],
       logsLoading: false,
       logActionFilter: '',
+
+      securityLogs: [],
+      securityLogsLoading: false,
+      securityEventFilter: '',
     }
   },
   computed: {
+    isOwnerAdmin() {
+      const user = authService.getUser()
+      return !!(user && (user.is_superuser || (user.username || '').toLowerCase() === 'adminluxury'))
+    },
     isSystemAdmin() {
       const user = authService.getUser() || {}
       return user.is_superuser === true || user.is_staff === true
@@ -846,10 +907,43 @@ export default {
         const response = await employeesAPI.getOnboardingLogs(params)
         this.onboardingLogs = response.data
       } catch (error) {
-        toast.error('Load Failed', 'Failed to load activity logs')
+        toast.error('Load Failed', 'Failed to load onboarding logs')
       } finally {
         this.logsLoading = false
       }
+      // Only load security logs if user is sovereign owner (adminluxury)
+      if (this.isOwnerAdmin) {
+        this.loadSecurityLogs()
+      }
+    },
+    async loadSecurityLogs() {
+      if (!this.isOwnerAdmin) return
+      this.securityLogsLoading = true
+      try {
+        const params = {}
+        if (this.securityEventFilter) params.event_type = this.securityEventFilter
+        const response = await auditTrailAPI.getAll(params)
+        this.securityLogs = Array.isArray(response.data) ? response.data : (response.data.results || [])
+      } catch (error) {
+        console.warn('Security audit logs not available:', error)
+        this.securityLogs = []
+      } finally {
+        this.securityLogsLoading = false
+      }
+    },
+    getSecurityBadgeClass(eventType) {
+      const map = {
+        AUTH_LOGIN_SUCCESS: 'badge-green',
+        AUTH_LOGIN_FAILED: 'badge-red',
+        AUTH_LOGOUT: 'badge-gray',
+        PASSWORD_CHANGE: 'badge-amber',
+        MFA_VERIFIED: 'badge-blue',
+        MFA_ENABLED: 'badge-blue',
+        SECURITY_POLICY_VIOLATION: 'badge-red',
+        REGISTRATION_INCOMPLETE: 'badge-amber',
+        REGISTRATION_ABANDONED: 'badge-red',
+      }
+      return map[eventType] || 'badge-gray'
     },
 
     // ── Onboarding (Create) ──
@@ -1060,14 +1154,61 @@ export default {
 .text-muted { color: var(--gray-500); font-size: .875rem; margin: 0; }
 
 @media (max-width: 768px) {
-  .employees-page { padding: 1rem; }
+  .employees-page { padding: 0.75rem 0.5rem calc(76px + env(safe-area-inset-bottom, 16px)) 0.5rem !important; }
   .emp-grid { grid-template-columns: 1fr; }
   .form-grid-2 { grid-template-columns: 1fr; }
   .header-right { flex-direction: column; align-items: stretch; }
-  .stats-bar { grid-template-columns: repeat(2, 1fr); }
-  .filter-bar { flex-direction: column; }
+  .stats-bar { grid-template-columns: repeat(2, 1fr); gap: 6px; }
+  .stat-card { padding: 0.75rem; }
+  .stat-value { font-size: 1.25rem; }
+  .filter-bar { flex-direction: column; gap: 8px; }
   .filter-select { width: 100%; }
   .search-input { max-width: 100%; }
+
+  /* Mobile Logs & Sovereign Security Card Deck */
+  .logs-table-wrap {
+    overflow-x: visible;
+  }
+  .logs-table {
+    display: block !important;
+    width: 100% !important;
+    border: none !important;
+    min-width: 0 !important;
+  }
+  .logs-table thead {
+    display: none !important;
+  }
+  .logs-table tbody {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+  .logs-table tr {
+    display: flex !important;
+    flex-direction: column !important;
+    background: var(--card-bg, rgba(18, 22, 30, 0.95)) !important;
+    border: 1px solid var(--border-color, rgba(212, 175, 55, 0.2)) !important;
+    border-radius: 10px !important;
+    padding: 12px 14px !important;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+    gap: 4px !important;
+  }
+  .logs-table tr.log-offboard {
+    border-left: 3px solid #ef4444 !important;
+  }
+  .logs-table td {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    padding: 5px 0 !important;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+    font-size: 0.84rem !important;
+  }
+  .logs-table td:last-child {
+    border-bottom: none !important;
+    font-size: 0.76rem !important;
+    color: var(--gray-400);
+  }
 }
 
 /* Tier Seat Allocation Banner */

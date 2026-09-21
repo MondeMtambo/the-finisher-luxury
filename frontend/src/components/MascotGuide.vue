@@ -452,4 +452,116 @@ export default {
   opacity: 0;
   transform: scale(0.9) translateY(12px);
 }
+
+/* ─── AUTOMATIC MOBILE SAFE-AREA DOCKING ─── */
+@media (max-width: 768px) {
+  .mascot-wrapper {
+    bottom: calc(72px + env(safe-area-inset-bottom, 12px)) !important;
+    right: 16px !important;
+  }
+
+  .mascot-body-orb {
+    width: 42px !important;
+    height: 42px !important;
+  }
+
+  .tiara-wrap {
+    top: -10px;
+    font-size: 0.85rem;
+  }
+
+  .eye {
+    width: 11px;
+    height: 14px;
+  }
+
+  .eyes-container {
+    gap: 5px;
+    margin-top: 4px;
+  }
+
+  .primary-shine {
+    width: 5px;
+    height: 6px;
+    top: 2px;
+    left: 2px;
+  }
+
+  .secondary-shine {
+    width: 3px;
+    height: 3px;
+  }
+
+  .blush {
+    width: 5px;
+    height: 3px;
+  }
+
+  .mouth {
+    width: 5px;
+    height: 3px;
+  }
+
+  .cheeks-row {
+    gap: 3px;
+    margin-top: 1px;
+  }
+
+  /* Auto-suppress the wide horizontal tooltip pill on mobile */
+  .floating-mascot-pill {
+    display: none !important;
+  }
+
+  /* Compact speech panel on mobile */
+  .mascot-speech-panel {
+    width: calc(100vw - 48px) !important;
+    max-width: 320px;
+    right: 0;
+  }
+}
+
+/* ─── LIGHT THEME SUPPORT ─── */
+[data-theme="light"] .mascot-speech-panel {
+  background: #ffffff;
+  border-color: rgba(180, 83, 9, 0.3);
+  color: #1e293b;
+  box-shadow: 0 15px 35px -5px rgba(0, 0, 0, 0.15), 0 0 20px rgba(180, 83, 9, 0.1);
+}
+
+[data-theme="light"] .speech-header {
+  background: rgba(180, 83, 9, 0.08);
+  border-bottom-color: rgba(180, 83, 9, 0.15);
+}
+
+[data-theme="light"] .guide-name {
+  color: #b45309;
+}
+
+[data-theme="light"] .greeting-text {
+  color: #334155;
+}
+
+[data-theme="light"] .chip-btn {
+  background: #f8fafc;
+  border-color: rgba(180, 83, 9, 0.2);
+  color: #1e293b;
+}
+
+[data-theme="light"] .chip-btn:hover {
+  background: rgba(180, 83, 9, 0.1);
+  border-color: #b45309;
+}
+
+[data-theme="light"] .speech-footer {
+  background: #f8fafc;
+  border-top-color: #e2e8f0;
+  color: #64748b;
+}
+
+[data-theme="light"] .floating-mascot-pill {
+  background: #ffffff;
+  border-color: #b45309;
+  color: #92400e;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
 </style>

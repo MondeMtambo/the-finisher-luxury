@@ -2279,7 +2279,7 @@ export default {
 </script>
 
 <style scoped>
-.luxury-theme { color: #fff; min-height: 100vh; }
+.luxury-theme { color: var(--text-primary, #fff); min-height: 100vh; }
 .admin-master-page { padding: 2rem; max-width: 1600px; margin: 0 auto; }
 .page-header { margin-bottom: 3rem; border-bottom: 1px solid rgba(212, 175, 55, 0.2); padding-bottom: 2rem; }
 .header-title-row { display: flex; align-items: center; gap: 1rem; margin-bottom: 0.5rem; }
@@ -2524,5 +2524,69 @@ export default {
   background: rgba(59, 130, 246, 0.2);
   border-color: #60a5fa;
   color: #ffffff;
+}
+
+/* ─── NATIVE MOBILE ERGONOMICS (ONLY ON SCREENS <= 768px) ─── */
+@media (max-width: 768px) {
+  .admin-master-page {
+    padding: 0.75rem 0.5rem calc(76px + env(safe-area-inset-bottom, 16px)) 0.5rem !important;
+  }
+  .page-header h1 {
+    font-size: 1.35rem !important;
+  }
+  .header-sub-row {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 12px !important;
+  }
+  .header-actions {
+    display: flex !important;
+    flex-direction: column !important;
+    width: 100% !important;
+    gap: 8px !important;
+  }
+  .header-actions .btn {
+    width: 100% !important;
+    min-height: 44px !important;
+    justify-content: center !important;
+  }
+  .sentinel-agent-section {
+    padding: 1rem !important;
+  }
+  .kpi-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+  }
+  .table-container {
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    border-radius: 8px !important;
+    scrollbar-width: thin !important;
+  }
+  .audit-filter-bar {
+    flex-direction: column !important;
+    align-items: stretch !important;
+    gap: 8px !important;
+  }
+  .filter-group.flex-1 {
+    min-width: 0 !important;
+    width: 100% !important;
+  }
+  .filter-group input, .filter-group select {
+    width: 100% !important;
+  }
+
+  /* Bottom sheet modal on phones */
+  .modal-overlay {
+    padding: 0 !important;
+    align-items: flex-end !important;
+  }
+  .modal-card, .modal-panel {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-radius: 20px 20px 0 0 !important;
+    max-height: 90vh !important;
+    padding: 1.25rem 1rem calc(1.5rem + env(safe-area-inset-bottom, 16px)) 1rem !important;
+  }
 }
 </style>

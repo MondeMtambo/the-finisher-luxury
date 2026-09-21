@@ -242,3 +242,454 @@ body {
   background: #e2e8f0;
   border-color: #b45309;
 }
+
+/* ==============================================================================
+   COMPREHENSIVE LIGHT THEME OVERRIDES — ALL AUTHENTICATED PAGES
+   Forces dark text colors on every common selector across Dashboard, Contacts,
+   Deals, Employees, Tickets, Reports, Settings, and all other pages.
+   Fixes invisible white-on-white fonts from dark theme hardcodes.
+   ============================================================================== */
+
+/* ─── Global Text Reset for Light Theme ─── */
+[data-theme="light"] h1,
+[data-theme="light"] h2,
+[data-theme="light"] h3,
+[data-theme="light"] h4,
+[data-theme="light"] h5,
+[data-theme="light"] h6 {
+  color: #0f172a !important;
+}
+
+[data-theme="light"] p,
+[data-theme="light"] span,
+[data-theme="light"] div,
+[data-theme="light"] label,
+[data-theme="light"] td,
+[data-theme="light"] th,
+[data-theme="light"] li {
+  color: inherit;
+}
+
+[data-theme="light"] .page-subtitle,
+[data-theme="light"] .text-muted,
+[data-theme="light"] .stat-label,
+[data-theme="light"] .detail-label,
+[data-theme="light"] .kpi-lbl,
+[data-theme="light"] .section-subtitle,
+[data-theme="light"] .help-text,
+[data-theme="light"] .logs-header p,
+[data-theme="light"] .offboard-header p {
+  color: #475569 !important;
+}
+
+/* ─── Page Headers ─── */
+[data-theme="light"] .page-header h1,
+[data-theme="light"] .dashboard h1,
+[data-theme="light"] .section-title {
+  color: #0f172a !important;
+}
+
+/* ─── Stat Cards / KPI Cards ─── */
+[data-theme="light"] .stat-card,
+[data-theme="light"] .kpi-card {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .stat-value,
+[data-theme="light"] .kpi-val,
+[data-theme="light"] .stat-number {
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .stat-icon-wrap {
+  color: #b45309 !important;
+}
+
+/* ─── Cards & Detail Rows ─── */
+[data-theme="light"] .card,
+[data-theme="light"] .emp-card,
+[data-theme="light"] .offboard-card,
+[data-theme="light"] .ticket-card,
+[data-theme="light"] .deal-card,
+[data-theme="light"] .contact-card {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .detail-value,
+[data-theme="light"] .emp-name,
+[data-theme="light"] .emp-email,
+[data-theme="light"] .emp-identity h3,
+[data-theme="light"] .emp-identity p,
+[data-theme="light"] .offboard-name,
+[data-theme="light"] .offboard-email {
+  color: #1e293b !important;
+}
+
+[data-theme="light"] .detail-row .detail-label {
+  color: #64748b !important;
+}
+
+[data-theme="light"] .detail-row .detail-value {
+  color: #1e293b !important;
+}
+
+/* ─── Tab Navigation ─── */
+[data-theme="light"] .tab-nav button,
+[data-theme="light"] .tab-nav a {
+  color: #475569 !important;
+  border-color: transparent !important;
+}
+
+[data-theme="light"] .tab-nav button.active,
+[data-theme="light"] .tab-nav a.active,
+[data-theme="light"] .tab-nav button:hover,
+[data-theme="light"] .tab-nav a:hover {
+  color: #b45309 !important;
+  border-bottom-color: #b45309 !important;
+}
+
+/* ─── Tables ─── */
+[data-theme="light"] table th {
+  color: #475569 !important;
+  background-color: #f8fafc !important;
+  border-bottom-color: #e2e8f0 !important;
+}
+
+[data-theme="light"] table td {
+  color: #1e293b !important;
+  border-bottom-color: #f1f5f9 !important;
+}
+
+[data-theme="light"] table tr:hover td {
+  background-color: #f8fafc !important;
+}
+
+[data-theme="light"] .logs-table th,
+[data-theme="light"] .admin-table th {
+  color: #475569 !important;
+}
+
+[data-theme="light"] .logs-table td,
+[data-theme="light"] .admin-table td {
+  color: #1e293b !important;
+}
+
+/* ─── Empty States ─── */
+[data-theme="light"] .empty-state h3,
+[data-theme="light"] .empty-state p {
+  color: #475569 !important;
+}
+
+/* ─── Badges ─── */
+[data-theme="light"] .badge {
+  color: inherit;
+}
+
+[data-theme="light"] .badge-gray {
+  background-color: #f1f5f9 !important;
+  color: #475569 !important;
+  border-color: #e2e8f0 !important;
+}
+
+/* ─── Avatar ─── */
+[data-theme="light"] .avatar {
+  border-color: #e2e8f0 !important;
+}
+
+/* ─── Dashboard Specific ─── */
+[data-theme="light"] .dashboard,
+[data-theme="light"] .employees-page,
+[data-theme="light"] .contacts-page,
+[data-theme="light"] .deals-page,
+[data-theme="light"] .tickets-page,
+[data-theme="light"] .reports-page,
+[data-theme="light"] .settings-page,
+[data-theme="light"] .companies-page,
+[data-theme="light"] .help-center {
+  color: #0f172a !important;
+}
+
+/* ─── Welcome / Splash Banners ─── */
+[data-theme="light"] .welcome-splash-banner {
+  background-color: #fffbeb !important;
+  border-color: rgba(180, 83, 9, 0.2) !important;
+  color: #1e293b !important;
+}
+
+[data-theme="light"] .welcome-splash-banner h3 {
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .welcome-splash-banner p {
+  color: #475569 !important;
+}
+
+/* ─── Modals (already partially covered, reinforcing) ─── */
+[data-theme="light"] .modal-body {
+  color: #1e293b !important;
+}
+
+[data-theme="light"] .modal-body h4,
+[data-theme="light"] .modal-body h3,
+[data-theme="light"] .modal-body p {
+  color: #1e293b !important;
+}
+
+/* ─── Section / Container Blocks ─── */
+[data-theme="light"] .section-container {
+  background-color: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .section-header-flex h2 {
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .section-header-flex p {
+  color: #475569 !important;
+}
+
+/* ─── Filter Bars & Selects ─── */
+[data-theme="light"] .filter-bar label,
+[data-theme="light"] .filter-group label {
+  color: #475569 !important;
+}
+
+[data-theme="light"] select,
+[data-theme="light"] select option {
+  color: #0f172a !important;
+  background-color: #ffffff !important;
+}
+
+/* ─── Inline Metric Texts ─── */
+[data-theme="light"] .text-green { color: #059669 !important; }
+[data-theme="light"] .text-red { color: #dc2626 !important; }
+[data-theme="light"] .text-amber { color: #b45309 !important; }
+[data-theme="light"] .text-blue { color: #2563eb !important; }
+
+/* ─── Buttons ─── */
+[data-theme="light"] .btn-secondary {
+  background-color: #f1f5f9 !important;
+  border-color: #cbd5e1 !important;
+  color: #1e293b !important;
+}
+
+[data-theme="light"] .btn-secondary:hover {
+  background-color: #e2e8f0 !important;
+}
+
+[data-theme="light"] .btn-outline-gold {
+  border-color: #b45309 !important;
+  color: #b45309 !important;
+}
+
+/* ─── Drag Handles & Icons ─── */
+[data-theme="light"] .drag-handle {
+  color: #94a3b8 !important;
+}
+
+/* ─── Spinner ─── */
+[data-theme="light"] .spinner {
+  border-top-color: #b45309 !important;
+}
+
+/* ─── Scrollbar for Light Theme ─── */
+[data-theme="light"] ::-webkit-scrollbar-thumb {
+  background: rgba(180, 83, 9, 0.3) !important;
+}
+
+[data-theme="light"] ::-webkit-scrollbar-track {
+  background: #f1f5f9 !important;
+}
+
+/* ─── Chart / Graph Background ─── */
+[data-theme="light"] .chart-container,
+[data-theme="light"] .graph-wrap {
+  background-color: #ffffff !important;
+}
+
+/* ─── Tooltip & Popover ─── */
+[data-theme="light"] .tooltip,
+[data-theme="light"] .popover {
+  background-color: #1e293b !important;
+  color: #f8fafc !important;
+}
+
+/* ─── Global Link Colors ─── */
+[data-theme="light"] a:not(.btn):not(.nav-item):not(.tab-nav *):not(.mobile-dock-item) {
+  color: #b45309;
+}
+
+/* ─── Sticky Footer ─── */
+[data-theme="light"] .sticky-footer {
+  background-color: rgba(255, 255, 255, 0.95) !important;
+  border-top-color: #e2e8f0 !important;
+  color: #475569 !important;
+}
+
+/* ─── Luxury Master Theme Overrides (Admin Console, Leads, Integrations) ─── */
+[data-theme="light"] .luxury-theme {
+  color: #0f172a !important;
+  background-color: #f8fafc !important;
+}
+
+[data-theme="light"] .luxury-card,
+[data-theme="light"] .admin-card,
+[data-theme="light"] .velocity-card,
+[data-theme="light"] .luxury-modal,
+[data-theme="light"] .table-container,
+[data-theme="light"] .section-card,
+[data-theme="light"] .chart-card {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06) !important;
+}
+
+/* ─── Velocity & KPI Components ─── */
+[data-theme="light"] .v-metric {
+  background: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+[data-theme="light"] .v-value,
+[data-theme="light"] .kpi-val,
+[data-theme="light"] .kpi-val-mini,
+[data-theme="light"] .act-total,
+[data-theme="light"] .stat-value,
+[data-theme="light"] .card-title,
+[data-theme="light"] .chart-card h3,
+[data-theme="light"] .section-head h2,
+[data-theme="light"] .quick-actions-bar h3,
+[data-theme="light"] .user-main,
+[data-theme="light"] .comp-name,
+[data-theme="light"] .tenant-header h3,
+[data-theme="light"] .pb-header,
+[data-theme="light"] .deal-name,
+[data-theme="light"] .deal-detail h4 {
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .v-label,
+[data-theme="light"] .v-sub,
+[data-theme="light"] .user-sub,
+[data-theme="light"] .date-cell,
+[data-theme="light"] .ip-cell,
+[data-theme="light"] .act-sub,
+[data-theme="light"] .chart-footer span,
+[data-theme="light"] .deal-detail p,
+[data-theme="light"] .ticket-desc,
+[data-theme="light"] .preview-list li,
+[data-theme="light"] .form-check,
+[data-theme="light"] .kpi-lbl,
+[data-theme="light"] .kpi-lbl-mini {
+  color: #475569 !important;
+}
+
+/* ─── Dropdowns & Lists ─── */
+[data-theme="light"] .dropdown-suggestions,
+[data-theme="light"] .suggestions-list {
+  background: #ffffff !important;
+  border-color: #cbd5e1 !important;
+  color: #0f172a !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+}
+
+[data-theme="light"] .dropdown-suggestions li,
+[data-theme="light"] .suggestions-list li {
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .dropdown-suggestions li:hover,
+[data-theme="light"] .suggestions-list li:hover {
+  background: #f1f5f9 !important;
+}
+
+/* ─── Luxury Table in Light Mode ─── */
+[data-theme="light"] .luxury-table th {
+  background: #f8fafc !important;
+  color: #b45309 !important;
+  border-bottom-color: #e2e8f0 !important;
+}
+
+[data-theme="light"] .luxury-table td {
+  color: #1e293b !important;
+  border-bottom-color: #f1f5f9 !important;
+}
+
+[data-theme="light"] .luxury-table tr:hover td {
+  background: #f8fafc !important;
+}
+
+/* ─── Footer Overrides in Light Theme ─── */
+[data-theme="light"] .app-footer {
+  background: #ffffff !important;
+  color: #1e293b !important;
+  border-top: 1px solid #e2e8f0 !important;
+}
+
+[data-theme="light"] .app-footer .fb-name {
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .app-footer .fb-sub,
+[data-theme="light"] .app-footer .fn-title,
+[data-theme="light"] .app-footer .footer-bottom p {
+  color: #475569 !important;
+}
+
+[data-theme="light"] .app-footer .fn-col a {
+  color: #64748b !important;
+}
+
+[data-theme="light"] .app-footer .fn-col a:hover {
+  color: #b45309 !important;
+}
+
+[data-theme="light"] .app-footer .footer-bottom {
+  border-top-color: #e2e8f0 !important;
+}
+
+/* ─── Deals Board in Light Theme ─── */
+[data-theme="light"] .deal-row {
+  border-color: #e2e8f0 !important;
+  background: #ffffff !important;
+}
+
+[data-theme="light"] .deal-row:hover {
+  background: #f8fafc !important;
+  border-color: rgba(180, 83, 9, 0.4) !important;
+}
+
+[data-theme="light"] .deal-row.selected {
+  background: rgba(180, 83, 9, 0.08) !important;
+  border-color: #b45309 !important;
+}
+
+/* ─── Universal Inline Style Neutralizer for Light Mode ─── */
+/* Overrides inline dark mode color hardcodes on text nodes while preserving badges, buttons & avatars */
+[data-theme="light"] :not(.btn):not(.btn *):not(.badge):not(.badge *):not(.seat-badge):not(.avatar):not(.admp-badge):not(.pulse-dot):not(code)[style*="color: #fff"],
+[data-theme="light"] :not(.btn):not(.btn *):not(.badge):not(.badge *):not(.seat-badge):not(.avatar):not(.admp-badge):not(.pulse-dot):not(code)[style*="color:#fff"],
+[data-theme="light"] :not(.btn):not(.btn *):not(.badge):not(.badge *):not(.seat-badge):not(.avatar):not(.admp-badge):not(.pulse-dot):not(code)[style*="color: #ffffff"],
+[data-theme="light"] :not(.btn):not(.btn *):not(.badge):not(.badge *):not(.seat-badge):not(.avatar):not(.admp-badge):not(.pulse-dot):not(code)[style*="color:#ffffff"],
+[data-theme="light"] :not(.btn):not(.btn *):not(.badge):not(.badge *):not(.seat-badge):not(.avatar):not(.admp-badge):not(.pulse-dot):not(code)[style*="color: white"],
+[data-theme="light"] :not(.btn):not(.btn *):not(.badge):not(.badge *):not(.seat-badge):not(.avatar):not(.admp-badge):not(.pulse-dot):not(code)[style*="color:white"],
+[data-theme="light"] :not(.btn):not(.btn *):not(.badge):not(.badge *):not(.seat-badge):not(.avatar):not(.admp-badge):not(.pulse-dot):not(code)[style*="color: #f8fafc"],
+[data-theme="light"] :not(.btn):not(.btn *):not(.badge):not(.badge *):not(.seat-badge):not(.avatar):not(.admp-badge):not(.pulse-dot):not(code)[style*="color: #f1f5f9"],
+[data-theme="light"] :not(.btn):not(.btn *):not(.badge):not(.badge *):not(.seat-badge):not(.avatar):not(.admp-badge):not(.pulse-dot):not(code)[style*="color: #e2e8f0"],
+[data-theme="light"] :not(.btn):not(.btn *):not(.badge):not(.badge *):not(.seat-badge):not(.avatar):not(.admp-badge):not(.pulse-dot):not(code)[style*="color: #e5e7eb"] {
+  color: #0f172a !important;
+}
+
+[data-theme="light"] :not(.btn):not(.btn *):not(.badge):not(.badge *):not(.seat-badge):not(.avatar):not(.admp-badge):not(.pulse-dot):not(code)[style*="color: #9ca3af"],
+[data-theme="light"] :not(.btn):not(.btn *):not(.badge):not(.badge *):not(.seat-badge):not(.avatar):not(.admp-badge):not(.pulse-dot):not(code)[style*="color: #94a3b8"],
+[data-theme="light"] :not(.btn):not(.btn *):not(.badge):not(.badge *):not(.seat-badge):not(.avatar):not(.admp-badge):not(.pulse-dot):not(code)[style*="color: #d1d5db"],
+[data-theme="light"] :not(.btn):not(.btn *):not(.badge):not(.badge *):not(.seat-badge):not(.avatar):not(.admp-badge):not(.pulse-dot):not(code)[style*="color: #cbd5e1"],
+[data-theme="light"] :not(.btn):not(.btn *):not(.badge):not(.badge *):not(.seat-badge):not(.avatar):not(.admp-badge):not(.pulse-dot):not(code)[style*="color: #a0aec0"] {
+  color: #475569 !important;
+}
+
