@@ -1,21 +1,30 @@
 {
   "agent_name": "FINISHER SENTINEL 24/7 GUARDIAN",
   "version": "v2.0-autonomous",
-  "last_pulse": "2026-09-20T04:10:05.768001+00:00",
+  "last_pulse": "2026-09-21T19:15:38.282831+00:00",
   "mode": "WATCHDOG_STAGING",
   "is_enterprise_live": false,
-  "client_count": 2,
+  "client_count": 1,
   "client_threshold": 10,
-  "clients_remaining_to_live_scale": 8,
+  "clients_remaining_to_live_scale": 9,
+  "pioneer_cohort": {
+    "max_companies": 10,
+    "claimed_companies": 1,
+    "remaining_spots": 9,
+    "is_open": true,
+    "seats_per_company": 8,
+    "executive_monthly_rate": 1500.0,
+    "status": "ACTIVE (9 spots remaining)"
+  },
   "health_score": 100,
   "database": {
     "status": "nominal",
-    "latency_ms": 0.1,
+    "latency_ms": 0.26,
     "host": "Supabase PostgreSQL (Enterprise Pooler)"
   },
   "metrics": {
-    "total_users": 2,
-    "total_organizations": 2,
+    "total_users": 3,
+    "total_organizations": 1,
     "paying_clients": 0,
     "sovereign_clients": 2,
     "total_contacts": 0,
@@ -27,6 +36,6 @@
   "findings": [
     "All systems nominal. Zero account lockouts detected."
   ],
-  "execution_duration_ms": 15.19,
+  "execution_duration_ms": 53.73,
   "interval_seconds": 10
 }

@@ -93,7 +93,7 @@
           <button class="modal-close" @click="closeDetailsModal">×</button>
         </div>
         <div class="modal-body">
-          <div class="detail-contact-info" style="margin-bottom: 1.5rem; color: #9ca3af; display: flex; gap: 1rem;">
+          <div class="detail-contact-info" style="margin-bottom: 1.5rem; color: var(--text-muted); display: flex; gap: 1rem;">
               <span>📧 {{ activeLead?.contact_email }}</span>
               <span v-if="activeLead?.contact_phone">📱 {{ activeLead?.contact_phone }}</span>
           </div>
@@ -104,14 +104,14 @@
               <span v-else class="quality-flag flag-yellow">🟡 Standard Lead (Score: {{ activeLead?.spam_score }})</span>
           </div>
 
-          <div class="detail-message-box" style="background: rgba(0,0,0,0.3); padding: 1.5rem; border-radius: 8px; border: 1px solid rgba(212, 175, 55, 0.1); margin-bottom: 1.5rem;">
-            <h4 style="margin-top: 0; color: #D4AF37; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1rem;">Message</h4>
-            <p style="white-space: pre-wrap; color: #e5e7eb; line-height: 1.6; margin-bottom: 0;">{{ activeLead?.inbound_message || "No message provided." }}</p>
+          <div class="detail-message-box" style="padding: 1.5rem; border-radius: 8px; border: 1px solid var(--border-gold); margin-bottom: 1.5rem;">
+            <h4 style="margin-top: 0; color: var(--text-gold); font-size: 0.875rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1rem;">Message</h4>
+            <p style="white-space: pre-wrap; color: var(--text-primary); line-height: 1.6; margin-bottom: 0;">{{ activeLead?.inbound_message || "No message provided." }}</p>
           </div>
 
           <div class="audit-trail">
-            <h4 style="margin-top: 0; color: #D4AF37; font-size: 0.875rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1rem;">Audit Trail</h4>
-            <ul style="list-style: none; padding: 0; margin: 0; color: #d1d5db; font-size: 0.875rem;">
+            <h4 style="margin-top: 0; color: var(--text-gold); font-size: 0.875rem; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 1rem;">Audit Trail</h4>
+            <ul style="list-style: none; padding: 0; margin: 0; color: var(--text-muted); font-size: 0.875rem;">
               <li style="margin-bottom: 0.5rem;">• <strong>Received:</strong> {{ formatFullDate(activeLead?.inbound_received_at) }}</li>
               <li v-if="activeLead?.handled_by_username" style="margin-bottom: 0.5rem;">• <strong>Last Handled By:</strong> {{ activeLead?.handled_by_username }}</li>
               <li v-if="activeLead?.response_status === 'promoted'">• <strong>Status:</strong> Promoted to Deal</li>
@@ -119,7 +119,7 @@
           </div>
         </div>
         <div class="modal-footer" style="display: flex; gap: 1rem; justify-content: flex-end; align-items: center;">
-          <button class="btn btn-secondary" @click="openReplyModal" style="color: #fff; border-color: rgba(255,255,255,0.2);">
+          <button class="btn btn-secondary" @click="openReplyModal">
             ✉️ Reply
           </button>
           <button class="btn btn-danger" @click="markAsSpam(activeLead)" v-if="activeLead?.response_status !== 'closed'">
@@ -471,9 +471,9 @@ export default {
 }
 
 .kanban-column {
-  background: rgba(10, 10, 10, 0.6);
+  background: var(--surface-card);
   backdrop-filter: blur(10px);
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  border: 1px solid var(--border-gold);
   border-radius: var(--radius-lg);
   display: flex;
   flex-direction: column;
@@ -481,7 +481,7 @@ export default {
 
 .column-header {
   padding: 1rem 1.25rem;
-  border-bottom: 1px solid rgba(212, 175, 55, 0.2);
+  border-bottom: 1px solid var(--border-gold);
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -490,13 +490,13 @@ export default {
 .column-header h3 {
   font-size: 1rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--text-primary);
   margin: 0;
 }
 
 .column-count {
-  background: rgba(212, 175, 55, 0.1);
-  color: #D4AF37;
+  background: var(--badge-gold-bg);
+  color: var(--text-gold);
   padding: 0.125rem 0.5rem;
   border-radius: 99px;
   font-size: 0.75rem;
@@ -516,8 +516,8 @@ export default {
 .empty-column {
   padding: 2rem;
   text-align: center;
-  color: rgba(255, 255, 255, 0.2);
-  border: 2px dashed rgba(212, 175, 55, 0.2);
+  color: var(--text-muted);
+  border: 2px dashed var(--border-gold);
   border-radius: var(--radius-md);
   font-weight: 600;
   text-transform: uppercase;
@@ -526,28 +526,28 @@ export default {
 }
 
 .lead-kanban-card {
-  background: linear-gradient(145deg, #1a1a1a, #0d0d0d);
-  border-left: 3px solid rgba(212, 175, 55, 0.3);
+  background: var(--surface-card);
+  border: 1px solid var(--border-subtle);
+  border-left: 3px solid var(--border-gold);
   padding: 1rem;
   border-radius: var(--radius-md);
-  box-shadow: 0 5px 15px rgba(0,0,0,0.4);
+  box-shadow: var(--shadow-card);
   cursor: pointer;
   transition: all 0.2s ease-in-out;
   position: relative;
 }
 .lead-kanban-card:hover {
   transform: translateY(-3px);
-  box-shadow: 0 8px 25px rgba(0,0,0,0.6);
+  background: var(--surface-card-hover);
+  border-color: var(--border-gold-bright);
 }
-.lead-kanban-card.hot-lead { border-left-color: #D4AF37; }
-.lead-kanban-card.hot-lead:hover { box-shadow: 0 8px 25px rgba(212, 175, 55, 0.2); }
+.lead-kanban-card.hot-lead { border-left-color: var(--text-gold); }
 .lead-kanban-card.spam-risk { border-left-color: #ef4444; }
-.lead-kanban-card.spam-risk:hover { box-shadow: 0 8px 25px rgba(239, 68, 68, 0.2); }
 
-.card-title { font-weight: 600; color: #fff; margin-bottom: 0.25rem; font-size: 0.9375rem; }
-.card-subtitle { font-size: 0.8125rem; color: #9ca3af; margin-bottom: 0.75rem; }
-.card-message { font-size: 0.875rem; color: #d1d5db; line-height: 1.5; margin-bottom: 0.75rem; }
-.card-footer { font-size: 0.75rem; color: #718096; }
+.card-title { font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem; font-size: 0.9375rem; }
+.card-subtitle { font-size: 0.8125rem; color: var(--text-muted); margin-bottom: 0.75rem; }
+.card-message { font-size: 0.875rem; color: var(--text-secondary); line-height: 1.5; margin-bottom: 0.75rem; }
+.card-footer { font-size: 0.75rem; color: var(--text-muted); }
 .card-badges { position: absolute; top: 0.75rem; right: 0.75rem; display: flex; gap: 0.5rem; }
 
 .quality-flag {

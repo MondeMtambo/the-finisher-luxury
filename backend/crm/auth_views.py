@@ -793,3 +793,17 @@ class ForceChangePasswordView(APIView):
 
         except Exception as e:
             return Response({'error': f'Failed to change password: {str(e)}'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class PioneerCohortStatusView(APIView):
+    """
+    Public unauthenticated endpoint returning the live status of the 10-Company Pioneer Cohort.
+    Used by public landing page, hero scarcity counter, and registration onboarding flow.
+    """
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        from .tier_limits import get_pioneer_cohort_status
+        status_data = get_pioneer_cohort_status()
+        return Response(status_data, status=status.HTTP_200_OK)
+

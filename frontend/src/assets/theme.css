@@ -261,13 +261,22 @@ body {
 }
 
 [data-theme="light"] p,
-[data-theme="light"] span,
-[data-theme="light"] div,
 [data-theme="light"] label,
-[data-theme="light"] td,
-[data-theme="light"] th,
 [data-theme="light"] li {
-  color: inherit;
+  color: #1e293b;
+}
+
+[data-theme="light"] td {
+  color: #1e293b !important;
+}
+
+[data-theme="light"] th {
+  color: #475569 !important;
+}
+
+[data-theme="light"] code {
+  color: #b45309;
+  background-color: #f1f5f9;
 }
 
 [data-theme="light"] .page-subtitle,
@@ -670,26 +679,388 @@ body {
   border-color: #b45309 !important;
 }
 
-/* ─── Universal Inline Style Neutralizer for Light Mode ─── */
-/* Overrides inline dark mode color hardcodes on text nodes while preserving badges, buttons & avatars */
-[data-theme="light"] :not(.btn):not(.btn *):not(.badge):not(.badge *):not(.seat-badge):not(.avatar):not(.admp-badge):not(.pulse-dot):not(code)[style*="color: #fff"],
-[data-theme="light"] :not(.btn):not(.btn *):not(.badge):not(.badge *):not(.seat-badge):not(.avatar):not(.admp-badge):not(.pulse-dot):not(code)[style*="color:#fff"],
-[data-theme="light"] :not(.btn):not(.btn *):not(.badge):not(.badge *):not(.seat-badge):not(.avatar):not(.admp-badge):not(.pulse-dot):not(code)[style*="color: #ffffff"],
-[data-theme="light"] :not(.btn):not(.btn *):not(.badge):not(.badge *):not(.seat-badge):not(.avatar):not(.admp-badge):not(.pulse-dot):not(code)[style*="color:#ffffff"],
-[data-theme="light"] :not(.btn):not(.btn *):not(.badge):not(.badge *):not(.seat-badge):not(.avatar):not(.admp-badge):not(.pulse-dot):not(code)[style*="color: white"],
-[data-theme="light"] :not(.btn):not(.btn *):not(.badge):not(.badge *):not(.seat-badge):not(.avatar):not(.admp-badge):not(.pulse-dot):not(code)[style*="color:white"],
-[data-theme="light"] :not(.btn):not(.btn *):not(.badge):not(.badge *):not(.seat-badge):not(.avatar):not(.admp-badge):not(.pulse-dot):not(code)[style*="color: #f8fafc"],
-[data-theme="light"] :not(.btn):not(.btn *):not(.badge):not(.badge *):not(.seat-badge):not(.avatar):not(.admp-badge):not(.pulse-dot):not(code)[style*="color: #f1f5f9"],
-[data-theme="light"] :not(.btn):not(.btn *):not(.badge):not(.badge *):not(.seat-badge):not(.avatar):not(.admp-badge):not(.pulse-dot):not(code)[style*="color: #e2e8f0"],
-[data-theme="light"] :not(.btn):not(.btn *):not(.badge):not(.badge *):not(.seat-badge):not(.avatar):not(.admp-badge):not(.pulse-dot):not(code)[style*="color: #e5e7eb"] {
+/* ─── Kanban & Leads Board in Light Theme ─── */
+[data-theme="light"] .kanban-column {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.05) !important;
+}
+
+[data-theme="light"] .column-header {
+  border-bottom-color: #e2e8f0 !important;
+  background: #f8fafc !important;
+}
+
+[data-theme="light"] .column-header h3 {
   color: #0f172a !important;
 }
 
-[data-theme="light"] :not(.btn):not(.btn *):not(.badge):not(.badge *):not(.seat-badge):not(.avatar):not(.admp-badge):not(.pulse-dot):not(code)[style*="color: #9ca3af"],
-[data-theme="light"] :not(.btn):not(.btn *):not(.badge):not(.badge *):not(.seat-badge):not(.avatar):not(.admp-badge):not(.pulse-dot):not(code)[style*="color: #94a3b8"],
-[data-theme="light"] :not(.btn):not(.btn *):not(.badge):not(.badge *):not(.seat-badge):not(.avatar):not(.admp-badge):not(.pulse-dot):not(code)[style*="color: #d1d5db"],
-[data-theme="light"] :not(.btn):not(.btn *):not(.badge):not(.badge *):not(.seat-badge):not(.avatar):not(.admp-badge):not(.pulse-dot):not(code)[style*="color: #cbd5e1"],
-[data-theme="light"] :not(.btn):not(.btn *):not(.badge):not(.badge *):not(.seat-badge):not(.avatar):not(.admp-badge):not(.pulse-dot):not(code)[style*="color: #a0aec0"] {
+[data-theme="light"] .column-count {
+  background: rgba(180, 83, 9, 0.1) !important;
+  color: #b45309 !important;
+}
+
+[data-theme="light"] .lead-kanban-card {
+  background: #ffffff !important;
+  border: 1px solid #e2e8f0 !important;
+  border-left: 3px solid #b45309 !important;
+  box-shadow: 0 2px 10px rgba(15, 23, 42, 0.06) !important;
+}
+
+[data-theme="light"] .lead-kanban-card.hot-lead {
+  border-left-color: #b45309 !important;
+}
+
+[data-theme="light"] .lead-kanban-card.spam-risk {
+  border-left-color: #dc2626 !important;
+}
+
+[data-theme="light"] .card-title {
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .card-subtitle {
   color: #475569 !important;
 }
+
+[data-theme="light"] .card-message {
+  color: #334155 !important;
+}
+
+[data-theme="light"] .card-footer {
+  color: #64748b !important;
+}
+
+[data-theme="light"] .detail-message-box {
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+[data-theme="light"] .detail-message-box h4 {
+  color: #b45309 !important;
+}
+
+[data-theme="light"] .detail-message-box p {
+  color: #1e293b !important;
+}
+
+[data-theme="light"] .audit-trail ul,
+[data-theme="light"] .audit-trail li {
+  color: #334155 !important;
+}
+
+[data-theme="light"] .mobile-tab-btn {
+  background: #ffffff !important;
+  color: #475569 !important;
+  border-color: #e2e8f0 !important;
+}
+
+[data-theme="light"] .mobile-tab-btn.active {
+  background: rgba(180, 83, 9, 0.1) !important;
+  border-color: #b45309 !important;
+  color: #b45309 !important;
+}
+
+[data-theme="light"] .mobile-tab-badge {
+  background: rgba(180, 83, 9, 0.12) !important;
+  color: #b45309 !important;
+}
+
+[data-theme="light"] .mobile-tab-btn.active .mobile-tab-badge {
+  background: #b45309 !important;
+  color: #ffffff !important;
+}
+
+/* ─── Tenant Roster & Client Cards in Admin Console ─── */
+[data-theme="light"] .tenant-roster {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 4px 20px rgba(15, 23, 42, 0.06) !important;
+}
+
+[data-theme="light"] .tenant-header {
+  background: #f8fafc !important;
+  border-bottom-color: #e2e8f0 !important;
+}
+
+[data-theme="light"] .tenant-header h3 {
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .client-card {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  border-left: 3px solid #b45309 !important;
+  box-shadow: 0 4px 16px rgba(15, 23, 42, 0.06) !important;
+}
+
+[data-theme="light"] .cc-header h3 {
+  color: #b45309 !important;
+}
+
+[data-theme="light"] .cc-email {
+  color: #475569 !important;
+}
+
+[data-theme="light"] .comp-item {
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+}
+
+[data-theme="light"] .comp-name {
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .comp-metrics {
+  color: #475569 !important;
+}
+
+/* ─── Pipeline Board in Deals ─── */
+[data-theme="light"] .pipeline-col {
+  background: #f8fafc !important;
+  border-color: #e2e8f0 !important;
+}
+
+[data-theme="light"] .col-header {
+  background: #ffffff !important;
+  border-bottom-color: #e2e8f0 !important;
+}
+
+[data-theme="light"] .col-title {
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .deal-card {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .deal-title {
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .deal-meta-line {
+  color: #475569 !important;
+}
+
+/* ─── Employees Page & Mobile Security Deck ─── */
+[data-theme="light"] .logs-table tr {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #1e293b !important;
+}
+
+[data-theme="light"] .logs-table td code {
+  color: #b45309 !important;
+  background: rgba(180, 83, 9, 0.08) !important;
+}
+
+[data-theme="light"] .seat-text {
+  color: #475569 !important;
+}
+
+/* ─── Documentation, Integrations & Verification ─── */
+[data-theme="light"] .doc-card,
+[data-theme="light"] .doc-section,
+[data-theme="light"] .integration-card,
+[data-theme="light"] .webhook-card,
+[data-theme="light"] .api-key-box {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .doc-card h2,
+[data-theme="light"] .doc-card h3,
+[data-theme="light"] .doc-card h4,
+[data-theme="light"] .integration-card h3,
+[data-theme="light"] .integration-card h4 {
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .doc-card p,
+[data-theme="light"] .doc-card li,
+[data-theme="light"] .integration-card p {
+  color: #334155 !important;
+}
+
+/* ─── Universal Inline Style Neutralizer for Light Mode ─── */
+/* Overrides inline dark mode color hardcodes on text nodes while preserving colored action buttons & colored badges */
+[data-theme="light"] :not(.btn-primary):not(.btn-primary *):not(.btn-danger):not(.btn-danger *):not(.btn-success):not(.btn-success *):not(.btn-gold):not(.btn-gold *):not(.badge-green):not(.badge-green *):not(.badge-red):not(.badge-red *):not(.badge-blue):not(.badge-blue *):not(.badge-purple):not(.badge-purple *):not(.badge-warning):not(.badge-warning *):not(.avatar):not(.pulse-dot)[style*="color: #fff"],
+[data-theme="light"] :not(.btn-primary):not(.btn-primary *):not(.btn-danger):not(.btn-danger *):not(.btn-success):not(.btn-success *):not(.btn-gold):not(.btn-gold *):not(.badge-green):not(.badge-green *):not(.badge-red):not(.badge-red *):not(.badge-blue):not(.badge-blue *):not(.badge-purple):not(.badge-purple *):not(.badge-warning):not(.badge-warning *):not(.avatar):not(.pulse-dot)[style*="color:#fff"],
+[data-theme="light"] :not(.btn-primary):not(.btn-primary *):not(.btn-danger):not(.btn-danger *):not(.btn-success):not(.btn-success *):not(.btn-gold):not(.btn-gold *):not(.badge-green):not(.badge-green *):not(.badge-red):not(.badge-red *):not(.badge-blue):not(.badge-blue *):not(.badge-purple):not(.badge-purple *):not(.badge-warning):not(.badge-warning *):not(.avatar):not(.pulse-dot)[style*="color: #ffffff"],
+[data-theme="light"] :not(.btn-primary):not(.btn-primary *):not(.btn-danger):not(.btn-danger *):not(.btn-success):not(.btn-success *):not(.btn-gold):not(.btn-gold *):not(.badge-green):not(.badge-green *):not(.badge-red):not(.badge-red *):not(.badge-blue):not(.badge-blue *):not(.badge-purple):not(.badge-purple *):not(.badge-warning):not(.badge-warning *):not(.avatar):not(.pulse-dot)[style*="color:#ffffff"],
+[data-theme="light"] :not(.btn-primary):not(.btn-primary *):not(.btn-danger):not(.btn-danger *):not(.btn-success):not(.btn-success *):not(.btn-gold):not(.btn-gold *):not(.badge-green):not(.badge-green *):not(.badge-red):not(.badge-red *):not(.badge-blue):not(.badge-blue *):not(.badge-purple):not(.badge-purple *):not(.badge-warning):not(.badge-warning *):not(.avatar):not(.pulse-dot)[style*="color: white"],
+[data-theme="light"] :not(.btn-primary):not(.btn-primary *):not(.btn-danger):not(.btn-danger *):not(.btn-success):not(.btn-success *):not(.btn-gold):not(.btn-gold *):not(.badge-green):not(.badge-green *):not(.badge-red):not(.badge-red *):not(.badge-blue):not(.badge-blue *):not(.badge-purple):not(.badge-purple *):not(.avatar):not(.pulse-dot)[style*="color:white"],
+[data-theme="light"] :not(.btn-primary):not(.btn-primary *):not(.btn-danger):not(.btn-danger *):not(.btn-success):not(.btn-success *):not(.btn-gold):not(.btn-gold *):not(.badge-green):not(.badge-green *):not(.badge-red):not(.badge-red *):not(.badge-blue):not(.badge-blue *):not(.badge-purple):not(.badge-purple *):not(.avatar):not(.pulse-dot)[style*="color: #f8fafc"],
+[data-theme="light"] :not(.btn-primary):not(.btn-primary *):not(.btn-danger):not(.btn-danger *):not(.btn-success):not(.btn-success *):not(.btn-gold):not(.btn-gold *):not(.badge-green):not(.badge-green *):not(.badge-red):not(.badge-red *):not(.badge-blue):not(.badge-blue *):not(.badge-purple):not(.badge-purple *):not(.avatar):not(.pulse-dot)[style*="color: #f1f5f9"],
+[data-theme="light"] :not(.btn-primary):not(.btn-primary *):not(.btn-danger):not(.btn-danger *):not(.btn-success):not(.btn-success *):not(.btn-gold):not(.btn-gold *):not(.badge-green):not(.badge-green *):not(.badge-red):not(.badge-red *):not(.badge-blue):not(.badge-blue *):not(.badge-purple):not(.badge-purple *):not(.avatar):not(.pulse-dot)[style*="color: #e2e8f0"],
+[data-theme="light"] :not(.btn-primary):not(.btn-primary *):not(.btn-danger):not(.btn-danger *):not(.btn-success):not(.btn-success *):not(.btn-gold):not(.btn-gold *):not(.badge-green):not(.badge-green *):not(.badge-red):not(.badge-red *):not(.badge-blue):not(.badge-blue *):not(.badge-purple):not(.badge-purple *):not(.avatar):not(.pulse-dot)[style*="color: #e5e7eb"] {
+  color: #0f172a !important;
+}
+
+[data-theme="light"] :not(.btn-primary):not(.btn-primary *):not(.btn-danger):not(.btn-danger *):not(.btn-success):not(.btn-success *):not(.btn-gold):not(.btn-gold *):not(.badge-green):not(.badge-green *):not(.badge-red):not(.badge-red *):not(.badge-blue):not(.badge-blue *):not(.badge-purple):not(.badge-purple *):not(.badge-warning):not(.badge-warning *):not(.avatar):not(.pulse-dot)[style*="color: #9ca3af"],
+[data-theme="light"] :not(.btn-primary):not(.btn-primary *):not(.btn-danger):not(.btn-danger *):not(.btn-success):not(.btn-success *):not(.btn-gold):not(.btn-gold *):not(.badge-green):not(.badge-green *):not(.badge-red):not(.badge-red *):not(.badge-blue):not(.badge-blue *):not(.badge-purple):not(.badge-purple *):not(.avatar):not(.pulse-dot)[style*="color: #94a3b8"],
+[data-theme="light"] :not(.btn-primary):not(.btn-primary *):not(.btn-danger):not(.btn-danger *):not(.btn-success):not(.btn-success *):not(.btn-gold):not(.btn-gold *):not(.badge-green):not(.badge-green *):not(.badge-red):not(.badge-red *):not(.badge-blue):not(.badge-blue *):not(.badge-purple):not(.badge-purple *):not(.avatar):not(.pulse-dot)[style*="color: #d1d5db"],
+[data-theme="light"] :not(.btn-primary):not(.btn-primary *):not(.btn-danger):not(.btn-danger *):not(.btn-success):not(.btn-success *):not(.btn-gold):not(.btn-gold *):not(.badge-green):not(.badge-green *):not(.badge-red):not(.badge-red *):not(.badge-blue):not(.badge-blue *):not(.badge-purple):not(.badge-purple *):not(.avatar):not(.pulse-dot)[style*="color: #cbd5e1"],
+[data-theme="light"] :not(.btn-primary):not(.btn-primary *):not(.btn-danger):not(.btn-danger *):not(.btn-success):not(.btn-success *):not(.btn-gold):not(.btn-gold *):not(.badge-green):not(.badge-green *):not(.badge-red):not(.badge-red *):not(.badge-blue):not(.badge-blue *):not(.badge-purple):not(.badge-purple *):not(.avatar):not(.pulse-dot)[style*="color: #a0aec0"],
+[data-theme="light"] :not(.btn-primary):not(.btn-primary *):not(.btn-danger):not(.btn-danger *):not(.btn-success):not(.btn-success *):not(.btn-gold):not(.btn-gold *):not(.badge-green):not(.badge-green *):not(.badge-red):not(.badge-red *):not(.badge-blue):not(.badge-blue *):not(.badge-purple):not(.badge-purple *):not(.avatar):not(.pulse-dot)[style*="color: rgba(255"] {
+  color: #475569 !important;
+}
+
+/* ─── Exhaustive Component-Level Light Theme Fixes (Prevents White-on-White Font Glitches) ─── */
+[data-theme="light"] .page-title,
+[data-theme="light"] .page-header h1,
+[data-theme="light"] .modal-title-row h2,
+[data-theme="light"] .modal-title-wrap h2,
+[data-theme="light"] .modal-header h3,
+[data-theme="light"] .tutorial-header h2,
+[data-theme="light"] .details-header h3,
+[data-theme="light"] .card-head h2,
+[data-theme="light"] .card-title,
+[data-theme="light"] .stat-value,
+[data-theme="light"] .stat-big,
+[data-theme="light"] .camp-val,
+[data-theme="light"] .pipe-val,
+[data-theme="light"] .funnel-count,
+[data-theme="light"] .deal-name,
+[data-theme="light"] .deal-title,
+[data-theme="light"] .deal-detail h4,
+[data-theme="light"] .contact-name,
+[data-theme="light"] .task-title,
+[data-theme="light"] .wo-name,
+[data-theme="light"] .city-name,
+[data-theme="light"] .step-content h3,
+[data-theme="light"] .faq-question h3,
+[data-theme="light"] .sc h3,
+[data-theme="light"] .footer-title,
+[data-theme="light"] .provider-name-row h3,
+[data-theme="light"] .modal-title-group h3,
+[data-theme="light"] .lifecycle-header h2,
+[data-theme="light"] .ssl-audit-header h2,
+[data-theme="light"] .step-title,
+[data-theme="light"] .hero-title,
+[data-theme="light"] .sop-step h4,
+[data-theme="light"] .doc-info h4,
+[data-theme="light"] .checkbox-headline,
+[data-theme="light"] .font-bold,
+[data-theme="light"] .status-title-row h3,
+[data-theme="light"] .verified-item .val,
+[data-theme="light"] .form-header h2,
+[data-theme="light"] .upload-meta strong,
+[data-theme="light"] .doc-list strong,
+[data-theme="light"] .step-row strong,
+[data-theme="light"] .kpi-value,
+[data-theme="light"] .chap-btn.active .chap-title,
+[data-theme="light"] .active-slide-caption h4,
+[data-theme="light"] .section-card-title h4,
+[data-theme="light"] .splash-text h3,
+[data-theme="light"] .verify-header h1 {
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .form-input,
+[data-theme="light"] .form-select,
+[data-theme="light"] .form-textarea,
+[data-theme="light"] .url-input,
+[data-theme="light"] input:not([type="checkbox"]):not([type="radio"]):not([type="submit"]):not([type="button"]),
+[data-theme="light"] textarea,
+[data-theme="light"] select {
+  background-color: #ffffff !important;
+  color: #0f172a !important;
+  border-color: #cbd5e1 !important;
+}
+
+[data-theme="light"] .form-input::placeholder,
+[data-theme="light"] .url-input::placeholder,
+[data-theme="light"] input::placeholder,
+[data-theme="light"] textarea::placeholder {
+  color: #94a3b8 !important;
+}
+
+[data-theme="light"] .form-label,
+[data-theme="light"] .modal-sub,
+[data-theme="light"] .checkbox-desc,
+[data-theme="light"] .file-drop-label,
+[data-theme="light"] .splash-text p,
+[data-theme="light"] .deal-detail p,
+[data-theme="light"] .form-hint {
+  color: #475569 !important;
+}
+
+[data-theme="light"] .form-section-card,
+[data-theme="light"] .self-employed-box {
+  background: #f8fafc !important;
+  border: 1px solid #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .self-employed-box.active {
+  background: rgba(180, 83, 9, 0.08) !important;
+  border-color: rgba(180, 83, 9, 0.4) !important;
+}
+
+[data-theme="light"] .custom-file-box {
+  background: #f8fafc !important;
+  border-color: #cbd5e1 !important;
+}
+
+[data-theme="light"] .dropdown-suggestions,
+[data-theme="light"] .company-dropdown {
+  background: #ffffff !important;
+  border: 1px solid #cbd5e1 !important;
+  color: #0f172a !important;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1) !important;
+}
+
+[data-theme="light"] .dropdown-suggestions li,
+[data-theme="light"] .company-dropdown li {
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .dropdown-suggestions li:hover,
+[data-theme="light"] .company-dropdown li:hover {
+  background: #f1f5f9 !important;
+  color: #b45309 !important;
+}
+
+/* Legal and Documentation Pages in Light Theme */
+[data-theme="light"] .legal-page {
+  background: #f8fafc !important;
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .legal-page .doc-container {
+  background: #ffffff !important;
+  border-color: #e2e8f0 !important;
+  box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08) !important;
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .legal-page h1,
+[data-theme="light"] .legal-page h2,
+[data-theme="light"] .legal-page h3,
+[data-theme="light"] .legal-page strong {
+  color: #0f172a !important;
+}
+
+[data-theme="light"] .legal-page p,
+[data-theme="light"] .legal-page li {
+  color: #334155 !important;
+}
+
+[data-theme="light"] .legal-page .back-btn {
+  border-color: #cbd5e1 !important;
+  color: #475569 !important;
+  background: #ffffff !important;
+}
+
+[data-theme="light"] .legal-page .back-btn:hover {
+  border-color: #b45309 !important;
+  color: #b45309 !important;
+  background: #f1f5f9 !important;
+}
+
+
 

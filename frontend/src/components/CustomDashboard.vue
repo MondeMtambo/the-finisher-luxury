@@ -513,62 +513,62 @@ export default {
 
 /* Stat Card */
 .widget-stat { text-align: center; padding: 20px 0; }
-.stat-big { font-size: 40px; font-weight: 800; color: #ffffff; text-shadow: 0 0 12px rgba(212, 175, 55, 0.3); }
-.stat-sub { font-size: 13px; color: #9ca3af; margin-top: 4px; }
+.stat-big { font-size: 40px; font-weight: 800; color: var(--text-primary, #ffffff); text-shadow: 0 0 12px rgba(212, 175, 55, 0.3); }
+.stat-sub { font-size: 13px; color: var(--text-muted, #9ca3af); margin-top: 4px; }
 
 /* Completed Tickets Stats */
 .widget-completed-stats { text-align: center; padding: 20px 0; }
 .stat-breakdown { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 12px; font-size: 12px; }
-.stat-item { display: flex; justify-content: space-between; padding: 6px 8px; background: rgba(255,255,255,0.02); border-radius: 4px; }
-.stat-label { color: #9ca3af; }
+.stat-item { display: flex; justify-content: space-between; padding: 6px 8px; background: var(--surface-bg, rgba(255,255,255,0.02)); border-radius: 4px; }
+.stat-label { color: var(--text-muted, #9ca3af); }
 .stat-item span:last-child { color: #D4AF37; font-weight: 600; }
 
 /* Pipeline */
 .pipe-bar-row { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; }
-.pipe-label { width: 90px; font-size: 12px; color: #d1d5db; text-transform: capitalize; }
-.pipe-bar-track { flex: 1; height: 20px; background: rgba(255,255,255,0.05); border-radius: 4px; overflow: hidden; }
+.pipe-label { width: 90px; font-size: 12px; color: var(--text-muted, #d1d5db); text-transform: capitalize; }
+.pipe-bar-track { flex: 1; height: 20px; background: var(--surface-bg, rgba(255,255,255,0.05)); border-radius: 4px; overflow: hidden; }
 .pipe-bar-fill { height: 100%; background: linear-gradient(90deg, #D4AF37, #B49015); border-radius: 4px; transition: width 0.5s; }
-.pipe-val { width: 30px; text-align: right; font-size: 13px; font-weight: 600; color: #ffffff; }
+.pipe-val { width: 30px; text-align: right; font-size: 13px; font-weight: 600; color: var(--text-primary, #ffffff); }
 
 /* Revenue */
 .rev-total { font-size: 28px; font-weight: 700; color: #D4AF37; text-align: center; text-shadow: 0 0 10px rgba(212,175,55,0.3); }
-.rev-label { font-size: 12px; color: #9ca3af; text-align: center; margin-bottom: 16px; }
+.rev-label { font-size: 12px; color: var(--text-muted, #9ca3af); text-align: center; margin-bottom: 16px; }
 .rev-bars { display: flex; align-items: flex-end; justify-content: center; gap: 8px; height: 80px; }
 .rev-bar-col { display: flex; flex-direction: column; align-items: center; flex: 1; }
 .rev-bar { width: 100%; max-width: 24px; background: linear-gradient(180deg, #D4AF37, #B49015); border-radius: 4px 4px 0 0; transition: height 0.5s; min-height: 4px; }
-.rev-month { font-size: 10px; color: #9ca3af; margin-top: 4px; }
+.rev-month { font-size: 10px; color: var(--text-muted, #9ca3af); margin-top: 4px; }
 
 /* Feed */
 .feed-item { display: flex; gap: 10px; padding: 6px 0; }
 .feed-dot { width: 8px; height: 8px; border-radius: 50%; background: #D4AF37; margin-top: 5px; flex-shrink: 0; box-shadow: 0 0 8px rgba(212,175,55,0.6); }
 .feed-content { min-width: 0; }
-.feed-text { font-size: 13px; color: #d1d5db; display: block; }
-.feed-time { font-size: 11px; color: #6b7280; }
+.feed-text { font-size: 13px; color: var(--text-secondary, #d1d5db); display: block; }
+.feed-time { font-size: 11px; color: var(--text-muted, #6b7280); }
 
 /* Funnel */
 .widget-funnel { display: flex; flex-direction: column; align-items: center; gap: 4px; }
 .funnel-step { padding: 8px 16px; background: rgba(212, 175, 55, 0.1); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 6px; display: flex; justify-content: space-between; font-size: 13px; transition: width 0.3s; }
-.funnel-label { color: #d1d5db; text-transform: capitalize; }
-.funnel-count { font-weight: 700; color: #ffffff; }
+.funnel-label { color: var(--text-secondary, #d1d5db); text-transform: capitalize; }
+.funnel-count { font-weight: 700; color: var(--text-primary, #ffffff); }
 
 /* Top Contacts */
 .contact-row { display: flex; align-items: center; gap: 10px; padding: 6px 0; }
 .contact-avatar { width: 30px; height: 30px; border-radius: 50%; background: rgba(212, 175, 55, 0.2); border: 1px solid rgba(212,175,55,0.4); color: #D4AF37; display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 600; flex-shrink: 0; }
 .contact-info { min-width: 0; flex: 1; }
-.contact-name { font-size: 13px; font-weight: 500; color: #ffffff; display: block; }
-.contact-company { font-size: 11px; color: #9ca3af; }
+.contact-name { font-size: 13px; font-weight: 500; color: var(--text-primary, #ffffff); display: block; }
+.contact-company { font-size: 11px; color: var(--text-muted, #9ca3af); }
 .contact-score { margin-left: auto; }
 
 /* Campaign Stats */
 .camp-stat-row { display: flex; gap: 20px; justify-content: center; }
 .camp-stat { text-align: center; }
-.camp-val { display: block; font-size: 28px; font-weight: 700; color: #ffffff; }
-.camp-lbl { font-size: 11px; color: #9ca3af; text-transform: uppercase; }
+.camp-val { display: block; font-size: 28px; font-weight: 700; color: var(--text-primary, #ffffff); }
+.camp-lbl { font-size: 11px; color: var(--text-muted, #9ca3af); text-transform: uppercase; }
 
 /* Leaderboard */
 .lb-row { display: flex; align-items: center; gap: 12px; padding: 6px 0; }
-.lb-rank { font-size: 14px; font-weight: 700; color: #6b7280; width: 24px; }
-.lb-name { flex: 1; font-size: 14px; color: #d1d5db; }
+.lb-rank { font-size: 14px; font-weight: 700; color: var(--text-muted, #6b7280); width: 24px; }
+.lb-name { flex: 1; font-size: 14px; color: var(--text-secondary, #d1d5db); }
 .lb-score { font-weight: 600; color: #D4AF37; }
 
 /* Tasks */
@@ -577,23 +577,23 @@ export default {
 .p-high { background: #ef4444; box-shadow: 0 0 6px rgba(239, 68, 68, 0.6); }
 .p-medium { background: #f59e0b; box-shadow: 0 0 6px rgba(245, 158, 11, 0.6); }
 .p-low { background: #22c55e; box-shadow: 0 0 6px rgba(34, 197, 94, 0.6); }
-.task-title { font-size: 13px; color: #ffffff; }
+.task-title { font-size: 13px; color: var(--text-primary, #ffffff); }
 
 /* Recent Deals */
 .deal-row { display: flex; justify-content: space-between; align-items: center; padding: 6px 0; }
-.deal-name { font-size: 13px; font-weight: 500; color: #ffffff; margin-right: 6px; }
+.deal-name { font-size: 13px; font-weight: 500; color: var(--text-primary, #ffffff); margin-right: 6px; }
 .deal-stage { font-size: 10px; }
-.deal-val { font-size: 13px; font-weight: 600; color: #d1d5db; white-space: nowrap; }
+.deal-val { font-size: 13px; font-weight: 600; color: var(--text-muted, #d1d5db); white-space: nowrap; }
 
-.widget-empty { text-align: center; padding: 20px; color: #6b7280; font-size: 13px; }
+.widget-empty { text-align: center; padding: 20px; color: var(--text-muted, #6b7280); font-size: 13px; }
 
 /* Widget Picker */
 .widget-picker { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 12px; }
-.widget-option { display: flex; gap: 12px; padding: 14px; border: 1px solid rgba(255,255,255,0.1); border-radius: 10px; cursor: pointer; transition: all 0.15s; background: rgba(255,255,255,0.02); }
+.widget-option { display: flex; gap: 12px; padding: 14px; border: 1px solid var(--border-subtle, rgba(255,255,255,0.1)); border-radius: 10px; cursor: pointer; transition: all 0.15s; background: var(--surface-bg, rgba(255,255,255,0.02)); }
 .widget-option:hover { border-color: #D4AF37; background: rgba(212, 175, 55, 0.05); }
 .wo-icon { font-size: 24px; }
-.wo-name { font-size: 14px; font-weight: 600; color: #ffffff; }
-.wo-desc { font-size: 12px; color: #9ca3af; }
+.wo-name { font-size: 14px; font-weight: 600; color: var(--text-primary, #ffffff); }
+.wo-desc { font-size: 12px; color: var(--text-muted, #9ca3af); }
 
 .btn-icon { background: none; border: none; cursor: pointer; padding: 4px; color: var(--gray-400); border-radius: 4px; }
 .btn-icon:hover { background: var(--gray-100); color: var(--gray-600); }
@@ -601,17 +601,17 @@ export default {
 .badge { display: inline-block; padding: 2px 8px; border-radius: 20px; font-size: 11px; font-weight: 600; }
 .badge-blue { background: rgba(212, 175, 55, 0.1); color: #D4AF37; border: 1px solid rgba(212, 175, 55, 0.2); }
 
-.empty-state { text-align: center; padding: 60px 20px; color: #9ca3af; grid-column: 1 / -1; }
+.empty-state { text-align: center; padding: 60px 20px; color: var(--text-muted, #9ca3af); grid-column: 1 / -1; }
 .empty-state h3 { color: #D4AF37; margin: 12px 0 4px; }
 .empty-state p { margin-bottom: 16px; }
 
-.btn-secondary { background: rgba(255,255,255,0.05); color: #d1d5db; border: 1px solid rgba(255,255,255,0.1); }
-.btn-secondary:hover { background: rgba(255,255,255,0.1); color: #fff; }
+.btn-secondary { background: var(--surface-bg, rgba(255,255,255,0.05)); color: var(--text-secondary, #d1d5db); border: 1px solid var(--border-subtle, rgba(255,255,255,0.1)); }
+.btn-secondary:hover { background: rgba(255,255,255,0.1); color: var(--text-primary, #fff); }
 
-.modal-panel { background: linear-gradient(135deg, rgba(15,15,15,0.95), rgba(5,5,5,0.95)); border: 1px solid rgba(212, 175, 55, 0.3); border-radius: 16px; width: 95%; max-width: 640px; max-height: 90vh; overflow-y: auto; }
-.modal-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid rgba(212, 175, 55, 0.2); }
-.modal-header h3 { font-size: 18px; font-weight: 600; margin: 0; color: #fff; }
-.modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: #9ca3af; transition: color 0.2s; }
+.modal-panel { background: var(--surface-card, rgba(15,15,15,0.95)); border: 1px solid var(--border-gold, rgba(212, 175, 55, 0.3)); border-radius: 16px; width: 95%; max-width: 640px; max-height: 90vh; overflow-y: auto; color: var(--text-primary, #fff); }
+.modal-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 24px; border-bottom: 1px solid var(--border-subtle, rgba(212, 175, 55, 0.2)); }
+.modal-header h3 { font-size: 18px; font-weight: 600; margin: 0; color: var(--text-primary, #fff); }
+.modal-close { background: none; border: none; font-size: 24px; cursor: pointer; color: var(--text-muted, #9ca3af); transition: color 0.2s; }
 .modal-close:hover { color: #D4AF37; }
 .modal-body { padding: 24px; }
 

@@ -51,8 +51,8 @@ def run_agent_cycle(verbose=False):
         db_status = f"degraded: {str(e)}"
         findings.append(f"Database ping warning: {str(e)}")
 
-    # 2. Client Organization Census & Threshold Engine
-    active_orgs = Organization.objects.filter(is_active=True)
+    # 2. Client Organization Census & Threshold Engine (Excluding internal ingestion bots)
+    active_orgs = Organization.objects.filter(is_active=True).exclude(slug__icontains='system_lead_ingest')
     total_clients = active_orgs.count()
     threshold = 10
     is_live_scale = total_clients >= threshold
@@ -152,6 +152,15 @@ def run_agent_cycle(verbose=False):
         "client_count": total_clients,
         "client_threshold": threshold,
         "clients_remaining_to_live_scale": clients_to_threshold,
+        "pioneer_cohort": {
+            "max_companies": threshold,
+            "claimed_companies": total_clients,
+            "remaining_spots": clients_to_threshold,
+            "is_open": not is_live_scale,
+            "seats_per_company": 8,
+            "executive_monthly_rate": 1500.00,
+            "status": "CLOSED (11th+ Company -> Executive Suite R1,500/mo)" if is_live_scale else f"ACTIVE ({clients_to_threshold} spots remaining)"
+        },
         "health_score": 100 if db_status == "nominal" else 85,
         "database": {
             "status": db_status,

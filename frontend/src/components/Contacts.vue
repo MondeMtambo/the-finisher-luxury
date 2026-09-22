@@ -939,7 +939,9 @@ export default {
   border: 1px solid rgba(212, 175, 55, 0.25);
   border-radius: 12px;
   box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
-  color: #e5e7eb;
+  color: var(--text-primary, #e5e7eb);
+  background: var(--surface-card, #12141a);
+  border: 1px solid var(--border-gold, rgba(212, 175, 55, 0.3));
 }
 .modal-scrollable {
   max-height: 90vh;
@@ -951,14 +953,14 @@ export default {
   padding: 1.5rem;
 }
 .modal-title-wrap { display: flex; flex-direction: column; gap: 0.25rem; }
-.modal-badge-tag { font-size: 0.65rem; font-weight: 800; letter-spacing: 0.1em; color: #d4af37; text-transform: uppercase; }
-.modal-header h3 { margin: 0; font-size: 1.35rem; font-weight: 700; color: #fff; }
-.modal-sub { margin: 0; font-size: 0.8rem; color: #9ca3af; }
+.modal-badge-tag { font-size: 0.65rem; font-weight: 800; letter-spacing: 0.1em; color: var(--text-gold, #d4af37); text-transform: uppercase; }
+.modal-header h3 { margin: 0; font-size: 1.35rem; font-weight: 700; color: var(--text-primary, #fff); }
+.modal-sub { margin: 0; font-size: 0.8rem; color: var(--text-muted, #9ca3af); }
 
 /* Form Sections */
 .form-section-card {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  background: var(--surface-bg, rgba(255, 255, 255, 0.02));
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.06));
   border-radius: 8px;
   padding: 1.25rem;
   margin-bottom: 1.25rem;
@@ -969,9 +971,9 @@ export default {
   gap: 0.6rem;
   margin-bottom: 1rem;
   padding-bottom: 0.5rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+  border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.05));
 }
-.section-card-title h4 { margin: 0; font-size: 0.95rem; font-weight: 700; color: #f3f4f6; }
+.section-card-title h4 { margin: 0; font-size: 0.95rem; font-weight: 700; color: var(--text-primary, #f3f4f6); }
 .section-num {
   width: 22px;
   height: 22px;
@@ -987,8 +989,8 @@ export default {
 
 /* Self-Employed Box */
 .self-employed-box {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  background: var(--surface-bg, rgba(255, 255, 255, 0.03));
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.1));
   border-radius: 8px;
   padding: 1rem;
   transition: all 0.2s ease;
@@ -997,8 +999,8 @@ export default {
   background: rgba(212, 175, 55, 0.08);
   border-color: rgba(212, 175, 55, 0.4);
 }
-.checkbox-headline { font-weight: 700; color: #fff; font-size: 0.9rem; }
-.checkbox-desc { margin: 0.25rem 0 0; font-size: 0.78rem; color: #9ca3af; line-height: 1.35; }
+.checkbox-headline { font-weight: 700; color: var(--text-primary, #fff); font-size: 0.9rem; }
+.checkbox-desc { margin: 0.25rem 0 0; font-size: 0.78rem; color: var(--text-muted, #9ca3af); line-height: 1.35; }
 .form-check-row { display: flex; align-items: flex-start; gap: 0.75rem; cursor: pointer; }
 .form-check-row input[type="checkbox"] { width: 18px; height: 18px; margin-top: 2px; accent-color: #d4af37; cursor: pointer; }
 
@@ -1008,7 +1010,7 @@ export default {
   border-radius: 8px;
   padding: 1.25rem;
   text-align: center;
-  background: rgba(0, 0, 0, 0.2);
+  background: var(--surface-bg, rgba(0, 0, 0, 0.2));
   transition: border-color 0.2s;
   cursor: pointer;
 }
@@ -1021,7 +1023,7 @@ export default {
   align-items: center;
   gap: 0.5rem;
   font-size: 0.85rem;
-  color: #9ca3af;
+  color: var(--text-muted, #9ca3af);
   cursor: pointer;
 }
 .file-drop-label svg { color: #d4af37; }
@@ -1030,14 +1032,14 @@ export default {
 /* Form inputs styling */
 .form-row-2col { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
 .form-group { margin-bottom: 1rem; }
-.form-label { display: block; font-size: 0.82rem; font-weight: 600; color: #d1d5db; margin-bottom: 0.35rem; }
+.form-label { display: block; font-size: 0.82rem; font-weight: 600; color: var(--text-secondary, #d1d5db); margin-bottom: 0.35rem; }
 .form-input {
   width: 100%;
   padding: 0.65rem 0.85rem;
-  background: #181a20;
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: var(--input-bg, #181a20);
+  border: 1px solid var(--input-border, rgba(255, 255, 255, 0.12));
   border-radius: 6px;
-  color: #fff;
+  color: var(--input-text, #fff);
   font-size: 0.875rem;
   box-sizing: border-box;
 }
@@ -1047,7 +1049,7 @@ export default {
   box-shadow: 0 0 0 2px rgba(212, 175, 55, 0.2);
 }
 .form-textarea { resize: vertical; min-height: 70px; }
-.form-hint { font-size: 0.72rem; color: #9ca3af; margin: 0.25rem 0 0; }
+.form-hint { font-size: 0.72rem; color: var(--text-muted, #9ca3af); margin: 0.25rem 0 0; }
 .form-error { font-size: 0.72rem; color: #f87171; margin: 0.25rem 0 0; font-weight: 500; }
 .text-gold { color: #d4af37; }
 .font-mono { font-family: monospace; }

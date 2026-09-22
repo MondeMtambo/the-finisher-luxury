@@ -257,9 +257,19 @@ class PublicAccessRequestView(APIView):
         postal_address = (data.get('postal_address') or '').strip()
         cipc_number = (data.get('cipc_number') or '').strip()
         tax_number = (data.get('tax_number') or '').strip()
-        requested_tier = (data.get('requested_tier') or data.get('plan') or 'luxury').lower().strip()
+        requested_tier = (data.get('requested_tier') or data.get('plan') or 'basic').lower().strip()
         if requested_tier not in ['basic', 'luxury', 'executive', 'enterprise']:
-            requested_tier = 'luxury'
+            requested_tier = 'basic'
+
+        from .tier_limits import get_pioneer_cohort_status
+        cohort_status = get_pioneer_cohort_status()
+        pioneer_cohort_full = False
+        if requested_tier in ['basic', 'luxury']:
+            if not cohort_status['is_cohort_open']:
+                # The Pioneer Founding Cohort (10 companies) is full!
+                # Transition smoothly to Executive Suite (R1,500/month)
+                requested_tier = 'executive'
+                pioneer_cohort_full = True
 
         if not first_name or not last_name:
             return Response({'error': 'First name and last name are required.'}, status=status.HTTP_400_BAD_REQUEST)
@@ -420,6 +430,9 @@ class PublicAccessRequestView(APIView):
             'request_id': str(req_obj.id),
             'email': email,
             'company_name': company_name,
+            'requested_tier': requested_tier,
+            'pioneer_cohort_full': pioneer_cohort_full,
+            'cohort_spots_remaining': cohort_status['remaining_spots'],
             'expires_in_seconds': 300,
             'message': f'A 6-digit verification code has been dispatched to {email}. Please verify within 5 minutes.'
         }, status=status.HTTP_200_OK)
@@ -824,8 +837,16 @@ class AdminAccessRequestActionView(APIView):
         chosen_tier = getattr(req_obj, 'requested_tier', 'basic') or 'basic'
         if chosen_tier.lower() in ['luxury', 'classic', 'trial']:
             chosen_tier = 'basic'
-        tier_seats = {'basic': 5, 'classic': 5, 'luxury': 5, 'trial': 5, 'executive': 15, 'enterprise': 999}
-        max_seats = tier_seats.get(chosen_tier.lower(), 5)
+
+        # Check 10-Company Pioneer Cohort cap: If cohort full, step up to Executive
+        if chosen_tier == 'basic':
+            from .tier_limits import get_pioneer_cohort_status
+            cohort = get_pioneer_cohort_status()
+            if not Organization.objects.filter(name__iexact=req_obj.company_name).exists() and not cohort['is_cohort_open']:
+                chosen_tier = 'executive'
+
+        tier_seats = {'basic': 8, 'classic': 8, 'luxury': 8, 'trial': 8, 'executive': 15, 'enterprise': 999}
+        max_seats = tier_seats.get(chosen_tier.lower(), 8)
         monthly_cost = {'basic': 0.00, 'classic': 0.00, 'luxury': 0.00, 'trial': 0.00, 'executive': 1500.00, 'enterprise': 0.00}.get(chosen_tier.lower(), 0.00)
 
         org = None

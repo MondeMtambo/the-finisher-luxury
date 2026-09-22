@@ -2055,13 +2055,13 @@ class EmployeeViewSet(viewsets.ModelViewSet):
             user_tier = 'basic'
 
         TIER_SEAT_LIMITS = {
-            'basic': 5,
-            'classic': 5,
-            'luxury': 5,
+            'basic': 8,
+            'classic': 8,
+            'luxury': 8,
             'executive': 15,
             'enterprise': 999,
         }
-        max_users = TIER_SEAT_LIMITS.get((user_tier or 'basic').lower(), 5)
+        max_users = TIER_SEAT_LIMITS.get((user_tier or 'basic').lower(), 8)
 
         # Basic/Sovereign Tier Rule: Only CEO (admin) can onboard employees
         if not is_system_admin and (user_tier == 'basic' or user_tier == 'classic'):
@@ -2419,13 +2419,13 @@ https://www.thefinishercrm.tech
             user_tier = 'basic'
 
         TIER_SEAT_LIMITS = {
-            'basic': 5,
-            'classic': 5,
-            'luxury': 5,
+            'basic': 8,
+            'classic': 8,
+            'luxury': 8,
             'executive': 15,
             'enterprise': 999,
         }
-        max_users = TIER_SEAT_LIMITS.get((user_tier or 'basic').lower(), 5)
+        max_users = TIER_SEAT_LIMITS.get((user_tier or 'basic').lower(), 8)
 
         client_user_count = User.objects.filter(
             is_superuser=False,

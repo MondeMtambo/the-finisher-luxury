@@ -41,7 +41,7 @@
           <div>
             <div style="display: flex; align-items: center; gap: 0.6rem; margin-bottom: 0.35rem;">
               <span style="font-size: 1.4rem;">🛡️</span>
-              <h2 class="section-title" style="margin-bottom: 0; font-size: 1.25rem; color: #fff; letter-spacing: 0.5px;">
+              <h2 class="section-title" style="margin-bottom: 0; font-size: 1.25rem; color: var(--text-primary); letter-spacing: 0.5px;">
                 24/7 Autonomous Guardian Agent
               </h2>
               <span class="badge" :style="{
@@ -57,7 +57,7 @@
                 {{ sentinelData.mode }} &bull; 10s PULSE
               </span>
             </div>
-            <p style="color: #9ca3af; font-size: 0.84rem; margin: 0; line-height: 1.4;">
+            <p style="color: var(--text-muted); font-size: 0.84rem; margin: 0; line-height: 1.4;">
               Autonomous multi-tenant integrity daemon keeping Supabase database connections warm 24/7, auto-healing locked records, and managing enterprise scale.
             </p>
           </div>
@@ -197,8 +197,8 @@
             <tbody>
               <tr v-for="item in salesLedger" :key="item.id">
                 <td>
-                  <div style="font-weight: 700; color: #fff;">{{ item.company_name }}</div>
-                  <div style="font-size: 0.76rem; color: #9ca3af;" v-if="item.admin_email">{{ item.admin_email }}</div>
+                  <div style="font-weight: 700; color: var(--text-primary);">{{ item.company_name }}</div>
+                  <div style="font-size: 0.76rem; color: var(--text-muted);" v-if="item.admin_email">{{ item.admin_email }}</div>
                   <div v-if="item.notes" style="font-size: 0.72rem; color: #d4af37; margin-top: 0.2rem; font-style: italic;">
                     📝 {{ item.notes }}
                   </div>
@@ -210,8 +210,8 @@
                   </div>
                 </td>
                 <td>
-                  <div style="font-size: 0.82rem; color: #e5e7eb;">
-                    <span style="font-weight: 700; color: #fff;">{{ item.current_users }}</span> / {{ item.max_users }} Seats
+                  <div style="font-size: 0.82rem; color: var(--text-secondary);">
+                    <span style="font-weight: 700; color: var(--text-primary);">{{ item.current_users }}</span> / {{ item.max_users }} Seats
                   </div>
                   <div class="progress-bar-wrap" style="height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; width: 70px; margin-top: 0.3rem;">
                     <div style="height: 100%; background: #d4af37; border-radius: 2px;" :style="{ width: Math.min(100, Math.round((item.current_users / (item.max_users || 1)) * 100)) + '%' }"></div>
@@ -235,15 +235,15 @@
                   <div v-if="item.status === 'trial'" style="font-size: 0.82rem; color: #10b981; font-weight: 600;">
                     Permanent Sovereign Core
                   </div>
-                  <div v-else style="font-size: 0.78rem; color: #9ca3af;">
+                  <div v-else style="font-size: 0.78rem; color: var(--text-muted);">
                     Cycle: {{ formatDate(item.trial_end) }}
                   </div>
                 </td>
                 <td>
-                  <div style="font-size: 0.8rem; color: #fff; text-transform: uppercase; font-weight: 600;">
+                  <div style="font-size: 0.8rem; color: var(--text-primary); text-transform: uppercase; font-weight: 600;">
                     {{ item.payment_method }}
                   </div>
-                  <div v-if="item.payment_reference" style="font-family: monospace; font-size: 0.74rem; color: #9ca3af;">
+                  <div v-if="item.payment_reference" style="font-family: monospace; font-size: 0.74rem; color: var(--text-muted);">
                     Ref: {{ item.payment_reference }}
                   </div>
                 </td>
@@ -352,7 +352,7 @@
             <tbody>
               <tr v-for="req in corporateAccessRequests" :key="req.id">
                 <td>
-                  <div style="font-weight: 700; color: #fff;">{{ req.first_name }} {{ req.last_name }}</div>
+                  <div style="font-weight: 700; color: var(--text-primary);">{{ req.first_name }} {{ req.last_name }}</div>
                   <div style="font-size: 0.78rem; color: #d4af37; margin-top: 0.2rem;">
                     {{ req.job_title }}
                     <span v-if="req.is_ceo" style="margin-left: 0.35rem; background: rgba(212,175,55,0.2); padding: 0.15rem 0.4rem; border-radius: 4px; font-size: 0.72rem;">👑 CEO</span>
@@ -363,12 +363,12 @@
                   </div>
                 </td>
                 <td>
-                  <div style="font-weight: 700; color: #f3f4f6;">{{ req.company_name }}</div>
-                  <div style="font-size: 0.78rem; color: #9ca3af;">{{ req.trading_name ? `T/A ${req.trading_name}` : req.industry }}</div>
+                  <div style="font-weight: 700; color: var(--text-primary);">{{ req.company_name }}</div>
+                  <div style="font-size: 0.78rem; color: var(--text-muted);">{{ req.trading_name ? `T/A ${req.trading_name}` : req.industry }}</div>
                 </td>
                 <td>
-                  <div style="font-family: monospace; font-size: 0.82rem; color: #e5e7eb;">{{ req.email }}</div>
-                  <div style="font-size: 0.78rem; color: #9ca3af;">{{ req.phone }}</div>
+                  <div style="font-family: monospace; font-size: 0.82rem; color: var(--text-secondary);">{{ req.email }}</div>
+                  <div style="font-size: 0.78rem; color: var(--text-muted);">{{ req.phone }}</div>
                   <div v-if="req.auto_generated_password" style="font-size: 0.72rem; color: #d4af37; background: rgba(212,175,55,0.12); padding: 0.15rem 0.45rem; border-radius: 4px; margin-top: 0.3rem; font-family: monospace; display: inline-block; border: 1px solid rgba(212,175,55,0.25);" title="Auto-Generated Secure Password">
                     🔑 Auto-Pass: {{ req.auto_generated_password }}
                   </div>
@@ -631,11 +631,11 @@
           <div style="display: flex; justify-content: space-between; align-items: flex-start; flex-wrap: wrap; gap: 1rem; border-bottom: 1px solid rgba(255,255,255,0.08); padding-bottom: 1rem; margin-bottom: 1.25rem;">
             <div>
               <div style="display: flex; align-items: center; gap: 0.75rem;">
-                <h3 style="color: #fff; font-size: 1.35rem; margin: 0; font-weight: 800;">{{ inspectedTenantData.tenant.name }}</h3>
+                <h3 style="color: var(--text-primary); font-size: 1.35rem; margin: 0; font-weight: 800;">{{ inspectedTenantData.tenant.name }}</h3>
                 <span class="badge badge-primary" style="font-size: 0.75rem;">{{ inspectedTenantData.tenant.tier_display || 'Luxury' }}</span>
                 <span v-if="inspectedTenantData.tenant.is_cipc_verified" style="background: rgba(16, 185, 129, 0.2); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.4); padding: 0.15rem 0.5rem; border-radius: 4px; font-size: 0.72rem; font-weight: 700;">✓ CIPC Verified</span>
               </div>
-              <div style="color: #9ca3af; font-size: 0.8rem; margin-top: 0.3rem;">
+              <div style="color: var(--text-muted); font-size: 0.8rem; margin-top: 0.3rem;">
                 Root Administrator: <strong style="color: #d4af37;">{{ inspectedTenantData.tenant.admin_username }}</strong> ({{ inspectedTenantData.tenant.admin_email }}) &bull; Created: {{ formatDate(inspectedTenantData.tenant.created_at) }}
               </div>
             </div>
@@ -714,11 +714,11 @@
               <tbody>
                 <tr v-for="c in inspectedTenantData.contacts" :key="c.id">
                   <td>
-                    <div style="font-weight: 700; color: #fff;">{{ c.first_name }} {{ c.last_name }}</div>
+                    <div style="font-weight: 700; color: var(--text-primary);">{{ c.first_name }} {{ c.last_name }}</div>
                   </td>
                   <td>
-                    <div style="font-family: monospace; font-size: 0.82rem; color: #e5e7eb;">{{ c.email || '—' }}</div>
-                    <div style="font-size: 0.78rem; color: #9ca3af;">{{ c.phone || '—' }}</div>
+                    <div style="font-family: monospace; font-size: 0.82rem; color: var(--text-secondary);">{{ c.email || '—' }}</div>
+                    <div style="font-size: 0.78rem; color: var(--text-muted);">{{ c.phone || '—' }}</div>
                   </td>
                   <td style="color: #d4af37; font-weight: 600;">{{ c.company_name || 'Individual' }}</td>
                   <td><span class="badge badge-success">{{ c.status || 'Active' }}</span></td>
@@ -730,7 +730,7 @@
 
           <!-- Tab Content: Deals -->
           <div v-if="activeInspectorTab === 'deals'">
-            <div v-if="inspectedTenantData.deals.length === 0" style="padding: 2rem; text-align: center; color: #9ca3af;">
+            <div v-if="inspectedTenantData.deals.length === 0" style="padding: 2rem; text-align: center; color: var(--text-muted);">
               No deals currently in pipeline for this tenant.
             </div>
             <table v-else class="luxury-table">
@@ -745,8 +745,8 @@
               </thead>
               <tbody>
                 <tr v-for="d in inspectedTenantData.deals" :key="d.id">
-                  <td style="font-weight: 700; color: #fff;">{{ d.title }}</td>
-                  <td style="color: #d1d5db;">{{ d.contact_name || '—' }}</td>
+                  <td style="font-weight: 700; color: var(--text-primary);">{{ d.title }}</td>
+                  <td style="color: var(--text-secondary);">{{ d.contact_name || '—' }}</td>
                   <td><span class="badge badge-primary">{{ (d.stage || '').replace('_', ' ').toUpperCase() }}</span></td>
                   <td style="color: #10b981; font-family: monospace; font-weight: 700;">{{ formatCurrency(d.value) }}</td>
                   <td class="text-sm font-mono">{{ d.expected_close_date || '—' }}</td>
@@ -769,10 +769,10 @@
               </thead>
               <tbody>
                 <tr v-for="u in inspectedTenantData.users" :key="u.id">
-                  <td><div style="font-weight: 700; color: #fff;">{{ u.full_name }}</div></td>
+                  <td><div style="font-weight: 700; color: var(--text-primary);">{{ u.full_name }}</div></td>
                   <td>
-                    <div style="font-family: monospace; font-size: 0.82rem; color: #e5e7eb;">{{ u.email }}</div>
-                    <div style="font-size: 0.75rem; color: #9ca3af;">@{{ u.username }}</div>
+                    <div style="font-family: monospace; font-size: 0.82rem; color: var(--text-secondary);">{{ u.email }}</div>
+                    <div style="font-size: 0.75rem; color: var(--text-muted);">@{{ u.username }}</div>
                   </td>
                   <td><span class="badge badge-primary">{{ formatRole(u.role) }}</span></td>
                   <td>
@@ -1218,7 +1218,7 @@
         <div class="modal-header">
           <div class="modal-title-wrap">
             <span class="modal-badge-tag" style="color: #d4af37; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.1em;">CORPORATE TENANT PROVISIONING</span>
-            <h3 style="margin: 0; color: #fff; font-size: 1.35rem;">🏢 Onboard New Company</h3>
+            <h3 style="margin: 0; color: var(--text-primary); font-size: 1.35rem;">🏢 Onboard New Company</h3>
             <p class="text-muted text-sm mt-1 mb-0">Provision an isolated workspace for a business that requested access.</p>
           </div>
           <button class="modal-close" @click="closeOnboardModal">×</button>
@@ -1304,7 +1304,7 @@
             <div class="form-group mt-2">
               <label class="form-check-row" style="display: flex; align-items: center; gap: 0.5rem; cursor: pointer;">
                 <input type="checkbox" v-model="onboardForm.is_verified" style="accent-color: #d4af37;" />
-                <span style="font-size: 0.85rem; color: #e5e7eb;">Pre-verify CIPC Entity on BizPortal (Activate &amp; Unlock Workspace Immediately)</span>
+                <span style="font-size: 0.85rem; color: var(--text-secondary);">Pre-verify CIPC Entity on BizPortal (Activate &amp; Unlock Workspace Immediately)</span>
               </label>
             </div>
 
@@ -1328,7 +1328,7 @@
         <div class="modal-header">
           <div class="modal-title-wrap">
             <span class="modal-badge-tag" style="color: #10b981; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.1em;">✓ WORKSPACE PROVISIONED</span>
-            <h3 style="margin: 0; color: #fff; font-size: 1.35rem;">⚡ Executive Onboarding Dispatch</h3>
+            <h3 style="margin: 0; color: var(--text-primary); font-size: 1.35rem;">⚡ Executive Onboarding Dispatch</h3>
             <p class="text-muted text-sm mt-1 mb-0">The corporate workspace has been provisioned. Send or review credentials below.</p>
           </div>
           <button class="modal-close" @click="closeApprovalDispatchModal">×</button>
@@ -1421,7 +1421,7 @@
         <div class="modal-header">
           <div class="modal-title-wrap">
             <span class="modal-badge-tag" style="color: #d4af37; font-size: 0.7rem; font-weight: 800; letter-spacing: 0.1em;">EXECUTIVE REVENUE RECOGNITION</span>
-            <h3 style="margin: 0; color: #fff; font-size: 1.35rem;">{{ isEditingSale ? 'Edit Sales Record' : 'Record Direct Sale' }}</h3>
+            <h3 style="margin: 0; color: var(--text-primary); font-size: 1.35rem;">{{ isEditingSale ? 'Edit Sales Record' : 'Record Direct Sale' }}</h3>
             <p class="text-muted text-sm mt-1 mb-0">Record offline deals, EFT payments, or adjust corporate subscription allocations.</p>
           </div>
           <button class="modal-close" @click="closeRecordSaleModal">×</button>
@@ -2298,34 +2298,34 @@ export default {
 
 .kpi-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 1.5rem; margin-bottom: 2rem; }
 .kpi-grid.six-cols { grid-template-columns: repeat(6, 1fr); }
-.kpi-card { background: linear-gradient(145deg, #111, #0a0a0a); border: 1px solid rgba(212, 175, 55, 0.15); border-radius: 12px; padding: 1.5rem; box-shadow: 0 8px 30px rgba(0,0,0,0.5); transition: transform 0.3s; }
-.kpi-card:hover { transform: translateY(-4px); border-color: rgba(212, 175, 55, 0.4); }
+.kpi-card { background: var(--surface-card); border: 1px solid var(--border-gold); border-radius: 12px; padding: 1.5rem; box-shadow: var(--shadow-card); transition: transform 0.3s; }
+.kpi-card:hover { transform: translateY(-4px); border-color: var(--border-gold-bright); }
 .kpi-card.mini { padding: 1rem; text-align: center; }
-.kpi-val { font-size: 2.2rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; }
-.kpi-lbl { color: #a0aec0; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; }
-.kpi-val-mini { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.25rem; }
-.kpi-lbl-mini { color: #a0aec0; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; }
+.kpi-val { font-size: 2.2rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem; }
+.kpi-lbl { color: var(--text-muted); font-size: 0.85rem; text-transform: uppercase; letter-spacing: 1px; }
+.kpi-val-mini { font-size: 1.5rem; font-weight: 700; margin-bottom: 0.25rem; color: var(--text-primary); }
+.kpi-lbl-mini { color: var(--text-muted); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1px; }
 
-.text-blue { color: #60a5fa !important; }
-.text-amber { color: #fbbf24 !important; }
-.text-green { color: #34d399 !important; }
-.text-yellow { color: #facc15 !important; }
-.text-red { color: #f87171 !important; }
-.text-muted { color: #9ca3af !important; }
+.text-blue { color: #2563eb !important; }
+.text-amber { color: var(--text-gold) !important; }
+.text-green { color: #059669 !important; }
+.text-yellow { color: #d97706 !important; }
+.text-red { color: #dc2626 !important; }
+.text-muted { color: var(--text-muted) !important; }
 
-.table-container { background: rgba(10,10,10,0.6); backdrop-filter: blur(10px); border: 1px solid rgba(212,175,55,0.2); border-radius: 12px; overflow-x: auto; box-shadow: 0 10px 40px rgba(0,0,0,0.6); }
+.table-container { background: var(--surface-card); backdrop-filter: blur(10px); border: 1px solid var(--border-gold); border-radius: 12px; overflow-x: auto; box-shadow: var(--shadow-card); }
 .luxury-table { width: 100%; border-collapse: collapse; text-align: left; }
-.luxury-table th { background: rgba(212,175,55,0.05); padding: 1.25rem 1rem; color: #D4AF37; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 1px solid rgba(212, 175, 55, 0.2); }
-.luxury-table td { padding: 1.25rem 1rem; border-bottom: 1px solid rgba(255, 255, 255, 0.05); color: #d1d5db; font-size: 0.9rem; vertical-align: middle; }
-.luxury-table tr:hover td { background: rgba(212, 175, 55, 0.05); }
+.luxury-table th { background: var(--surface-card-hover); padding: 1.25rem 1rem; color: var(--text-gold); font-size: 0.75rem; text-transform: uppercase; letter-spacing: 1.5px; border-bottom: 1px solid var(--border-gold); }
+.luxury-table td { padding: 1.25rem 1rem; border-bottom: 1px solid var(--border-subtle); color: var(--text-secondary); font-size: 0.9rem; vertical-align: middle; }
+.luxury-table tr:hover td { background: var(--surface-card-hover); }
 .row-banned td { opacity: 0.5; background: rgba(239,68,68,0.05); }
 .row-warn td { background: rgba(245,158,11,0.05); }
 
-.user-main { font-weight: 600; color: #fff; margin-bottom: 0.25rem; }
-.user-sub { font-size: 0.8rem; color: #9ca3af; }
-.date-cell, .ip-cell { font-size: 0.85rem; color: #a0aec0; }
-.act-total { font-weight: 600; color: #D4AF37; font-size: 0.95rem; }
-.act-sub { font-size: 0.75rem; color: #6b7280; margin-top: 0.25rem; }
+.user-main { font-weight: 600; color: var(--text-primary); margin-bottom: 0.25rem; }
+.user-sub { font-size: 0.8rem; color: var(--text-muted); }
+.date-cell, .ip-cell { font-size: 0.85rem; color: var(--text-muted); }
+.act-total { font-weight: 600; color: var(--text-gold); font-size: 0.95rem; }
+.act-sub { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; }
 
 .action-flex { display: flex; gap: 0.5rem; align-items: center; }
 .btn-icon { background: none; border: none; font-size: 1.2rem; cursor: pointer; transition: transform 0.2s; padding: 0.25rem; }
@@ -2335,44 +2335,44 @@ export default {
 .btn-icon.success { filter: drop-shadow(0 0 5px rgba(16,185,129,0.5)); }
 
 .btn { display: flex; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.75rem 1.5rem; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.9375rem; transition: all 0.3s ease; border: none; text-transform: uppercase; letter-spacing: 1px; }
-.btn-primary { background: linear-gradient(135deg, #D4AF37 0%, #AA8010 100%); color: #000; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3); }
-.btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(212, 175, 55, 0.4); }
-.btn-secondary { background: rgba(255, 255, 255, 0.05); color: #fff; border: 1px solid rgba(255, 255, 255, 0.1); }
-.btn-secondary:hover:not(:disabled) { background: rgba(255, 255, 255, 0.1); border-color: #D4AF37; color: #D4AF37; }
+.btn-primary { background: var(--text-gold-gradient); color: #000; box-shadow: var(--shadow-glow); }
+.btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: var(--shadow-card); }
+.btn-secondary { background: var(--surface-card); color: var(--text-primary); border: 1px solid var(--border-gold); }
+.btn-secondary:hover:not(:disabled) { background: var(--surface-card-hover); border-color: var(--border-gold-bright); color: var(--text-gold); }
 .btn-danger { background: rgba(239, 68, 68, 0.1); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
 .btn-danger:hover:not(:disabled) { background: rgba(239, 68, 68, 0.2); box-shadow: 0 0 15px rgba(239, 68, 68, 0.3); }
 .btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
 /* Badges */
 .badge { padding: 0.35rem 0.75rem; border-radius: 999px; font-size: 0.7rem; font-weight: 700; letter-spacing: 0.5px; text-transform: uppercase; display: inline-block; }
-.badge-primary { background: rgba(212, 175, 55, 0.15); border: 1px solid rgba(212, 175, 55, 0.4); color: #D4AF37; }
+.badge-primary { background: var(--badge-gold-bg); border: 1px solid var(--border-gold); color: var(--text-gold); }
 .badge-danger { background: rgba(239, 68, 68, 0.15); border: 1px solid rgba(239, 68, 68, 0.4); color: #f87171; }
 .badge-success { background: rgba(16, 185, 129, 0.15); border: 1px solid rgba(16, 185, 129, 0.4); color: #34d399; }
-.badge-gray { background: rgba(156, 163, 175, 0.15); border: 1px solid rgba(156, 163, 175, 0.4); color: #9ca3af; }
+.badge-gray { background: rgba(156, 163, 175, 0.15); border: 1px solid rgba(156, 163, 175, 0.4); color: var(--text-muted); }
 .badge-warning { background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.4); color: #fbbf24; }
 
 /* Directories */
-.tenant-roster { background: linear-gradient(145deg, #161616, #0c0c0c); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 12px; margin-bottom: 2rem; overflow: hidden; box-shadow: 0 5px 20px rgba(0,0,0,0.5); }
-.tenant-header { padding: 1.5rem; border-bottom: 1px solid rgba(212, 175, 55, 0.2); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3); }
-.tenant-header h3 { color: #fff; margin: 0; font-size: 1.2rem; letter-spacing: 1px; }
+.tenant-roster { background: var(--surface-card); border: 1px solid var(--border-gold); border-radius: 12px; margin-bottom: 2rem; overflow: hidden; box-shadow: var(--shadow-card); }
+.tenant-header { padding: 1.5rem; border-bottom: 1px solid var(--border-gold); display: flex; justify-content: space-between; align-items: center; background: var(--surface-card-hover); }
+.tenant-header h3 { color: var(--text-primary); margin: 0; font-size: 1.2rem; letter-spacing: 1px; }
 .tenant-badges { display: flex; gap: 0.5rem; }
 
 .client-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(350px, 1fr)); gap: 1.5rem; }
-.client-card { background: linear-gradient(145deg, #1a1a1a, #0d0d0d); border-left: 3px solid rgba(212, 175, 55, 0.5); padding: 1.5rem; border-radius: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.4); transition: transform 0.3s; }
+.client-card { background: var(--surface-card); border-left: 3px solid var(--border-gold-bright); padding: 1.5rem; border-radius: 12px; box-shadow: var(--shadow-card); transition: transform 0.3s; }
 .client-card:hover { transform: translateY(-4px); }
-.cc-header h3 { color: #D4AF37; margin: 0 0 0.25rem 0; font-size: 1.25rem; }
-.cc-email { font-size: 0.85rem; color: #9ca3af; }
+.cc-header h3 { color: var(--text-gold); margin: 0 0 0.25rem 0; font-size: 1.25rem; }
+.cc-email { font-size: 0.85rem; color: var(--text-muted); }
 .cc-stats { display: flex; gap: 0.5rem; margin: 1rem 0; }
-.comp-item { background: rgba(255,255,255,0.03); padding: 0.75rem; border-radius: 8px; margin-bottom: 0.5rem; }
-.comp-name { font-weight: 600; color: #fff; font-size: 0.95rem; margin-bottom: 0.25rem; }
+.comp-item { background: var(--surface-card-hover); padding: 0.75rem; border-radius: 8px; margin-bottom: 0.5rem; }
+.comp-name { font-weight: 600; color: var(--text-primary); font-size: 0.95rem; margin-bottom: 0.25rem; }
 .comp-metrics { font-size: 0.8rem; }
 
 /* Playbook */
 .playbook-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 1.5rem; }
-.playbook-card { background: rgba(10,10,10,0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 12px; padding: 1.5rem; transition: border-color 0.3s; }
-.playbook-card:hover { border-color: #D4AF37; }
-.pb-header { font-size: 1.2rem; font-weight: 700; color: #fff; margin-bottom: 0.5rem; }
-.pb-focus { color: #d1d5db; font-size: 0.9rem; margin-bottom: 1rem; line-height: 1.5; }
+.playbook-card { background: var(--surface-card); border: 1px solid var(--border-gold); border-radius: 12px; padding: 1.5rem; transition: border-color 0.3s; }
+.playbook-card:hover { border-color: var(--border-gold-bright); }
+.pb-header { font-size: 1.2rem; font-weight: 700; color: var(--text-primary); margin-bottom: 0.5rem; }
+.pb-focus { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 1rem; line-height: 1.5; }
 .pb-next { font-size: 0.85rem; color: #D4AF37; background: rgba(212, 175, 55, 0.1); padding: 0.75rem; border-radius: 6px; }
 
 /* Alerts & Modals */

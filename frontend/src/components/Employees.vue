@@ -148,10 +148,10 @@
           <div v-if="!isSystemAdmin" class="tier-seat-banner" :class="{ 'seat-limit-reached': remainingSlots === 0 }">
             <div class="seat-info">
               <span class="seat-badge" :class="{ 'badge-limit': remainingSlots === 0 }">
-                {{ remainingSlots === 0 ? 'SEAT ALLOCATION FILLED' : '5-SEAT COLLABORATIVE ALLOCATION' }}
+                {{ remainingSlots === 0 ? 'SEAT ALLOCATION FILLED' : ((maxUsers || 8) + '-SEAT COLLABORATIVE ALLOCATION') }}
               </span>
               <span class="seat-text">
-                Your Corporate Sovereign Allocation includes <strong>{{ maxUsers || 5 }} Collaborative Seats</strong> (<strong>{{ remainingSlots }}</strong> seats remaining).
+                Your Workspace Allocation includes <strong>{{ maxUsers || 8 }} Collaborative Seats</strong> (<strong>{{ remainingSlots }}</strong> seats remaining).
               </span>
             </div>
             <router-link v-if="remainingSlots === 0 || remainingSlots <= 1" to="/upgrade/executive" class="btn btn-sm btn-upgrade-seat">
@@ -290,7 +290,7 @@
           <div v-if="remainingSlots === 0 && !isSystemAdmin" class="alert alert-warning" style="margin-bottom:1.25rem;padding:0.875rem 1rem;border-radius:8px;background:#fffbeb;border:1px solid #fef3c7;color:#92400e;display:flex;align-items:center;gap:10px;">
             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#d97706" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
             <div>
-              <strong>Seat Allocation Limit Reached:</strong> All {{ maxUsers || 5 }} collaborative seats for your Luxury Team tier are currently occupied. 
+              <strong>Seat Allocation Limit Reached:</strong> All {{ maxUsers || 8 }} collaborative seats for your organization tier are currently occupied. 
               <router-link to="/upgrade/executive" style="color:#d97706;font-weight:700;text-decoration:underline;margin-left:4px;">
                 Upgrade to Executive Suite (15 Seats) &rarr;
               </router-link>
@@ -1186,11 +1186,11 @@ export default {
   .logs-table tr {
     display: flex !important;
     flex-direction: column !important;
-    background: var(--card-bg, rgba(18, 22, 30, 0.95)) !important;
-    border: 1px solid var(--border-color, rgba(212, 175, 55, 0.2)) !important;
+    background: var(--surface-card, #ffffff) !important;
+    border: 1px solid var(--border-gold, rgba(212, 175, 55, 0.2)) !important;
     border-radius: 10px !important;
     padding: 12px 14px !important;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2) !important;
+    box-shadow: var(--shadow-card, 0 4px 12px rgba(0, 0, 0, 0.2)) !important;
     gap: 4px !important;
   }
   .logs-table tr.log-offboard {
@@ -1201,13 +1201,14 @@ export default {
     justify-content: space-between !important;
     align-items: center !important;
     padding: 5px 0 !important;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05) !important;
+    border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.05)) !important;
     font-size: 0.84rem !important;
+    color: var(--text-secondary) !important;
   }
   .logs-table td:last-child {
     border-bottom: none !important;
     font-size: 0.76rem !important;
-    color: var(--gray-400);
+    color: var(--text-muted) !important;
   }
 }
 

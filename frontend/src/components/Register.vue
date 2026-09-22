@@ -59,10 +59,18 @@
       <div class="auth-header">
         <div class="vip-badge-pill">
           <span class="vip-badge-dot"></span>
-          CORPORATE SOVEREIGN ALLOCATION &middot; ENTERPRISE WORKSPACE ONBOARDING
+          <span v-if="cohortStatus.is_cohort_open && form.requested_tier === 'basic'">
+            PIONEER FOUNDING COHORT &middot; ONLY {{ cohortStatus.remaining_spots }} OF {{ cohortStatus.max_pioneer_companies }} COMPANY SEATS REMAINING
+          </span>
+          <span v-else>
+            CORPORATE ALLOCATION &middot; ENTERPRISE WORKSPACE ONBOARDING
+          </span>
         </div>
-        <div class="scarcity-pill-banner">
-          <span>Official Corporate Access: <strong>Enterprise Cloud Workspace Provisioning</strong> &mdash; Instant Activation</span>
+        <div class="scarcity-pill-banner" v-if="cohortStatus.is_cohort_open && form.requested_tier === 'basic'">
+          <span>🔥 Strictly Limited: <strong>8 Collaborative Seats &middot; Unlimited Leads &amp; Contacts</strong> &mdash; First 10 Verified Companies (R0)</span>
+        </div>
+        <div class="scarcity-pill-banner cohort-full-alert" v-else-if="!cohortStatus.is_cohort_open">
+          <span>⚠️ Notice: Pioneer Cohort is fully claimed (10/10). Onboarding transitioned smoothly to <strong>Executive Suite (R1,500/mo)</strong></span>
         </div>
         <div class="selected-package-banner">
           <div class="package-banner-left">
@@ -592,6 +600,10 @@
           <span class="dossier-val highlight-gold">{{ selectedTierInfo.name }}</span>
         </div>
         <div class="dossier-row">
+          <span class="dossier-key">Allocated Capacity:</span>
+          <span class="dossier-val highlight-gold">{{ selectedTierInfo.seats }}</span>
+        </div>
+        <div class="dossier-row">
           <span class="dossier-key">Executive Dispatch:</span>
           <span class="dossier-val">noreply@mtamboholdings.dev</span>
         </div>
@@ -671,28 +683,36 @@ export default {
         cipc_number: '',
         tax_number: '',
         requested_tier: 'basic'
+      },
+      cohortStatus: {
+        max_pioneer_companies: 10,
+        claimed_companies: 1,
+        remaining_spots: 9,
+        is_cohort_open: true,
+        seats_per_company: 8
       }
     }
   },
   computed: {
     selectedTierInfo() {
+      const spots = this.cohortStatus ? this.cohortStatus.remaining_spots : 9
       const tierMap = {
         basic: {
-          name: 'CORPORATE SOVEREIGN',
+          name: 'PIONEER FOUNDING COHORT',
           price: 'R0 / permanent',
-          seats: '5 Collaborative Seats &middot; 6,000 Verified Contacts',
-          tag: 'FLAGSHIP ALLOCATION &middot; R0'
+          seats: '8 Collaborative Seats · Unlimited Leads & Contacts',
+          tag: `STRICTLY LIMITED TO 10 COMPANIES (${spots} REMAINING)`
         },
         luxury: {
-          name: 'CORPORATE SOVEREIGN',
+          name: 'PIONEER FOUNDING COHORT',
           price: 'R0 / permanent',
-          seats: '5 Collaborative Seats &middot; 6,000 Verified Contacts',
-          tag: 'FLAGSHIP ALLOCATION &middot; R0'
+          seats: '8 Collaborative Seats · Unlimited Leads & Contacts',
+          tag: `STRICTLY LIMITED TO 10 COMPANIES (${spots} REMAINING)`
         },
         executive: {
           name: 'EXECUTIVE SUITE',
           price: 'R1,500/month',
-          seats: 'Up to 15 Collaborative Seats &middot; Unlimited Contacts',
+          seats: 'Up to 15 Collaborative Seats · Unlimited Contacts',
           tag: 'ESTABLISHED FIRM'
         },
         enterprise: {
@@ -713,12 +733,17 @@ export default {
   beforeUnmount() {
     if (this.verificationTimer) clearInterval(this.verificationTimer)
   },
-  mounted() {
+  async mounted() {
     document.documentElement.setAttribute('data-theme', this.currentTheme)
     this.checkNetworkSecurity()
+    await this.fetchCohortStatus()
     const plan = (this.$route.query.plan || 'basic').toLowerCase()
     if (['basic', 'luxury', 'executive', 'enterprise'].includes(plan)) {
-      this.form.requested_tier = plan
+      if (plan === 'basic' && !this.cohortStatus.is_cohort_open) {
+        this.form.requested_tier = 'executive'
+      } else {
+        this.form.requested_tier = plan
+      }
     }
   },
   methods: {
@@ -726,6 +751,17 @@ export default {
       this.currentTheme = this.currentTheme === 'dark' ? 'light' : 'dark'
       localStorage.setItem('finisher_theme', this.currentTheme)
       document.documentElement.setAttribute('data-theme', this.currentTheme)
+    },
+    async fetchCohortStatus() {
+      try {
+        const res = await fetch('/api/auth/pioneer-cohort-status/')
+        if (res.ok) {
+          const data = await res.json()
+          this.cohortStatus = data
+        }
+      } catch (e) {
+        console.warn('Unable to load pioneer cohort status in register:', e)
+      }
     },
     checkCorporateEmail() {
       const email = (this.form.email || '').toLowerCase()

@@ -47,6 +47,7 @@ urlpatterns = [
     path('api/auth/password-reset/verify-otp/', auth_views.PasswordResetVerifyOTPView.as_view(), name='password_reset_verify_otp'),
     path('api/auth/password-reset-confirm/', auth_views.PasswordResetConfirmView.as_view(), name='password_reset_confirm'),
     path('api/auth/logout/', auth_views.LogoutView.as_view(), name='logout'),
+    path('api/auth/pioneer-cohort-status/', auth_views.PioneerCohortStatusView.as_view(), name='pioneer_cohort_status'),
     
     # Public endpoints (zero auth required)
     path('api/public/leads/', views.public_lead_capture, name='public_lead_capture'),

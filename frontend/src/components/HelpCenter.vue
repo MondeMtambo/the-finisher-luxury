@@ -343,14 +343,14 @@ export default {
 .page-title {
   font-size: 1.75rem;
   font-weight: 800;
-  color: #ffffff;
+  color: var(--text-primary, #ffffff);
   margin: 0 0 0.35rem;
   letter-spacing: -0.5px;
 }
 
 .page-subtitle {
   font-size: 0.9rem;
-  color: #94a3b8;
+  color: var(--text-muted, #94a3b8);
   margin: 0;
   line-height: 1.5;
   max-width: 650px;
@@ -386,9 +386,9 @@ export default {
 }
 
 .btn-outline-luxury {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: #cbd5e1;
+  background: var(--surface-bg, rgba(255, 255, 255, 0.04));
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.15));
+  color: var(--text-secondary, #cbd5e1);
   font-weight: 600;
   font-size: 0.85rem;
   padding: 0.65rem 1.1rem;
@@ -400,7 +400,7 @@ export default {
 .btn-outline-luxury:hover {
   background: rgba(255, 255, 255, 0.08);
   border-color: rgba(212, 175, 55, 0.5);
-  color: #ffffff;
+  color: var(--text-primary, #ffffff);
 }
 
 /* Status Pills */
@@ -438,8 +438,8 @@ export default {
   align-items: center;
   gap: 0.85rem;
   padding: 1rem 1.2rem;
-  background: #0f172a;
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  background: var(--surface-card, #0f172a);
+  border: 1px solid var(--border-gold, rgba(212, 175, 55, 0.2));
   border-radius: 10px;
   text-decoration: none;
   transition: all 0.2s ease;
@@ -464,13 +464,13 @@ export default {
   margin: 0;
   font-size: 0.875rem;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text-primary, #ffffff);
 }
 
 .doc-info p {
   margin: 0.15rem 0 0;
   font-size: 0.75rem;
-  color: #94a3b8;
+  color: var(--text-muted, #94a3b8);
 }
 
 .doc-arrow {
@@ -486,8 +486,8 @@ export default {
 
 /* Luxury Card Container */
 .luxury-card {
-  background: #0f172a;
-  border: 1px solid rgba(212, 175, 55, 0.22);
+  background: var(--surface-card, #0f172a);
+  border: 1px solid var(--border-gold, rgba(212, 175, 55, 0.22));
   border-radius: 14px;
   padding: 1.75rem;
   box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
@@ -500,7 +500,7 @@ export default {
   gap: 1rem;
   margin-bottom: 1.25rem;
   padding-bottom: 0.85rem;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  border-bottom: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.06));
 }
 
 .card-badge {
@@ -516,20 +516,20 @@ export default {
 .card-head h2 {
   font-size: 1.25rem;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text-primary, #ffffff);
   margin: 0;
 }
 
 .card-note {
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--text-muted, #64748b);
   font-weight: 600;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
 
 .section-intro {
-  color: #cbd5e1;
+  color: var(--text-secondary, #cbd5e1);
   font-size: 0.85rem;
   margin: 0 0 1.25rem;
   line-height: 1.5;
@@ -547,8 +547,8 @@ export default {
   align-items: flex-start;
   gap: 1rem;
   padding: 0.85rem 1rem;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: var(--surface-bg, rgba(255, 255, 255, 0.02));
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.05));
   border-radius: 10px;
   transition: all 0.2s ease;
 }
@@ -580,13 +580,13 @@ export default {
 .step-content h3 {
   font-size: 0.95rem;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text-primary, #ffffff);
   margin: 0 0 0.25rem;
 }
 
 .step-content p {
   font-size: 0.825rem;
-  color: #cbd5e1;
+  color: var(--text-secondary, #cbd5e1);
   margin: 0;
   line-height: 1.5;
 }
@@ -619,9 +619,9 @@ export default {
 }
 
 .faq-item {
-  border: 1px solid rgba(255, 255, 255, 0.07);
+  border: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.07));
   border-radius: 10px;
-  background: rgba(255, 255, 255, 0.02);
+  background: var(--surface-bg, rgba(255, 255, 255, 0.02));
   overflow: hidden;
   transition: all 0.2s ease;
 }
@@ -655,7 +655,7 @@ export default {
 .faq-question h3 {
   font-size: 0.925rem;
   font-weight: 600;
-  color: #ffffff;
+  color: var(--text-primary, #ffffff);
   margin: 0;
 }
 
@@ -667,10 +667,10 @@ export default {
 
 .faq-answer {
   padding: 0.25rem 1.2rem 1.1rem 2.4rem;
-  color: #cbd5e1;
+  color: var(--text-secondary, #cbd5e1);
   font-size: 0.85rem;
   line-height: 1.6;
-  border-top: 1px solid rgba(255, 255, 255, 0.04);
+  border-top: 1px solid var(--border-subtle, rgba(255, 255, 255, 0.04));
 }
 
 .faq-answer p {
@@ -686,8 +686,8 @@ export default {
 }
 
 .sc {
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(212, 175, 55, 0.2);
+  background: var(--surface-bg, rgba(255, 255, 255, 0.02));
+  border: 1px solid var(--border-gold, rgba(212, 175, 55, 0.2));
   border-radius: 12px;
   padding: 1.25rem;
   text-align: center;
@@ -719,13 +719,13 @@ export default {
 .sc h3 {
   font-size: 0.95rem;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text-primary, #ffffff);
   margin: 0 0 0.35rem;
 }
 
 .sc p {
   font-size: 0.8rem;
-  color: #94a3b8;
+  color: var(--text-muted, #94a3b8);
   margin: 0 0 1rem;
   line-height: 1.45;
   flex: 1;
@@ -766,13 +766,13 @@ export default {
 .footer-title {
   font-size: 0.825rem;
   font-weight: 700;
-  color: #ffffff;
+  color: var(--text-primary, #ffffff);
   margin: 0.25rem 0;
 }
 
 .footer-sub {
   font-size: 0.75rem;
-  color: #64748b;
+  color: var(--text-muted, #64748b);
   margin: 0;
 }
 

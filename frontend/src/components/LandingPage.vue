@@ -65,18 +65,37 @@
       
       <div class="landing-vip-badge">
         <span class="vip-pulse-dot"></span>
-        <span>CORPORATE SOVEREIGN ALLOCATION &middot; UNRESTRICTED CORE</span>
+        <span>PIONEER FOUNDING COHORT &middot; STRICTLY LIMITED TO 10 COMPANIES</span>
       </div>
 
       <h1 class="headline">Your Pipeline. Elevated.</h1>
       <p class="subheadline">The most exclusive CRM engine built for generational wealth and multi-million rand deals.</p>
       
-      <div class="scarcity-sub-badge">
-        Official Corporate Access &mdash; Enterprise Sovereign Workspace Provisioning Active
+      <!-- LIVE PIONEER COHORT SCARCITY TRACKER -->
+      <div class="pioneer-scarcity-deck">
+        <div class="deck-top">
+          <span class="deck-fire">🔥 PIONEER FOUNDING COHORT</span>
+          <span class="deck-counter">
+            ONLY <strong>{{ cohortStatus.remaining_spots }} OF {{ cohortStatus.max_pioneer_companies }}</strong> COMPANY SEATS REMAINING
+          </span>
+        </div>
+        <div class="deck-progress-bar-wrap">
+          <div 
+            class="deck-progress-bar" 
+            :style="{ width: ((cohortStatus.claimed_companies / cohortStatus.max_pioneer_companies) * 100) + '%' }"
+          ></div>
+        </div>
+        <div class="deck-footer">
+          <span>First 10 verified companies receive permanent 8-Seat Sovereign CRM access at R0.</span>
+          <span class="deck-transition-hint">Company #11 transitions smoothly to Executive Suite (R1,500/mo).</span>
+        </div>
       </div>
 
       <div class="hero-actions">
-        <button class="request-btn" @click="selectPlanAndRegister('basic')">Get Started Free (R0) &rarr;</button>
+        <button class="request-btn" @click="selectPlanAndRegister('basic')">
+          <span v-if="cohortStatus.is_cohort_open">Claim Pioneer Seat (R0) &rarr;</span>
+          <span v-else>Onboard Executive Suite &rarr;</span>
+        </button>
         <button class="packages-scroll-btn" @click="scrollToPackages">View All Packages &darr;</button>
       </div>
     </div>
@@ -91,33 +110,50 @@
       </p>
 
       <div class="landing-plans-grid">
-        <!-- Tier 1: Corporate Sovereign (Was R999 -> Scratched to R0 Permanent) -->
+        <!-- Tier 1: Pioneer Founding Cohort (Strictly 10 Companies · 8 Seats · Unlimited Leads) -->
         <div class="landing-plan-card featured sovereign-card">
-          <div class="popular-ribbon">RECOMMENDED &middot; 5 SEATS</div>
-          <div class="tier-badge gold">FLAGSHIP ALLOCATION</div>
-          <h3 class="tier-name">Corporate Sovereign</h3>
-          <p class="tier-desc">Empower business enterprises with full CRM capabilities.</p>
+          <div class="popular-ribbon" v-if="cohortStatus.is_cohort_open">
+            🔥 ONLY {{ cohortStatus.remaining_spots }} SPOTS LEFT &middot; 8 SEATS
+          </div>
+          <div class="popular-ribbon closed" v-else>
+            COHORT FULLY SUBSCRIBED (10/10)
+          </div>
+          <div class="tier-badge gold">PIONEER FOUNDING COHORT</div>
+          <h3 class="tier-name">Pioneer Sovereign</h3>
+          <p class="tier-desc">Permanent sovereign CRM allocation strictly capped to the first 10 verified companies.</p>
           <div class="tier-price">
-            <span class="scratched-price"><del>R999</del></span>
+            <span class="scratched-price"><del>R1,500</del></span>
             <span class="currency">R</span>0<span class="period">/permanent</span>
           </div>
-          <div class="seat-pill featured">5 Collaborative Seats &middot; Up to 6,000 Verified Contacts</div>
+          <div class="seat-pill featured">
+            <strong>8 Collaborative Seats</strong> &middot; <strong>Unlimited Leads &amp; Contacts</strong>
+          </div>
 
           <ul class="tier-features">
-            <li><strong>5 Collaborative Team Seats</strong> (CEO, Managers &amp; Reps)</li>
-            <li><strong>Up to 6,000 Verified Client Contacts</strong></li>
-            <li><strong>Full 100-Product Catalog &amp; Line Items</strong></li>
-            <li>Full deal pipeline &amp; Kanban stage management</li>
-            <li>Meta / Facebook Lead Ads Webhook Integration</li>
-            <li>Standard Quotation engine &amp; Invoicing</li>
-            <li><strong>5 Active Automated Trigger Workflows</strong></li>
-            <li><strong>10 Custom Corporate Email Templates</strong></li>
-            <li>POPIA Section 19 Compliance Vault</li>
-            <li>Standard Enterprise Network Security Stamp</li>
+            <li><strong>8 Collaborative Team Seats</strong> (CEO, Executives, Managers, Reps)</li>
+            <li><strong>Unlimited Client Leads &amp; Contacts</strong></li>
+            <li><strong>Full Product Catalog &amp; Line Items</strong></li>
+            <li>Real-time Deal Pipeline &amp; Executive Kanban</li>
+            <li>Autonomous Meta / Facebook Lead Ads Webhooks</li>
+            <li>Automated Quotes, Invoicing &amp; Revenue Ledger</li>
+            <li><strong>24/7 Sentinel Guardian System Health Monitor</strong></li>
+            <li>POPIA Section 19 Cryptographic Vault</li>
+            <li>Zero Hosting or Infrastructure Fees</li>
           </ul>
 
-          <button class="plan-cta-btn primary sovereign-btn" @click="selectPlanAndRegister('basic')">
-            Claim 5 Seats License (R0) &rarr;
+          <button 
+            v-if="cohortStatus.is_cohort_open" 
+            class="plan-cta-btn primary sovereign-btn" 
+            @click="selectPlanAndRegister('basic')"
+          >
+            Claim 1 of {{ cohortStatus.remaining_spots }} Free Pioneer Seats (R0) &rarr;
+          </button>
+          <button 
+            v-else 
+            class="plan-cta-btn secondary" 
+            @click="selectPlanAndRegister('executive')"
+          >
+            Cohort Full &mdash; Onboard into Executive Suite (R1,500/mo) &rarr;
           </button>
         </div>
 
@@ -204,6 +240,33 @@
         </button>
       </div>
     </div>
+
+    <!-- FLOATING PIONEER COHORT VIP POPUP / SCARCITY PILL -->
+    <transition name="floating-fade">
+      <div v-if="showFloatingScarcityPill" class="floating-pioneer-pill">
+        <button class="pill-close-btn" @click="showFloatingScarcityPill = false" aria-label="Close notification">&times;</button>
+        <div class="pill-badge">
+          <span class="pill-pulse-dot"></span>
+          STRICTLY LIMITED TO 10 FIRMS
+        </div>
+        <div class="pill-title">
+          <span v-if="cohortStatus.is_cohort_open">
+            Only <strong>{{ cohortStatus.remaining_spots }} of {{ cohortStatus.max_pioneer_companies }}</strong> Free Seats Remain
+          </span>
+          <span v-else>Pioneer Cohort Fully Subscribed</span>
+        </div>
+        <p class="pill-desc">
+          First 10 verified companies receive permanent <strong>8-Seat Sovereign CRM at R0</strong>. Company #11 transitions smoothly to Executive Suite (R1,500/mo).
+        </p>
+        <button 
+          class="pill-cta" 
+          @click="selectPlanAndRegister(cohortStatus.is_cohort_open ? 'basic' : 'executive')"
+        >
+          <span v-if="cohortStatus.is_cohort_open">Claim Your Free Pioneer Seat &rarr;</span>
+          <span v-else>Join Executive Suite &rarr;</span>
+        </button>
+      </div>
+    </transition>
   </div>
 </template>
 
@@ -221,7 +284,18 @@ export default {
       sparkles: [],
       slapTimer: null,
       sparkleTimer: null,
-      scrollTimer: null
+      scrollTimer: null,
+      showFloatingScarcityPill: true,
+      cohortStatus: {
+        max_pioneer_companies: 10,
+        claimed_companies: 1,
+        remaining_spots: 9,
+        is_cohort_open: true,
+        tier_name: 'Pioneer Founding Cohort',
+        seats_per_company: 8,
+        executive_monthly_rate: 1500.0,
+        leads_limit: 'Unlimited'
+      }
     }
   },
   computed: {
@@ -249,6 +323,7 @@ export default {
   },
   mounted() {
     this.updateDimensions()
+    this.fetchCohortStatus()
     window.addEventListener('resize', this.updateDimensions)
     if (this.$route.hash === '#packages') {
       setTimeout(this.scrollToPackages, 300)
@@ -343,6 +418,17 @@ export default {
       const el = this.$refs.packagesSection
       if (el) {
         el.scrollIntoView({ behavior: 'smooth' })
+      }
+    },
+    async fetchCohortStatus() {
+      try {
+        const res = await fetch('/api/auth/pioneer-cohort-status/')
+        if (res.ok) {
+          const data = await res.json()
+          this.cohortStatus = data
+        }
+      } catch (e) {
+        console.warn('Unable to load live cohort status:', e)
       }
     }
   }
@@ -1257,6 +1343,185 @@ export default {
 .btn-addon.gold:hover {
   background: #d4af37;
   color: #000;
+}
+
+/* Pioneer Founding Cohort Scarcity Deck */
+.pioneer-scarcity-deck {
+  background: rgba(212, 175, 55, 0.07);
+  border: 1px solid rgba(212, 175, 55, 0.35);
+  border-radius: 12px;
+  padding: 1rem 1.4rem;
+  max-width: 580px;
+  width: 90%;
+  margin: 0 auto 2.2rem;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.5), inset 0 1px 1px rgba(212, 175, 55, 0.2);
+  text-align: left;
+}
+
+.deck-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+}
+
+.deck-fire {
+  color: #f5d76e;
+  letter-spacing: 1px;
+  font-weight: 800;
+}
+
+.deck-counter {
+  color: #ffffff;
+  letter-spacing: 0.5px;
+}
+
+.deck-counter strong {
+  color: #d4af37;
+  font-size: 0.95rem;
+}
+
+.deck-progress-bar-wrap {
+  height: 7px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 999px;
+  overflow: hidden;
+  margin: 0.65rem 0;
+  border: 1px solid rgba(212, 175, 55, 0.15);
+}
+
+.deck-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #b48608 0%, #d4af37 50%, #f5d76e 100%);
+  box-shadow: 0 0 10px rgba(212, 175, 55, 0.7);
+  transition: width 0.8s ease-in-out;
+}
+
+.deck-footer {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  font-size: 0.72rem;
+  color: #94a3b8;
+  line-height: 1.45;
+}
+
+.deck-transition-hint {
+  color: #d4af37;
+  font-weight: 600;
+}
+
+.popular-ribbon.closed {
+  background: #334155;
+  color: #94a3b8;
+}
+
+/* Floating Pioneer Scarcity Popup */
+.floating-pioneer-pill {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  z-index: 1000;
+  width: 330px;
+  background: rgba(10, 15, 28, 0.94);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(212, 175, 55, 0.45);
+  border-radius: 14px;
+  padding: 1.15rem 1.25rem 1.15rem 1.15rem;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.8), 0 0 25px rgba(212, 175, 55, 0.2);
+  text-align: left;
+}
+
+.pill-close-btn {
+  position: absolute;
+  top: 8px;
+  right: 12px;
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.pill-close-btn:hover {
+  color: #ffffff;
+}
+
+.pill-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.62rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: #d4af37;
+  text-transform: uppercase;
+  margin-bottom: 0.35rem;
+}
+
+.pill-pulse-dot {
+  width: 6px;
+  height: 6px;
+  background-color: #d4af37;
+  border-radius: 50%;
+  animation: pulse-dot 1.8s infinite;
+}
+
+.pill-title {
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #ffffff;
+  margin-bottom: 0.35rem;
+  line-height: 1.3;
+}
+
+.pill-title strong {
+  color: #f5d76e;
+}
+
+.pill-desc {
+  font-size: 0.72rem;
+  color: #94a3b8;
+  line-height: 1.45;
+  margin: 0 0 0.85rem;
+}
+
+.pill-cta {
+  width: 100%;
+  background: linear-gradient(135deg, #d4af37 0%, #b48608 100%);
+  border: none;
+  color: #000000;
+  font-weight: 800;
+  font-size: 0.75rem;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  padding: 0.65rem 1rem;
+  border-radius: 6px;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.3);
+  transition: all 0.25s ease;
+}
+
+.pill-cta:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.45);
+}
+
+.floating-fade-enter-active,
+.floating-fade-leave-active {
+  transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.floating-fade-enter-from,
+.floating-fade-leave-to {
+  opacity: 0;
+  transform: translateY(20px) scale(0.95);
 }
 
 @media(max-width: 1100px) {

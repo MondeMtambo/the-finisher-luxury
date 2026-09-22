@@ -205,9 +205,13 @@
               </div>
               <div class="dropdown-divider"></div>
               <router-link to="/settings" class="dropdown-item">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M18.36 5.64l1.42-1.42"/><path d="M1 12h2M21 12h2M4.22 19.78l1.42-1.42"/></svg>
                 Settings
               </router-link>
+              <button @click="showInstallModal = true; showUserMenu = false" class="dropdown-item">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+                Install Mobile App
+              </button>
               <button @click="handleLogout" class="dropdown-item logout-item">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"/></svg>
                 Logout
@@ -262,6 +266,10 @@
             <button class="mobile-quick-btn" @click="openTutorial" type="button">
               <span class="quick-btn-icon">🎬</span>
               <span>System Tour</span>
+            </button>
+            <button class="mobile-quick-btn" @click="showInstallModal = true; mobileMenuOpen = false" type="button">
+              <span class="quick-btn-icon">📲</span>
+              <span>Install App</span>
             </button>
           </div>
         </div>
@@ -348,6 +356,10 @@
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
             <span v-if="!sidebarCollapsed">{{ $t('nav.help') }}</span>
           </router-link>
+          <button type="button" class="nav-item nav-item-btn" @click="showInstallModal = true" title="Download & Install Mobile App">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
+            <span v-if="!sidebarCollapsed">Install Mobile App</span>
+          </button>
         </div>
       </nav>
 
@@ -428,6 +440,12 @@
       @city-pinned="handleCityPinned"
     />
 
+    <!-- Install Mobile App (PWA) Modal -->
+    <InstallAppModal
+      :isOpen="showInstallModal"
+      @close="showInstallModal = false"
+    />
+
     <!-- ═══ MOBILE & PWA DEDICATED LANGUAGE SELECTION MODAL ═══ -->
     <transition name="fade">
       <div v-if="showMobileLangModal" class="mobile-lang-overlay" @click.self="showMobileLangModal = false">
@@ -482,13 +500,15 @@ import toast from '../utils/toast'
 import modal from '../utils/modal'
 import { getRandomAvatar, getAvatarById } from '../utils/avatars.js'
 import WorldClockModal from './WorldClockModal.vue'
+import InstallAppModal from './InstallAppModal.vue'
 import { languages, setLanguage, getActiveLanguage, i18nState } from '../i18n'
 import fontSizeService from '../utils/fontSize'
 
 export default {
   name: 'Navbar',
   components: {
-    WorldClockModal
+    WorldClockModal,
+    InstallAppModal
   },
   emits: ['open-query-modal'],
   data() {
@@ -508,6 +528,7 @@ export default {
       showNotifications: false,
       showUserMenu: false,
       showWorldClock: false,
+      showInstallModal: false,
       showLangMenu: false,
       showMobileLangModal: false,
       pinnedCityTimezone: localStorage.getItem('finisher_pinned_clock_tz') || 'Africa/Johannesburg',
@@ -1711,6 +1732,14 @@ export default {
   transition: all 0.12s ease;
   margin-bottom: 2px;
   white-space: nowrap;
+}
+.nav-item-btn {
+  background: none;
+  border: none;
+  width: 100%;
+  text-align: left;
+  cursor: pointer;
+  font-family: inherit;
 }
 .nav-item:hover {
   background: rgba(212, 175, 55, 0.05);

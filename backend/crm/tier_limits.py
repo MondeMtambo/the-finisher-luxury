@@ -7,11 +7,37 @@ Configures commercial limits for:
   - enterprise (Enterprise Cluster)
 """
 
+MAX_PIONEER_COMPANIES = 10
+
+def get_pioneer_cohort_status():
+    """
+    Calculates the live status of the 10-Company Pioneer Founding Cohort.
+    Excludes internal system ingestion organizations.
+    Returns dict with claimed count, remaining spots, and cohort open flag.
+    """
+    from .models import Organization
+    # Exclude internal system lead ingestion organization
+    qs = Organization.objects.exclude(slug__icontains='system_lead_ingest')
+    claimed_count = qs.count()
+    remaining = max(0, MAX_PIONEER_COMPANIES - claimed_count)
+    is_open = claimed_count < MAX_PIONEER_COMPANIES
+
+    return {
+        'max_pioneer_companies': MAX_PIONEER_COMPANIES,
+        'claimed_companies': claimed_count,
+        'remaining_spots': remaining,
+        'is_cohort_open': is_open,
+        'tier_name': 'Pioneer Founding Cohort',
+        'seats_per_company': 8,
+        'executive_monthly_rate': 1500.00,
+        'leads_limit': 'Unlimited'
+    }
+
 TIER_QUOTAS = {
     'basic': {
-        'max_users': 5,
+        'max_users': 8,         # 8 Collaborative Seats per Pioneer Sovereign Allocation
         'max_companies': None,  # Unlimited
-        'max_contacts': 6000,   # Corporate Sovereign allocation
+        'max_contacts': None,   # Unlimited Leads & Contacts
         'max_deals': None,      # Unlimited
         'max_products': 100,
         'max_campaigns': 5,

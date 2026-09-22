@@ -1376,11 +1376,11 @@ export default {
 .page-header h1 {
   font-size: 1.75rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--text-primary, #fff);
   margin: 0;
 }
 .page-subtitle {
-  color: #9ca3af;
+  color: var(--text-muted, #9ca3af);
   font-size: 0.95rem;
   margin: 0.25rem 0 0;
 }
@@ -1506,7 +1506,7 @@ export default {
 .stat-value {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--text-primary, #fff);
   margin: 0;
   line-height: 1.2;
 }
@@ -1525,13 +1525,13 @@ export default {
 .section-head h2 {
   font-size: 1.15rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--text-primary, #fff);
   margin: 0;
 }
 .ticket-desc {
   margin: 0.25rem 0 0;
   font-size: 0.8rem;
-  color: #9ca3af;
+  color: var(--text-muted, #9ca3af);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -1554,7 +1554,7 @@ export default {
 .chart-card h3 {
   font-size: 1rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--text-primary, #fff);
   margin: 0 0 1rem;
 }
 .chart-wrap {
@@ -1665,7 +1665,7 @@ export default {
 .quick-actions-bar h3 {
   font-size: 1rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--text-primary, #fff);
   margin: 0 0 0.75rem;
 }
 .qa-buttons {
@@ -1688,13 +1688,13 @@ export default {
   top: 100%;
   left: 0;
   right: 0;
-  background: #111418;
-  border: 1px solid rgba(255,255,255,0.1);
+  background: var(--surface-dropdown, #111418);
+  border: 1px solid var(--border-subtle, rgba(255,255,255,0.1));
   border-radius: var(--radius-md);
   max-height: 200px;
   overflow-y: auto;
   box-shadow: 0 10px 20px rgba(0,0,0,0.5);
-  color: #fff;
+  color: var(--text-primary, #fff);
   z-index: 20;
   list-style: none;
   padding: 0;
@@ -1768,7 +1768,7 @@ export default {
 }
 .deal-row:hover { background: rgba(212, 175, 55, 0.1); border-color: rgba(212, 175, 55, 0.3); }
 .deal-row.selected { background: rgba(212, 175, 55, 0.2); border-color: #D4AF37; }
-.deal-name { font-weight: 600; color: #fff; }
+.deal-name { font-weight: 600; color: var(--text-primary, #fff); }
 .deal-val { font-weight: 600; color: #D4AF37; font-size: 0.9rem; }
 .deal-detail {
   margin-top: 1rem;
@@ -1778,12 +1778,12 @@ export default {
   margin: 0 0 0.75rem;
   font-size: 1rem;
   font-weight: 700;
-  color: #fff;
+  color: var(--text-primary, #fff);
 }
 .deal-detail p {
   margin: 0.25rem 0;
   font-size: 0.875rem;
-  color: #d1d5db;
+  color: var(--text-muted, #d1d5db);
 }
 
 .modal-lg {
@@ -1791,17 +1791,17 @@ export default {
 }
 
 /* Base overrides for inside components */
-.modal-panel { background: rgba(17, 20, 24, 0.95); border: 1px solid rgba(212, 175, 55, 0.3); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8); color: #fff; }
-.modal-header { border-bottom: 1px solid rgba(255,255,255,0.1); }
-.modal-header h3 { color: #fff; }
-.form-input { background: rgba(0,0,0,0.2); border: 1px solid rgba(255,255,255,0.1); color: #fff; }
+.modal-panel { background: var(--surface-card, rgba(17, 20, 24, 0.95)); border: 1px solid var(--border-gold, rgba(212, 175, 55, 0.3)); box-shadow: 0 25px 50px -12px rgba(0,0,0,0.8); color: var(--text-primary, #fff); }
+.modal-header { border-bottom: 1px solid var(--border-subtle, rgba(255,255,255,0.1)); }
+.modal-header h3 { color: var(--text-primary, #fff); }
+.form-input { background: var(--input-bg, rgba(0,0,0,0.2)); border: 1px solid var(--input-border, rgba(255,255,255,0.1)); color: var(--input-text, #fff); }
 .form-input:focus { border-color: #D4AF37; box-shadow: 0 0 0 3px rgba(212,175,55,0.2); }
-.form-label { color: #d1d5db; }
-.form-hint { color: #9ca3af; }
-.modal-footer { border-top: 1px solid rgba(255,255,255,0.1); }
-.data-table th { background: rgba(255,255,255,0.05); color: #9ca3af; border-bottom: 1px solid rgba(255,255,255,0.1); padding: 10px; text-align: left; }
-.data-table td { border-bottom: 1px solid rgba(255,255,255,0.05); color: #fff; padding: 10px; }
-.btn-secondary { background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); color: #fff; }
+.form-label { color: var(--text-secondary, #d1d5db); }
+.form-hint { color: var(--text-muted, #9ca3af); }
+.modal-footer { border-top: 1px solid var(--border-subtle, rgba(255,255,255,0.1)); }
+.data-table th { background: var(--surface-bg, rgba(255,255,255,0.05)); color: var(--text-muted, #9ca3af); border-bottom: 1px solid var(--border-subtle, rgba(255,255,255,0.1)); padding: 10px; text-align: left; }
+.data-table td { border-bottom: 1px solid var(--border-subtle, rgba(255,255,255,0.05)); color: var(--text-primary, #fff); padding: 10px; }
+.btn-secondary { background: var(--surface-bg, rgba(255,255,255,0.05)); border: 1px solid var(--border-subtle, rgba(255,255,255,0.1)); color: var(--text-primary, #fff); }
 .btn-secondary:hover { border-color: #D4AF37; color: #D4AF37; }
 
 /* Text helpers */
@@ -1855,7 +1855,7 @@ export default {
   margin: 0;
   font-size: 1.15rem;
   font-weight: 800;
-  color: #ffffff;
+  color: var(--text-primary, #ffffff);
 }
 
 .splash-text p {

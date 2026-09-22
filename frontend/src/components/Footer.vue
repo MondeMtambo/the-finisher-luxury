@@ -32,7 +32,7 @@
             <div class="fn-title">Contact &amp; Legal Domicile</div>
             <a href="mailto:support@thefinishercrm.tech">support@thefinishercrm.tech</a>
             <a href="mailto:legal@thefinishercrm.tech">legal@thefinishercrm.tech</a>
-            <span style="color: #9ca3af; font-size: 0.75rem; margin-top: 4px; line-height: 1.35;">📍 Sandton City<br>Johannesburg, Gauteng, South Africa</span>
+            <span style="color: var(--text-muted); font-size: 0.75rem; margin-top: 4px; line-height: 1.35;">📍 Sandton City<br>Johannesburg, Gauteng, South Africa</span>
           </div>
         </nav>
       </div>
@@ -83,20 +83,20 @@ export default {
 }
 </script>
 <style scoped>
-.app-footer { margin-top:2rem; background:var(--gray-900); color:#e5e7eb; border-top:1px solid var(--gray-800); }
+.app-footer { margin-top:2rem; background:var(--surface-card); color:var(--text-primary); border-top:1px solid var(--border-subtle); }
 .footer-inner { max-width:1100px; margin:0 auto; padding:2rem 1.5rem 1.25rem; }
 .footer-top { display:flex; gap:2.5rem; flex-wrap:wrap; margin-bottom:1.5rem; }
 .footer-brand { display:flex; align-items:flex-start; gap:.625rem; min-width:220px; }
 .fb-mark { width:32px; height:32px; background:var(--primary-500); color:#fff; border-radius:var(--radius-sm); display:flex; align-items:center; justify-content:center; font-weight:800; font-size:.875rem; flex-shrink:0; }
-.fb-name { font-weight:700; font-size:.875rem; }
-.fb-sub { color:#9ca3af; font-size:.75rem; }
+.fb-name { font-weight:700; font-size:.875rem; color:var(--text-primary); }
+.fb-sub { color:var(--text-muted); font-size:.75rem; }
 .footer-nav { display:flex; gap:2rem; flex:1; flex-wrap:wrap; }
 .fn-col { display:flex; flex-direction:column; min-width:140px; }
-.fn-title { font-size:.6875rem; font-weight:600; color:#d1d5db; text-transform:uppercase; letter-spacing:.04em; margin-bottom:.5rem; }
-.fn-col a { color:#9ca3af; text-decoration:none; font-size:.8125rem; margin-bottom:.25rem; transition:color .15s; }
-.fn-col a:hover { color:#fff; }
-.footer-bottom { border-top:1px solid rgba(255,255,255,.08); padding-top:1rem; display:flex; flex-direction:column; align-items:center; gap:.5rem; text-align:center; }
-.footer-bottom p { font-size:.75rem; color:#9ca3af; margin:0; }
+.fn-title { font-size:.6875rem; font-weight:600; color:var(--text-gold); text-transform:uppercase; letter-spacing:.04em; margin-bottom:.5rem; }
+.fn-col a { color:var(--text-muted); text-decoration:none; font-size:.8125rem; margin-bottom:.25rem; transition:color .15s; }
+.fn-col a:hover { color:var(--text-gold); }
+.footer-bottom { border-top:1px solid var(--border-subtle); padding-top:1rem; display:flex; flex-direction:column; align-items:center; gap:.5rem; text-align:center; }
+.footer-bottom p { font-size:.75rem; color:var(--text-muted); margin:0; }
 .footer-copyright-link {
   color: #D4AF37;
   text-decoration: none;
