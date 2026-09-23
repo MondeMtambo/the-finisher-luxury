@@ -2103,13 +2103,19 @@ export default {
   border-radius: 4px;
 }
 
-/* Mobile Drawer Controls */
+/* Mobile Drawer Controls (Hidden on desktop, only shown in mobile drawer) */
 .mobile-drawer-controls {
-  padding: 10px 12px 14px 12px;
-  margin: 6px 10px 12px 10px;
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(212, 175, 55, 0.2);
-  border-radius: 10px;
+  display: none;
+}
+@media (max-width: 768px) {
+  .sidebar.mobile-open .mobile-drawer-controls {
+    display: block;
+    padding: 10px 12px 14px 12px;
+    margin: 6px 10px 12px 10px;
+    background: rgba(255, 255, 255, 0.03);
+    border: 1px solid rgba(212, 175, 55, 0.2);
+    border-radius: 10px;
+  }
 }
 .ctrl-section-label {
   display: block;

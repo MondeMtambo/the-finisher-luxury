@@ -106,4 +106,5 @@ urlpatterns = [
     # 24/7 Autonomous Sentinel Guardian Agent
     path('api/agent/sentinel/status/', agent_views.SentinelAgentStatusView.as_view(), name='sentinel_agent_status'),
     path('api/agent/sentinel/pulse/', agent_views.SentinelAgentTriggerPulseView.as_view(), name='sentinel_agent_pulse'),
+    path('api/agent/sentinel/cron/', agent_views.SentinelAgentCronView.as_view(), name='sentinel_agent_cron'),
 ]

@@ -26,7 +26,21 @@ from django.conf import settings
 from crm.models import Organization, UserProfile, Contact, Deal, Ticket, SecurityAuditTrail, Notification
 from django.contrib.auth.models import User
 
-TELEMETRY_FILE = os.path.join(settings.BASE_DIR, 'agent_telemetry.json')
+def _resolve_telemetry_file():
+    env_path = os.environ.get('TELEMETRY_FILE')
+    if env_path:
+        return env_path
+    base_file = os.path.join(settings.BASE_DIR, 'agent_telemetry.json')
+    try:
+        test_file = os.path.join(settings.BASE_DIR, '.writable_test')
+        with open(test_file, 'w') as f:
+            f.write('')
+        os.remove(test_file)
+        return base_file
+    except Exception:
+        return '/tmp/agent_telemetry.json'
+
+TELEMETRY_FILE = _resolve_telemetry_file()
 
 def run_agent_cycle(verbose=False):
     """

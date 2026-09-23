@@ -6,7 +6,7 @@ Endpoints to inspect and interact with the 24/7 Sentinel Guardian Agent.
 
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework import status
 import os
 import json
@@ -61,3 +61,29 @@ class SentinelAgentTriggerPulseView(APIView):
             'message': 'Autonomous Guardian Agent pulse completed successfully.',
             'telemetry': telemetry
         }, status=status.HTTP_200_OK)
+
+class SentinelAgentCronView(APIView):
+    """
+    GET /api/agent/sentinel/cron/
+    Automated execution endpoint triggered by Vercel Cron or external uptime monitors.
+    """
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        cron_secret = os.environ.get('CRON_SECRET', '')
+        auth_header = request.headers.get('Authorization', '')
+        user_agent = request.headers.get('User-Agent', '')
+
+        if cron_secret and auth_header != f'Bearer {cron_secret}' and 'vercel-cron' not in user_agent:
+            return Response(
+                {'error': 'Unauthorized cron invocation.'},
+                status=status.HTTP_401_UNAUTHORIZED
+            )
+
+        telemetry = run_agent_cycle(verbose=False)
+        return Response({
+            'status': 'ok',
+            'agent': 'FINISHER SENTINEL 24/7 GUARDIAN',
+            'telemetry': telemetry
+        }, status=status.HTTP_200_OK)
+
