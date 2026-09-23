@@ -4,7 +4,7 @@
 // ═══════════════════════════════════════════════════════════════════════
 
 // Hardcoded production backend — Render Web Service
-const PRODUCTION_BACKEND = 'https://the-finisher-luxury-api.onrender.com/api'
+const PRODUCTION_BACKEND = 'https://the-finisher-luxury-api.vercel.app/api'
 
 const resolveBase = () => {
   const isBrowser = typeof window !== 'undefined'

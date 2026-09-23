@@ -437,21 +437,21 @@
             {{ sslAuditRunning ? 'Testing SSL Handshake...' : '⚡ Quick SSL Ping' }}
           </button>
           <a 
-            href="https://www.ssllabs.com/ssltest/analyze.html?d=the-finisher-luxury-api.onrender.com" 
+            href="https://www.ssllabs.com/ssltest/analyze.html?d=the-finisher-luxury-api.vercel.app" 
             target="_blank" 
             class="btn btn-ssl-audit"
           >
             🛡️ Qualys SSL Labs Report (Grade A+) ↗
           </a>
           <a 
-            href="https://securityheaders.com/?q=https%3A%2F%2Fthe-finisher-luxury-api.onrender.com" 
+            href="https://securityheaders.com/?q=https%3A%2F%2Fthe-finisher-luxury-api.vercel.app" 
             target="_blank" 
             class="btn btn-ssl-audit"
           >
             🔒 SecurityHeaders.com Audit ↗
           </a>
           <a 
-            href="https://www.sslshopper.com/ssl-checker.html#hostname=the-finisher-luxury-api.onrender.com" 
+            href="https://www.sslshopper.com/ssl-checker.html#hostname=the-finisher-luxury-api.vercel.app" 
             target="_blank" 
             class="btn btn-ssl-audit"
           >
@@ -875,11 +875,11 @@ export default {
       this.sslAuditRunning = true
       const startTime = performance.now()
       try {
-        const testUrl = 'https://the-finisher-luxury-api.onrender.com/health/'
+        const testUrl = 'https://the-finisher-luxury-api.vercel.app/health/'
         const response = await fetch(testUrl, { method: 'GET', mode: 'cors' })
         const elapsed = Math.round(performance.now() - startTime)
         this.sslAuditReport = {
-          host: 'the-finisher-luxury-api.onrender.com',
+          host: 'the-finisher-luxury-api.vercel.app',
           status: response.ok ? '200 OK (Healthy)' : `${response.status} ${response.statusText}`,
           protocol: window.location.protocol.toUpperCase().replace(':', ''),
           latency: elapsed,
@@ -889,7 +889,7 @@ export default {
       } catch (err) {
         const elapsed = Math.round(performance.now() - startTime)
         this.sslAuditReport = {
-          host: 'the-finisher-luxury-api.onrender.com',
+          host: 'the-finisher-luxury-api.vercel.app',
           status: 'Active (TLS 1.3 / HTTPS Enforced)',
           protocol: 'HTTPS',
           latency: elapsed || 142,

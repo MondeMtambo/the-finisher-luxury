@@ -484,7 +484,7 @@ export default {
       if (!url) return '#'
       if (url.startsWith('http://') || url.startsWith('https://')) return url
       const isLocal = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
-      const base = isLocal ? 'http://localhost:8000' : 'https://the-finisher-luxury-api.onrender.com'
+      const base = isLocal ? 'http://localhost:8000' : 'https://the-finisher-luxury-api.vercel.app'
       return `${base}${url}`
     },
     async loadContacts() {
