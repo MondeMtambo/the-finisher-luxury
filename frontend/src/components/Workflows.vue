@@ -667,8 +667,8 @@ export default {
 /* Executive 1-Click Recipes */
 .recipes-section {
   background: rgba(17, 18, 23, 0.65);
-  backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
   border: 1px solid rgba(212, 175, 55, 0.25);
   border-radius: 14px;
   padding: 24px;

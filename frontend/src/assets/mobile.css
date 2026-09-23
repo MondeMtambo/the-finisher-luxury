@@ -37,6 +37,7 @@ html[data-font-size="xlarge"] {
 body {
   font-size: var(--app-base-font-size, 14px);
   -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 /* ─── MOBILE TOUCH ERGONOMICS & SAFE AREAS ─── */
@@ -46,7 +47,6 @@ body {
     overflow-x: hidden !important;
     position: relative;
     width: 100%;
-    -webkit-overflow-scrolling: touch;
   }
 
   #app, .app-layout {
@@ -96,7 +96,6 @@ body {
     width: 100% !important;
     max-width: 100% !important;
     overflow-x: auto !important;
-    -webkit-overflow-scrolling: touch !important;
     display: block !important;
     margin-bottom: 1rem;
     border-radius: 8px;
@@ -264,7 +263,6 @@ body {
     border-top-right-radius: 18px !important;
     max-height: 88vh !important;
     overflow-y: auto !important;
-    -webkit-overflow-scrolling: touch !important;
     padding: 1.25rem 1rem calc(1.5rem + env(safe-area-inset-bottom, 16px)) 1rem !important;
     animation: slideUpModal 0.25s cubic-bezier(0.16, 1, 0.3, 1) !important;
   }
@@ -283,8 +281,8 @@ body {
     height: calc(58px + env(safe-area-inset-bottom, 12px));
     padding-bottom: env(safe-area-inset-bottom, 12px);
     background: rgba(10, 12, 16, 0.92);
-    backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
     border-top: 1px solid rgba(212, 175, 55, 0.25);
     display: flex;
     align-items: center;

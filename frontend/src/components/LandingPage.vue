@@ -1427,8 +1427,8 @@ export default {
   z-index: 1000;
   width: 330px;
   background: rgba(10, 15, 28, 0.94);
-  backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
   border: 1px solid rgba(212, 175, 55, 0.45);
   border-radius: 14px;
   padding: 1.15rem 1.25rem 1.15rem 1.15rem;

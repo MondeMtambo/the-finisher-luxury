@@ -1099,8 +1099,8 @@ export default {
   position: sticky;
   bottom: 0;
   background: rgba(17, 18, 23, 0.72);
-  backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
+  backdrop-filter: blur(16px);
   padding: 1rem 0;
   border-top: 1px solid rgba(212, 175, 55, 0.22);
   display: flex;
